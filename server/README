@@ -1,0 +1,25 @@
+src/
+├── config/
+├── middlewares/
+├── modules/
+│   ├── notification/
+│   │   ├── notification.controller.js
+│   │   ├── notification.service.js
+│   │   ├── notification.model.js
+│   │   ├── notification.routes.js
+│   │   ├── notification.validator.js
+│   │   └── notification.entity.js
+│   │
+│   ├── user/
+│   │   ├── user.controller.js
+│   │   ├── user.service.js
+│   │   ├── user.model.js
+│   │   ├── user.routes.js
+│   │   └── user.validator.js
+│
+├── routes/
+│   └── index.js   👈 gom tất cả module routes
+│
+├── utils/
+├── app.js
+└── server.js
