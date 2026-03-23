@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Cấu hình map -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Lấy vị trí hiện tại -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
     <application
         android:label="mobile"
         android:name="${applicationName}"

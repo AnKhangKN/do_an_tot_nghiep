@@ -1,0 +1,29 @@
+lib/
+├── core/
+│   ├── network/
+│   ├── theme/
+│   ├── utils/
+│
+├── features/
+│   ├── auth/
+│   ├── user/
+│   ├── notification/
+│
+├── routes/
+│   └── app_router.dart
+│
+├── shared/
+│   ├── widgets/
+│   ├── constants/
+│
+└── main.dart
+
+features/user/
+ ├── data/
+ │   ├── user_model.dart
+ │   ├── user_api.dart
+ │   ├── user_repository.dart
+ │
+ ├── presentation/
+ │   ├── user_screen.dart
+ │   ├── user_controller.dart
