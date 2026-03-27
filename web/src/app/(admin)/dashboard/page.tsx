@@ -1,3 +1,10 @@
+
+
 export default function Dashboard() {
-  return <div>dash board</div>;
+  return (
+    <div className="h-screen">
+      <div className="h-screen">h screen</div>
+      <div className="h-screen">h screen</div>
+    </div>
+  );
 }

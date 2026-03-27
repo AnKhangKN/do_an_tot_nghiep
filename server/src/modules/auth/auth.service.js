@@ -1,51 +1,38 @@
 const throwError = require("@utils/throw_error.util");
-const userEntity = require("@modules/user/user.entity");
-const { hashPassword } = require("@utils/hash_password.util");
-const { generateUUID } = require("@/utils/generate_uuid.util");
+const { transaction } = require("@/config/database.config");
+const userService = require("../user/user.service");
+const user_authService = require("../user_auth/user_auth.service");
 
 class AuthService {
     constructor() {
-        this.userEntity = userEntity;
+        this.userService = userService
+        this.user_authService = user_authService
     }
 
     register = async ({
         email,
-        password,
         provider,
         providerId,
+        password,
     }) => {
-        const exists = await this.userEntity.exists(email);
+        return await transaction(async (client) => {
+            const isExist = await this.userService.exists(client, { email })
 
-        if (exists) {
-            throwError("Người dùng đã tồn tại!", 400);
-        }
+            if (isExist) {
+                throwError("Người dùng đã tồn tại!", 400);
+            }
 
-        const userId = generateUUID();
-        const fullName = email.split("@")[0];
+            const user = await this.userService.createUser(client, { email })
 
-        const userAuthId = generateUUID();
+            const userId = user.user_id
 
-        let pw = null;
+            const userAuth = await this.user_authService.createUserAuth(client, { userId, provider, providerId, password })
 
-        if (provider === "EMAIL") {
-            pw = await hashPassword(password);
-        }
-
-        if (provider === "GOOGLE" && !providerId) {
-            throwError("Thiếu Google ID", 400);
-        }
-
-        const entity = await this.userEntity.createUser({
-            userId,
-            fullName,
-            email,
-            userAuthId,
-            provider,
-            providerId,
-            password: pw,
-        });
-
-        return entity;
+            return {
+                user,
+                user_auth: userAuth
+            }
+        })
     };
 }
 

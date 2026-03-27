@@ -52,6 +52,11 @@ const validatorRegister = (req, res, next) => {
     }
 };
 
+const validatorLogin = (req, res, next) => {
+    const {email, password, } = req.body
+}
+
 module.exports = {
-    validatorRegister
+    validatorRegister,
+    validatorLogin
 };
