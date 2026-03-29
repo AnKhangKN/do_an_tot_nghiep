@@ -11,17 +11,18 @@ const sosRequestModel = {
         status: 'status',
 
         // Loại sự cố
-        incidentType: 'incident_type',
+        incidentTypeId: 'incident_type_id',
 
         // Cập nhật khi được người cứu hộ xác nhận
-        rescuerLatitude: 'rescuer_latitude',
-        rescuerLongitude: 'rescuer_longitude',
+        rescuerLat: 'rescuer_lat',
+        rescuerLng: 'rescuer_lng',
 
-        victimLatitude: 'victim_latitude',
-        victimLongitude: 'victim_longitude',
+        victimLat: 'victim_lat',
+        victimLng: 'victim_lng',
 
         description: 'description',
 
+        // Tự tạo khi tạo
         createdAt: 'created_at',
         updatedAt: 'updated_at'
     }

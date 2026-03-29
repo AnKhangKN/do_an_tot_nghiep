@@ -1,6 +1,5 @@
 const { generateUUID } = require("@/utils/generate_uuid.util");
 const userAuthRepository = require("./user_auth.repository");
-const throwError = require("@/utils/throw_error.util");
 const { hashPassword } = require("@/utils/hash_password.util");
 
 class UserAuthService {
@@ -17,14 +16,14 @@ class UserAuthService {
 
         const userAuthId = generateUUID();
 
-        const hashPassword = hashPassword(password)
+        const hash = await hashPassword(password)
 
         return await this.userAuth.createUserAuth(client, {
             userAuthId,
             userId,
             provider,
             providerId,
-            password: hashPassword,
+            password: hash,
         });
     };
 }

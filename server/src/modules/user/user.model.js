@@ -16,8 +16,8 @@ const userModel = {
         isVerified: "is_verified",
 
         // Cập nhật khi nhấn vị trí của tôi hoặc gửi request
-        currentLatitude: "current_latitude",
-        currentLongitude: "current_longitude",
+        currentLat: "current_lat",
+        currentLng: "current_lng",
 
         createdAt: "created_at",
         updatedAt: "updated_at"

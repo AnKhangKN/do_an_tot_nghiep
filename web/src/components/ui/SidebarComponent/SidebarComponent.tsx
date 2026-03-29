@@ -17,6 +17,7 @@ import {
   PiCaretLeftLight,
   PiCaretRightLight,
 } from "react-icons/pi";
+import { AppColor } from "@/constant/app_color";
 
 const menuItems = [
   { icon: PiCirclesFourLight, link: "/dashboard", label: "Tổng quan" },
@@ -61,11 +62,11 @@ export default function SidebarComponent() {
             ${collapsed ? "gap-0" : "gap-3"}`}
         >
           <Image
-            src="/images/logo/logo_app.png"
+            src="/images/logo/app_logo.png"
             alt="logo"
             width={40}
             height={40}
-            className="rounded-lg shrink-0 border border-gray-800"
+            className="rounded-lg shrink-0"
           />
 
           <span
@@ -96,7 +97,7 @@ export default function SidebarComponent() {
                     transition-all duration-300 ease-in-out
                     ${
                       isActive
-                        ? "bg-blue-600 text-white"
+                        ? `bg-[#34e537] text-white`
                         : "text-gray-700 hover:bg-gray-100"
                     }
                    ${collapsed ? "gap-0" : "gap-3"} 
