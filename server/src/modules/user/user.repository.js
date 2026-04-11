@@ -36,6 +36,28 @@ class UserRepository {
 
         return result.rows[0];
     };
+
+    getUserByEmail = async (client, { email }) => {
+        const query = `
+            SELECT ${this.user.field.userId},  ${this.user.field.fullName}, ${this.user.field.email}, ${this.user.field.phone}, ${this.user.field.role}, ${this.user.field.status}, ${this.user.field.avatarUrl}, ${this.user.field.isVerified}
+            FROM ${this.user.table}
+            WHERE ${this.user.field.email} = $1
+        `;
+
+        const result = await client.query(query, [email]);
+        return result.rows[0] ? result.rows[0] : null;
+    }
+
+    getUserById = async ( { userId }) => {
+        const query = `
+            SELECT ${this.user.field.userId},  ${this.user.field.fullName}, ${this.user.field.email}, ${this.user.field.phone}, ${this.user.field.role}, ${this.user.field.status}, ${this.user.field.avatarUrl}, ${this.user.field.isVerified}
+            FROM ${this.user.table}
+            WHERE ${this.user.field.userId} = $1
+        `;  
+
+        const result = await pool.query(query, [userId]);
+        return result.rows[0] ? result.rows[0] : null;
+    }
 }
 
 module.exports = new UserRepository();

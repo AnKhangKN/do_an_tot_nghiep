@@ -20,6 +20,15 @@ class UserService {
       email,
     });
   };
+
+  getUserByEmail = async (client, { email }) => {
+    return await this.user.getUserByEmail(client, { email });
+  }
+
+  getUserById = async ({ userId }) => {
+
+    return await this.user.getUserById({ userId });
+  }
 }
 
 module.exports = new UserService();

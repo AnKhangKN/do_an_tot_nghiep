@@ -6,6 +6,7 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 module.exports = {
   // PORT
   PORT: process.env.PORT || 8000,
+  FRONTEND_URL: process.env.FRONTEND_URL,
 
   // DATABASE
   DB_HOST: process.env.DB_HOST,

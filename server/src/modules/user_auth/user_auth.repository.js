@@ -35,6 +35,16 @@ class UserAuthRepository {
 
     return result.rows[0];
   };
+
+  getPasswordByUserId = async (client, { userId }) => {
+    const query = `SELECT ${this.userAuth.field.password}
+      FROM ${this.userAuth.table}
+      WHERE ${this.userAuth.field.userId} = $1
+    `;
+
+    const result = await client.query(query, [userId]);
+    return result.rows[0] ? result.rows[0][this.userAuth.field.password] : null;
+  }
 }
 
 module.exports = new UserAuthRepository();

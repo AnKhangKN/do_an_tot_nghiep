@@ -25,6 +25,8 @@ class IncidentTypeController {
         try {
             const result = await this.incident_typeService.getIncidentTypes()
 
+            console.log("Incident Types:", result);
+
             return res.status(200).json({
                 success: true,
                 message: "Lấy danh sách sự cố thành công!",

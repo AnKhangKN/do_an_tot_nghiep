@@ -26,6 +26,10 @@ class UserAuthService {
             password: hash,
         });
     };
+
+    getPasswordByUserId = async (client, { userId }) => {
+        return await this.userAuth.getPasswordByUserId(client, { userId });
+    }
 }
 
 module.exports = new UserAuthService();
