@@ -34,10 +34,6 @@ const LoginPage = () => {
       const user = await UserApi.getUserInfo(accessToken?.data);
 
       store.dispatch(setUser(user?.data));
-
-      console.log(accessToken?.data);
-      console.log(user?.data);
-
       navigate("/admin/dashboard");
     } catch (error) {
       console.log(error);
@@ -53,7 +49,7 @@ const LoginPage = () => {
 
         <h2 className="text-2xl font-bold text-center mb-2">ADMIN CỨU HỘ</h2>
 
-        {/* ✅ thêm onSubmit */}
+        {/* Thêm onSubmit */}
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="text-sm text-gray-600">Email</label>

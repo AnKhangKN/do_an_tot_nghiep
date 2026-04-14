@@ -27,7 +27,6 @@ function App() {
 
           const user = await UserApi.getUserInfo();
           store.dispatch(setUser(user?.data));
-
         } else {
           navigate("/login");
           return;

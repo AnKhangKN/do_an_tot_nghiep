@@ -1,9 +1,12 @@
 import React from "react";
 
-const ButtonComponent = () => {
+const ButtonComponent = ({ children, className = "", ...props }) => {
   return (
-    <button className="border px-3 py-2 rounded-xl cursor-pointer">
-      ButtonComponent
+    <button
+      className={`border px-4 py-2 rounded-lg ${className}`}
+      {...props}
+    >
+      {children}
     </button>
   );
 };

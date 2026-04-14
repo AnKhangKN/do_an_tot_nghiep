@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/config/routes/app.router.dart';
+
+import 'core/navigation/widgets/bottom_nav_bar_widget.dart';
+import 'core/routes/app_router.dart';
 
 class App extends StatelessWidget {
   const App({super.key});

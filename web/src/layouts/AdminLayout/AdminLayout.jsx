@@ -10,7 +10,7 @@ const AdminLayout = ({ children }) => {
       <div className="flex flex-col flex-1">
         <HeaderComponent />
         
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto p-4">
           {children}
         </main>
       </div>

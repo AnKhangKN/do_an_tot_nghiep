@@ -14,13 +14,11 @@ class UserAuthRepository {
   }) => {
     const query = `
       INSERT INTO ${this.userAuth.table}
-      (
-        ${this.userAuth.field.userAuthId},
+        (${this.userAuth.field.userAuthId},
         ${this.userAuth.field.userId},
         ${this.userAuth.field.provider},
         ${this.userAuth.field.providerId},
-        ${this.userAuth.field.password}
-      )
+        ${this.userAuth.field.password})
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *
     `;
@@ -37,13 +35,15 @@ class UserAuthRepository {
   };
 
   getPasswordByUserId = async (client, { userId }) => {
-    const query = `SELECT ${this.userAuth.field.password}
+    const query = `
+      SELECT 
+        ${this.userAuth.field.password}
       FROM ${this.userAuth.table}
       WHERE ${this.userAuth.field.userId} = $1
     `;
 
     const result = await client.query(query, [userId]);
-    return result.rows[0] ? result.rows[0][this.userAuth.field.password] : null;
+    return result.rows[0] ? result.rows[0] : null;
   }
 }
 

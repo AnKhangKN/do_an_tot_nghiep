@@ -24,15 +24,38 @@ class AuthController {
 
     handleRefreshToken = async (req, res, next) => {
         try {
-            const refreshToken = req.cookies.refreshToken;
+            const { data, platform } = req.body
 
-            const result = await authService.handleRefreshToken({ refreshToken })
+            console.log("handle refresh token: ",req.body);
 
-            return res.status(200).json({
-                success: true,
-                message: "Lấy token thành công",
-                data: result,
-            });
+            if (platform === "MOBILE") {
+                const refreshToken = data
+                const result = await authService.handleRefreshToken({ refreshToken })
+
+                return res.status(200).json({
+                    success: true,
+                    message: "Lấy token thành công",
+                    data: result,
+                });
+
+            } else if (platform === "WEB") {
+                const refreshToken = req.cookies.refreshToken;
+
+                const result = await authService.handleRefreshToken({ refreshToken })
+
+                return res.status(200).json({
+                    success: true,
+                    message: "Lấy token thành công",
+                    data: result,
+                });
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: "Nền tảng không hợp lệ!"
+                })
+            }
+
+
         } catch (error) {
             next(error);
         }
@@ -43,11 +66,10 @@ class AuthController {
             const { email, password, platform } = req.body;
 
             const result = await authService.loginNormal({ email, password });
+            const { accessToken, refreshToken } = result;
 
             if (platform === "WEB") {
-                const { accessToken, user } = result;
-
-                res.cookie("refreshToken", result.refreshToken, {
+                res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
                     secure: false, // Đổi thành true khi deploy với HTTPS
                     sameSite: "strict",
@@ -58,18 +80,18 @@ class AuthController {
                 return res.status(200).json({
                     success: true,
                     message: "Đăng nhập thành công",
-                    data: { accessToken, user },
+                    data: { accessToken },
                 });
             } else if (platform === "MOBILE") {
                 return res.status(200).json({
                     success: true,
                     message: "Đăng nhập thành công",
-                    data: result,
+                    data: { accessToken, refreshToken },
                 });
             } else {
                 return res.status(400).json({
                     success: false,
-                    message: "Nền tảng không hợp lệ",
+                    message: "Nền tảng không hợp lệ!",
                 });
             }
 

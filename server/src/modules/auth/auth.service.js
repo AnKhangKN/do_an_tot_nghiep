@@ -28,13 +28,12 @@ class AuthService {
 
             const user = await this.userService.createUser(client, { email })
 
-            const userId = user.user_id
+            const userId = user.userId
 
-            const userAuth = await this.user_authService.createUserAuth(client, { userId, provider, providerId, password })
+            await this.user_authService.createUserAuth(client, { userId, provider, providerId, password })
 
             return {
-                user,
-                user_auth: userAuth
+                user
             }
         })
     };
@@ -59,36 +58,36 @@ class AuthService {
     loginNormal = async ({ email, password }) => {
         return await transaction(async (client) => {
 
-            const user = await this.userService.getUserByEmail(client, { email });
+            const user = await this.userService.getUserIdByEmail(client, { email });
 
-            if (!user.user_id) {
+            if (!user.userId) {
                 throwError("Không tồn tại user id!", 400);
             }
 
-            const storedPassword = await this.user_authService.getPasswordByUserId(client, { userId: user.user_id });
+            const storedPassword = await this.user_authService.getPasswordByUserId(client, { userId: user.userId });
 
-            if (!storedPassword) {
+            if (!storedPassword.password) {
                 throwError("Không lấy được mật khẩu!", 400);
             }
 
             // So sánh mật khẩu đã hash với mật khẩu người dùng nhập vào
-            const isPasswordValid = await comparePassword(password, storedPassword);
+            const isPasswordValid = await comparePassword(password, storedPassword.password);
 
             if (!isPasswordValid) {
                 throwError("Xác thực mật khẩu thất bại!", 400);
             }
 
             const accessToken = await generateAccessToken({
-                userId: user.user_id,
+                userId: user.userId,
                 role: user.role
             });
 
             const refreshToken = await generateRefreshToken({
-                userId: user.user_id,
+                userId: user.userId,
                 role: user.role
             });
 
-            return { accessToken, refreshToken, user };
+            return { accessToken, refreshToken };
         })
 
     }

@@ -35,7 +35,7 @@ class BottomNavBarWidget extends StatelessWidget {
         context.go('/history');
         break;
 
-      case4:
+      case 4:
         context.go('/profile');
         break;
     }

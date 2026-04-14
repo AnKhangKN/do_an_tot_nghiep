@@ -23,16 +23,19 @@ class IncidentTypeController {
 
     getIncidentTypes = async (req, res, next) => {
         try {
-            const result = await this.incident_typeService.getIncidentTypes()
 
-            console.log("Incident Types:", result);
+            const page = parseInt(req.query.page);
+            const limit = parseInt(req.query.limit);
+
+
+            const result = await this.incident_typeService.getIncidentTypes({ page, limit })
 
             return res.status(200).json({
                 success: true,
                 message: "Lấy danh sách sự cố thành công!",
                 data: result
             })
-            
+
         } catch (error) {
             next(error)
         }
