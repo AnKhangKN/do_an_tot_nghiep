@@ -1,9 +1,0 @@
-Cấu trúc 1 module của dự án
-
-sosRequest/
-├── sosRequest.controller.js    # nhận request 
-├── sosRequest.service.js       # xử lý logic 
-├── sosRequest.repository.js    # viết sql
-├── sosRequest.model.js         # mapping bảng
-├── sosRequest.validator.js     # validator input
-└── sosRequest.routes.js        # định nghĩa api
