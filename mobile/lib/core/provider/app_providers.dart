@@ -11,7 +11,7 @@ class AppProviders extends StatelessWidget {
   final StorageService storageService;
   final AuthRepository authRepository;
   final UserRepository userRepository;
-  final Widget child; // 🔥 THÊM DÒNG NÀY
+  final Widget child; // THÊM DÒNG NÀY
 
   const AppProviders({
     super.key,
@@ -23,7 +23,6 @@ class AppProviders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("🔥 APP PROVIDERS BUILD");
     return MultiProvider(
       providers: [
         Provider<StorageService>.value(value: storageService),

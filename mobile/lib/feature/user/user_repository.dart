@@ -8,8 +8,6 @@ class UserRepository {
 
   Future<UserModel> getProfile() async {
     final res = await userService.getProfile();
-    print("Nhận thông tin");
-    print("res.data.data: ${res.data['data']}");
 
     return UserModel.fromJson(res.data['data']);
   }

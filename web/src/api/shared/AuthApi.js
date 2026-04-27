@@ -42,9 +42,11 @@ axiosJWT.interceptors.response.use(
     }
 );
 
-export const refreshToken = async () => {
+export const refreshToken = async (platform = "WEB") => {
     try {
-        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/refresh-token`, {}, {
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/refresh-token`, {
+            platform
+        }, {
             withCredentials: true,
         });
         return response.data;

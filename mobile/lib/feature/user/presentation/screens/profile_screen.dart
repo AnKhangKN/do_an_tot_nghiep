@@ -17,7 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     Future.microtask(() {
       context.read<UserProvider>().getProfile();
-      print("PROVIDER HASH: ${context.read<UserProvider>().hashCode}");
     });
   }
 
@@ -25,11 +24,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
 
-    print("UI USER: $user");
-
     return Scaffold(
       body: Center(
-        child: Text(user?.fullName ?? "Chưa có user"),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(user?.fullName ?? "Chưa có user"),
+
+            const SizedBox(height: 20),
+
+            ElevatedButton(
+              onPressed: () {
+                context.go('/login');
+              },
+              child: const Text("Đi tới Login"),
+            ),
+
+            const SizedBox(height: 10),
+
+            ElevatedButton(
+              onPressed: () {
+                context.go('/register');
+              },
+              child: const Text("Đi tới Register"),
+            ),
+          ],
+        ),
       ),
     );
   }

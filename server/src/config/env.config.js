@@ -1,11 +1,12 @@
 const dotenv = require("dotenv");
-const path = require("path");
 
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` }); 
 
 module.exports = {
   // PORT
   PORT: process.env.PORT || 8000,
+
+  // FRONTEND
   FRONTEND_URL: process.env.FRONTEND_URL,
 
   // DATABASE
@@ -17,5 +18,12 @@ module.exports = {
 
   // jwt
   ACCESS_TOKEN: process.env.JWT_ACCESS_TOKEN,
-  REFRESH_TOKEN: process.env.JWT_REFRESH_TOKEN
+  REFRESH_TOKEN: process.env.JWT_REFRESH_TOKEN,
+
+  // OSM
+  PHOTON_API: process.env.PHOTON_API,
+  OSM_API: process.env.OSM_API,
+
+  // cookie
+  COOKIE_SECURE: process.env.COOKIE_SECURE,
 };

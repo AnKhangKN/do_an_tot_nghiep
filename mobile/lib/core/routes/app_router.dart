@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/navigation/widgets/bottom_nav_bar_widget.dart';
+import 'package:mobile/feature/auth/presentation/screens/register_screen.dart';
 import 'package:mobile/feature/map/screens/map_screen.dart';
 
 import '../../feature/auth/presentation/screens/login_screen.dart';
@@ -14,6 +15,12 @@ class AppRouter {
     initialLocation: '/splash',
 
     routes: [
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+
       // ===== AUTH (không có bottom nav) =====
       GoRoute(
         path: '/login',
@@ -22,9 +29,9 @@ class AppRouter {
       ),
 
       GoRoute(
-        path: '/splash',
-        name: 'splash',
-        builder: (context, state) => const SplashScreen(),
+        path: '/register',
+        name: 'register',
+        builder: (context, state) => const RegisterScreen(),
       ),
 
       // ===== SHELL (có bottom nav) =====
