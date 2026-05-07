@@ -4,7 +4,7 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 
 module.exports = {
   // PORT
-  PORT: process.env.PORT || 8000,
+  PORT: process.env.PORT,
 
   // FRONTEND
   FRONTEND_URL: process.env.FRONTEND_URL,
