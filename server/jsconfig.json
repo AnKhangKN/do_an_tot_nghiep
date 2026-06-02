@@ -1,14 +1,29 @@
+// {
+//   "compilerOptions": {
+//     "ignoreDeprecations": "6.0",
+//     "baseUrl": ".",
+//     "paths": {
+//       "@/*": ["src/*"],
+//       "@config/*": ["src/config/*"],
+//       "@middlewares/*": ["src/middlewares/*"],
+//       "@modules/*": ["src/modules/*"],
+//       "@routes/*": ["src/routes/*"],
+//       "@utils/*": ["src/utils/*"]
+//     }
+//   },
+//   "include": ["src/**/*"]
+// }
+
 {
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
+    "moduleResolution": "Bundler",
     "paths": {
-      "@/*": ["src/*"],
-      "@config/*": ["src/config/*"],
-      "@middlewares/*": ["src/middlewares/*"],
-      "@modules/*": ["src/modules/*"],
-      "@routes/*": ["src/routes/*"],
-      "@utils/*": ["src/utils/*"]
+      "@/*": ["./src/*"],
+      "@config/*": ["./src/config/*"],
+      "@middlewares/*": ["./src/middlewares/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@routes/*": ["./src/routes/*"],
+      "@utils/*": ["./src/utils/*"]
     }
   },
   "include": ["src/**/*"]

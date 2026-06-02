@@ -1,35 +1,36 @@
 import 'package:go_router/go_router.dart';
+import 'package:mobile/core/constants/app_router_constants.dart';
 import 'package:mobile/core/navigation/widgets/bottom_nav_bar_widget.dart';
 import 'package:mobile/feature/auth/presentation/screens/register_screen.dart';
-import 'package:mobile/feature/map/screens/map_screen.dart';
 
 import '../../feature/auth/presentation/screens/login_screen.dart';
-import '../../feature/history/screens/history_list_screen.dart';
-import '../../feature/messages/screens/chat_list_screen.dart';
-import '../../feature/notification/screens/notification_screen.dart';
+import '../../feature/history/presentation/screens/history_list_screen.dart';
+import '../../feature/map/presentation/screens/map_screen.dart';
+import '../../feature/messages/presentation/screens/chat_list_screen.dart';
+import '../../feature/notification/presentation/screens/notification_screen.dart';
 import '../../feature/splash/presentation/screens/splash_screen.dart';
 import '../../feature/user/presentation/screens/profile_screen.dart';
 
 class AppRouter {
   static final GoRouter goRouter = GoRouter(
-    initialLocation: '/splash',
+    initialLocation: RouterConstants.splash,
 
     routes: [
       GoRoute(
-        path: '/splash',
+        path: RouterConstants.splash,
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
       ),
 
       // ===== AUTH (không có bottom nav) =====
       GoRoute(
-        path: '/login',
+        path: RouterConstants.login,
         name: 'login',
         builder: (context, state) => const LoginScreen(),
       ),
 
       GoRoute(
-        path: '/register',
+        path: RouterConstants.register,
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
       ),
@@ -41,35 +42,35 @@ class AppRouter {
         },
         routes: [
           GoRoute(
-            path: '/map',
+            path: RouterConstants.map,
             name: 'Map',
             pageBuilder: (context, state) {
               return const NoTransitionPage(child: MapScreen());
             },
           ),
           GoRoute(
-            path: '/notifications',
+            path: RouterConstants.notification,
             name: 'Thông báo',
             pageBuilder: (context, state) {
               return const NoTransitionPage(child: NotificationScreen());
             },
           ),
           GoRoute(
-            path: '/messages',
+            path: RouterConstants.messages,
             name: 'Tin nhắn',
             pageBuilder: (context, state) {
               return const NoTransitionPage(child: ChatListScreen());
             },
           ),
           GoRoute(
-            path: '/history',
+            path: RouterConstants.history,
             name: 'Lịch sử',
             pageBuilder: (context, state) {
               return const NoTransitionPage(child: HistoryListScreen());
             },
           ),
           GoRoute(
-            path: '/profile',
+            path: RouterConstants.profile,
             name: 'Cá nhân',
             pageBuilder: (context, state) {
               return const NoTransitionPage(child: ProfileScreen());

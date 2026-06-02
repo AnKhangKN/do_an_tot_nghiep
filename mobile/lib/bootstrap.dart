@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:mobile/feature/user/user_repository.dart';
+import 'package:mobile/feature/user/data/user_repository.dart';
 
 import 'app.dart';
 import 'core/constants/app_constants.dart';
@@ -12,7 +12,7 @@ import 'feature/auth/data/auth_service.dart';
 import 'feature/auth/data/auth_repository.dart';
 
 import 'core/provider/app_providers.dart';
-import 'feature/user/user_service.dart';
+import 'feature/user/data/user_service.dart';
 
 Future<Widget> bootstrap() async {
   final storageService = StorageService();

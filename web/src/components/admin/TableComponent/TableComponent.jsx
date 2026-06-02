@@ -13,17 +13,17 @@ const TableComponent = ({
   loading = false,
 }) => {
   return (
-    <div className="rounded-lg border shadow-sm overflow-hidden bg-white">
+    <div className="rounded-lg border border-gray-200 shadow-lg overflow-hidden bg-white">
 
       {/* TABLE */}
       <table className="w-full">
 
-        <thead className="bg-gray-100">
+        <thead className="bg-gray-900">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="px-4 py-3 text-left font-medium text-gray-700"
+                className="px-4 py-3 text-left font-medium text-white"
               >
                 {col.title}
               </th>
@@ -31,7 +31,7 @@ const TableComponent = ({
           </tr>
         </thead>
 
-        <tbody className="divide-y">
+        <tbody className="">
 
           {/* loading */}
           {loading && (
@@ -72,7 +72,7 @@ const TableComponent = ({
       </table>
 
       {/* PAGINATION */}
-      <div className="flex justify-end gap-2 p-3 border-t bg-gray-50">
+      <div className="flex justify-end gap-2 p-3 bg-gray-100">
 
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
           <button
@@ -80,7 +80,7 @@ const TableComponent = ({
             onClick={() => onPageChange(p)}
             className={`w-8 h-8 rounded border text-sm flex items-center justify-center transition
               ${page === p
-                ? "bg-blue-500 text-white border-blue-500"
+                ? "bg-gray-500 text-white border-gray-500"
                 : "hover:bg-gray-100"
               }`}
           >

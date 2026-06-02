@@ -46,12 +46,6 @@ export const routes = [
         isAdmin: true
     },
     {
-        path: '/admin/vehicle',
-        name: 'Vehicle',
-        component: React.lazy(() => import('../pages/admin/VehiclePage/VehiclePage')),
-        isAdmin: true
-    },
-    {
         path: '/admin/incident-type',
         name: 'Incident Type',
         component: React.lazy(() => import('../pages/admin/IncidentTypePage/IncidentTypePage')),

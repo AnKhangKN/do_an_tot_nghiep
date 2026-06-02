@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/feature/user/user_repository.dart';
-import '../user_model.dart';
+import 'package:mobile/feature/user/data/user_repository.dart';
+import '../data/user_model.dart';
 
 class UserProvider extends ChangeNotifier {
   final UserRepository _repo;

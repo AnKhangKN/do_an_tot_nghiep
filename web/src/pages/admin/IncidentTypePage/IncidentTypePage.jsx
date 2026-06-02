@@ -69,20 +69,7 @@ const IncidentTypePage = () => {
   return (
     <div className="space-y-4">
       {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-800">
-            Danh sách loại sự cố
-          </h1>
-          <p className="text-sm text-gray-500">
-            Quản lý tất cả các loại sự cố trong hệ thống
-          </p>
-        </div>
-
-        <ButtonComponent className="bg-blue-500 text-white hover:bg-blue-600">
-          + Tạo loại sự cố
-        </ButtonComponent>
-      </div>
+      
 
       {/* TABLE CARD */}
       <div className="">

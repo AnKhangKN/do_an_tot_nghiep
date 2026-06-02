@@ -14,7 +14,7 @@ class RefreshInterceptor extends Interceptor {
     final request = err.requestOptions;
 
     // tránh loop refresh
-    if (request.path.contains('/auth/refresh-token')) {
+    if (request.path.contains('/api/auth/refresh-token')) {
       return handler.next(err);
     }
 
@@ -28,11 +28,25 @@ class RefreshInterceptor extends Interceptor {
       try {
         final refreshToken = await storageService.getRefreshToken();
 
+        if (refreshToken == null || refreshToken.isEmpty) {
+          isRefreshing = false;
+          await storageService.clear();
+          return handler.next(err);
+        }
+
         final response = await dio.post(
-          '/auth/refresh-token',
+          '/api/auth/refresh-token',
           data: {"data": refreshToken, "platform": "MOBILE"},
         );
-        final newAccessToken = response.data['data']['accessToken'];
+        final data = response.data['data'];
+        final newAccessToken =
+            data is Map<String, dynamic> ? data['accessToken'] as String? : null;
+
+        if (newAccessToken == null || newAccessToken.isEmpty) {
+          isRefreshing = false;
+          await storageService.clear();
+          return handler.next(err);
+        }
 
         await storageService.saveAccessToken(newAccessToken);
 

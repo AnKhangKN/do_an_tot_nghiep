@@ -18,9 +18,23 @@ class AuthRepository {
 
     final data = res.data['data'];
 
+    if (data is! Map<String, dynamic>) {
+      throw Exception('Phản hồi đăng nhập không hợp lệ');
+    }
+
+    final accessToken = data['accessToken'] as String?;
+    final refreshToken = data['refreshToken'] as String?;
+
+    if (accessToken == null ||
+        accessToken.isEmpty ||
+        refreshToken == null ||
+        refreshToken.isEmpty) {
+      throw Exception('Thiếu token đăng nhập');
+    }
+
     await storage.saveToken(
-      data['accessToken'],
-      data['refreshToken'],
+      accessToken,
+      refreshToken,
     );
   }
 }

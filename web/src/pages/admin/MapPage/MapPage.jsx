@@ -172,7 +172,7 @@ const SearchBox = ({ setLocation }) => {
   }, [query]);
 
   return (
-    <div className="absolute top-3 left-3 z-[1000] bg-white p-3 rounded shadow w-[320px]">
+    <div className="absolute top-3 left-3 z-1000 bg-white p-3 rounded shadow w-[320px]">
       <input
         className="border p-2 w-full"
         value={query}
@@ -242,7 +242,7 @@ const MapPage = () => {
   const [location, setLocation] = useState(null);
 
   return (
-    <div className="w-full h-[600px] relative">
+    <div className="w-full h-146 relative">
       <SearchBox setLocation={setLocation} />
 
       <MapContainer center={center} zoom={13} className="w-full h-full">

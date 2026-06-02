@@ -1,5 +1,5 @@
-import 'package:mobile/feature/user/user_model.dart';
-import 'package:mobile/feature/user/user_service.dart';
+import 'package:mobile/feature/user/data/user_model.dart';
+import 'package:mobile/feature/user/data/user_service.dart';
 
 class UserRepository {
   final UserService userService;
