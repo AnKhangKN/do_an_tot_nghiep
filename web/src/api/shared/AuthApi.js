@@ -68,3 +68,14 @@ export const login = async (email, password, platform = "WEB") => {
     }
 };
 
+export const logout = async () => {
+    const response = await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`,
+        {
+            withCredentials: true,
+        }
+    );
+
+    return response.data;
+};
+

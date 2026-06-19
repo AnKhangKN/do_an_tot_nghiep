@@ -1,8 +1,7 @@
 const authService = require("../service/auth.service");
-const { COOKIE_SECURE } = require("../../../config/env.config"); 
+const { COOKIE_SECURE } = require("../../../config/env.config");
 
 class AuthController {
-
     register = async (req, res, next) => {
         try {
             const { email, provider, providerId, password } = req.body;
@@ -11,7 +10,7 @@ class AuthController {
                 email,
                 provider,
                 providerId,
-                password
+                password,
             });
 
             return res.status(201).json({
@@ -24,24 +23,42 @@ class AuthController {
         }
     };
 
+    registerRescuer = async (req, res, next) => {
+        const { fullName, email, phone } = req.body
+    }
+
     handleRefreshToken = async (req, res, next) => {
         try {
-            const { data, platform } = req.body
+            const { data, platform } = req.body;
 
             if (platform === "MOBILE") {
-                const refreshToken = data
-                const result = await authService.handleRefreshToken({ refreshToken })
+                const refreshToken = data;
+
+                if (!refreshToken) {
+                    return res.status(401).json({
+                        success: false,
+                        message: "No refresh token",
+                    });
+                }
+
+                const result = await authService.handleRefreshToken({ refreshToken });
 
                 return res.status(200).json({
                     success: true,
                     message: "Lấy token thành công",
                     data: result,
                 });
-
             } else if (platform === "WEB") {
                 const refreshToken = req.cookies.refreshToken;
 
-                const result = await authService.handleRefreshToken({ refreshToken })
+                if (!refreshToken) {
+                    return res.status(401).json({
+                        success: false,
+                        message: "No refresh token",
+                    });
+                }
+
+                const result = await authService.handleRefreshToken({ refreshToken });
 
                 return res.status(200).json({
                     success: true,
@@ -51,15 +68,13 @@ class AuthController {
             } else {
                 return res.status(400).json({
                     success: false,
-                    message: "Nền tảng không hợp lệ!"
-                })
+                    message: "Nền tảng không hợp lệ!",
+                });
             }
-
-
         } catch (error) {
             next(error);
         }
-    }
+    };
 
     login = async (req, res, next) => {
         try {
@@ -94,11 +109,10 @@ class AuthController {
                     message: "Nền tảng không hợp lệ!",
                 });
             }
-
         } catch (error) {
-            next(error)
+            next(error);
         }
-    }
+    };
 
     // TODO: Xử lý sau
 
@@ -106,7 +120,6 @@ class AuthController {
         // try {
         //     const { email, providerId } = req.body;
         //     const result = await this.authService.loginWithGoogle({ email, providerId });
-
         //     return res.status(200).json({
         //         success: true,
         //         message: "Đăng nhập với Google thành công",
@@ -115,28 +128,32 @@ class AuthController {
         // } catch (error) {
         //     next(error);
         // }
-    }
+    };
 
     logout = async (req, res, next) => {
         try {
-            
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                secure: COOKIE_SECURE,
+                sameSite: "strict",
+                path: "/",
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Đăng xuất thành công",
+            });
+
         } catch (error) {
             next(error);
         }
+    };
 
-    }
+    verifyEmail = async (req, res, next) => { };
 
-    verifyEmail = async (req, res, next) => {
+    forgotPassword = async (req, res, next) => { };
 
-    }
-
-    forgotPassword = async (req, res, next) => {
-
-    }
-
-    resetPassword = async (req, res, next) => {
-
-    }
+    resetPassword = async (req, res, next) => { };
 }
 
 module.exports = new AuthController();

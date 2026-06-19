@@ -40,6 +40,8 @@ class IncidentTypeController {
             next(error)
         }
     }
+
+    
 }
 
 module.exports = new IncidentTypeController()

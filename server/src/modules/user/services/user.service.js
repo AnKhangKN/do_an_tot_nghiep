@@ -37,6 +37,10 @@ class UserService {
     const rows = await this.userRepository.getUserInfoById({ userId });
     return mapFields(rows, this.userModel);
   }
+
+  createNewRescuer = async (client, {fullName, email, phone, gender, area}) => {
+
+  }
 }
 
 module.exports = new UserService();

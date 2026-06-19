@@ -2,7 +2,7 @@ const incidentTypeModel = {
     table: 'incident_types',
     
     field: {
-        incidentId: 'incident_id',
+        incidentTypeId: 'incident_type_id',
         incidentType: 'incident_type',
         status: 'status', // ACTIVE | INACTIVE
 

@@ -4,11 +4,16 @@ import {
   PiMoonLight,
   PiCaretDownLight,
 } from "react-icons/pi";
-import { useSelector } from "react-redux";
-import { useLocation, NavLink } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, NavLink, useNavigate } from "react-router-dom";
+import * as AuthApi from "@/api/shared/AuthApi";
+import { clearUser } from "@/store/user/userSlice";
+import { logout } from "@/store/accessToken/accessTokenSlice"
 
 const HeaderComponent = () => {
   const state = useSelector((state) => state.user);
+  const navigate = useNavigate()
+  const dispatch = useDispatch();
 
   const location = useLocation();
 
@@ -32,6 +37,20 @@ const HeaderComponent = () => {
   ];
 
   const currentPage = pathName.find((item) => item.nav);
+
+  const handleLogout = async () => {
+    try {
+      await AuthApi.logout();
+
+
+    dispatch(clearUser());
+    dispatch(logout());
+
+    navigate("/login", { replace: true });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div className="h-20 bg-white border-b border-gray-100 px-6 flex items-center justify-between shadow-sm">
@@ -149,7 +168,10 @@ const HeaderComponent = () => {
                 </button>
               </NavLink>
 
-              <button className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-red-500 text-sm transition-all">
+              <button
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-red-500 text-sm transition-all"
+                onClick={handleLogout}
+              >
                 Đăng xuất
               </button>
             </div>

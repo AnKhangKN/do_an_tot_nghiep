@@ -20,7 +20,8 @@ class StorageService {
     return _storage.read(key: 'refreshToken');
   }
 
-  Future<void> clear() async {
-    await _storage.deleteAll();
+  Future<void> clearToken() async {
+    await _storage.delete(key: 'accessToken');
+    await _storage.delete(key: 'refreshToken');
   }
 }

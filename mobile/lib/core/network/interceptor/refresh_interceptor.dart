@@ -30,7 +30,7 @@ class RefreshInterceptor extends Interceptor {
 
         if (refreshToken == null || refreshToken.isEmpty) {
           isRefreshing = false;
-          await storageService.clear();
+          await storageService.clearToken();
           return handler.next(err);
         }
 
@@ -39,12 +39,13 @@ class RefreshInterceptor extends Interceptor {
           data: {"data": refreshToken, "platform": "MOBILE"},
         );
         final data = response.data['data'];
-        final newAccessToken =
-            data is Map<String, dynamic> ? data['accessToken'] as String? : null;
+        final newAccessToken = data is Map<String, dynamic>
+            ? data['accessToken'] as String?
+            : null;
 
         if (newAccessToken == null || newAccessToken.isEmpty) {
           isRefreshing = false;
-          await storageService.clear();
+          await storageService.clearToken();
           return handler.next(err);
         }
 
@@ -62,7 +63,7 @@ class RefreshInterceptor extends Interceptor {
       } catch (e) {
         isRefreshing = false;
 
-        await storageService.clear();
+        await storageService.clearToken();
 
         return handler.next(err);
       }

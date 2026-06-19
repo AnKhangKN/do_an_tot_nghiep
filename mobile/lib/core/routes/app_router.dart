@@ -1,15 +1,17 @@
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/constants/app_router_constants.dart';
 import 'package:mobile/core/navigation/widgets/bottom_nav_bar_widget.dart';
-import 'package:mobile/feature/auth/presentation/screens/register_screen.dart';
-
-import '../../feature/auth/presentation/screens/login_screen.dart';
-import '../../feature/history/presentation/screens/history_list_screen.dart';
-import '../../feature/map/presentation/screens/map_screen.dart';
-import '../../feature/messages/presentation/screens/chat_list_screen.dart';
-import '../../feature/notification/presentation/screens/notification_screen.dart';
-import '../../feature/splash/presentation/screens/splash_screen.dart';
-import '../../feature/user/presentation/screens/profile_screen.dart';
+import '../../feature/404/screens/not_found_screen.dart';
+import '../../feature/history/screens/history_list_screen.dart';
+import '../../feature/map/screens/map_screen.dart';
+import '../../feature/messages/screens/chat_list_screen.dart';
+import '../../feature/notification/screens/notification_screen.dart';
+import '../../feature/rescue/screens/register_rescuer_screen.dart';
+import '../../feature/rescue/screens/register_rescuer_step2_screen.dart';
+import '../../feature/auth/screens/login_screen.dart';
+import '../../feature/auth/screens/register_screen.dart';
+import '../../feature/splash/screens/splash_screen.dart';
+import '../../feature/user/screens/profile_screen.dart';
 
 class AppRouter {
   static final GoRouter goRouter = GoRouter(
@@ -33,6 +35,19 @@ class AppRouter {
         path: RouterConstants.register,
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+
+      GoRoute(
+        path: RouterConstants.registerRescuer,
+        name: 'register_rescuer',
+        builder: (context, state) => const RegisterRescuerScreen(),
+      ),
+
+      GoRoute(path: RouterConstants.registerRescuerStep2,
+      name: 'final_register_rescuer',
+        pageBuilder: (context, state) {
+          return const NoTransitionPage(child: RegisterRescuerStep2Screen());
+        },
       ),
 
       // ===== SHELL (có bottom nav) =====
@@ -79,5 +94,9 @@ class AppRouter {
         ],
       ),
     ],
+
+    errorBuilder: (context, state) {
+      return const NotFoundScreen();
+    },
   );
 }

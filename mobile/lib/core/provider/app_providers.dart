@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/feature/user/data/user_repository.dart';
+import 'package:mobile/feature/user/repositories/user_repository.dart';
 import 'package:provider/provider.dart';
 
-import '../../feature/auth/data/auth_repository.dart';
-import '../../feature/auth/presentation/auth_provider.dart';
-import '../../feature/user/presentation/user_provider.dart';
+import '../../feature/auth/repositories/auth_repository.dart';
+import '../../feature/auth/providers/auth_provider.dart';
+import '../../feature/rescue/providers/register_rescuer_provider.dart';
+import '../../feature/rescue/repositories/rescuer_repositories.dart';
+import '../../feature/user/providers/user_provider.dart';
 import '../services/storage_service.dart';
 
 class AppProviders extends StatelessWidget {
   final StorageService storageService;
   final AuthRepository authRepository;
   final UserRepository userRepository;
+  final RescuerRepositories registerRescuerRepository;
   final Widget child; // THÊM DÒNG NÀY
 
   const AppProviders({
@@ -18,6 +21,7 @@ class AppProviders extends StatelessWidget {
     required this.storageService,
     required this.authRepository,
     required this.userRepository,
+    required this.registerRescuerRepository,
     required this.child, // 🔥 THÊM DÒNG NÀY
   });
 
@@ -28,6 +32,9 @@ class AppProviders extends StatelessWidget {
         Provider<StorageService>.value(value: storageService),
         ChangeNotifierProvider(create: (_) => AuthProvider(authRepository)),
         ChangeNotifierProvider(create: (_) => UserProvider(userRepository)),
+        ChangeNotifierProvider(
+          create: (_) => RegisterRescuerProvider(registerRescuerRepository),
+        ),
       ],
       child: child, // 🔥 THÊM DÒNG NÀY
     );

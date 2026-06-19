@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { routes } from "./routes";
 import React, { useEffect, useState } from "react";
 import AdminLayout from "@/layouts/AdminLayout/AdminLayout";
@@ -11,12 +11,24 @@ import SplashPage from "./pages/SplashPage/SplashPage";
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAuthReady, setIsAuthReady] = useState(false); // xử lý trạng thái auth
+  const publicPaths = ["/", "/login", "/forgot-password"];
+  const isPublicPath = publicPaths.includes(location.pathname);
 
   useEffect(() => {
     const initApp = async () => {
+      if (isPublicPath) {
+        setIsAuthReady(true);
+        return;
+      }
+
       try {
         const res = await AuthApi.refreshToken();
+
+        if (!res?.data?.accessToken) {
+          throw new Error("No access token");
+        }
 
         if (res?.data?.accessToken) {
           store.dispatch(
@@ -40,7 +52,7 @@ function App() {
     };
 
     initApp();
-  }, [navigate]);
+  }, [isPublicPath, navigate]);
 
   // CHẶN render cho tới khi auth xong
   if (!isAuthReady) {
