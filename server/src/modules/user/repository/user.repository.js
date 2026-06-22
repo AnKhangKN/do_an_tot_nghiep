@@ -9,7 +9,7 @@ class UserRepository {
     }
 
     // check user có tồn tại không
-    exists = async (client, {email}) => {
+    exists = async (client, { email }) => {
         const query = `
         SELECT 1 
         FROM ${this.user.table} 
@@ -52,7 +52,7 @@ class UserRepository {
         return result.rows[0] ? result.rows[0] : null;
     }
 
-    getUserInfoById = async ( { userId }) => {
+    getUserInfoById = async ({ userId }) => {
         const query = `
         SELECT 
             ${this.user.field.userId},  
@@ -61,14 +61,25 @@ class UserRepository {
             ${this.user.field.phone}, 
             ${this.user.field.role}, 
             ${this.user.field.status}, 
-            ${this.user.field.avatarUrl}, 
-            ${this.user.field.isVerified}
+            ${this.user.field.avatarUrl}
         FROM ${this.user.table}
         WHERE ${this.user.field.userId} = $1
-        `;  
+        `;
 
         const result = await pool.query(query, [userId]);
         return result.rows[0] ? result.rows[0] : null;
+    }
+
+    updatePhone = async (client, { userId, phone }) => {
+        const query = `
+        UPDATE ${this.user.table}
+        SET ${this.user.field.phone} = $2
+        WHERE ${this.user.field.userId} = $1
+        RETURNING *
+    `;
+
+        const result = await client.query(query, [userId, phone]);
+        return result.rows[0];
     }
 }
 

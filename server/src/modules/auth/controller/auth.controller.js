@@ -23,10 +23,6 @@ class AuthController {
         }
     };
 
-    registerRescuer = async (req, res, next) => {
-        const { fullName, email, phone } = req.body
-    }
-
     handleRefreshToken = async (req, res, next) => {
         try {
             const { data, platform } = req.body;
@@ -114,22 +110,6 @@ class AuthController {
         }
     };
 
-    // TODO: Xử lý sau
-
-    loginWithGoogle = async (req, res, next) => {
-        // try {
-        //     const { email, providerId } = req.body;
-        //     const result = await this.authService.loginWithGoogle({ email, providerId });
-        //     return res.status(200).json({
-        //         success: true,
-        //         message: "Đăng nhập với Google thành công",
-        //         data: result,
-        //     });
-        // } catch (error) {
-        //     next(error);
-        // }
-    };
-
     logout = async (req, res, next) => {
         try {
             res.clearCookie("refreshToken", {
@@ -147,6 +127,21 @@ class AuthController {
         } catch (error) {
             next(error);
         }
+    };
+    // TODO: Xử lý sau
+
+    loginWithGoogle = async (req, res, next) => {
+        // try {
+        //     const { email, providerId } = req.body;
+        //     const result = await this.authService.loginWithGoogle({ email, providerId });
+        //     return res.status(200).json({
+        //         success: true,
+        //         message: "Đăng nhập với Google thành công",
+        //         data: result,
+        //     });
+        // } catch (error) {
+        //     next(error);
+        // }
     };
 
     verifyEmail = async (req, res, next) => { };

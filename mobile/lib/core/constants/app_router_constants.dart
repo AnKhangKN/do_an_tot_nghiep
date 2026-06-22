@@ -15,4 +15,5 @@ class RouterConstants {
   static const profile = '/profile';
 
   // rescuer
+  static const rescuerMap = '/rescuer_map';
 }

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/constants/app_router_constants.dart';
+import 'package:mobile/feature/user/providers/user_provider.dart';
+import 'package:provider/provider.dart';
+
+import '../../../feature/auth/providers/auth_provider.dart';
 
 class BottomNavBarWidget extends StatelessWidget {
   final Widget child;
@@ -13,6 +17,9 @@ class BottomNavBarWidget extends StatelessWidget {
   int _getSelectIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
 
+    if (location.startsWith(RouterConstants.map)) return 0;
+    if (location.startsWith(RouterConstants.rescuerMap)) return 0;
+
     if (location.startsWith(RouterConstants.notification)) return 1;
     if (location.startsWith(RouterConstants.messages)) return 2;
     if (location.startsWith(RouterConstants.history)) return 3;
@@ -22,9 +29,15 @@ class BottomNavBarWidget extends StatelessWidget {
   }
 
   void _onItemTapped(BuildContext context, int index) {
+    final userProvider = context.read<UserProvider>();
+
     switch (index) {
       case 0:
-        context.go(RouterConstants.map);
+        if (userProvider.isRescuer) {
+          context.go(RouterConstants.rescuerMap);
+        } else {
+          context.go(RouterConstants.map);
+        }
         break;
 
       case 1:
@@ -59,7 +72,7 @@ class BottomNavBarWidget extends StatelessWidget {
       ),
 
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.all(16),
+        height: 110,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),

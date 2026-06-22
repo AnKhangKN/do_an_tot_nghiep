@@ -1,31 +1,36 @@
 const { pool } = require("@/config/database.config")
 const incident_typeModel = require("../model/incident_type.model")
+const { mapFields } = require("@utils/mapper.util")
 
 class IncidentTypeRepository {
     constructor() {
         this.incident_typeModel = incident_typeModel
     }
 
-    createIncidentType = async ({ incidentId, incidentType }) => {
+    createIncidentType = async ({ incidentTypeId, incidentType }) => {
         const query = `
-        INSERT INTO ${this.incident_typeModel.table} 
-            (${this.incident_typeModel.field.incidentId}, 
-            ${this.incident_typeModel.field.incidentType})
+        INSERT INTO ${this.incident_typeModel.table}
+            (${this.incident_typeModel.field.incidentTypeId},
+             ${this.incident_typeModel.field.incidentType})
         VALUES ($1, $2)
         RETURNING *
-        `
+    `;
 
-        const result = await pool.query(query, [incidentId, incidentType])
-        return result.rows[0]
+        const result = await pool.query(query, [
+            incidentTypeId,
+            incidentType
+        ]);
+
+        return result.rows[0];
     }
 
-    getIncidentTypes = async ({ page, limit }) => {
+    getIncidentTypeAdmin = async ({ page, limit }) => {
 
         const offset = (page - 1) * limit;
 
         const query = `
         SELECT 
-            ${this.incident_typeModel.field.incidentId},
+            ${this.incident_typeModel.field.incidentTypeId},
             ${this.incident_typeModel.field.incidentType},
             ${this.incident_typeModel.field.status},
             ${this.incident_typeModel.field.createdAt},
@@ -53,6 +58,22 @@ class IncidentTypeRepository {
             page,
             totalPages: Math.ceil(total / limit)
         };
+    }
+
+    getIncidentType = async () => {
+        const query = `
+        SELECT
+            ${this.incident_typeModel.field.incidentTypeId},
+            ${this.incident_typeModel.field.incidentType}
+        FROM ${this.incident_typeModel.table}
+        WHERE ${this.incident_typeModel.field.status} = 'ACTIVE'
+    `;
+
+        const { rows } = await pool.query(query);
+
+        return rows.map(row =>
+            mapFields(row, this.incident_typeModel)
+        );
     }
 }
 

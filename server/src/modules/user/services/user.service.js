@@ -38,8 +38,13 @@ class UserService {
     return mapFields(rows, this.userModel);
   }
 
-  createNewRescuer = async (client, {fullName, email, phone, gender, area}) => {
+  updatePhone = async (client, { userId, phone }) => {
+    
+    return await this.userRepository.updatePhone(client, { userId, phone });
+  }
 
+  getUser = async () => {
+    
   }
 }
 

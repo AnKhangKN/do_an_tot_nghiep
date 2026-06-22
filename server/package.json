@@ -14,7 +14,9 @@
     "@middlewares": "src/middlewares",
     "@modules": "src/modules",
     "@routes": "src/routes",
-    "@utils": "src/utils"
+    "@utils": "src/utils",
+    "@event": "src/events",
+    "@socket": "src/socket"
   },
   "keywords": [],
   "author": "",

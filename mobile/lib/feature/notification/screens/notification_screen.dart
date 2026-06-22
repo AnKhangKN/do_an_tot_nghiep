@@ -55,7 +55,7 @@ class NotificationScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         title: const Text(
-          'Hộp thư',
+          'Thông báo',
           style: TextStyle(
             color: Color(0xFF1B1E28),
             fontWeight: FontWeight.bold,

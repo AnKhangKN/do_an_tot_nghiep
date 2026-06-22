@@ -17,29 +17,13 @@ class MapScreen extends StatelessWidget {
       body: Stack(
         children: [
           FlutterMap(
-            options: MapOptions(
-              initialCenter: LatLng(10.0452, 105.7469),
-              initialZoom: 13,
-            ),
+
             children: [
               TileLayer(
                 urlTemplate: AppConstants.urlTemplate,
                 userAgentPackageName: 'com.example.mobile',
               ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: LatLng(10.0452, 105.7469),
-                    width: 50,
-                    height: 50,
-                    child: const Icon(
-                      Icons.location_pin,
-                      color: Colors.red,
-                      size: 40,
-                    ),
-                  ),
-                ],
-              ),
+
             ],
           ),
           const Positioned(
@@ -63,6 +47,7 @@ class MapScreen extends StatelessWidget {
               ),
             ),
           ),
+
           const Positioned(
             left: 0,
             right: 0,

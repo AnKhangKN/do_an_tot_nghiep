@@ -1,76 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/core/incident_types/model/incident_type_model.dart';
+import 'package:mobile/core/incident_types/repository/incident_type_repository.dart';
 
 import '../models/register_rescuer_request.dart';
 import '../repositories/rescuer_repositories.dart';
 
 class RegisterRescuerProvider extends ChangeNotifier {
   final RescuerRepositories _repo;
+  final IncidentTypeRepository _incidentTypeRepository;
 
-  RegisterRescuerProvider(this._repo);
-
-  // Step 1
-  String fullName = '';
-  String email = '';
-  String phone = '';
-  String gender = '';
-
-  // Step 2
-  String area = '';
-  String incidentTypesId = '';
+  RegisterRescuerProvider(
+      this._repo,
+      this._incidentTypeRepository,
+      );
 
   bool _loading = false;
   bool get loading => _loading;
 
-  void saveStep1({
-    required String fullName,
-    required String email,
+  bool _loadingIncidentTypes = false;
+  bool get loadingIncidentTypes => _loadingIncidentTypes;
+
+  List<IncidentTypeModel> _incidentTypes = [];
+  List<IncidentTypeModel> get incidentTypes => _incidentTypes;
+
+  Future<void> loadIncidentTypes() async {
+    _loadingIncidentTypes = true;
+    notifyListeners();
+
+    try {
+      _incidentTypes =
+      await _incidentTypeRepository.getIncidentType();
+    } finally {
+      _loadingIncidentTypes = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> registerRescuer({
     required String phone,
     required String gender,
-  }) {
-    this.fullName = fullName;
-    this.email = email;
-    this.phone = phone;
-    this.gender = gender;
-
-    notifyListeners();
-  }
-
-  void saveStep2({required String area, required String incidentTypesId}) {
-    this.area = area;
-    this.incidentTypesId = incidentTypesId;
-
-    notifyListeners();
-  }
-
-  Future<void> registerRescuer() async {
+    required String area,
+    required String incidentTypeId,
+  }) async {
     _loading = true;
     notifyListeners();
 
     try {
       final request = RegisterRescuerRequest(
-        fullName: fullName,
-        email: email,
         phone: phone,
         gender: gender,
         area: area,
-        incidentTypesId: incidentTypesId,
+        incidentTypeId: incidentTypeId,
       );
 
       await _repo.registerRescuer(request);
-
-      clear();
     } finally {
       _loading = false;
       notifyListeners();
     }
-  }
-
-  void clear() {
-    fullName = '';
-    email = '';
-    phone = '';
-    gender = '';
-    area = '';
-    incidentTypesId = '';
   }
 }

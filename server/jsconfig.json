@@ -23,7 +23,9 @@
       "@middlewares/*": ["./src/middlewares/*"],
       "@modules/*": ["./src/modules/*"],
       "@routes/*": ["./src/routes/*"],
-      "@utils/*": ["./src/utils/*"]
+      "@utils/*": ["./src/utils/*"],
+      "@events/*": ["./src/events/*"],
+      "@socket/*": ["./src/socket/*"]
     }
   },
   "include": ["src/**/*"]

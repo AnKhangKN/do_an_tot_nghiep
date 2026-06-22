@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/core/constants/app_router_constants.dart';
 import 'package:provider/provider.dart';
 
+import '../../user/providers/user_provider.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -97,13 +98,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       onPressed: () async {
-                        final success =
-                        await context.read<AuthProvider>().login(
+                        final success = await context.read<AuthProvider>().login(
                           emailController.text.trim(),
                           passwordController.text.trim(),
                         );
 
-                        if (success) {
+                        if (!success) return;
+
+                        final userProvider = context.read<UserProvider>();
+
+                        await userProvider.getProfile();
+
+                        if (!context.mounted) return;
+
+                        if (userProvider.isRescuer) {
+                          context.go(RouterConstants.rescuerMap);
+                        } else {
                           context.go(RouterConstants.map);
                         }
                       },

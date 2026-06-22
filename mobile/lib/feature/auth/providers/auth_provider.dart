@@ -34,5 +34,4 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> registerRescuer() async {}
 }

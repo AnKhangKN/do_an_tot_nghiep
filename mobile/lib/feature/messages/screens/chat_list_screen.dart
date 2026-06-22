@@ -56,7 +56,7 @@ class ChatListScreen extends StatelessWidget {
         surfaceTintColor: Colors.white,
         centerTitle: true,
         title: const Text(
-          "Trò chuyện",
+          "Tin nhắn",
           style: TextStyle(
             color: Color(0xFF1B1E28),
             fontWeight: FontWeight.bold,

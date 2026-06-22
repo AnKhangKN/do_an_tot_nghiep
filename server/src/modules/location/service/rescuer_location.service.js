@@ -15,23 +15,6 @@ class RescuerLocationService {
     getCurrentLocation = async () => {
 
     }
-
-    // lọc rescuer có thể nhận SOS
-    // (online, available, không bận xử lý SOS khác...)
-    #filterAvailability = async () => {
-
-    }
-
-    // xếp hạng rescuer theo độ phù hợp
-    // (khoảng cách, thời gian phản hồi, rating...)
-    #rankRescuers = async () => {
-
-    }
-
-    // tìm danh sách rescuer phù hợp cho SOS
-    findNearbyRescuersForSOS = async () => {
-
-    }
 }
 
 module.exports = new RescuerLocationService();

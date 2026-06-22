@@ -10,7 +10,7 @@ class AuthModel {
   factory AuthModel.fromJson(Map<String, dynamic> json) {
     return AuthModel(
       accessToken: json['accessToken'],
-      refreshToken: json['refreshToken'],
+      refreshToken: json['refreshToken']
     );
   }
 }

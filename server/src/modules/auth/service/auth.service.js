@@ -40,7 +40,6 @@ class AuthService {
 
     handleRefreshToken = async ({ refreshToken }) => {
         try {
-            console.log("refresh token: ", refreshToken);
             const userAuth = await jwt.verify(refreshToken, REFRESH_TOKEN);
 
             const newAccessToken = await generateAccessToken({

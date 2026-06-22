@@ -9,126 +9,200 @@ class RegisterRescuerScreen extends StatefulWidget {
   const RegisterRescuerScreen({super.key});
 
   @override
-  State<RegisterRescuerScreen> createState() => _RegisterRescuerScreenState();
+  State<RegisterRescuerScreen> createState() =>
+      _RegisterRescuerScreenState();
 }
 
-class _RegisterRescuerScreenState extends State<RegisterRescuerScreen> {
-  final _fullNameController = TextEditingController();
-  final _emailController = TextEditingController();
+class _RegisterRescuerScreenState
+    extends State<RegisterRescuerScreen> {
   final _phoneController = TextEditingController();
-  final _genderController = TextEditingController();
+  final _areaController = TextEditingController();
+
+  String? _incidentTypeId;
+  String? _gender;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      context.read<RegisterRescuerProvider>().loadIncidentTypes();
+    });
+  }
 
   @override
   void dispose() {
-    _fullNameController.dispose();
-    _emailController.dispose();
     _phoneController.dispose();
-    _genderController.dispose();
+    _areaController.dispose();
     super.dispose();
-  }
-
-  void _nextStep() {
-    if (_fullNameController.text.trim().isEmpty ||
-        _emailController.text.trim().isEmpty ||
-        _phoneController.text.trim().isEmpty ||
-        _genderController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
-      );
-      return;
-    }
-
-    context.read<RegisterRescuerProvider>().saveStep1(
-      fullName: _fullNameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
-      gender: _genderController.text.trim(),
-    );
-
-    context.push(RouterConstants.registerRescuerStep2);
   }
 
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
     );
+  }
+
+  Future<void> _submit() async {
+    if (_phoneController.text.trim().isEmpty) {
+      return;
+    }
+
+    if (_gender == null) {
+      return;
+    }
+
+    if (_areaController.text.trim().isEmpty) {
+      return;
+    }
+
+    if (_incidentTypeId == null) {
+      return;
+    }
+
+    try {
+      await context.read<RegisterRescuerProvider>().registerRescuer(
+        phone: _phoneController.text.trim(),
+        gender: _gender!,
+        area: _areaController.text.trim(),
+        incidentTypeId: _incidentTypeId!,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đăng ký người cứu hộ thành công'),
+        ),
+      );
+
+      context.go(RouterConstants.profile);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        title: const Text('Đăng ký người cứu hộ'),
-        leading: IconButton(
-          onPressed: () {
-            context.go(RouterConstants.profile);
-          },
-          icon: const Icon(Icons.arrow_back),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _fullNameController,
-                  decoration: _inputDecoration('Họ và tên'),
-                ),
-
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: _emailController,
-                  // keyboardType: TextInputType.emailAddress,
-                  decoration: _inputDecoration('Email'),
-                ),
-
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: _inputDecoration('Số điện thoại'),
-                ),
-
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: _genderController,
-                  decoration: _inputDecoration('Giới tính'),
-                ),
-
-                const SizedBox(height: 24),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _nextStep,
-                    child: const Text('Bước tiếp theo'),
-                  ),
-                ),
-              ],
+    return Consumer<RegisterRescuerProvider>(
+      builder: (context, provider, child) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFF5F7FA),
+          appBar: AppBar(
+            title: const Text('Đăng ký người cứu hộ'),
+            leading: IconButton(
+              onPressed: () {
+                context.go(RouterConstants.profile);
+              },
+              icon: const Icon(Icons.arrow_back),
             ),
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration:
+                      _inputDecoration('Số điện thoại'),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    DropdownButtonFormField<String>(
+                      value: _gender,
+                      decoration: _inputDecoration('Giới tính'),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'MALE',
+                          child: Text('Nam'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'FEMALE',
+                          child: Text('Nữ'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'OTHER',
+                          child: Text('Khác'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _gender = value;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    DropdownButtonFormField<String>(
+                      value: _incidentTypeId,
+                      decoration:
+                      _inputDecoration('Loại cứu hộ'),
+                      items: provider.incidentTypes
+                          .map(
+                            (item) => DropdownMenuItem(
+                          value: item.incidentTypeId,
+                          child:
+                          Text(item.incidentType),
+                        ),
+                      )
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _incidentTypeId = value;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: _areaController,
+                      decoration:
+                      _inputDecoration('Khu vực'),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: provider.loading
+                            ? null
+                            : _submit,
+                        child: provider.loading
+                            ? const CircularProgressIndicator()
+                            : const Text(
+                          'Hoàn tất đăng ký',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
-import '../../../../core/services/storage_service.dart';
+import '../../../core/constants/app_router_constants.dart';
+import '../../../core/storage/storage_service.dart';
 import '../../user/providers/user_provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -30,10 +30,20 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (token != null) {
       try {
+        final userProvider = context.read<UserProvider>();
+
         await context.read<UserProvider>().getProfile();
 
-        if (!mounted) return;
-        context.go('/map');
+        debugPrint("ROLE = ${userProvider.role}");
+        debugPrint("IS_RESCUER = ${userProvider.isRescuer}");
+
+        if (userProvider.isRescuer) {
+          debugPrint("GO RESCUER");
+          context.go(RouterConstants.rescuerMap);
+        } else {
+          debugPrint("GO VICTIM");
+          context.go(RouterConstants.map);
+        }
       } catch (e) {
         context.go('/login');
       }

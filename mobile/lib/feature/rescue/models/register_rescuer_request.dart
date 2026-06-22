@@ -1,28 +1,22 @@
 class RegisterRescuerRequest {
-  final String fullName;
-  final String email;
   final String phone;
   final String gender;
   final String area;
-  final String incidentTypesId;
+  final String incidentTypeId;
 
   RegisterRescuerRequest({
-    required this.fullName,
-    required this.email,
     required this.phone,
     required this.gender,
     required this.area,
-    required this.incidentTypesId,
+    required this.incidentTypeId,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'fullName': fullName,
-      'email': email,
       'phone': phone,
       'gender': gender,
       'area': area,
-      'incidentTypesId': incidentTypesId,
+      'incidentTypeId': incidentTypeId,
     };
   }
 }

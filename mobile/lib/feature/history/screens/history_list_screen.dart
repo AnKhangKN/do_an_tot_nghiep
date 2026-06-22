@@ -48,7 +48,7 @@ class HistoryListScreen extends StatelessWidget {
         surfaceTintColor: Colors.white,
         centerTitle: true,
         title: const Text(
-          "Lịch sử cứu hộ",
+          "Lịch sử",
           style: TextStyle(
             color: Color(0xFF1B1E28),
             fontWeight: FontWeight.bold,

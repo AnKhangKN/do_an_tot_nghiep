@@ -1,13 +1,13 @@
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/constants/app_router_constants.dart';
 import 'package:mobile/core/navigation/widgets/bottom_nav_bar_widget.dart';
+import 'package:mobile/feature/map/screens/rescuer_map_screen.dart';
 import '../../feature/404/screens/not_found_screen.dart';
 import '../../feature/history/screens/history_list_screen.dart';
 import '../../feature/map/screens/map_screen.dart';
 import '../../feature/messages/screens/chat_list_screen.dart';
 import '../../feature/notification/screens/notification_screen.dart';
 import '../../feature/rescue/screens/register_rescuer_screen.dart';
-import '../../feature/rescue/screens/register_rescuer_step2_screen.dart';
 import '../../feature/auth/screens/login_screen.dart';
 import '../../feature/auth/screens/register_screen.dart';
 import '../../feature/splash/screens/splash_screen.dart';
@@ -43,19 +43,14 @@ class AppRouter {
         builder: (context, state) => const RegisterRescuerScreen(),
       ),
 
-      GoRoute(path: RouterConstants.registerRescuerStep2,
-      name: 'final_register_rescuer',
-        pageBuilder: (context, state) {
-          return const NoTransitionPage(child: RegisterRescuerStep2Screen());
-        },
-      ),
-
       // ===== SHELL (có bottom nav) =====
       ShellRoute(
         builder: (context, state, child) {
           return BottomNavBarWidget(child: child);
         },
         routes: [
+
+          // User
           GoRoute(
             path: RouterConstants.map,
             name: 'Map',
@@ -89,6 +84,14 @@ class AppRouter {
             name: 'Cá nhân',
             pageBuilder: (context, state) {
               return const NoTransitionPage(child: ProfileScreen());
+            },
+          ),
+          // Rescuer
+          GoRoute(
+            path: RouterConstants.rescuerMap,
+            name: 'RescuerMap',
+            pageBuilder: (context, state) {
+              return const NoTransitionPage(child: RescuerMapScreen());
             },
           ),
         ],

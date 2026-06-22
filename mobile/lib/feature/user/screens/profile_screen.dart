@@ -191,6 +191,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onPressed: () async {
                           await context.read<AuthProvider>().logout();
 
+                          context.read<UserProvider>().clear();
+
                           if (!context.mounted) return;
 
                           context.go(RouterConstants.login);

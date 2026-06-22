@@ -5,8 +5,6 @@ const route = express.Router()
 
 route.post("/register", validatorRegister, authController.register);
 
-route.post("/register_rescuer", authController.registerRescuer);
-
 route.post("/refresh-token", authController.handleRefreshToken)
 
 route.post("/login", authController.login)
