@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/constants/app_router_constants.dart';
-import 'package:mobile/feature/user/providers/user_provider.dart';
+import 'package:mobile/feature/splash/providers/splash_provider.dart';
 import 'package:provider/provider.dart';
-
-import '../../../feature/auth/providers/auth_provider.dart';
 
 class BottomNavBarWidget extends StatelessWidget {
   final Widget child;
 
-  const BottomNavBarWidget({
-    super.key,
-    required this.child,
-  });
+  const BottomNavBarWidget({super.key, required this.child});
 
   int _getSelectIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
@@ -29,11 +24,11 @@ class BottomNavBarWidget extends StatelessWidget {
   }
 
   void _onItemTapped(BuildContext context, int index) {
-    final userProvider = context.read<UserProvider>();
+    final splashProvider = context.read<SplashProvider>();
 
     switch (index) {
       case 0:
-        if (userProvider.isRescuer) {
+        if (splashProvider.isRescuer) {
           context.go(RouterConstants.rescuerMap);
         } else {
           context.go(RouterConstants.map);
@@ -66,10 +61,7 @@ class BottomNavBarWidget extends StatelessWidget {
       extendBody: true,
       backgroundColor: const Color(0xFFF4F7FC),
 
-      body: SafeArea(
-        bottom: false,
-        child: child,
-      ),
+      body: SafeArea(bottom: false, child: child),
 
       bottomNavigationBar: Container(
         height: 110,
@@ -101,9 +93,7 @@ class BottomNavBarWidget extends StatelessWidget {
             selectedFontSize: 12,
             unselectedFontSize: 11,
 
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
 
             items: [
               BottomNavigationBarItem(
@@ -171,10 +161,7 @@ class BottomNavBarWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
 
-          child: Icon(
-            icon,
-            size: 26,
-          ),
+          child: Icon(icon, size: 26),
         ),
 
         if (showBadge)
@@ -187,10 +174,7 @@ class BottomNavBarWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.green,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 2,
-                ),
+                border: Border.all(color: Colors.white, width: 2),
               ),
             ),
           ),

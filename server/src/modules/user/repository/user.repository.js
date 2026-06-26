@@ -40,10 +40,28 @@ class UserRepository {
         return result.rows[0];
     };
 
+    getUserAuthInfo = async (client, { userId }) => {
+        const query = `
+        SELECT 
+            ${this.user.field.userId},
+            ${this.user.field.phone},
+            ${this.user.field.role},
+            ${this.user.field.isVerified},
+            ${this.user.field.status}
+
+        FROM  ${this.user.table}
+        WHERE ${this.user.field.userId} = $1
+        `;
+
+        const result = await client.query(query, [userId]);
+        return result.rows[0] ? result.rows[0] : null;
+    }
+
     getUserIdByEmail = async (client, { email }) => {
         const query = `
         SELECT 
-            ${this.user.field.userId}
+            ${this.user.field.userId},
+            ${this.user.field.role}
         FROM ${this.user.table}
         WHERE ${this.user.field.email} = $1
         `;

@@ -6,11 +6,13 @@ const user_authService = require("../../user_auth/service/user_auth.service");
 const { REFRESH_TOKEN } = require("@/config/env.config");
 const { generateAccessToken, generateRefreshToken } = require("@/utils/jwt.util");
 const { comparePassword } = require("@/utils/password.util");
+const rescuerService = require("@modules/rescuer/service/rescuer.service");
 
 class AuthService {
     constructor() {
         this.userService = userService
         this.user_authService = user_authService
+        this.rescuerService = rescuerService
     }
 
     register = async ({
@@ -91,6 +93,30 @@ class AuthService {
 
     }
 
+    getMe = async ({ userId }) => {
+        return await transaction(async (client) => {
+            const user = await this.userService.getUserAuthInfo(client, { userId });
+
+            if (!user) {
+                throwError("Không tìm thấy người dùng!", 404);
+            }
+
+            const result = {
+                ...user,
+            };
+
+            if (user.role === "RESCUER") {
+                const rescuer = await this.rescuerService.getRescuerAuthInfo(
+                    client,
+                    { userId }
+                );
+
+                result.rescuer = rescuer;
+            }
+
+            return result;
+        });
+    };
 }
 
 module.exports = new AuthService();

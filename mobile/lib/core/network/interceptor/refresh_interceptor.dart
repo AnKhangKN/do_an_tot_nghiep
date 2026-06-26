@@ -1,5 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:mobile/core/session/app_session.dart';
 
+import '../../di/di.dart';
+import '../../socket/index_socket.dart';
 import '../../storage/storage_service.dart';
 
 // xử lý 401 + retry
@@ -27,6 +30,7 @@ class RefreshInterceptor extends Interceptor {
       isRefreshing = true;
 
       try {
+
         final refreshToken = await storageService.getRefreshToken();
 
         if (refreshToken == null || refreshToken.isEmpty) {
@@ -39,6 +43,7 @@ class RefreshInterceptor extends Interceptor {
           '/api/auth/refresh-token',
           data: {"data": refreshToken, "platform": "MOBILE"},
         );
+
         final data = response.data['data'];
         final newAccessToken = data is Map<String, dynamic>
             ? data['accessToken'] as String?

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../../../core/constants/app_router_constants.dart';
-import '../../../core/storage/storage_service.dart';
-import '../../user/providers/user_provider.dart';
+import '../providers/splash_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,40 +23,33 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> initApp() async {
-    final storage = context.read<StorageService>();
-    final token = await storage.getAccessToken();
+    final provider = context.read<SplashProvider>();
+
+    final route = await provider.init();
 
     if (!mounted) return;
 
-    if (token != null) {
-      try {
-        final userProvider = context.read<UserProvider>();
+    switch (route) {
+      case SplashRoute.login:
+        context.go(RouterConstants.login);
+        break;
 
-        await context.read<UserProvider>().getProfile();
+      case SplashRoute.victim:
+        context.go(RouterConstants.map);
+        break;
 
-        debugPrint("ROLE = ${userProvider.role}");
-        debugPrint("IS_RESCUER = ${userProvider.isRescuer}");
-
-        if (userProvider.isRescuer) {
-          debugPrint("GO RESCUER");
-          context.go(RouterConstants.rescuerMap);
-        } else {
-          debugPrint("GO VICTIM");
-          context.go(RouterConstants.map);
-        }
-      } catch (e) {
-        context.go('/login');
-      }
-    } else {
-      context.go('/login');
+      case SplashRoute.rescuer:
+        context.go(RouterConstants.rescuerMap);
+        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
-    return Scaffold(
-      body: Center(child: Text("APP CỨU HỘ")),
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }

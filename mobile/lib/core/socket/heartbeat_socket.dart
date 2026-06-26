@@ -1,27 +1,36 @@
 import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:mobile/core/socket/service_socket.dart';
 
 class HeartbeatSocket {
-  final ServiceSocket _serviceSocket;
+  final ServiceSocket core;
+
   Timer? _timer;
 
-  HeartbeatSocket(this._serviceSocket);
+  HeartbeatSocket(this.core);
 
-  void start(String userId) {
-    _timer?.cancel();
+  void start() {
+    if (_timer != null) return; // 🚨 CHẶN MULTI TIMER
 
-    _timer = Timer.periodic(const Duration(seconds: 10), (_) {
-      final socket = _serviceSocket.socket;
+    debugPrint("Heartbeat start");
 
-      if (socket == null || !socket.connected) return;
+    _timer = Timer.periodic(
+      const Duration(seconds: 15),
+          (_) {
+        final socket = core.raw;
 
-      socket.emit("heartbeat", {
-        "userId": userId,
-      });
-    });
+        if (socket == null || !socket.connected) return;
+
+        debugPrint("SEND HEARTBEAT");
+        socket.emit("rescuer:heartbeat");
+      },
+    );
   }
 
   void stop() {
+    debugPrint("Heartbeat stop");
+
     _timer?.cancel();
     _timer = null;
   }

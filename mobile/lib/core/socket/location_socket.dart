@@ -14,13 +14,12 @@ class LocationSocket {
     _timer?.cancel();
 
     _timer = Timer.periodic(const Duration(seconds: 5), (_) {
-      final socket = _serviceSocket.socket;
+      final socket = _serviceSocket.raw;
 
       if (socket == null || !socket.connected) return;
       if (_lat == null || _lng == null) return;
 
-      socket.emit("location_update", {
-        "userId": userId,
+      socket.emit("rescuer:location_update", {
         "lat": _lat,
         "lng": _lng,
       });

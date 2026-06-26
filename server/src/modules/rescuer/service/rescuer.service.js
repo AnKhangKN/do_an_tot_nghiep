@@ -62,6 +62,17 @@ class RescuerService {
         })
     }
 
+    getRescuerAuthInfo = async (client, { userId }) => {
+        const rescuer = await this.rescuerRepository.getRescuerAuthInfo(client, { userId });
+
+        if (!rescuer) {
+            throwError("Không tìm thấy người cứu hộ!", 404);
+        }
+
+        return mapFields(rescuer, this.rescuerModel);
+
+    }
+
     // Admin
     getRescuer = async ({ page, limit }) => {
         const rows = await this.rescuerRepository.getRescuer({ page, limit });
@@ -77,25 +88,66 @@ class RescuerService {
         } // trả về camelCase nhiều field
     }
 
-    // Admin
     isVerifiedRescuer = async ({ userId }) => {
 
     }
 
-    // Admin
-    getRescuerDetail = async () => {
+    // Rescuer
+    findRescuerByUserId = async ({ userId }) => {
+        return await this.rescuerRepository.findRescuerByUserId({ userId });
+    }
 
+
+    checkRescuerOnline = async ({ userId }) => {
+        return await this.rescuerRepository.checkRescuerOnline({ userId });
     }
 
     goOnline = async ({ userId }) => {
-        const status = "ACTIVE"
+        console.log("goOnline", userId);
 
-        return await this.rescuerRepository.updateStatus({ userId, status });
+        const rescuer = await this.findRescuerByUserId({ userId });
+
+        if (!rescuer) {
+            throwError("Không tìm thấy người cứu hộ!", 404);
+        }
+
+        const checkOnline = await this.checkRescuerOnline({ userId });
+
+        if (checkOnline) {
+            throwError("Người cứu hộ đã online!", 400);
+        }
+
+        return await this.rescuerRepository.updateStatus({ userId, status: 'ACTIVE' });
     }
 
     updateLastSeen = async ({ userId }) => {
-        return await this.rescuerRepository.updateLastSeen({userId})
+        const rescuer = await this.findRescuerByUserId({ userId });
+
+        if (!rescuer) {
+            throwError("Không tìm thấy người cứu hộ!", 404);
+        }
+
+        return await this.rescuerRepository.updateLastSeen({ userId })
     }
+
+    // Rescuer tự bấm offline 
+    goOffline = async ({ userId }) => {
+        console.log("Đã offline");
+
+        const rescuer = await this.findRescuerByUserId({ userId });
+
+        if (!rescuer) {
+            throwError("Không tìm thấy người cứu hộ!", 404);
+        }
+
+        const checkOnline = await this.checkRescuerOnline({ userId });
+
+        if (!checkOnline) {
+            throwError("Người cứu hộ đã offline!", 400);
+        }
+
+        return await this.rescuerRepository.updateStatus({ userId, status: 'OFFLINE' });
+    };
 }
 
 module.exports = new RescuerService();

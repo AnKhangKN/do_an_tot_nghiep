@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/core/session/app_session.dart';
+import 'package:mobile/core/storage/storage_service.dart';
 
 import '../models/login_request.dart';
 import '../repositories/auth_repository.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository repo;
+  final AppSession appSession;
+  final StorageService storageService;
 
-  AuthProvider(this.repo);
+  AuthProvider(this.repo, this.appSession, this.storageService);
 
   bool isLoading = false;
   String? error;
@@ -17,9 +21,24 @@ class AuthProvider extends ChangeNotifier {
       error = null;
       notifyListeners();
 
-      await repo.login(LoginRequest(email: email, password: password));
+      final result = await repo.login(
+        LoginRequest(email: email, password: password),
+      );
 
-      return true;
+      final accessToken = result.accessToken;
+      final refreshToken = result.refreshToken;
+
+      if (accessToken.isNotEmpty && refreshToken.isNotEmpty) {
+        await storageService.saveToken(
+          accessToken,
+          refreshToken,
+        );
+
+        await appSession.start();
+        return true;
+      }
+
+      return false;
     } catch (e) {
       error = e.toString();
       return false;
@@ -31,7 +50,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     await repo.logout();
+    await appSession.stop();
     notifyListeners();
   }
-
 }

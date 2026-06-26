@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:mobile/feature/map/widgets/go_online_button_widget.dart';
-import 'package:mobile/feature/map/widgets/rescuer_util_widget.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../providers/rescuer_map_provider.dart';
+import '../widgets/go_online_button_widget.dart';
 import '../widgets/layer_widget.dart';
+import '../widgets/rescuer_util_widget.dart';
 import '../widgets/search_widget.dart';
 
 class RescuerMapScreen extends StatefulWidget {
@@ -16,15 +17,13 @@ class RescuerMapScreen extends StatefulWidget {
 }
 
 class _RescuerMapScreenState extends State<RescuerMapScreen> {
-  bool isOnline = true;
-
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<RescuerMapProvider>();
+
     return Scaffold(
       body: Stack(
         children: [
-
-          // Map
           FlutterMap(
             children: [
               TileLayer(
@@ -34,7 +33,6 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
             ],
           ),
 
-          // Search & Layer
           const Positioned(
             top: 0,
             left: 0,
@@ -57,7 +55,6 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
             ),
           ),
 
-        // Action button
           Positioned(
             left: 0,
             right: 0,
@@ -71,20 +68,21 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Align(
-                        alignment: Alignment.bottomCenter,
+                        alignment: provider.isOnline
+                            ? Alignment.bottomLeft
+                            : Alignment.bottomCenter,
                         child: GoOnlineButtonWidget(
-                          isOnline: isOnline,
-                          onTap: () {
-                            setState(() {
-                              isOnline = !isOnline;
-                            });
-
-                            // TODO:
-                            // gọi API hoặc socket cập nhật status rescuer
+                          isOnline: provider.isOnline,
+                          onTap: () async {
+                            if (provider.isOnline) {
+                              await provider.goOffline();
+                            } else {
+                              await provider.goOnline();
+                            }
                           },
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       const Align(
                         alignment: Alignment.bottomRight,
                         child: RescuerUtilWidget(),

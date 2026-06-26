@@ -7,7 +7,5 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  final app = await bootstrap();
-
-  runApp(app);
+  runApp(await bootstrap());
 }

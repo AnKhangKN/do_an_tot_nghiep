@@ -72,7 +72,7 @@ class AuthController {
         }
     };
 
-    login = async (req, res, next) => {
+    loginNormal = async (req, res, next) => {
         try {
             const { email, password, platform } = req.body;
 
@@ -128,6 +128,26 @@ class AuthController {
             next(error);
         }
     };
+
+    getMe = async (req, res, next) => {
+        try {
+            const userId = req.userId;
+
+            console.log("user id: ", userId);
+
+            const result = await authService.getMe({ userId });
+
+            return res.status(200).json({
+                success: true,
+                message: "Lấy thông tin người dùng thành công",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+
+    }
+
     // TODO: Xử lý sau
 
     loginWithGoogle = async (req, res, next) => {

@@ -26,11 +26,18 @@ class UserService {
     return mapFields(rows, this.userModel);
   };
 
+  getUserAuthInfo = async (client, { userId }) => {
+    const rows = await this.userRepository.getUserAuthInfo(client, { userId });
+    return mapFields(rows, this.userModel);
+  }
+
   getUserIdByEmail = async (client, { email }) => {
 
     const rows = await this.userRepository.getUserIdByEmail(client, { email });
     return mapFields(rows, this.userModel);
   };
+
+
 
   getUserInfoById = async ({ userId }) => {
 
@@ -41,10 +48,6 @@ class UserService {
   updatePhone = async (client, { userId, phone }) => {
     
     return await this.userRepository.updatePhone(client, { userId, phone });
-  }
-
-  getUser = async () => {
-    
   }
 }
 

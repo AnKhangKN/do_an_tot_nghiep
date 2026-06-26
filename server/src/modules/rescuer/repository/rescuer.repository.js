@@ -63,6 +63,19 @@ class RescueRepository {
         return result.rows[0];
     };
 
+    getRescuerAuthInfo = async (client, { userId }) => {
+        const query = `
+        SELECT
+            ${this.rescuerProfileModel.field.isVerified}
+        FROM ${this.rescuerProfileModel.table}
+        WHERE ${this.rescuerProfileModel.field.userId} = $1
+    `;
+
+        const result = await client.query(query, [userId]);
+        return result.rows[0] ? result.rows[0] : null;
+    }
+
+    // Admin
     getRescuer = async ({ page, limit }) => {
         const offset = (page - 1) * limit;
 
@@ -122,7 +135,34 @@ class RescueRepository {
     }
 
     // Khi rescuer bật online
-    updateStatus = async ({userId, status}) => {
+    findRescuerByUserId = async ({ userId }) => {
+        const query = `
+            SELECT 1
+            FROM ${this.rescuerProfileModel.table}
+            WHERE ${this.rescuerProfileModel.field.userId} = $1
+        `;
+
+        const result = await pool.query(query, [userId]);
+        return result.rows[0];
+    }
+
+    checkRescuerOnline = async ({ userId }) => {
+        const query = `
+        SELECT ${this.rescuerProfileModel.field.status}
+        FROM ${this.rescuerProfileModel.table}
+        WHERE ${this.rescuerProfileModel.field.userId} = $1
+    `;
+
+        const result = await pool.query(query, [userId]);
+
+        if (!result.rows[0]) {
+            return null; // không tồn tại
+        }
+
+        return result.rows[0].status === 'ACTIVE'; // true nếu online, false nếu offline
+    }
+
+    updateStatus = async ({ userId, status }) => {
         const query = `
             UPDATE ${this.rescuerProfileModel.table}
             SET ${this.rescuerProfileModel.field.status} = $2
@@ -145,6 +185,42 @@ class RescueRepository {
         const result = await pool.query(query, [userId]);
         return result.rows[0];
     };
+
+    checkRescuerOnlineStatus = async ({ userId }) => {
+        const query = `
+            SELECT ${this.rescuerProfileModel.field.status}
+            FROM ${this.rescuerProfileModel.table}
+            WHERE ${this.rescuerProfileModel.field.userId} = $1
+        `;
+
+        const result = await pool.query(query, [userId]);
+        return result.rows[0]?.status;
+    }
+
+    checkLastSeen = async ({ userId }) => {
+        const query = `
+            SELECT ${this.rescuerProfileModel.field.lastSeenAt}
+            FROM ${this.rescuerProfileModel.table}
+            WHERE ${this.rescuerProfileModel.field.userId} = $1
+        `;
+
+        const result = await pool.query(query, [userId]);
+
+        return result.rows[0]?.lastseenat;
+    }
+
+    // Người dùng tự bấm offline
+    goOffline = async ({ userId }) => {
+        const query = `
+            UPDATE ${this.rescuerProfileModel.table}
+            SET ${this.rescuerProfileModel.field.status} = 'offline'
+            WHERE ${this.rescuerProfileModel.field.userId} = $1
+            RETURNING *
+        `;
+
+        const result = await pool.query(query, [userId]);
+        return result.rows[0];
+    }
 }
 
 module.exports = new RescueRepository()

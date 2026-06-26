@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/core/constants/app_router_constants.dart';
+import 'package:mobile/core/constants/app_constants.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/app_router_constants.dart';
 import '../../user/providers/user_provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -24,6 +25,17 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _login() async {
+    final success = await context.read<AuthProvider>().login(
+      emailController.text.trim(),
+      passwordController.text.trim(),
+    );
+
+    if (!success) return;
+
+    context.go(RouterConstants.splash);
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -38,8 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🔥 Title
-                  Text(
+                  const Text(
                     'Welcome Back 👋',
                     style: TextStyle(
                       fontSize: 28,
@@ -47,30 +58,31 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
 
-                  Text(
+                  const Text(
                     'Login to your account',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
                   ),
 
-                  SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-                  // 📧 Email
                   TextField(
                     controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: 'Email',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      prefixIcon: Icon(Icons.email),
+                      prefixIcon: const Icon(Icons.email),
                     ),
                   ),
 
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                  // 🔑 Password
                   TextField(
                     controller: passwordController,
                     obscureText: true,
@@ -79,69 +91,55 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      prefixIcon: Icon(Icons.lock),
+                      prefixIcon: const Icon(Icons.lock),
                     ),
                   ),
 
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                  // 🔥 Button
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: auth.isLoading
-                        ? Center(child: CircularProgressIndicator())
+                        ? const Center(
+                      child: CircularProgressIndicator(),
+                    )
                         : ElevatedButton(
+                      onPressed: _login,
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () async {
-                        final success = await context.read<AuthProvider>().login(
-                          emailController.text.trim(),
-                          passwordController.text.trim(),
-                        );
-
-                        if (!success) return;
-
-                        final userProvider = context.read<UserProvider>();
-
-                        await userProvider.getProfile();
-
-                        if (!context.mounted) return;
-
-                        if (userProvider.isRescuer) {
-                          context.go(RouterConstants.rescuerMap);
-                        } else {
-                          context.go(RouterConstants.map);
-                        }
-                      },
-                      child: Text(
+                      child: const Text(
                         'Login',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
                   ),
 
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                  // ❌ Error
                   if (auth.error != null)
                     Text(
-                      style: TextStyle(color: Colors.red),
                       auth.error!,
+                      style: const TextStyle(
+                        color: Colors.red,
+                      ),
                     ),
 
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                  // 👉 Register
                   Center(
                     child: TextButton(
                       onPressed: () {
-                        // TODO: navigate register
+                        context.go(
+                          RouterConstants.register,
+                        );
                       },
-                      child: Text("Don't have an account? Register"),
+                      child: const Text(
+                        "Don't have an account? Register",
+                      ),
                     ),
                   ),
                 ],

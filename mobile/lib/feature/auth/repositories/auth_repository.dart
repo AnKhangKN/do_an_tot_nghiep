@@ -1,3 +1,5 @@
+import 'package:mobile/feature/auth/models/user_model.dart';
+
 import '../../../core/storage/storage_service.dart';
 import '../models/auth_model.dart';
 import '../models/login_request.dart';
@@ -25,7 +27,14 @@ class AuthRepository {
     return auth;
   }
 
+  Future<UserModel> getMe () async {
+    final res = await service.getMe();
+
+    return UserModel.fromJson(res.data['data']);
+  }
+
   Future<void> logout() async {
+
     await storage.clearToken();
   }
 }

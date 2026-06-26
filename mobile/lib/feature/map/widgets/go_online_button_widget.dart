@@ -15,14 +15,14 @@ class GoOnlineButtonWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 48,
+        height: 52,
         padding: const EdgeInsets.symmetric(
-          horizontal: 10,
+          horizontal: 9,
           vertical: 6,
         ),
         decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(24),
+          color: isOnline ? Colors.green : Colors.black,
+          borderRadius: BorderRadius.circular(26),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
@@ -42,26 +42,25 @@ class GoOnlineButtonWidget extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isOnline
-                    ? Icons.power_settings_new
-                    : Icons.power_settings_new,
+                Icons.power_settings_new,
                 color: isOnline ? Colors.green : Colors.black,
                 size: 20,
               ),
             ),
 
-            const SizedBox(width: 10),
-
-            Text(
-              isOnline ? "Đang trực tuyến" : "Bật kết nối",
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            if (!isOnline) ...[
+              const SizedBox(width: 10),
+              const Text(
+                "Bật kết nối",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+            ],
           ],
-        ),
+        )
       ),
     );
   }

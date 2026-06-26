@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:mobile/core/constants/app_constants.dart';
 
 import '../widgets/layer_widget.dart';
@@ -17,13 +16,11 @@ class MapScreen extends StatelessWidget {
       body: Stack(
         children: [
           FlutterMap(
-
             children: [
               TileLayer(
                 urlTemplate: AppConstants.urlTemplate,
                 userAgentPackageName: 'com.example.mobile',
               ),
-
             ],
           ),
           const Positioned(

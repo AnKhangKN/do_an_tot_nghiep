@@ -3,7 +3,7 @@ const route  = express.Router();
 const rescuerController = require('../controller/rescuer.controller');
 const { verifyToken } = require('@/middlewares/auth.middleware');
 
-route.post('/register', verifyToken, rescuerController.rescuerRegister);
+route.post('/register', verifyToken, rescuerController.rescuerRegister); //  verifyToken,
 
 route.get('/rescuer', rescuerController.getRescuer);
 
