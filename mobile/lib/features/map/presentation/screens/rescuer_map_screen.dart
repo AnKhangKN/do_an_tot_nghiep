@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mobile/shared/widgtes/MapWidget.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -23,31 +24,6 @@ class RescuerMapScreen extends StatefulWidget {
 
 class _RescuerMapScreenState extends State<RescuerMapScreen> {
   final MapController _mapController = MapController();
-  bool _centered = false;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final session = getIt<SessionController>();
-    final pos = session.state.position;
-
-    if (!_centered && pos != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _mapController.move(
-          LatLng(pos.latitude, pos.longitude),
-          15,
-        );
-      });
-
-      _centered = true;
-    }
-  }
 
   @override
   void dispose() {
@@ -55,58 +31,21 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
     super.dispose();
   }
 
-  void _moveCameraIfNeeded(Position? pos) {
-    if (_centered || pos == null) return;
-
-    _mapController.move(
-      LatLng(pos.latitude, pos.longitude),
-      15,
-    );
-
-    _centered = true;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final session = getIt<SessionController>();
+    // Lắng nghe position từ session
+    final session = context.watch<SessionController>();
     final position = session.state.position;
 
-    // reactive center khi position update
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _moveCameraIfNeeded(position);
-    });
+    // Lấy isOnline
+    final isOnline = session.isOnline;
+    final isProcessing = session.isProcessing;
+    debugPrint("Trạng thái hiện tại của nút là: $isOnline");
 
     return Scaffold(
       body: Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: const MapOptions(
-              initialCenter: LatLng(10.0354, 105.7828),
-              initialZoom: 13,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: AppConstants.urlTemplate,
-                userAgentPackageName: 'com.example.mobile',
-              ),
-
-              if (position != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(
-                        position.latitude,
-                        position.longitude,
-                      ),
-                      width: 60,
-                      height: 60,
-                      child: _buildMarker(),
-                    ),
-                  ],
-                ),
-            ],
-          ),
+          MapWidget(mapController: _mapController, position: position),
 
           // ================= TOP UI =================
           const Positioned(
@@ -140,20 +79,24 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: SizedBox(
                   height: 180,
-                  child: Stack(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Consumer<RescuerMapProvider>(
                         builder: (context, provider, _) {
                           return Align(
-                            alignment: provider.isOnline
+                            alignment: isOnline
                                 ? Alignment.bottomLeft
                                 : Alignment.bottomCenter,
                             child: GoOnlineButtonWidget(
-                              isOnline: provider.isOnline,
+                              isOnline: isOnline,
+                              isProcessing: isProcessing,
                               onTap: () async {
-                                provider.isOnline
-                                    ? await provider.goOffline()
-                                    : await provider.goOnline();
+                                if (isOnline) {
+                                  await provider.goOffline();
+                                } else {
+                                  await provider.goOnline();
+                                }
                               },
                             ),
                           );
@@ -172,31 +115,6 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMarker() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.3),
-            shape: BoxShape.circle,
-          ),
-        ),
-        Container(
-          width: 18,
-          height: 18,
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2.5),
-          ),
-        ),
-      ],
     );
   }
 }

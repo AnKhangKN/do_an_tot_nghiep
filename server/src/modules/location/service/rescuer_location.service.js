@@ -11,14 +11,9 @@ class RescuerLocationService {
     updateLocation = async ({userId, lat, lng}) => {
 
         const geohash = await hashLocation({ lat, lng });
-        console.log("Tạo geohash: ", geohash);
+        console.log("Tạo geohash: ", geohash); 
 
         return await this.rescuer_locationRepository.updateLocation({userId, lat, lng, geohash});
-    }
-
-    // lấy vị trí hiện tại của rescuer
-    getCurrentLocation = async () => {
-
     }
 }
 

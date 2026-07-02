@@ -1,57 +1,38 @@
+import 'dart:async';
+
 import 'package:geolocator/geolocator.dart';
 
+import '../../session/session_controller.dart';
+import 'location_service.dart';
+
 class LocationRepository {
-  /// Check quyền truy cập vị trí
-  Future<bool> ensureLocationPermission() async {
-    // Kiểm tra GPS
-    final serviceEnabled =
-    await Geolocator.isLocationServiceEnabled();
+  final LocationService _locationService;
+  final SessionController _sessionController;
 
-    if (!serviceEnabled) {
-      print("⚠️ GPS đang tắt");
+  StreamSubscription<Position>? _subscription;
 
-      await Geolocator.openLocationSettings();
+  LocationRepository(
+      this._locationService,
+      this._sessionController,
+      );
 
-      return false;
+  // Lấy vị trí lần đầu
+  Future<void> loadCurrentPosition() async {
+    final position =
+    await _locationService.getCurrentPosition();
+
+    if (position != null) {
+      _sessionController.updatePosition(position);
     }
-
-    var permission = await Geolocator.checkPermission();
-
-    // Chưa cấp quyền
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-
-      if (permission == LocationPermission.denied) {
-        print("❌ Người dùng từ chối quyền vị trí");
-        return false;
-      }
-    }
-
-    // Từ chối vĩnh viễn
-    if (permission == LocationPermission.deniedForever) {
-      print("❌ Quyền vị trí bị chặn vĩnh viễn");
-
-      await Geolocator.openAppSettings();
-
-      return false;
-    }
-
-    return true;
   }
 
-  /// Hàm lấy vị trí hiện tại sau khi đã check quyền
-  Future<Position?> getCurrentLocation() async {
-    try {
-      bool hasPermission = await ensureLocationPermission();
-      if (!hasPermission) return null;
+  // bắt đầu lây vị trí realtime
+  Future<Stream<Position>?> startTracking() async {
+    final granted = await _locationService.ensureLocationPermission();
 
-      // Lấy vị trí hiện tại với độ chính xác cao
-      return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-    } catch (e) {
-      print("❌ Lỗi khi lấy vị trí: $e");
-      return null;
-    }
+    if (!granted) return null;
+
+    // Chỉ trả về Stream thô của phần cứng, không "listen" ở đây nữa
+    return _locationService.getPositionStream();
   }
 }

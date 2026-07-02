@@ -8,5 +8,7 @@ class AppBootstrap {
 
     // init DI
     await initDI();
+
+    // Bật map catching
   }
 }

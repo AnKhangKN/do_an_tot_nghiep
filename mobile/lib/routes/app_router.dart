@@ -7,7 +7,7 @@ import '../core/di/di.dart';
 import '../core/session/app_session.dart';
 import '../features/splash/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
-import '../features/map/presentation/screens/map_screen.dart';
+import '../features/map/presentation/screens/victim_map_screen.dart';
 import '../features/history/presentation/screens/history_screen.dart';
 import '../features/chat/presentation/screens/chat_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';

@@ -3,6 +3,7 @@ import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/location/data/location_repository.dart';
 import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/storage/storage_service.dart';
+import 'package:mobile/features/map/presentation/providers/map_provider.dart';
 import 'package:mobile/features/user/data/user_repository.dart';
 import 'package:provider/provider.dart';
 
@@ -32,7 +33,7 @@ class AppProviders extends StatelessWidget {
         ),
 
         // HistoryProvider
-        // MapProvider
+        // VictimMapProvider
         // RescuerMapProvider
         ChangeNotifierProvider(
           create: (_) => RescuerMapProvider(getIt<AppSession>(), getIt<LocationRepository>()),
@@ -47,7 +48,7 @@ class AppProviders extends StatelessWidget {
         ),
 
         // UserProvider
-        ChangeNotifierProvider<UserProvider>(
+        ChangeNotifierProvider(
           create: (_) => UserProvider(
             getIt<UserRepository>(),
           ),
@@ -55,8 +56,11 @@ class AppProviders extends StatelessWidget {
         // App Session
         Provider<AppSession>(create: (_) => getIt<AppSession>()),
 
+        // Map Provider
+        ChangeNotifierProvider(create: (_) => MapProvider(getIt<LocationRepository>())),
+        
         // Session Controller
-        // ChangeNotifierProvider(create: (_) => SessionController()),
+        ChangeNotifierProvider(create: (_) => getIt<SessionController>())
       ],
       child: child,
     );

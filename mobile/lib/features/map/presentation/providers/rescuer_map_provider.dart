@@ -10,31 +10,20 @@ class RescuerMapProvider extends ChangeNotifier {
   RescuerMapProvider(this._appSession, this.locationRepository);
 
   bool _loading = false;
-  bool _isOnline = false;
 
   bool get loading => _loading;
-  bool get isOnline => _isOnline;
+
+  // Future<void> init() async {
+  //   // Load danh sách nạn nhân gần đó
+  //
+  //   // Load các marker cứu hộ
+  // }
 
   Future<void> goOnline() async {
     _setLoading(true);
 
     try {
-      final granted = await locationRepository.ensureLocationPermission();
-
-      print("Granted: ${granted}");
-
-      if (!granted) {
-        print("Ứng dụng cần truy cập vị trí!");
-        return;
-      }
-
-      bool isSuccess = await _appSession.goOnline();
-
-      if (isSuccess) {
-        _isOnline = true;
-      } else {
-        _isOnline = false;
-      }
+      await _appSession.goOnline();
 
       notifyListeners();
     } catch (e) {
@@ -48,13 +37,7 @@ class RescuerMapProvider extends ChangeNotifier {
     _setLoading(true);
 
     try {
-      bool isSuccess = await _appSession.goOffline();
-
-      if (isSuccess) {
-        _isOnline = false;
-      } else {
-        _isOnline = true;
-      }
+      await _appSession.goOffline();
 
       notifyListeners();
     } catch (e) {

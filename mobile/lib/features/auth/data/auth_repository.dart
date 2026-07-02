@@ -115,6 +115,6 @@ class AuthRepository {
 
   Future<void> logout() async {
 
-    await storage.clearToken();
+    await storage.clearAll();
   }
 }

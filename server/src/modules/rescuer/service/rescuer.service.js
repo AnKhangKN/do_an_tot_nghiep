@@ -134,12 +134,6 @@ class RescuerService {
     goOffline = async ({ userId }) => {
         console.log("Đã offline");
 
-        const rescuer = await this.findRescuerByUserId({ userId });
-
-        if (!rescuer) {
-            throwError("Không tìm thấy người cứu hộ!", 404);
-        }
-
         const checkOnline = await this.checkRescuerOnline({ userId });
 
         if (!checkOnline) {

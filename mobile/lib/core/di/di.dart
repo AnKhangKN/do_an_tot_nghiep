@@ -36,28 +36,28 @@ Future<void> initDI() async {
     return DioClient(dio: baseDio, storageService: storageService);
   });
 
-  // 3. Các Service lấy trực tiếp .dio đã được cấu hình chuẩn chỉ
-  getIt.registerLazySingleton<AuthService>(
-    () => AuthService(getIt<DioClient>().dio),
-  );
-  getIt.registerLazySingleton<UserService>(
-    () => UserService(getIt<DioClient>().dio),
-  );
-
-  // 4. Đăng ký các Repository
-  getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepository(getIt<AuthService>(), getIt<StorageService>()),
-  );
-  getIt.registerLazySingleton(() => UserRepository(getIt<UserService>()));
-  getIt.registerLazySingleton(() => LocationRepository());
-
-  // 5. Đăng ký các service hệ thống còn lại
+  // Đăng ký các service hệ thống còn lại
   getIt.registerLazySingleton(() => BackgroundService());
   getIt.registerLazySingleton(() => CoreSocket());
   getIt.registerLazySingleton(() => LocationService());
   getIt.registerLazySingleton(() => SessionController());
   getIt.registerLazySingleton(() => HeartbeatSocket(getIt<CoreSocket>()));
   getIt.registerLazySingleton(() => LocationSocket(getIt<CoreSocket>()));
+
+  // Các Service lấy trực tiếp .dio đã được cấu hình chuẩn chỉ
+  getIt.registerLazySingleton(
+    () => AuthService(getIt<DioClient>().dio),
+  );
+  getIt.registerLazySingleton(
+    () => UserService(getIt<DioClient>().dio),
+  );
+
+  // Đăng ký các Repository
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepository(getIt<AuthService>(), getIt<StorageService>()),
+  );
+  getIt.registerLazySingleton(() => UserRepository(getIt<UserService>()));
+  getIt.registerLazySingleton(() => LocationRepository(getIt<LocationService>(), getIt<SessionController>()));
 
   getIt.registerLazySingleton(
     () => AppSession(
