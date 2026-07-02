@@ -13,6 +13,7 @@ class SosRequestRepository {
                         ${this.sos_requestModel.field.userId},
                         ${this.sos_requestModel.field.victimLat},
                         ${this.sos_requestModel.field.victimLng},
+                        ${this.sos_requestModel.field.geohash}
                         ${this.sos_requestModel.field.description}
                     )
                     VALUES ($1, $2, $3, $4, $5)

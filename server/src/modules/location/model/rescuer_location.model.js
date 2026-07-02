@@ -4,6 +4,7 @@ const rescuerLocationModel = {
         userId: "user_id",
         lat: "lat",
         lng: "lng",
+        geohash: "geohash",
         updatedAt: "updated_at"
     }
 }

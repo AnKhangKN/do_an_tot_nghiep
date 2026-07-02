@@ -133,8 +133,6 @@ class AuthController {
         try {
             const userId = req.userId;
 
-            console.log("user id: ", userId);
-
             const result = await authService.getMe({ userId });
 
             return res.status(200).json({

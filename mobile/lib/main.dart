@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-import 'bootstrap.dart';
+import 'package:mobile/app.dart';
+import 'bootstrap/app_bootstrap.dart';
 
 void main() async {
+  // Khởi tạo Flutter Binding
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
 
-  runApp(await bootstrap());
+  try {
+    await AppBootstrap.init();
+  } catch (e, st) {
+    debugPrint('Bootstrap error: $e');
+  }
+
+  runApp(const App());
 }

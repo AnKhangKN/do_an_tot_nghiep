@@ -1,60 +1,74 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:mobile/core/bootstrap/app_bootstrap.dart';
-import 'package:mobile/core/constants/app_constants.dart';
-import 'package:mobile/core/incident_types/repository/incident_type_repository.dart';
-import 'package:mobile/core/incident_types/services/incident_type_service.dart';
-import 'package:mobile/core/network/interceptor/auth_interceptor.dart';
-import 'package:mobile/core/network/interceptor/refresh_interceptor.dart';
-import 'package:mobile/core/socket/index_socket.dart';
+import 'package:mobile/core/background/background_service.dart';
+import 'package:mobile/core/location/data/location_repository.dart';
+import 'package:mobile/core/location/data/location_service.dart';
+import 'package:mobile/core/session/app_session.dart';
+import 'package:mobile/core/session/session_controller.dart';
+import 'package:mobile/core/socket/core_socket.dart';
+import 'package:mobile/core/socket/modules/heartbeat_socket.dart';
+import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/storage/storage_service.dart';
-import 'package:mobile/feature/auth/providers/auth_provider.dart';
-import 'package:mobile/feature/auth/repositories/auth_repository.dart';
-import 'package:mobile/feature/auth/services/auth_service.dart';
-import 'package:mobile/feature/rescue/providers/register_rescuer_provider.dart';
-import 'package:mobile/feature/rescue/repositories/rescuer_repositories.dart';
-import 'package:mobile/feature/rescue/services/rescuer_services.dart';
-import 'package:mobile/feature/user/providers/user_provider.dart';
-import 'package:mobile/feature/user/services/user_service.dart';
+import 'package:mobile/features/auth/data/auth_repository.dart';
+import 'package:mobile/features/auth/data/auth_service.dart';
+import 'package:mobile/features/user/data/user_repository.dart';
+import 'package:mobile/features/user/data/user_service.dart';
 
-import '../../feature/user/repositories/user_repository.dart';
-import '../session/app_session.dart';
+import '../network/dio_client.dart';
+import '../network/interceptor/refresh_interceptor.dart';
 
-final getIt = GetIt.instance;
+final GetIt getIt = GetIt.instance;
 
-Future<void> setupDI() async {
-  // core
-  getIt.registerLazySingleton(() => StorageService());
+/// Khởi tạo và đăng ký toàn bộ dependency của ứng dụng.
+Future<void> initDI() async {
+  // 1. Khởi tạo StorageService và CHẮC CHẮN nó đã sẵn sàng
+  final storageService = StorageService();
+  getIt.registerSingleton<StorageService>(storageService);
 
-  final dio = Dio(BaseOptions(baseUrl: AppConstants.baseUrl));
+  // 2. Khởi tạo và cấu hình cấu trúc mạng (Dio) thống nhất
+  getIt.registerLazySingleton<DioClient>(() {
+    final baseDio = Dio();
 
-  final storageService = getIt<StorageService>();
+    // SỬA TẠI ĐÂY: Thêm tên tham số cho RefreshInterceptor
+    baseDio.interceptors.addAll([RefreshInterceptor(baseDio, storageService)]);
 
-  dio.interceptors.addAll([
-    AuthInterceptor(storageService),
-    RefreshInterceptor(dio, storageService),
-  ]);
+    // SỬA TẠI ĐÂY: Thêm tên tham số cho DioClient
+    return DioClient(dio: baseDio, storageService: storageService);
+  });
 
-  getIt.registerLazySingleton(() => dio);
+  // 3. Các Service lấy trực tiếp .dio đã được cấu hình chuẩn chỉ
+  getIt.registerLazySingleton<AuthService>(
+    () => AuthService(getIt<DioClient>().dio),
+  );
+  getIt.registerLazySingleton<UserService>(
+    () => UserService(getIt<DioClient>().dio),
+  );
 
-  // service
-  getIt.registerLazySingleton(() => AuthService(dio));
-  getIt.registerLazySingleton(() => UserService(dio));
-  getIt.registerLazySingleton(() => RescuerServices(dio));
-  getIt.registerLazySingleton(() => IncidentTypeService(dio));
+  // 4. Đăng ký các Repository
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepository(getIt<AuthService>(), getIt<StorageService>()),
+  );
+  getIt.registerLazySingleton(() => UserRepository(getIt<UserService>()));
+  getIt.registerLazySingleton(() => LocationRepository());
 
-  // repository
-  getIt.registerLazySingleton(() => AuthRepository(getIt(), getIt()));
-  getIt.registerLazySingleton(() => UserRepository(getIt()));
-  getIt.registerLazySingleton(() => RescuerRepositories(getIt()));
-  getIt.registerLazySingleton(() => IncidentTypeRepository(getIt()));
+  // 5. Đăng ký các service hệ thống còn lại
+  getIt.registerLazySingleton(() => BackgroundService());
+  getIt.registerLazySingleton(() => CoreSocket());
+  getIt.registerLazySingleton(() => LocationService());
+  getIt.registerLazySingleton(() => SessionController());
+  getIt.registerLazySingleton(() => HeartbeatSocket(getIt<CoreSocket>()));
+  getIt.registerLazySingleton(() => LocationSocket(getIt<CoreSocket>()));
 
-  // socket
-  getIt.registerLazySingleton(() => IndexSocket(getIt()));
-
-  // App session dùng để tạo kết nối socket
-  getIt.registerLazySingleton(() => AppSession(getIt()));
-
-  // App bootstrap
-  getIt.registerLazySingleton(() => AppBootstrap(getIt()));
+  getIt.registerLazySingleton(
+    () => AppSession(
+      controller: getIt(),
+      storageService: getIt(),
+      socket: getIt(),
+      background: getIt(),
+      authRepository: getIt<AuthRepository>(),
+      heartbeatSocket: getIt<HeartbeatSocket>(),
+      locationSocket: getIt<LocationSocket>(),
+      locationRepository: getIt<LocationRepository>()
+    ),
+  );
 }

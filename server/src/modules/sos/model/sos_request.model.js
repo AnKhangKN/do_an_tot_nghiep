@@ -14,6 +14,7 @@ const sosRequestModel = {
 
         victimLat: 'victim_lat',
         victimLng: 'victim_lng',
+        genhash: 'geohash',
 
         description: 'description',
 

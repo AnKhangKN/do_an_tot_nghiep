@@ -3,9 +3,8 @@ const sos_requestService = require("../service/sos_request.service");
 class SosRequestController {
     createSOS = async (req, res, next) => {
         try {
+            const userId = req.userId;
             const { victimLat, victimLng, description } = req.body
-
-            const userId = "019ee588-ef3d-71c1-b914-583bfa125401"
 
             const result = await sos_requestService.createSOS({ userId, victimLat, victimLng, description });
 

@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:mobile/core/storage/storage_service.dart';
 
-import '../../storage/storage_service.dart';
-
-// Gắn token
 class AuthInterceptor extends Interceptor {
   final StorageService storageService;
 

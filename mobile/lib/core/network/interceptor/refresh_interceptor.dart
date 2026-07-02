@@ -1,11 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:mobile/core/session/app_session.dart';
 
-import '../../di/di.dart';
-import '../../socket/index_socket.dart';
 import '../../storage/storage_service.dart';
 
-// xử lý 401 + retry
 class RefreshInterceptor extends Interceptor {
   final Dio dio;
   final StorageService storageService;

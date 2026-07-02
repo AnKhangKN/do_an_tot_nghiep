@@ -1,3 +1,2 @@
-Request là gửi dữ liệu từ app đến server
-Response là nhận từ server về app
-Model là dùng nhiều chỗ trong app được
+1. Từ provider -> repository -> service (gọi api bth).
+2. Từ provider -> background_service -> service_handler -> app_session -> socket

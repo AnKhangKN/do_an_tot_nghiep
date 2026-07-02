@@ -15,7 +15,7 @@
     "@modules": "src/modules",
     "@routes": "src/routes",
     "@utils": "src/utils",
-    "@event": "src/events",
+    "@events": "src/events",
     "@socket": "src/socket"
   },
   "keywords": [],

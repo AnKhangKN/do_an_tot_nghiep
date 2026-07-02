@@ -1,4 +1,5 @@
-const rescuer_locationRepository = require("../repository/rescuer_location.repository")
+const rescuer_locationRepository = require("../repository/rescuer_location.repository");
+const { hashLocation } = require("@utils/geohash.util");
 
 class RescuerLocationService {
 
@@ -7,8 +8,12 @@ class RescuerLocationService {
     }
 
     // cập nhật vị trí realtime của rescuer
-    updateLocation = async (client ,{userId, lat, lng}) => {
-        return await this.rescuer_locationRepository.updateLocation(client, {userId, lat, lng});
+    updateLocation = async ({userId, lat, lng}) => {
+
+        const geohash = await hashLocation({ lat, lng });
+        console.log("Tạo geohash: ", geohash);
+
+        return await this.rescuer_locationRepository.updateLocation({userId, lat, lng, geohash});
     }
 
     // lấy vị trí hiện tại của rescuer
