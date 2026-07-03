@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class GoOnlineButtonWidget extends StatelessWidget {
+class RescuerGoOnlineButtonWidget extends StatelessWidget {
   final bool isOnline;
   final bool isProcessing; // Thêm biến này nhận từ Controller xuống
   final VoidCallback onTap;
 
-  const GoOnlineButtonWidget({
+  const RescuerGoOnlineButtonWidget({
     super.key,
     required this.isOnline,
     required this.isProcessing,

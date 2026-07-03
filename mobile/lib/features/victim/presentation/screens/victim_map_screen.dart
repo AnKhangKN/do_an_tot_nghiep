@@ -7,20 +7,20 @@ import 'package:mobile/core/constants/app_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 
-import '../../../../shared/widgtes/MapWidget.dart';
-import '../widgets/layer_widget.dart';
-import '../widgets/search_widget.dart';
-import '../widgets/sos_button_widget.dart';
-import '../widgets/util_widget.dart';
+import '../../../../shared/widgtes/map_widget.dart';
+import '../../../../shared/widgtes/layer_widget.dart';
+import '../../../../shared/widgtes/search_widget.dart';
+import '../widgets/victim_sos_button_widget.dart';
+import '../widgets/victim_util_widget.dart';
 
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+class VictimMapScreen extends StatefulWidget {
+  const VictimMapScreen({super.key});
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<VictimMapScreen> createState() => _VictimMapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _VictimMapScreenState extends State<VictimMapScreen> {
   final MapController _mapController = MapController();
 
   @override
@@ -80,11 +80,11 @@ class _MapScreenState extends State<MapScreen> {
                     children: [
                       const Align(
                         alignment: Alignment.bottomCenter,
-                        child: SosButtonWidget(),
+                        child: VictimSosButtonWidget(),
                       ),
                       const Align(
                         alignment: Alignment.bottomRight,
-                        child: UtilWidget(),
+                        child: VictimUtilWidget(),
                       ),
                     ],
                   ),

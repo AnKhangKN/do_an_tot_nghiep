@@ -142,6 +142,11 @@ class RescuerService {
 
         return await this.rescuerRepository.updateStatus({ userId, status: 'OFFLINE' });
     };
+
+    // Matching Service gọi tới
+    findNearbyRescuers = async ({ lat, lng, radius }) => {
+        return await this.rescuerRepository.findNearbyRescuers({ lat, lng, radius });
+    }
 }
 
 module.exports = new RescuerService();

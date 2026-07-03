@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:mobile/shared/widgtes/UserMarkerWidget.dart';
+import 'package:mobile/shared/widgtes/user_marker_widget.dart';
 
 import '../../core/constants/app_constants.dart';
 

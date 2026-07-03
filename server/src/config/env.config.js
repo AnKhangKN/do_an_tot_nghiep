@@ -26,4 +26,8 @@ module.exports = {
 
   // cookie
   COOKIE_SECURE: process.env.COOKIE_SECURE,
+
+  // redis
+  REDIS_HOST: process.env.REDIS_HOST,
+  REDIS_PORT: process.env.REDIS_PORT,
 };

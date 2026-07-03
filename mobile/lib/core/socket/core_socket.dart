@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../constants/app_constants.dart';
 
@@ -59,7 +60,7 @@ class CoreSocket {
   }
 
   Future<void> ensureConnected(String token) async {
-    if (_isConnected) return;
+    disconnect();
 
     connect(token);
 

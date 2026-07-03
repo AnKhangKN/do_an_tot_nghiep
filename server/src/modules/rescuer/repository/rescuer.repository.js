@@ -130,10 +130,6 @@ class RescueRepository {
         return result.rows[0];
     }
 
-    getRescuerDetail = async () => {
-
-    }
-
     // Khi rescuer bật online
     findRescuerByUserId = async ({ userId }) => {
         const query = `
@@ -221,6 +217,32 @@ class RescueRepository {
         const result = await pool.query(query, [userId]);
         return result.rows[0];
     }
+
+    // Matching service
+    findNearbyRescuers = async ({
+        lat,
+        lng,
+        radius
+    }) => {
+
+        const result = await redis.sendCommand([
+            'GEOSEARCH',
+            'active_rescuers',
+            'FROMLONLAT',
+            String(lng),
+            String(lat),
+            'BYRADIUS',
+            String(radius),
+            'km',
+            'WITHDIST',
+            'ASC'
+        ]);
+
+        console.log("Kết quả của người dùng gần nhất là: ",result);
+
+        return result;
+    };
+
 }
 
 module.exports = new RescueRepository()

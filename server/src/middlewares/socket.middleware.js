@@ -5,6 +5,8 @@ const socketAuth = (socket, next) => {
     try {
 
         const token = socket.handshake.auth?.token;
+        
+        console.log(socket.handshake.auth);
 
         // Trong socket.middleware.js
         const decoded = jwt.verify(token, ACCESS_TOKEN, {

@@ -4,9 +4,9 @@ class SosRequestController {
     createSOS = async (req, res, next) => {
         try {
             const userId = req.userId;
-            const { victimLat, victimLng, description } = req.body
+            const { phone, incidentTypeId, description, victimLat, victimLng } = req.body;
 
-            const result = await sos_requestService.createSOS({ userId, victimLat, victimLng, description });
+            const result = await sos_requestService.createSOS({ userId, phone, incidentTypeId, description, victimLat, victimLng });
 
             return res.status(201).json({
                 success: true,

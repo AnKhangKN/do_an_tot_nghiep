@@ -1,19 +1,19 @@
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/storage/storage_service.dart';
-import 'package:mobile/features/map/presentation/screens/rescuer_map_screen.dart';
 import 'package:mobile/routes/widgets/main_shell.dart';
 import '../core/constants/router_constants.dart';
 import '../core/di/di.dart';
 import '../core/session/app_session.dart';
+import '../features/rescuer/presentation/screens/rescuer_map_screen.dart';
 import '../features/splash/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
-import '../features/map/presentation/screens/victim_map_screen.dart';
 import '../features/history/presentation/screens/history_screen.dart';
 import '../features/chat/presentation/screens/chat_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
 import '../features/user/presentation/screens/profile_screen.dart';
 import '../features/404/screens/not_found_screen.dart';
 
+import '../features/victim/presentation/screens/victim_map_screen.dart';
 import 'route_guards.dart';
 
 class AppRouter {
@@ -87,7 +87,7 @@ class AppRouter {
           return MainShell(child: child);
         },
         routes: [
-          GoRoute(path: '/map', builder: (context, state) => const MapScreen()),
+          GoRoute(path: '/map', builder: (context, state) => const VictimMapScreen()),
           GoRoute(
             path: '/rescuer-map',
             builder: (context, state) => const RescuerMapScreen(),

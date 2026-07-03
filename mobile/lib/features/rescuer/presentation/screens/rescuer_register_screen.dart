@@ -3,18 +3,18 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/router_constants.dart';
-import '../providers/register_rescuer_provider.dart';
+import '../providers/rescuer_register_provider.dart';
 
-class RegisterRescuerScreen extends StatefulWidget {
-  const RegisterRescuerScreen({super.key});
+class RescuerRegisterScreen extends StatefulWidget {
+  const RescuerRegisterScreen({super.key});
 
   @override
-  State<RegisterRescuerScreen> createState() =>
-      _RegisterRescuerScreenState();
+  State<RescuerRegisterScreen> createState() =>
+      _RescuerRegisterScreenState();
 }
 
-class _RegisterRescuerScreenState
-    extends State<RegisterRescuerScreen> {
+class _RescuerRegisterScreenState
+    extends State<RescuerRegisterScreen> {
   final _phoneController = TextEditingController();
   final _areaController = TextEditingController();
 
@@ -26,7 +26,7 @@ class _RegisterRescuerScreenState
     super.initState();
 
     Future.microtask(() {
-      context.read<RegisterRescuerProvider>().loadIncidentTypes();
+      context.read<RescuerRegisterProvider>().loadIncidentTypes();
     });
   }
 
@@ -53,7 +53,7 @@ class _RegisterRescuerScreenState
     if (_incidentTypeId == null) return;
 
     try {
-      await context.read<RegisterRescuerProvider>().registerRescuer(
+      await context.read<RescuerRegisterProvider>().registerRescuer(
         phone: _phoneController.text.trim(),
         gender: _gender!,
         area: _areaController.text.trim(),
@@ -84,7 +84,7 @@ class _RegisterRescuerScreenState
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<RegisterRescuerProvider>();
+    final provider = context.watch<RescuerRegisterProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),

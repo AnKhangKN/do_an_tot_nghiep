@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:mobile/shared/widgtes/MapWidget.dart';
+import 'package:mobile/shared/widgtes/map_widget.dart';
 import 'package:provider/provider.dart';
-
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
-
 import '../providers/rescuer_map_provider.dart';
-import '../widgets/go_online_button_widget.dart';
-import '../widgets/layer_widget.dart';
+import '../../../../shared/widgtes/layer_widget.dart';
+import '../widgets/rescuer_go_online_button_widget.dart';
 import '../widgets/rescuer_util_widget.dart';
-import '../widgets/search_widget.dart';
+import '../../../../shared/widgtes/search_widget.dart';
 
 class RescuerMapScreen extends StatefulWidget {
   const RescuerMapScreen({super.key});
@@ -88,7 +82,7 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
                             alignment: isOnline
                                 ? Alignment.bottomLeft
                                 : Alignment.bottomCenter,
-                            child: GoOnlineButtonWidget(
+                            child: RescuerGoOnlineButtonWidget(
                               isOnline: isOnline,
                               isProcessing: isProcessing,
                               onTap: () async {

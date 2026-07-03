@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class UtilWidget extends StatefulWidget {
-  const UtilWidget({super.key});
+class VictimUtilWidget extends StatefulWidget {
+  const VictimUtilWidget({super.key});
 
   @override
-  State<UtilWidget> createState() => _UtilWidgetState();
+  State<VictimUtilWidget> createState() => _VictimUtilWidgetState();
 }
 
-class _UtilWidgetState extends State<UtilWidget> {
+class _VictimUtilWidgetState extends State<VictimUtilWidget> {
   @override
   Widget build(BuildContext context) {
     return Column(

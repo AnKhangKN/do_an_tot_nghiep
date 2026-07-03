@@ -141,8 +141,6 @@ class AppSession {
         try {
           await locationRepository.loadCurrentPosition();
 
-          // Gửi ngay lập tức phát đầu tiên lên server và UI
-          // locationSocket.sendLocation(lat: currentPos, lng: currentPos.longitude);
           debugPrint("📍 Đã gửi tọa độ khởi tạo thành công khi Go Online");
         } catch (e) {
           debugPrint("⚠️ Không lấy được tọa độ khởi tạo ngay lập tức: $e");

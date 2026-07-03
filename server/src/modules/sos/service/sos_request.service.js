@@ -1,28 +1,35 @@
 const uuidUtil = require("@/utils/uuid.util");
 const sos_requestRepository = require("../repository/sos_request.repository");
-const eventEmitter = require("@/events/eventEmitter");
 const geohashUtil = require("@/utils/geohash.util");
+const userService = require("@modules/user/services/user.service")
+
 
 class SosRequestService {
-    constructor () {
+    constructor() {
         this.sos_requestRepository = sos_requestRepository
     }
 
     // nạn nhân tạo sos
-    createSOS = async ({ userId, victimLat, victimLng, description }) => {
+    createSOS = async (client, { userId, phone, incidentTypeId, description, victimLat, victimLng }) => {
         const sosRequestId = uuidUtil.generateUUID();
-        const geohash = geohashUtil({victimLat, victimLng});
+        const geohash = geohashUtil({ victimLat, victimLng });
 
-        const sos = await this.sos_requestRepository.createSOS({sosRequestId, userId, victimLat, victimLng, geohash, description});
+        const sos = await this.sos_requestRepository.createSOS(client, { sosRequestId, userId, incidentTypeId, description, victimLat, victimLng, geohash });
 
-        eventEmitter.emit('sos:created', sos);
+        await userService.updatePhone(client, { userId, phone });
+
+        await sosQueue.add('process-sos', {
+            sosId: sosRequestId,
+            attempt: 1
+        });
 
         return sos;
     }
 
-    getSOS = async () => {}
-
-    updateSOSStatus = async() => {}
+    findSOSById = async (sosId) => {
+        const sos = await this.sos_requestRepository.findSOSById(sosId);
+        return sos;
+    }
 }
 
 module.exports = new SosRequestService()

@@ -1,4 +1,4 @@
-const matchingService = require("@/modules/matching/matching.service");
+const matchingService = require("@modules/matching/service/matching.service");
 
 class DispatchService {
     constructor() {

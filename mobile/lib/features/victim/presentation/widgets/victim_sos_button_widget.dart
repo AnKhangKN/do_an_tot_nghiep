@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class SosButtonWidget extends StatefulWidget {
-  const SosButtonWidget({super.key});
+class VictimSosButtonWidget extends StatefulWidget {
+  const VictimSosButtonWidget({super.key});
 
   @override
-  State<SosButtonWidget> createState() => _SosButtonWidgetState();
+  State<VictimSosButtonWidget> createState() => _SosButtonWidgetState();
 }
 
-class _SosButtonWidgetState extends State<SosButtonWidget> {
+class _SosButtonWidgetState extends State<VictimSosButtonWidget> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
@@ -208,8 +208,8 @@ class _SosButtonWidgetState extends State<SosButtonWidget> {
   Widget build(BuildContext context) {
     return Container(
       height: 52,
-      width: 156,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      width: 150,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
@@ -245,7 +245,7 @@ class _SosButtonWidgetState extends State<SosButtonWidget> {
                 'SOS',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
               ),

@@ -4,6 +4,12 @@ const sosRequestModel = {
     field: {
         sosRequestId: 'sos_request_id',
         userId: 'user_id',
+        incidentTypeId: 'incident_type_id',
+        description: 'description',
+
+        victimLat: 'victim_lat',
+        victimLng: 'victim_lng',
+        geohash: 'geohash',
 
         status: 'status', 
         // PENDING → SEARCHING → ASSIGNED → IN_PROGRESS → DONE
@@ -11,12 +17,6 @@ const sosRequestModel = {
         // rescuerId chỉ tồn tại từ ASSIGNED trở đi 
         // acceptedAt chỉ tồn tại khi IN_PROGRESS
         // completedAt chỉ tồn tại khi DONE
-
-        victimLat: 'victim_lat',
-        victimLng: 'victim_lng',
-        genhash: 'geohash',
-
-        description: 'description',
 
         // Được cập nhật sau khi người dùng được nhận cứu hộ
         rescuerId: 'rescuer_id',

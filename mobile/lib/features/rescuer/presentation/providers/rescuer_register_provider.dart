@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:mobile/core/incident_types/data/incident_type_repository.dart';
 import '../../../../core/incident_types/models/incident_type_model.dart';
 import '../../data/rescuer_repositories.dart';
-import '../../models/register_rescuer_request.dart';
+import '../../models/rescuer_register_request.dart';
 
-class RegisterRescuerProvider extends ChangeNotifier {
+class RescuerRegisterProvider extends ChangeNotifier {
   final RescuerRepositories _repo;
   final IncidentTypeRepository _incidentTypeRepository;
 
-  RegisterRescuerProvider(
+  RescuerRegisterProvider(
       this._repo,
       this._incidentTypeRepository,
       );
@@ -45,7 +45,7 @@ class RegisterRescuerProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final request = RegisterRescuerRequest(
+      final request = RescuerRegisterRequest(
         phone: phone,
         gender: gender,
         area: area,

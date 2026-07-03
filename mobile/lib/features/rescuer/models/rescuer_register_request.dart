@@ -1,10 +1,10 @@
-class RegisterRescuerRequest {
+class RescuerRegisterRequest {
   final String phone;
   final String gender;
   final String area;
   final String incidentTypeId;
 
-  RegisterRescuerRequest({
+  RescuerRegisterRequest({
     required this.phone,
     required this.gender,
     required this.area,
