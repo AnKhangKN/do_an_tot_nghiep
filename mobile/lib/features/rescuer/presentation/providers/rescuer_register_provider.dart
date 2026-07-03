@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/core/incident_types/data/incident_type_repository.dart';
 import '../../../../core/incident_types/models/incident_type_model.dart';
-import '../../data/rescuer_repositories.dart';
+import '../../data/rescuer_repository.dart';
 import '../../models/rescuer_register_request.dart';
 
 class RescuerRegisterProvider extends ChangeNotifier {
-  final RescuerRepositories _repo;
+  final RescuerRepository _repo;
   final IncidentTypeRepository _incidentTypeRepository;
 
   RescuerRegisterProvider(

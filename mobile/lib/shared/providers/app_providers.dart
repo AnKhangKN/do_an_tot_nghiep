@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/incident_types/data/incident_type_repository.dart';
 import 'package:mobile/core/location/data/location_repository.dart';
 import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/storage/storage_service.dart';
+import 'package:mobile/features/rescuer/data/rescuer_repository.dart';
+import 'package:mobile/features/rescuer/presentation/providers/rescuer_register_provider.dart';
 import 'package:mobile/features/user/data/user_repository.dart';
 import 'package:provider/provider.dart';
 import '../../core/session/session_controller.dart';
@@ -31,36 +34,43 @@ class AppProviders extends StatelessWidget {
           ),
         ),
 
+        ChangeNotifierProvider(
+          create: (_) => RescuerRegisterProvider(
+            getIt<RescuerRepository>(),
+            getIt<IncidentTypeRepository>(),
+          ),
+        ),
+
         // HistoryProvider
         // VictimMapProvider
         ChangeNotifierProvider(create: (_) => VictimMapProvider()),
         // RescuerMapProvider
         ChangeNotifierProvider(
-          create: (_) => RescuerMapProvider(getIt<AppSession>(), getIt<LocationRepository>()),
+          create: (_) => RescuerMapProvider(
+            getIt<AppSession>(),
+            getIt<LocationRepository>(),
+          ),
         ),
         // MessageProvider
         // Notification
         // RescueProvider
         // SplashProvider
         ChangeNotifierProvider(
-          create: (_) =>
-              SplashProvider(getIt<AppSession>()),
+          create: (_) => SplashProvider(getIt<AppSession>()),
         ),
 
         // UserProvider
         ChangeNotifierProvider(
-          create: (_) => UserProvider(
-            getIt<UserRepository>(),
-          ),
+          create: (_) => UserProvider(getIt<UserRepository>()),
         ),
         // App Session
         Provider<AppSession>(create: (_) => getIt<AppSession>()),
 
         // Map Provider
         // ChangeNotifierProvider(create: (_) => MapProvider(getIt<LocationRepository>())),
-        
+
         // Session Controller
-        ChangeNotifierProvider(create: (_) => getIt<SessionController>())
+        ChangeNotifierProvider(create: (_) => getIt<SessionController>()),
       ],
       child: child,
     );

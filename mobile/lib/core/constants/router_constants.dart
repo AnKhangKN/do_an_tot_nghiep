@@ -4,16 +4,19 @@ class RouterConstants {
   // auth
   static const login = '/login';
   static const register = '/register';
-  static const registerRescuer = '/register_rescuer';
-  static const registerRescuerStep2 = '/register_rescuer_step2';
+  static const registerRescuer = '/register-rescuer';
 
   // victim
   static const map = '/map';
-  static const notification = '/notifications';
-  static const messages = '/messages';
   static const history = '/history';
+  static const chat = '/chat';
+  static const notification = '/notifications';
   static const profile = '/profile';
 
   // rescuer
-  static const rescuerMap = '/rescuer_map';
+  static const rescuerMap = '/rescuer-map';
+
+  // profile link
+  static const setting = '/setting';
+  static const appInfo = '/app-info';
 }

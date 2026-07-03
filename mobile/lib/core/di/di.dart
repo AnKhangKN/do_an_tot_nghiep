@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mobile/core/background/background_service.dart';
+import 'package:mobile/core/incident_types/data/incident_type_service.dart';
 import 'package:mobile/core/location/data/location_repository.dart';
 import 'package:mobile/core/location/data/location_service.dart';
 import 'package:mobile/core/session/app_session.dart';
@@ -11,9 +12,12 @@ import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 import 'package:mobile/features/auth/data/auth_repository.dart';
 import 'package:mobile/features/auth/data/auth_service.dart';
+import 'package:mobile/features/rescuer/data/rescuer_service.dart';
 import 'package:mobile/features/user/data/user_repository.dart';
 import 'package:mobile/features/user/data/user_service.dart';
 
+import '../../features/rescuer/data/rescuer_repository.dart';
+import '../incident_types/data/incident_type_repository.dart';
 import '../network/dio_client.dart';
 import '../network/interceptor/refresh_interceptor.dart';
 
@@ -44,6 +48,7 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(() => HeartbeatSocket(getIt<CoreSocket>()));
   getIt.registerLazySingleton(() => LocationSocket(getIt<CoreSocket>()));
 
+
   // Các Service lấy trực tiếp .dio đã được cấu hình chuẩn chỉ
   getIt.registerLazySingleton(
     () => AuthService(getIt<DioClient>().dio),
@@ -51,6 +56,8 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(
     () => UserService(getIt<DioClient>().dio),
   );
+  getIt.registerLazySingleton(() => RescuerService(getIt<DioClient>().dio));
+  getIt.registerLazySingleton(() => IncidentTypeService(getIt<DioClient>().dio));
 
   // Đăng ký các Repository
   getIt.registerLazySingleton<AuthRepository>(
@@ -58,6 +65,8 @@ Future<void> initDI() async {
   );
   getIt.registerLazySingleton(() => UserRepository(getIt<UserService>()));
   getIt.registerLazySingleton(() => LocationRepository(getIt<LocationService>(), getIt<SessionController>()));
+  getIt.registerLazySingleton(() => RescuerRepository(getIt<RescuerService>()));
+  getIt.registerLazySingleton(() => IncidentTypeRepository(getIt<IncidentTypeService>()));
 
   getIt.registerLazySingleton(
     () => AppSession(

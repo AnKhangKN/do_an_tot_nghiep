@@ -3,9 +3,7 @@ const rescuerService = require("../service/rescuer.service");
 class RescuerController {
     rescuerRegister = async (req, res, next) => {
         try {
-            // const userId = req.userId; 
-
-            const userId = "019effb7-33cb-7018-a9b4-0ad031784eae";
+            const userId = req.userId; 
 
             const { phone, gender, area, incidentTypeId } = req.body;
 
