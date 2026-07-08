@@ -1,202 +1,278 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/victim_map_provider.dart';
 
 class VictimSosButtonWidget extends StatefulWidget {
-  const VictimSosButtonWidget({super.key});
+  final double victimLat;
+  final double victimLng;
+
+  const VictimSosButtonWidget({
+    super.key,
+    required this.victimLat,
+    required this.victimLng,
+  });
 
   @override
-  State<VictimSosButtonWidget> createState() => _SosButtonWidgetState();
+  State<VictimSosButtonWidget> createState() =>
+      _VictimSosButtonWidgetState();
 }
 
-class _SosButtonWidgetState extends State<VictimSosButtonWidget> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
-  final TextEditingController issueController = TextEditingController();
+class _VictimSosButtonWidgetState
+    extends State<VictimSosButtonWidget> {
+  final TextEditingController phoneController =
+  TextEditingController();
+
+  final TextEditingController descriptionController =
+  TextEditingController();
+
+  String? selectedIncidentTypeId;
 
   @override
   void dispose() {
-    nameController.dispose();
     phoneController.dispose();
-    addressController.dispose();
-    issueController.dispose();
+    descriptionController.dispose();
     super.dispose();
   }
 
   void _showSosForm() {
+    context.read<VictimMapProvider>().loadIncidentTypes();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       enableDrag: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.8,
-          minChildSize: 0.4,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (context, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 12,
-                  bottom:
-                  MediaQuery.of(context).viewInsets.bottom + 20,
-                ),
-                child: ListView(
-                  controller: scrollController,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 50,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
+        return StatefulBuilder(
+          builder: (context, setBottomSheetState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.8,
+              minChildSize: 0.4,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    const Text(
-                      "Yêu cầu cứu hộ",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      top: 12,
+                      bottom:
+                      MediaQuery.of(context).viewInsets.bottom +
+                          20,
                     ),
-
-                    const SizedBox(height: 24),
-
-                    TextField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        labelText: "Họ và tên",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    TextField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        labelText: "Số điện thoại",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    TextField(
-                      controller: addressController,
-                      decoration: InputDecoration(
-                        labelText: "Địa chỉ hiện tại",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        labelText: "Loại sự cố",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: "Tai nạn",
-                          child: Text("Tai nạn"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Hỏng xe",
-                          child: Text("Hỏng xe"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Khẩn cấp",
-                          child: Text("Khẩn cấp"),
-                        ),
-                      ],
-                      onChanged: (value) {},
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    TextField(
-                      controller: issueController,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        labelText: "Mô tả chi tiết",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    SizedBox(
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          debugPrint(
-                              "Tên: ${nameController.text}");
-                          debugPrint(
-                              "SĐT: ${phoneController.text}");
-                          debugPrint(
-                              "Địa chỉ: ${addressController.text}");
-                          debugPrint(
-                              "Mô tả: ${issueController.text}");
-
-                          Navigator.pop(context);
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  "Đã gửi yêu cầu cứu hộ"),
+                    child: ListView(
+                      controller: scrollController,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 50,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius:
+                              BorderRadius.circular(10),
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                          const Color(0xFFDC2626),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                            BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          "GỬI YÊU CẦU",
+
+                        const SizedBox(height: 20),
+
+                        const Text(
+                          "Yêu cầu cứu hộ",
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.white,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
+                        const SizedBox(height: 16),
+
+                        TextField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: InputDecoration(
+                            labelText: "Số điện thoại",
+                            border: OutlineInputBorder(
+                              borderRadius:
+                              BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        Consumer<VictimMapProvider>(
+                          builder: (context, provider, child) {
+                            if (provider.loadingIncidentTypes) {
+                              return const Center(
+                                child:
+                                CircularProgressIndicator(),
+                              );
+                            }
+
+                            return DropdownButtonFormField<
+                                String>(
+                              value: selectedIncidentTypeId,
+                              decoration: InputDecoration(
+                                labelText: "Loại sự cố",
+                                border: OutlineInputBorder(
+                                  borderRadius:
+                                  BorderRadius.circular(12),
+                                ),
+                              ),
+                              items: provider.incidentTypes
+                                  .map(
+                                    (item) =>
+                                    DropdownMenuItem<String>(
+                                      value:
+                                      item.incidentTypeId,
+                                      child: Text(item.incidentType),
+                                    ),
+                              )
+                                  .toList(),
+                              onChanged: (value) {
+                                setBottomSheetState(() {
+                                  selectedIncidentTypeId =
+                                      value;
+                                });
+                              },
+                            );
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        TextField(
+                          controller: descriptionController,
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            labelText: "Mô tả chi tiết",
+                            border: OutlineInputBorder(
+                              borderRadius:
+                              BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        Consumer<VictimMapProvider>(
+                          builder: (context, provider, child) {
+                            return SizedBox(
+                              height: 55,
+                              child: ElevatedButton(
+                                onPressed: provider.loading
+                                    ? null
+                                    : () async {
+                                  if (selectedIncidentTypeId ==
+                                      null) {
+                                    ScaffoldMessenger.of(
+                                        context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Vui lòng chọn loại sự cố",
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  final success =
+                                  await provider.sendSos(
+                                    phoneController.text
+                                        .trim(),
+                                    selectedIncidentTypeId!,
+                                    descriptionController
+                                        .text
+                                        .trim()
+                                        .isEmpty
+                                        ? null
+                                        : descriptionController
+                                        .text
+                                        .trim(),
+                                    widget.victimLat,
+                                    widget.victimLng,
+                                  );
+
+                                  if (!mounted) return;
+
+                                  if (success) {
+                                    Navigator.pop(
+                                        context);
+
+                                    ScaffoldMessenger.of(
+                                        context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Đã gửi yêu cầu cứu hộ",
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(
+                                        context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Gửi yêu cầu thất bại",
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                style:
+                                ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                  const Color(
+                                      0xFFDC2626),
+                                  shape:
+                                  RoundedRectangleBorder(
+                                    borderRadius:
+                                    BorderRadius.circular(
+                                        12),
+                                  ),
+                                ),
+                                child: provider.loading
+                                    ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child:
+                                  CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                                    : const Text(
+                                  "GỬI YÊU CẦU",
+                                  style: TextStyle(
+                                    color:
+                                    Colors.white,
+                                    fontWeight:
+                                    FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                );
+              },
             );
           },
         );
@@ -209,7 +285,8 @@ class _SosButtonWidgetState extends State<VictimSosButtonWidget> {
     return Container(
       height: 52,
       width: 150,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding:
+      const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
@@ -229,7 +306,8 @@ class _SosButtonWidgetState extends State<VictimSosButtonWidget> {
         onPressed: _showSosForm,
         style: TextButton.styleFrom(
           padding: EdgeInsets.zero,
-          foregroundColor: const Color(0xFFDC2626),
+          foregroundColor:
+          const Color(0xFFDC2626),
         ),
         child: Row(
           children: [

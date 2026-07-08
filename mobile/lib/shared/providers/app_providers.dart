@@ -6,7 +6,9 @@ import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 import 'package:mobile/features/rescuer/data/rescuer_repository.dart';
 import 'package:mobile/features/rescuer/presentation/providers/rescuer_register_provider.dart';
+import 'package:mobile/features/rescuer/presentation/providers/sos_provider.dart';
 import 'package:mobile/features/user/data/user_repository.dart';
+import 'package:mobile/features/victim/data/victim_repository.dart';
 import 'package:provider/provider.dart';
 import '../../core/session/session_controller.dart';
 import '../../features/auth/data/auth_repository.dart';
@@ -43,7 +45,12 @@ class AppProviders extends StatelessWidget {
 
         // HistoryProvider
         // VictimMapProvider
-        ChangeNotifierProvider(create: (_) => VictimMapProvider()),
+        ChangeNotifierProvider(
+          create: (_) => VictimMapProvider(
+            getIt<VictimRepository>(),
+            getIt<IncidentTypeRepository>(),
+          ),
+        ),
         // RescuerMapProvider
         ChangeNotifierProvider(
           create: (_) => RescuerMapProvider(
@@ -53,7 +60,10 @@ class AppProviders extends StatelessWidget {
         ),
         // MessageProvider
         // Notification
-        // RescueProvider
+        // SosProvider
+        ChangeNotifierProvider(
+          create: (_) => getIt<SOSProvider>(),
+        ),
         // SplashProvider
         ChangeNotifierProvider(
           create: (_) => SplashProvider(getIt<AppSession>()),

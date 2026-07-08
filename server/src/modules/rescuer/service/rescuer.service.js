@@ -121,18 +121,20 @@ class RescuerService {
     }
 
     updateLastSeen = async ({ userId }) => {
-        const rescuer = await this.findRescuerByUserId({ userId });
+        // const rescuer = await this.findRescuerByUserId({ userId });
 
-        if (!rescuer) {
-            throwError("Không tìm thấy người cứu hộ!", 404);
-        }
+        // if (!rescuer) {
+        //     throwError("Không tìm thấy người cứu hộ!", 404);
+        // }
 
         return await this.rescuerRepository.updateLastSeen({ userId })
     }
 
     // Rescuer tự bấm offline 
     goOffline = async ({ userId }) => {
-        console.log("Đã offline");
+        
+
+        await this.rescuerRepository.offlineRedis({ userId });
 
         const checkOnline = await this.checkRescuerOnline({ userId });
 
@@ -140,6 +142,7 @@ class RescuerService {
             throwError("Người cứu hộ đã offline!", 400);
         }
 
+        console.log("Đã offline");
         return await this.rescuerRepository.updateStatus({ userId, status: 'OFFLINE' });
     };
 
@@ -147,6 +150,12 @@ class RescuerService {
     findNearbyRescuers = async ({ lat, lng, radius }) => {
         return await this.rescuerRepository.findNearbyRescuers({ lat, lng, radius });
     }
+
+    // ở đây là tìm người dùng
+    getRescuersByIds = async (rescuerIds) => {
+        return await this.rescuerRepository.getRescuersByIds(rescuerIds);
+    }
+
 }
 
 module.exports = new RescuerService();

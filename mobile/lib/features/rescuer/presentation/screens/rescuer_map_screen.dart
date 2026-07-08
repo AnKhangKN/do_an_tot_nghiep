@@ -5,9 +5,12 @@ import 'package:provider/provider.dart';
 import '../../../../core/session/session_controller.dart';
 import '../providers/rescuer_map_provider.dart';
 import '../../../../shared/widgtes/layer_widget.dart';
+import '../providers/sos_provider.dart';
 import '../widgets/rescuer_go_online_button_widget.dart';
 import '../widgets/rescuer_util_widget.dart';
 import '../../../../shared/widgtes/search_widget.dart';
+import '../widgets/sos_offer_overlay_widget.dart';
+import '../../models/sos_offer_model.dart';
 
 class RescuerMapScreen extends StatefulWidget {
   const RescuerMapScreen({super.key});
@@ -25,16 +28,35 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
     super.dispose();
   }
 
+  // Xử lý tạm thời khi bấm NHẬN CUỐC (Chỉ tắt Pop-up để test UI)
+  void _handleAcceptUI(SOSOfferModel sos, SOSProvider sosProvider) {
+    debugPrint("🚀 [TEST UI] Đã bấm NHẬN CUỐC ID: ${sos.sosId}");
+    sosProvider.clearSOS(); // Tắt bảng thông báo
+  }
+
+  // Xử lý tạm thời khi bấm TỪ CHỐI / HẾT GIỜ (Chỉ tắt Pop-up để test UI)
+  void _handleRejectUI(SOSOfferModel sos, SOSProvider sosProvider) {
+    debugPrint("❌ [TEST UI] Đã BỎ QUA cuốc ID: ${sos.sosId}");
+    sosProvider.clearSOS(); // Tắt bảng thông báo
+  }
+
   @override
   Widget build(BuildContext context) {
     // Lắng nghe position từ session
     final session = context.watch<SessionController>();
     final position = session.state.position;
 
+    final sosProvider = context.watch<SOSProvider>();
+    debugPrint("Mã bộ nhớ Provider lúc VẼ UI: ${sosProvider.hashCode}");
+    final currentSOS = sosProvider.currentSOS;
+
+    if (currentSOS != null) {
+      debugPrint("Bên screen đã nhận! ${currentSOS.toString()}");
+    }
+
     // Lấy isOnline
     final isOnline = session.isOnline;
     final isProcessing = session.isProcessing;
-    debugPrint("Trạng thái hiện tại của nút là: $isOnline");
 
     return Scaffold(
       body: Stack(
@@ -107,6 +129,29 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
               ),
             ),
           ),
+
+          // ================= SOS OVERLAY (HIỆN LÊN ĐỂ TEST GIAO DIỆN) =================
+          if (currentSOS != null) ...[
+            // Lớp nền đen mờ che phủ bản đồ
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+              ),
+            ),
+            // Widget thông báo khẩn cấp (có đếm ngược 30s)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 30,
+              child: SOSOfferOverlayWidget(
+                sos: currentSOS,
+                currentPosition: position,
+                timeoutSeconds: 30,
+                onAccept: () => _handleAcceptUI(currentSOS, sosProvider),
+                onReject: () => _handleRejectUI(currentSOS, sosProvider),
+              ),
+            ),
+          ],
         ],
       ),
     );

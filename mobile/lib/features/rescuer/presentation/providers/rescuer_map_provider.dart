@@ -16,7 +16,6 @@ class RescuerMapProvider extends ChangeNotifier {
   // Future<void> init() async {
   //   // Load danh sách nạn nhân gần đó
   //
-  //   // Load các marker cứu hộ
   // }
 
   Future<void> goOnline() async {

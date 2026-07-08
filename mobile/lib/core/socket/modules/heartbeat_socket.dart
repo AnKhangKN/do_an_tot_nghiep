@@ -12,6 +12,7 @@ class HeartbeatSocket {
   HeartbeatSocket(this.socket);
 
   void start() {
+
     _timer?.cancel();
 
     _timer = Timer.periodic(const Duration(seconds: 15), (_) {

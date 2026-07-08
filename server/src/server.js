@@ -1,5 +1,5 @@
 const app = require("./app");
-const { connectDB } = require("@config/database.config");
+const { connectDB } = require("./config/database.config");
 const { PORT, FRONTEND_URL } = require("./config/env.config");
 
 const http = require("http");
@@ -17,7 +17,8 @@ const io = new Server(server, {
 });
 
 // 3. attach socket handlers (index socket của bạn)
-require("@socket/index")(io); 
+require("./socket/index")(io); 
+// require("./socket/socket.subscriber")(io);
 // hoặc path bạn đang dùng: ./socket/index
 
 // 4. connect DB

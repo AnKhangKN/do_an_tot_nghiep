@@ -1,10 +1,10 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile/core/background/background_config.dart';
 import 'package:mobile/core/socket/modules/heartbeat_socket.dart';
 import 'package:mobile/core/socket/modules/location_socket.dart';
+import 'package:mobile/core/socket/modules/rescuer_socket.dart';
 import 'package:mobile/core/socket/socket_events.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 
@@ -24,6 +24,7 @@ class AppSession {
   final HeartbeatSocket heartbeatSocket;
   final LocationSocket locationSocket;
   final LocationRepository locationRepository;
+  final RescuerSocket rescuerSocket;
 
   AppSession({
     required this.controller,
@@ -34,42 +35,36 @@ class AppSession {
     required this.heartbeatSocket,
     required this.locationSocket,
     required this.locationRepository,
+    required this.rescuerSocket,
   });
 
-  // =========================
-  // STATE
-  // =========================
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
 
   UserRole? get role => controller.state.role;
   bool get isLoggedIn => controller.state.isLoggedIn;
-
   bool get isRescuer => controller.state.role == UserRole.rescuer;
   bool get isVictim => controller.state.role == UserRole.victim;
-
   bool get isOnline => controller.state.isOnline;
 
   StreamSubscription<Position>? _locationSubscription;
 
   // =========================
-  // Mở app hay mới đăng nhập đều phải gọi.
+  // INITIALIZE SESSION
   // =========================
   Future<void> init() async {
-    // Lấy token mới nhất
     final token = await authRepository.getValidAccessToken();
-
-    // Lấy vị trí hiện tại lần đầu
     await locationRepository.loadCurrentPosition();
 
     if (token != null) {
       try {
-        // Kiểm tra token để gọi socket còn dùng được không
-        await socket.ensureConnected(token);
-
-        heartbeatSocket.start();
-
         final profileResponse = await authRepository.getMe();
+
+        await socket.ensureConnected(
+          token,
+          profileResponse.userId,
+          profileResponse.role,
+        );
 
         final String roleStr = profileResponse.role;
         final UserRole userRole = roleStr == 'RESCUER'
@@ -81,12 +76,11 @@ class AppSession {
         controller.setLoggedIn(true);
 
         if (userRole == UserRole.rescuer) {
+          heartbeatSocket.start();
           background.start();
         }
       } catch (e, stackTrace) {
-        print("🚨 LỖI PHÂN QUYỀN HOẶC PARSE USER MODEL TẠI SPLASH: $e");
-        print("🚨 STACK TRACE: $stackTrace");
-
+        debugPrint("🚨 LỖI INIT SESSION: $e\n$stackTrace");
         _isInitialized = true;
         controller.reset();
       }
@@ -98,13 +92,20 @@ class AppSession {
   }
 
   // =========================
-  // LOGOUT & DISCONNECT
+  // STOP & LOGOUT
   // =========================
   Future<void> stopSession() async {
-    if (isOnline) {
-      await goOffline();
+    // 1. Luôn hủy theo dõi vị trí trước tiên
+    await _locationSubscription?.cancel();
+    _locationSubscription = null;
+
+    // 2. Báo offline cho server nếu đang online
+    if (isOnline && socket.isConnected) {
+      socket.emit(SocketEvents.goOffline);
     }
 
+    // 3. Dừng các service
+    heartbeatSocket.stop(); // (Nên có hàm stop cho heartbeat)
     socket.disconnect();
     await background.stop();
 
@@ -112,55 +113,62 @@ class AppSession {
   }
 
   Future<void> logout() async {
-    await storageService.clearAll();
     await stopSession();
+    await storageService.clearAll();
   }
 
   // =========================
-  // ONLINE STATE (QUAN TRỌNG NHẤT)
+  // ONLINE STATE
   // =========================
   Future<bool> goOnline() async {
     if (controller.isProcessing) return false;
 
     try {
-      controller.setProcessing(true); // Khóa nút ngay lập tức
+      controller.setProcessing(true);
 
-      await background.start();
       final token = await authRepository.getValidAccessToken();
       if (token == null) return false;
 
-      await socket.ensureConnected(token);
+      final profileResponse = await authRepository.getMe();
 
-      // 1. Gọi startTracking và hứng lấy Stream vị trí
+      await background.start();
+
+      // Đảm bảo socket đã kết nối
+      await socket.ensureConnected(
+        token,
+        profileResponse.userId,
+        profileResponse.role,
+      );
+
+      // QUAN TRỌNG: Tái đăng ký lắng nghe SOS đề phòng socket vừa bị reconnect/re-init
+      if (profileResponse.role == 'RESCUER') {
+        rescuerSocket.listenSosOffer();
+      }
+
+      // Khởi động GPS Tracking
       final positionStream = await locationRepository.startTracking();
-
-      if (positionStream != null) {
-        // Hủy sub cũ nếu có để tránh trùng lặp stream (leak bộ nhớ)
-        await _locationSubscription?.cancel();
-
-        try {
-          await locationRepository.loadCurrentPosition();
-
-          debugPrint("📍 Đã gửi tọa độ khởi tạo thành công khi Go Online");
-        } catch (e) {
-          debugPrint("⚠️ Không lấy được tọa độ khởi tạo ngay lập tức: $e");
-        }
-
-        // 2. Lắng nghe và cập nhật vị trí trực tiếp trong Controller
-        _locationSubscription = positionStream.listen((position) {
-          // Hàm này vừa cập nhật UI vừa bắn Socket lên server
-          locationSocket.sendLocation(
-            lat: position.latitude,
-            lng: position.longitude,
-          );
-
-          controller.updatePosition(position);
-        });
-      } else {
-        print("🚨 Không có quyền truy cập vị trí.");
+      if (positionStream == null) {
+        debugPrint("🚨 Không có quyền truy cập vị trí.");
         return false;
       }
 
+      await _locationSubscription?.cancel();
+
+      try {
+        await locationRepository.loadCurrentPosition();
+      } catch (e) {
+        debugPrint("⚠️ Không lấy được tọa độ khởi tạo: $e");
+      }
+
+      _locationSubscription = positionStream.listen((position) {
+        locationSocket.sendLocation(
+          lat: position.latitude,
+          lng: position.longitude,
+        );
+        controller.updatePosition(position);
+      });
+
+      // Bắn event lên Server
       socket.emit(SocketEvents.goOnline);
       controller.setOnline(true);
 
@@ -169,22 +177,22 @@ class AppSession {
         content: BackgroundConfig.notificationContentGoOnline,
       );
 
-      // ⏳ Đợi đủ 2 giây Cooldown rồi mới mở khóa cho phép bấm nút Tắt
-      Future.delayed(const Duration(seconds: 2), () {
-        controller.setProcessing(false);
-      });
-
+      await Future.delayed(const Duration(seconds: 2));
       return true;
     } catch (e) {
-      print("🚨 Go online failed: $e");
+      debugPrint("🚨 Go online failed: $e");
       return false;
+    } finally {
+      // Đảm bảo luôn mở khóa nút bấm
+      controller.setProcessing(false);
     }
   }
 
   Future<bool> goOffline() async {
     if (controller.isProcessing) return false;
+
     try {
-      controller.setProcessing(true); // Khóa nút ngay lập tức
+      controller.setProcessing(true);
 
       await _locationSubscription?.cancel();
       _locationSubscription = null;
@@ -199,15 +207,14 @@ class AppSession {
         content: BackgroundConfig.notificationContentOffline,
       );
 
-      // ⏳ Đợi đủ 2 giây Cooldown rồi mới mở khóa cho phép bấm nút Tắt
-      Future.delayed(const Duration(seconds: 2), () {
-        controller.setProcessing(false);
-      });
-
+      await Future.delayed(const Duration(seconds: 2));
       return true;
     } catch (e) {
-      print("🚨 Go offline failed: $e");
+      debugPrint("🚨 Go offline failed: $e");
       return false;
+    } finally {
+      // Đảm bảo luôn mở khóa nút bấm
+      controller.setProcessing(false);
     }
   }
 }

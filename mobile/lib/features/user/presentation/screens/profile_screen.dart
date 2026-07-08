@@ -18,7 +18,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      context.read<UserProvider>().getProfile();
+      if (mounted) {
+        context.read<UserProvider>().getProfile();
+      }
     });
   }
 
@@ -52,6 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 24),
 
                   _logoutButton(context),
+                  const SizedBox(height: 24), // Thêm chút khoảng trống dưới cùng
                 ],
               ),
             ),
@@ -83,11 +86,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
                   blurRadius: 12,
-                  offset: const Offset(0, 6),
+                  offset: Offset(0, 6),
                 ),
               ],
             ),
@@ -142,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // MENU CARD
+  // MENU CARD - ĐÃ SỬA LỖI LISTTILE RIPPLE EFFECT
   Widget _menuCard(List<Widget> items) {
     return Container(
       decoration: BoxDecoration(
@@ -156,7 +159,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           )
         ],
       ),
-      child: Column(children: items),
+      // Quan trọng: Dùng Material trong suốt và clipBehavior để hiển thị gợn sóng chính xác
+      child: Material(
+        color: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
+        borderRadius: BorderRadius.circular(16),
+        child: Column(children: items),
+      ),
     );
   }
 
@@ -183,27 +192,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // LOGOUT BUTTON
+  // LOGOUT BUTTON - ĐÃ CHUẨN HÓA SỬ DỤNG ELEVATEDBUTTON STYLE
   Widget _logoutButton(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: 52,
-      decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(14),
-      ),
       child: TextButton(
+        style: TextButton.styleFrom(
+          backgroundColor: Colors.red.withOpacity(0.1),
+          foregroundColor: Colors.red,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
         onPressed: () async {
           await context.read<AuthProvider>().logout();
-          context.read<UserProvider>().clear();
 
           if (!context.mounted) return;
+          context.read<UserProvider>().clear();
           context.go(RouterConstants.login);
         },
         child: const Text(
           "Đăng xuất",
           style: TextStyle(
-            color: Colors.red,
+            fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
         ),

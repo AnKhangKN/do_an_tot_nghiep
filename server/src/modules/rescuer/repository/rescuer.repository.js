@@ -2,6 +2,7 @@ const rescuer_incident_typesModel = require('../model/rescuer_incident_types.mod
 const rescuerProfileModel = require("../model/rescuer_profile.model")
 const userModel = require("@modules/user/model/user.model");
 const { pool } = require('@/config/database.config');
+const redis = require('@/config/redis.config');
 
 class RescueRepository {
     constructor() {
@@ -170,46 +171,24 @@ class RescueRepository {
         return result.rows[0]
     }
 
+    // Khi người dùng offline, cập nhật member trong Redis
+    offlineRedis = async ({ userId }) => {
+
+        const removed = await redis.call(
+            'ZREM',
+            'rescuer_locations',
+            userId
+        );
+
+        console.log(`ZREM result:`, removed);
+
+        return removed;
+    }
+
     updateLastSeen = async ({ userId }) => {
         const query = `
             UPDATE ${this.rescuerProfileModel.table}
             SET ${this.rescuerProfileModel.field.lastSeenAt} = NOW()
-            WHERE ${this.rescuerProfileModel.field.userId} = $1
-            RETURNING *
-        `;
-
-        const result = await pool.query(query, [userId]);
-        return result.rows[0];
-    };
-
-    checkRescuerOnlineStatus = async ({ userId }) => {
-        const query = `
-            SELECT ${this.rescuerProfileModel.field.status}
-            FROM ${this.rescuerProfileModel.table}
-            WHERE ${this.rescuerProfileModel.field.userId} = $1
-        `;
-
-        const result = await pool.query(query, [userId]);
-        return result.rows[0]?.status;
-    }
-
-    checkLastSeen = async ({ userId }) => {
-        const query = `
-            SELECT ${this.rescuerProfileModel.field.lastSeenAt}
-            FROM ${this.rescuerProfileModel.table}
-            WHERE ${this.rescuerProfileModel.field.userId} = $1
-        `;
-
-        const result = await pool.query(query, [userId]);
-
-        return result.rows[0]?.lastseenat;
-    }
-
-    // Người dùng tự bấm offline
-    goOffline = async ({ userId }) => {
-        const query = `
-            UPDATE ${this.rescuerProfileModel.table}
-            SET ${this.rescuerProfileModel.field.status} = 'offline'
             WHERE ${this.rescuerProfileModel.field.userId} = $1
             RETURNING *
         `;
@@ -225,9 +204,9 @@ class RescueRepository {
         radius
     }) => {
 
-        const result = await redis.sendCommand([
+        const result = await redis.call(
             'GEOSEARCH',
-            'active_rescuers',
+            'rescuer_locations', // key của tập hợp địa lý trong Redis (đúng với key đã thêm ở updateLocation)
             'FROMLONLAT',
             String(lng),
             String(lat),
@@ -236,11 +215,35 @@ class RescueRepository {
             'km',
             'WITHDIST',
             'ASC'
-        ]);
+        );
 
-        console.log("Kết quả của người dùng gần nhất là: ",result);
+        const count = await redis.call(
+            'ZCARD',
+            'active_rescuers'
+        );
 
         return result;
+    };
+
+    getRescuersByIds = async (rescuerIds) => {
+
+        if (!rescuerIds.length) {
+            return [];
+        }
+
+        const result = await pool.query(
+            `
+        SELECT
+            ${this.rescuerProfileModel.field.userId},
+            ${this.rescuerProfileModel.field.status},
+            ${this.rescuerProfileModel.field.lastSeenAt}
+        FROM ${this.rescuerProfileModel.table}
+        WHERE ${this.rescuerProfileModel.field.userId} = ANY($1)
+        `,
+            [rescuerIds]
+        );
+
+        return result.rows;
     };
 
 }

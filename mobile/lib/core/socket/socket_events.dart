@@ -13,6 +13,7 @@ class SocketEvents {
   // =========================
   static const sosEmit = "sos:emit";
   static const sosCancel = "sos:cancel";
+  static const sosOffer = "sos:offer";
 
   // =========================
   // LOCATION
@@ -30,5 +31,5 @@ class SocketEvents {
   // =========================
   // HEARTBEAT
   // =========================
-  static const heartbeat = "heartbeat";
+  static const heartbeat = "rescuer:heartbeat";
 }

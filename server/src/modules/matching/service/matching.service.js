@@ -2,110 +2,100 @@ const rescuerService = require('@modules/rescuer/service/rescuer.service');
 
 class MatchingService {
 
-    constructor(
-    ) {
+    constructor() {
         this.rescuerService = rescuerService;
     }
 
+    /**
+     * MAIN: find suitable rescuers for SOS
+     */
     findNearbyRescuersForSOS = async (sos, radius) => {
 
-        // 1. tìm tất cả rescuer trong bán kính
+        // 1. Lấy từ redis (geo search) {#7a0,10}
         const nearbyRescuers =
             await this.rescuerService.findNearbyRescuers({
-                lat: sos.victimLat,
-                lng: sos.victimLng,
+                lat: sos.victim_lat,
+                lng: sos.victim_lng,
                 radius
             });
 
-        // 2. lọc khả dụng
-        const availableRescuers =
-            await this.#filterAvailability({
-                rescuers: nearbyRescuers,
-                sos
-            });
+        if (!nearbyRescuers || nearbyRescuers.length === 0) {
+            return [];
+        }
 
-        // 3. rank
-        const ranked =
-            await this.#rankRescuers(
-                availableRescuers,
-                sos
-            );
+        // 2. NORMALIZE redis result
+        const nearby = nearbyRescuers.map(([userId, distance]) => ({
+            userId,
+            distance: parseFloat(distance)
+        }));
 
-        return ranked.slice(0, 5);
+        const rescuerIds = nearby.map(r => r.userId);
+
+        // 3. Lấy từ DB {#7a0,6}
+        const rescuers =
+            await this.rescuerService.getRescuersByIds(rescuerIds);
+
+        if (!rescuers || rescuers.length === 0) {
+            return [];
+        }
+
+        // 4. MAP DB by user_id
+        const dbMap = new Map(
+            rescuers.map(r => [r.user_id, r])
+        );
+
+        // 5. MERGE Redis + DB
+        const merged = nearby
+            .map(r => {
+                const db = dbMap.get(r.userId);
+
+                if (!db) return null;
+
+                return {
+                    userId: r.userId,
+                    distance: r.distance,
+                    status: db.status,
+                    lastSeenAt: db.last_seen_at
+                };
+            })
+            .filter(Boolean);
+
+        // 6. FILTER AVAILABLE
+        const available = await this.#filterAvailability(merged);
+
+        if (!available.length) {
+            return [];
+        }
+
+        // 7. SORT BY DISTANCE (closest first)
+        available.sort((a, b) => a.distance - b.distance);
+
+        // 8. RETURN TOP 5
+        return available.slice(0, 5);
     }
 
-    #filterAvailability = async ({ rescuers }) => {
+    /**
+     * FILTER: only active + recently online rescuers
+     */
+    #filterAvailability = async (rescuers) => {
 
-        const NOW_LIMIT = 30;
+        const NOW_LIMIT_SECONDS = 30;
         const now = Date.now();
 
         return rescuers.filter(r => {
 
-            if (!r.isOnline) {
-                return false;
-            }
+            // must be active
+            if (r.status !== "ACTIVE") return false;
 
-            if (r.status !== 'ACTIVE') {
-                return false;
-            }
+            // must have lastSeen
+            if (!r.lastSeenAt) return false;
 
-            const lastSeen =
-                new Date(r.lastLocationUpdatedAt).getTime();
+            const lastSeen = new Date(r.lastSeenAt).getTime();
+            const diffSeconds = (now - lastSeen) / 1000;
 
-            const diffSeconds =
-                (now - lastSeen) / 1000;
-
-            if (diffSeconds > NOW_LIMIT) {
-                return false;
-            }
-
-            return true;
+            // must be recently online
+            return diffSeconds <= NOW_LIMIT_SECONDS;
         });
-    }
-
-    #rankRescuers = async (rescuers, sos) => {
-
-        return rescuers.sort((a, b) => {
-
-            const distanceA =
-                this.#calculateDistance(
-                    sos.victimLat,
-                    sos.victimLng,
-                    a.lat,
-                    a.lng
-                );
-
-            const distanceB =
-                this.#calculateDistance(
-                    sos.victimLat,
-                    sos.victimLng,
-                    b.lat,
-                    b.lng
-                );
-
-            return distanceA - distanceB;
-        });
-    }
-
-    #calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-
-        const dLat =
-            (lat2 - lat1) * Math.PI / 180;
-
-        const dLon =
-            (lon2 - lon1) * Math.PI / 180;
-
-        const a =
-            Math.sin(dLat / 2) ** 2 +
-            Math.cos(lat1 * Math.PI / 180) *
-            Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) ** 2;
-
-        return R * 2 * Math.atan2(
-            Math.sqrt(a),
-            Math.sqrt(1 - a)
-        );
     }
 }
 

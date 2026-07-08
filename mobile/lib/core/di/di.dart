@@ -9,12 +9,16 @@ import 'package:mobile/core/session/session_controller.dart';
 import 'package:mobile/core/socket/core_socket.dart';
 import 'package:mobile/core/socket/modules/heartbeat_socket.dart';
 import 'package:mobile/core/socket/modules/location_socket.dart';
+import 'package:mobile/core/socket/modules/rescuer_socket.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 import 'package:mobile/features/auth/data/auth_repository.dart';
 import 'package:mobile/features/auth/data/auth_service.dart';
 import 'package:mobile/features/rescuer/data/rescuer_service.dart';
+import 'package:mobile/features/rescuer/presentation/providers/sos_provider.dart';
 import 'package:mobile/features/user/data/user_repository.dart';
 import 'package:mobile/features/user/data/user_service.dart';
+import 'package:mobile/features/victim/data/victim_repository.dart';
+import 'package:mobile/features/victim/data/victim_service.dart';
 
 import '../../features/rescuer/data/rescuer_repository.dart';
 import '../incident_types/data/incident_type_repository.dart';
@@ -47,26 +51,36 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(() => SessionController());
   getIt.registerLazySingleton(() => HeartbeatSocket(getIt<CoreSocket>()));
   getIt.registerLazySingleton(() => LocationSocket(getIt<CoreSocket>()));
-
+  getIt.registerLazySingleton<SOSProvider>(() => SOSProvider());
+  getIt.registerLazySingleton(
+    () => RescuerSocket(getIt<CoreSocket>(), getIt<SOSProvider>()),
+  );
 
   // Các Service lấy trực tiếp .dio đã được cấu hình chuẩn chỉ
-  getIt.registerLazySingleton(
-    () => AuthService(getIt<DioClient>().dio),
-  );
-  getIt.registerLazySingleton(
-    () => UserService(getIt<DioClient>().dio),
-  );
+  getIt.registerLazySingleton(() => AuthService(getIt<DioClient>().dio));
+  getIt.registerLazySingleton(() => UserService(getIt<DioClient>().dio));
   getIt.registerLazySingleton(() => RescuerService(getIt<DioClient>().dio));
-  getIt.registerLazySingleton(() => IncidentTypeService(getIt<DioClient>().dio));
+  getIt.registerLazySingleton(
+    () => IncidentTypeService(getIt<DioClient>().dio),
+  );
+  getIt.registerLazySingleton(() => VictimService(getIt<DioClient>().dio));
 
   // Đăng ký các Repository
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepository(getIt<AuthService>(), getIt<StorageService>()),
   );
   getIt.registerLazySingleton(() => UserRepository(getIt<UserService>()));
-  getIt.registerLazySingleton(() => LocationRepository(getIt<LocationService>(), getIt<SessionController>()));
+  getIt.registerLazySingleton(
+    () => LocationRepository(
+      getIt<LocationService>(),
+      getIt<SessionController>(),
+    ),
+  );
   getIt.registerLazySingleton(() => RescuerRepository(getIt<RescuerService>()));
-  getIt.registerLazySingleton(() => IncidentTypeRepository(getIt<IncidentTypeService>()));
+  getIt.registerLazySingleton(
+    () => IncidentTypeRepository(getIt<IncidentTypeService>()),
+  );
+  getIt.registerLazySingleton(() => VictimRepository(getIt<VictimService>()));
 
   getIt.registerLazySingleton(
     () => AppSession(
@@ -77,7 +91,8 @@ Future<void> initDI() async {
       authRepository: getIt<AuthRepository>(),
       heartbeatSocket: getIt<HeartbeatSocket>(),
       locationSocket: getIt<LocationSocket>(),
-      locationRepository: getIt<LocationRepository>()
+      locationRepository: getIt<LocationRepository>(),
+      rescuerSocket: getIt<RescuerSocket>(),
     ),
   );
 }

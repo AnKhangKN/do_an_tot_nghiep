@@ -23,7 +23,7 @@ class SosRequestRepository {
                     `
 
         const result = await client.query(query, [
-            userId, incidentTypeId, description, victimLat, victimLng, geohash, sosRequestId
+            sosRequestId, userId, incidentTypeId, description, victimLat, victimLng, geohash
         ])
 
         return result.rows[0]

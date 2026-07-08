@@ -38,10 +38,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          MapWidget(
-            mapController: _mapController,
-            position: position,
-          ),
+          MapWidget(mapController: _mapController, position: position),
 
           // ================= TOP UI =================
           const Positioned(
@@ -78,9 +75,12 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
                   child: Stack(
                     // 🚀 ĐÃ SỬA: Bỏ từ khóa 'const' ở đây để tránh lỗi biên dịch widget con
                     children: [
-                      const Align(
+                      Align(
                         alignment: Alignment.bottomCenter,
-                        child: VictimSosButtonWidget(),
+                        child: VictimSosButtonWidget(
+                          victimLat: position!.latitude,
+                          victimLng: position.longitude,
+                        ),
                       ),
                       const Align(
                         alignment: Alignment.bottomRight,
