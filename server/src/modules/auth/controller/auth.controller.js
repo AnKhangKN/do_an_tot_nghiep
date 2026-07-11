@@ -33,7 +33,7 @@ class AuthController {
                 if (!refreshToken) {
                     return res.status(401).json({
                         success: false,
-                        message: "No refresh token",
+                        message: "Không tìm thấy token làm mới",
                     });
                 }
 
@@ -50,7 +50,7 @@ class AuthController {
                 if (!refreshToken) {
                     return res.status(401).json({
                         success: false,
-                        message: "No refresh token",
+                        message: "Không tìm thấy token làm mới",
                     });
                 }
 

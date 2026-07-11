@@ -13,7 +13,7 @@ const verifyToken = (req, res, next) => {
     const token = extractToken(req);
 
     if (!token) {
-        return res.status(401).json({ message: "No token provided" });
+        return res.status(401).json({ message: "Không tìm thấy token xác thực" });
     }
 
     try {
@@ -21,7 +21,7 @@ const verifyToken = (req, res, next) => {
         req.userId = decoded.userId;
         next();
     } catch (error) {
-        return res.status(401).json({ message: "Invalid token" });
+        return res.status(401).json({ message: "Token không hợp lệ hoặc đã hết hạn" });
     }
 };
 

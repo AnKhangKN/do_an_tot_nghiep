@@ -1,11 +1,6 @@
-const rescuer_locationRepository = require("../repository/rescuer_location.repository");
 const redis = require("../../../config/redis.config");
 
 class RescuerLocationService {
-
-    constructor() {
-        this.rescuer_locationRepository = rescuer_locationRepository
-    }
 
 
     // Cập nhật vị trí của rescuer vào redis để tìm kiếm nhanh

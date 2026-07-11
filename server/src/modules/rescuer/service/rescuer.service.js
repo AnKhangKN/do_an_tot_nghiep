@@ -89,7 +89,7 @@ class RescuerService {
     }
 
     isVerifiedRescuer = async ({ userId }) => {
-
+        return await this.rescuerRepository.isVerifiedRescuer({ userId });
     }
 
     // Rescuer
@@ -132,7 +132,7 @@ class RescuerService {
 
     // Rescuer tự bấm offline 
     goOffline = async ({ userId }) => {
-        
+
 
         await this.rescuerRepository.offlineRedis({ userId });
 

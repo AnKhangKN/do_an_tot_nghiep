@@ -16,7 +16,7 @@
 
 {
   "compilerOptions": {
-    "moduleResolution": "Bundler",
+    "moduleResolution": "node",
     "paths": {
       "@/*": ["./src/*"],
       "@config/*": ["./src/config/*"],

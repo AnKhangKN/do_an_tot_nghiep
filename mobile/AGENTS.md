@@ -53,3 +53,16 @@ Mỗi tính năng là một thực thể độc lập và khép kín:
 1. **Dependency Injection**: Mọi Service, Repository, Bloc/Cubit phải được đăng ký trong hệ thống DI ([core/di](file:///d:/workspace/do_an_tot_nghiep/mobile/lib/core/di/)) trước khi gọi sử dụng. Tránh việc khởi tạo thủ công (`new Repository()`) trong UI widget.
 2. **Sử dụng Package Imports**: Luôn ưu tiên dùng `import 'package:mobile/...'` thay vì import tương đối quá sâu để code rõ ràng và tránh lỗi khi di chuyển file giữa các thư mục.
 3. **Quản lý bất đồng bộ**: Mọi tác vụ gọi mạng (network) phải được bọc trong các khối `try-catch` tại lớp Repository/Datasource và trả về các kiểu dữ liệu an toàn hoặc throw lỗi được kiểm soát tốt.
+
+---
+
+## 🎨 Quy định Thiết kế UI & Phát triển trong Android Studio
+1. **Môi trường phát triển**:
+   - Lập trình viên chủ yếu sử dụng **Android Studio** để chỉnh sửa code và chạy ứng dụng Flutter.
+   - Để tránh xung đột Gradle lock và các tài nguyên hệ thống, AI không tự ý chạy các tác vụ build nặng hoặc `flutter run` qua terminal trừ khi được yêu cầu. Hãy để Android Studio chịu trách nhiệm build/run và hot reload ứng dụng.
+2. **Thiết kế UI Tốt & Responsive**:
+   - Giao diện phải hiện đại, mượt mà và trực quan (WOW factor).
+   - Đảm bảo tính Responsive cho nhiều loại màn hình thiết bị di động (sử dụng `MediaQuery`, `LayoutBuilder`, hoặc `flutter_screenutil` nếu có sẵn trong dự án).
+   - Tách các thành phần UI phức tạp thành các widget nhỏ hơn để dễ tái sử dụng tại thư mục `shared/` hoặc thư mục con `widgets/` của từng module/feature.
+   - **Bắt buộc**: Tách biệt hoàn toàn giao diện (UI) và logic nghiệp vụ. Sử dụng **Bloc** hoặc **Cubit** để quản lý trạng thái màn hình. Tuyệt đối không viết logic xử lý dữ liệu hoặc gọi API trực tiếp trong UI widget.
+
