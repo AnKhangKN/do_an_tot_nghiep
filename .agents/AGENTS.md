@@ -28,15 +28,28 @@ Dưới đây là các quy tắc nghiêm ngặt mà AI phải tuân thủ khi l�
 
 ---
 
-## 3. Quy định Thiết kế UI & Phát triển ứng dụng Mobile (Flutter)
-* **Môi trường phát triển**:
+## 3. Quy định Thiết kế UI & Phát triển (Mobile & Web Admin)
+* **Môi trường phát triển Mobile (Flutter)**:
   - Dự án mobile được viết bằng Flutter tại thư mục `mobile/`.
   - Người dùng chủ yếu làm việc trên **Android Studio** để code và build app, tuy nhiên thư mục code vẫn đồng bộ với workspace này.
   - AI không nên chạy các lệnh build Gradle nặng hoặc chạy `flutter run` gây khóa tài nguyên hoặc xung đột với Android Studio đang chạy. Hãy để Android Studio tự quản lý Hot Reload/Build, AI chỉ cần tập trung viết code `.dart` chất lượng.
-* **Thiết kế & Tạo UI Tốt (UI Guidelines)**:
+* **Thiết kế & Tạo UI Mobile (Flutter)**:
   - Giao diện phải hiện đại, trực quan, hỗ trợ Responsive tốt cho nhiều kích thước màn hình (sử dụng `MediaQuery`, `LayoutBuilder` hoặc thư viện như `flutter_screenutil` nếu có sẵn).
   - Tách các Widget giao diện thành các Component nhỏ, dễ tái sử dụng và đặt trong `shared/` hoặc thư mục con `widgets/` của feature.
   - **Bắt buộc**: Tách biệt UI và Logic. Sử dụng **Bloc** hoặc **Cubit** để quản lý trạng thái UI. Tuyệt đối không lạm dụng `setState` hoặc viết logic xử lý API/nghiệp vụ trực tiếp bên trong giao diện Widget.
+* **Thiết kế & Đồng bộ UI Web Admin (React/Tailwind)**:
+  - **Đồng bộ tone màu**: Bắt buộc sử dụng tone màu tối giản hiện đại (Minimalist & Sleek) đã có sẵn:
+    - Màu nhấn/chính (Primary/Active): `bg-gray-900` (hoặc `bg-gray-800` khi hover) kết hợp chữ trắng (`text-white`).
+    - Màu nền phụ: `bg-gray-50` cho các ô input, background nền chung.
+    - Màu viền (Borders): `border-gray-200` (viền panel, input, card) hoặc `border-gray-100` (viền phân cách mỏng).
+    - Màu văn bản: `text-gray-900` (tiêu đề, label đậm), `text-gray-700` hoặc `text-gray-600` (văn bản thường, mô tả), `text-gray-500` hoặc `text-gray-400` (chú thích nhỏ, footer).
+  - **Bo góc & Shadow**: Thiết kế sử dụng các góc bo lớn và mềm mại.
+    - `rounded-2xl` cho các nút bấm (buttons), ô nhập liệu (inputs), các item trong danh sách/sidebar.
+    - `rounded-3xl` cho các card lớn, khung form hoặc các container chính.
+    - `rounded-xl` cho khung chứa biểu tượng (icon wrapper).
+    - Bóng đổ nhẹ nhàng: `shadow-sm` cho các panel/sidebar, `shadow-md` cho card, `shadow-lg` cho active items.
+  - **Icons**: Đồng bộ sử dụng thư viện Phosphor Icons (`react-icons/pi`) để giữ tính nhất quán về visual style.
+  - **Tính nhất quán**: Khi tạo trang mới hoặc bổ sung component mới, AI tuyệt đối không tự ý dùng các màu sắc sặc sỡ khác ngoài bảng màu xám đen tối giản trên, trừ khi có yêu cầu cụ thể đối với các trạng thái cảnh báo (đỏ, vàng, xanh lá) hoặc bản đồ.
 
 ---
 

@@ -19,6 +19,21 @@ All commands must be executed in the `web/` directory:
 - **Routing**: React Router v7 (`react-router-dom`).
 - **Maps**: Leaflet and React Leaflet (`leaflet`, `react-leaflet`).
 
+### 🎨 UI/UX Design System (Quy định Đồng bộ Thiết kế)
+Bắt buộc đồng bộ tuyệt đối với phong cách thiết kế hiện tại của Web Admin:
+1. **Bảng màu (Color Palette)**:
+   - *Primary/Active*: `bg-gray-900` (hover: `bg-gray-800`), chữ đi kèm `text-white`.
+   - *Background phụ/Input*: `bg-gray-50`.
+   - *Borders*: `border-gray-200` (hoặc `border-gray-100` cho dải phân cách nhỏ).
+   - *Text Hierarchies*: `text-gray-900` (titles/labels chính), `text-gray-700`/`text-gray-600` (nội dung thường), `text-gray-500`/`text-gray-400` (subtext/footer/ghi chú).
+2. **Bo góc (Border Radius) & Shadow**:
+   - `rounded-2xl` cho buttons, inputs, item list và các thanh navigation.
+   - `rounded-3xl` cho card container lớn, form wrapper.
+   - `rounded-xl` cho khung chứa icons (icon wrappers).
+   - `shadow-sm` cho sidebar/panels, `shadow-md` cho card, `shadow-lg` cho active status navigation.
+3. **Thư viện Icon**:
+   - Chỉ sử dụng Phosphor Icons (`react-icons/pi`).
+
 ---
 
 ## 🏗️ Architecture & Directories (Quy định cấu trúc Code)
