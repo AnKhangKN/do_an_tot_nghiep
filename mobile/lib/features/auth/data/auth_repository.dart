@@ -8,6 +8,8 @@ import '../models/login_request.dart';
 import '../models/refresh_token_request.dart';
 import '../models/refresh_token_response.dart';
 import '../models/user_model.dart';
+import '../models/register_request.dart';
+import '../models/register_response.dart';
 import 'auth_service.dart';
 
 class AuthRepository {
@@ -116,5 +118,16 @@ class AuthRepository {
   Future<void> logout() async {
 
     await storage.clearAll();
+  }
+
+  Future<RegisterResponse> register(RegisterRequest request) async {
+    final res = await service.register(request.toJson());
+
+    final data = res.data['data'];
+    if (data is! Map<String, dynamic>) {
+      throw Exception('Phản hồi đăng ký không hợp lệ');
+    }
+
+    return RegisterResponse.fromJson(data);
   }
 }

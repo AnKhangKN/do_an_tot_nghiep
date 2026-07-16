@@ -89,7 +89,17 @@ class RescuerService {
     }
 
     isVerifiedRescuer = async ({ userId }) => {
-        return await this.rescuerRepository.isVerifiedRescuer({ userId });
+        return await transaction(async (client) => {
+            const rescuerProfile = await this.rescuerRepository.isVerifiedRescuer(client, { userId });
+
+            if (!rescuerProfile) {
+                return null;
+            }
+
+            await this.userService.updateRole(client, { userId, role: 'RESCUER' });
+
+            return rescuerProfile;
+        });
     }
 
     // Rescuer

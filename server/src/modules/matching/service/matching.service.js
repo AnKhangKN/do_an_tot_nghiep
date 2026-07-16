@@ -79,7 +79,7 @@ class MatchingService {
      */
     #filterAvailability = async (rescuers) => {
 
-        const NOW_LIMIT_SECONDS = 30;
+        const NOW_LIMIT_SECONDS = 300; // Tăng từ 30s lên 300s (5 phút) để phù hợp với độ trễ di động chạy nền
         const now = Date.now();
 
         return rescuers.filter(r => {

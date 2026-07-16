@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/color_constants.dart';
 
 class ChatScreen extends StatelessWidget {
   const ChatScreen({super.key});
@@ -7,163 +8,61 @@ class ChatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final chats = [
       {
-        "name": "Trung tâm cứu hộ",
+        "name": "Trung tâm điều phối",
         "message": "Admin đang theo dõi yêu cầu của bạn.",
         "time": "2 phút",
         "unread": 2,
-        "isAdmin": true,
+        "isEmergency": true,
         "online": true,
       },
       {
-        "name": "Nguyễn Văn Minh",
-        "message": "Tôi đang bị mắc kẹt gần cầu Ninh Kiều.",
+        "name": "Nguyễn Văn Minh (Cứu hộ viên)",
+        "message": "Tôi đang đến gần vị trí của bạn.",
         "time": "5 phút",
         "unread": 1,
-        "isAdmin": false,
+        "isEmergency": false,
         "online": true,
       },
       {
-        "name": "Đội cứu hộ 02",
-        "message": "Chúng tôi sẽ đến trong khoảng 10 phút.",
+        "name": "Đội cứu hộ số 02",
+        "message": "Chúng tôi sẽ đến trong 10 phút nữa.",
         "time": "12 phút",
         "unread": 0,
-        "isAdmin": false,
+        "isEmergency": false,
         "online": true,
       },
       {
-        "name": "Lê Thị Hoa",
-        "message": "Cảm ơn đội cứu hộ đã hỗ trợ.",
-        "time": "1 giờ",
-        "unread": 0,
-        "isAdmin": false,
-        "online": false,
-      },
-      {
-        "name": "Phòng điều phối",
-        "message": "Có cảnh báo thời tiết mới trong khu vực.",
+        "name": "Phòng chỉ huy",
+        "message": "Cập nhật bản đồ khu vực nguy hiểm.",
         "time": "Hôm qua",
         "unread": 0,
-        "isAdmin": true,
+        "isEmergency": true,
         "online": false,
       },
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FC),
+      backgroundColor: ColorConstants.backgroundLight,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: ColorConstants.surfaceWhite,
         elevation: 0,
-        surfaceTintColor: Colors.white,
         centerTitle: true,
         title: const Text(
-          "Tin nhắn",
+          "TIN NHẮN HỖ TRỢ",
           style: TextStyle(
-            color: Color(0xFF1B1E28),
-            fontWeight: FontWeight.bold,
+            color: ColorConstants.redRescue,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.1,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.support_agent_rounded,
-              color: Color(0xFF1565C0),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // Header Card
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFFD6D27),
-                    Color(0xFFFF8C42),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.2),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Icon(
-                      Icons.chat_bubble_rounded,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Liên lạc cứu hộ",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          "Trao đổi trực tiếp với đội cứu hộ và admin hỗ trợ khẩn cấp.",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
+            // Search Bar
+            _buildSearchBar(),
 
-            // Search
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const TextField(
-                  decoration: InputDecoration(
-                    icon: Icon(Icons.search_rounded),
-                    border: InputBorder.none,
-                    hintText: "Tìm kiếm cuộc trò chuyện...",
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
             // Chat list
             Expanded(
@@ -172,13 +71,12 @@ class ChatScreen extends StatelessWidget {
                 itemCount: chats.length,
                 itemBuilder: (context, index) {
                   final chat = chats[index];
-
                   return _ChatTile(
                     name: chat["name"] as String,
                     message: chat["message"] as String,
                     time: chat["time"] as String,
                     unread: chat["unread"] as int,
-                    isAdmin: chat["isAdmin"] as bool,
+                    isEmergency: chat["isEmergency"] as bool,
                     online: chat["online"] as bool,
                   );
                 },
@@ -187,15 +85,40 @@ class ChatScreen extends StatelessWidget {
           ],
         ),
       ),
-
-      // Floating button contact admin
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFFD32F2F),
+        backgroundColor: ColorConstants.redRescue,
         onPressed: () {},
-        icon: const Icon(Icons.support_agent_rounded),
+        icon: const Icon(Icons.emergency_share, color: Colors.white),
         label: const Text(
-          "Liên hệ Admin",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          "HỖ TRỢ KHẨN CẤP",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: ColorConstants.surfaceWhite,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const TextField(
+          decoration: InputDecoration(
+            hintText: "Tìm kiếm cuộc hội thoại...",
+            prefixIcon: Icon(Icons.search, color: ColorConstants.redRescue),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(vertical: 15),
+          ),
         ),
       ),
     );
@@ -207,7 +130,7 @@ class _ChatTile extends StatelessWidget {
   final String message;
   final String time;
   final int unread;
-  final bool isAdmin;
+  final bool isEmergency;
   final bool online;
 
   const _ChatTile({
@@ -215,165 +138,99 @@ class _ChatTile extends StatelessWidget {
     required this.message,
     required this.time,
     required this.unread,
-    required this.isAdmin,
+    required this.isEmergency,
     required this.online,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Stack(
+      child: Material(
+        color: ColorConstants.surfaceWhite, // Chuyển màu nền lên Material
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: Stack(
             children: [
               CircleAvatar(
-                radius: 30,
-                backgroundColor: isAdmin
-                    ? const Color(0xFF1565C0).withOpacity(0.15)
-                    : const Color(0xFFD32F2F).withOpacity(0.12),
+                radius: 28,
+                backgroundColor: isEmergency ? ColorConstants.redRescue.withOpacity(0.1) : ColorConstants.backgroundLight,
                 child: Icon(
-                  isAdmin
-                      ? Icons.support_agent_rounded
-                      : Icons.person_rounded,
-                  size: 32,
-                  color: isAdmin
-                      ? const Color(0xFF1565C0)
-                      : const Color(0xFFD32F2F),
+                  isEmergency ? Icons.admin_panel_settings : Icons.person,
+                  color: isEmergency ? ColorConstants.redRescue : ColorConstants.textSecondary,
+                  size: 30,
                 ),
               ),
-
-              // Online dot
               if (online)
                 Positioned(
-                  bottom: 2,
-                  right: 2,
+                  right: 0,
+                  bottom: 0,
                   child: Container(
                     width: 14,
                     height: 14,
                     decoration: BoxDecoration(
-                      color: Colors.green,
+                      color: ColorConstants.success,
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2,
-                      ),
+                      border: Border.all(color: Colors.white, width: 2),
                     ),
                   ),
                 ),
             ],
           ),
-
-          const SizedBox(width: 14),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                ),
+              ),
+              Text(time, style: const TextStyle(color: ColorConstants.textSecondary, fontSize: 12)),
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-
-                          if (isAdmin) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1565C0)
-                                    .withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                "ADMIN",
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1565C0),
-                                ),
-                              ),
-                            ),
-                          ]
-                        ],
-                      ),
+                Expanded(
+                  child: Text(
+                    message,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: unread > 0 ? ColorConstants.textPrimary : ColorConstants.textSecondary,
+                      fontWeight: unread > 0 ? FontWeight.bold : FontWeight.normal,
                     ),
-
-                    Text(
-                      time,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-
-                const SizedBox(height: 8),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        message,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
+                if (unread > 0)
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(color: ColorConstants.redRescue, shape: BoxShape.circle),
+                    child: Text(
+                      unread.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
-
-                    if (unread > 0) ...[
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFD32F2F),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          unread.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ]
-                  ],
-                ),
+                  ),
               ],
             ),
           ),
-        ],
+          onTap: () {},
+        ),
       ),
     );
   }

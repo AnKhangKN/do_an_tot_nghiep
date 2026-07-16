@@ -10,9 +10,15 @@ module.exports = (io) => {
     io.on("connection", (socket) => {
         const { userId, role } = socket.user;
 
+        console.log("role: ", role)
+
         if (role === "RESCUER") {
             socket.join(`rescuer:${userId}`);
             console.log(`Mã phòng khi "Rescuer" join room: rescuer:${userId}`);
+
+            // Hủy lịch hẹn offline nếu có do kết nối lại
+            const { cancelPendingOffline } = require("./connection.socket");
+            cancelPendingOffline(userId);
         } else if (role === "VICTIM") {
             socket.join(`victim:${userId}`);
             console.log(`Mã phòng khi "Victim" join room: victim:${userId}`);

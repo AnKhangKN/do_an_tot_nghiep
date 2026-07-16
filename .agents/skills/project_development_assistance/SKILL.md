@@ -30,7 +30,7 @@ Tài liệu này đóng vai trò như một kỹ năng (Skill) tự động kíc
   - Sử dụng Bloc/Cubit để quản lý state và xử lý logic UI. Không lạm dụng `setState` hay viết logic gọi API trong file Widget.
 
 ## 5. Quy tắc làm việc với Cơ sở dữ liệu & Repository
-- **Tuân thủ tệp Script DB**: Bắt buộc tham chiếu tệp [script-db.sql](file:///d:/workspace/do_an_tot_nghiep/script-db.sql) khi viết Model và viết SQL trong Repository để đồng bộ kiểu dữ liệu và cấu trúc quan hệ.
+- **Tuân thủ tệp Script DB**: Bắt buộc tham chiếu tệp [script-db.sql](../../../script-db.sql) khi viết Model và viết SQL trong Repository để đồng bộ kiểu dữ liệu và cấu trúc quan hệ.
 - **Thao tác dữ liệu qua luồng API**: Mọi thay đổi dữ liệu (thêm/sửa/xóa) phải được lập trình chạy theo đúng luồng API chuẩn (Route -> Validator -> Controller -> Service -> Repository), tuyệt đối không thực thi các câu lệnh SQL trực tiếp trên database của người dùng để can thiệp dữ liệu thủ công.
 - **Không thực thi các câu lệnh phá hủy**: Nghiêm cấm chạy các câu lệnh thay đổi cấu trúc bảng (DROP, ALTER,...) trực tiếp trên database của khách hàng để đảm bảo an toàn tuyệt đối cho hệ thống dữ liệu.
 

@@ -8,7 +8,7 @@ void main() async {
 
   try {
     await AppBootstrap.init();
-  } catch (e, st) {
+  } catch (e) {
     debugPrint('Bootstrap error: $e');
   }
 

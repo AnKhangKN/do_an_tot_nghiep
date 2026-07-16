@@ -35,7 +35,7 @@ Dưới đây là các quy tắc nghiêm ngặt mà AI phải tuân thủ khi l�
   - AI không nên chạy các lệnh build Gradle nặng hoặc chạy `flutter run` gây khóa tài nguyên hoặc xung đột với Android Studio đang chạy. Hãy để Android Studio tự quản lý Hot Reload/Build, AI chỉ cần tập trung viết code `.dart` chất lượng.
 * **Thiết kế & Tạo UI Mobile (Flutter)**:
   - Giao diện phải hiện đại, trực quan, hỗ trợ Responsive tốt cho nhiều kích thước màn hình (sử dụng `MediaQuery`, `LayoutBuilder` hoặc thư viện như `flutter_screenutil` nếu có sẵn).
-  - Tách các Widget giao diện thành các Component nhỏ, dễ tái sử dụng và đặt trong `shared/` hoặc thư mục con `widgets/` của feature.
+  - **Tách các thành phần Widget con**: Tách các thành phần giao diện nhỏ (như Card, Item, Button, Header...) thành các Widget riêng biệt và lưu trữ tại thư mục `widgets/` của feature đó, hoặc trong thư mục `shared/widgets/` nếu là widget dùng chung toàn dự án. Tránh định nghĩa trực tiếp các widget con phức tạp bên trong file Screen để giữ file ngắn gọn, dễ chỉnh sửa và dễ bảo trì.
   - **Bắt buộc**: Tách biệt UI và Logic. Sử dụng **Bloc** hoặc **Cubit** để quản lý trạng thái UI. Tuyệt đối không lạm dụng `setState` hoặc viết logic xử lý API/nghiệp vụ trực tiếp bên trong giao diện Widget.
 * **Thiết kế & Đồng bộ UI Web Admin (React/Tailwind)**:
   - **Đồng bộ tone màu**: Bắt buộc sử dụng tone màu tối giản hiện đại (Minimalist & Sleek) đã có sẵn:
@@ -54,7 +54,7 @@ Dưới đây là các quy tắc nghiêm ngặt mà AI phải tuân thủ khi l�
 ---
 
 ## 4. Quy định làm việc với Cơ sở dữ liệu & Repository (Database Rules)
-* **Tuân thủ Script Database**: Khi tạo hoặc cập nhật các Model và Repository, AI bắt buộc phải tham chiếu và tuân thủ chính xác cấu trúc bảng, kiểu dữ liệu (UUID, DOUBLE PRECISION,...), quan hệ khóa ngoại và các Index đã được khai báo tại file [script-db.sql](file:///d:/workspace/do_an_tot_nghiep/script-db.sql) để đảm bảo đồng bộ hệ thống.
+* **Tuân thủ Script Database**: Khi tạo hoặc cập nhật các Model và Repository, AI bắt buộc phải tham chiếu và tuân thủ chính xác cấu trúc bảng, kiểu dữ liệu (UUID, DOUBLE PRECISION,...), quan hệ khóa ngoại và các Index đã được khai báo tại file [script-db.sql](../script-db.sql) để đảm bảo đồng bộ hệ thống.
 * **Chỉ thao tác dữ liệu thông qua API**: Khi thực hiện các nghiệp vụ thay đổi dữ liệu (ví dụ: tạo người dùng mới, cập nhật trạng thái, xóa tài khoản,...), bắt buộc phải lập trình viết mã nguồn chạy theo đúng luồng API chuẩn của hệ thống (Route -> Validator -> Controller -> Service -> Repository).
 * **Cấm can thiệp trực tiếp vào DB**:
   - Tuyệt đối **KHÔNG** chạy trực tiếp các câu lệnh query (INSERT, UPDATE, DELETE) thủ công trên database để thay đổi dữ liệu, nhằm ngăn ngừa nguy cơ sai lệch dữ liệu và mất tính nhất quán.

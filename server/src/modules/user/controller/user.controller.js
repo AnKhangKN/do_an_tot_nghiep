@@ -20,6 +20,23 @@ class UserController {
         }
     }
 
+    getUsersAdmin = async (req, res, next) => {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+
+            const result = await userService.getUsersAdmin({ page, limit });
+
+            res.status(200).json({
+                success: true,
+                message: "Lấy danh sách người dùng thành công",
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // TODO: xử lý sau
 
     updateUserInfo = async (req, res, next) => { }

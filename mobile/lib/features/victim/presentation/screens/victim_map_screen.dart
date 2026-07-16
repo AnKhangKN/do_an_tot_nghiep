@@ -78,8 +78,8 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
                       Align(
                         alignment: Alignment.bottomCenter,
                         child: VictimSosButtonWidget(
-                          victimLat: position!.latitude,
-                          victimLng: position.longitude,
+                          victimLat: position?.latitude,
+                          victimLng: position?.longitude,
                         ),
                       ),
                       const Align(

@@ -44,13 +44,20 @@ class AuthService {
         try {
             const userAuth = await jwt.verify(refreshToken, REFRESH_TOKEN);
 
-            const newAccessToken = await generateAccessToken({
-                userId: userAuth.userId,
-                role: userAuth.role
-            })
+            return await transaction(async (client) => {
+                const user = await this.userService.getUserAuthInfo(client, { userId: userAuth.userId });
 
-            return { accessToken: newAccessToken };
+                if (!user) {
+                    throwError("Không tìm thấy người dùng!", 404);
+                }
 
+                const newAccessToken = await generateAccessToken({
+                    userId: userAuth.userId,
+                    role: user.role
+                });
+
+                return { accessToken: newAccessToken };
+            });
         } catch (error) {
             throwError("Làm mới token thất bại!", 400);
         }

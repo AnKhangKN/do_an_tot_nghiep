@@ -99,7 +99,7 @@ class RescueRepository {
 
         const countQuery = `
         SELECT COUNT(*) AS total
-        FROM ${this.rescuerModel.table}
+        FROM ${this.rescuerProfileModel.table}
         `
 
         const [dataResult, countResult] = await Promise.all([
@@ -118,7 +118,7 @@ class RescueRepository {
     }
 
     // Admin
-    isVerifiedRescuer = async ({ userId }) => {
+    isVerifiedRescuer = async (client, { userId }) => {
         const query = `
             UPDATE ${this.rescuerProfileModel.table}
             SET ${this.rescuerProfileModel.field.isVerified} = true
@@ -126,7 +126,7 @@ class RescueRepository {
             RETURNING *;
         `;
 
-        const result = await pool.query(query, [userId]);
+        const result = await client.query(query, [userId]);
 
         return result.rows[0];
     }
@@ -186,14 +186,16 @@ class RescueRepository {
     }
 
     updateLastSeen = async ({ userId }) => {
+        const now = new Date();
         const query = `
             UPDATE ${this.rescuerProfileModel.table}
-            SET ${this.rescuerProfileModel.field.lastSeenAt} = NOW()
+            SET ${this.rescuerProfileModel.field.lastSeenAt} = $2
             WHERE ${this.rescuerProfileModel.field.userId} = $1
             RETURNING *
         `;
 
-        const result = await pool.query(query, [userId]);
+        const result = await pool.query(query, [userId, now]);
+        console.log(`[DB] Cập nhật lastSeenAt cho user ${userId}:`, result.rows[0]);
         return result.rows[0];
     }
 

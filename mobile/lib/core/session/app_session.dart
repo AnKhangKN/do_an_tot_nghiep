@@ -7,6 +7,7 @@ import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/socket/modules/rescuer_socket.dart';
 import 'package:mobile/core/socket/socket_events.dart';
 import 'package:mobile/core/storage/storage_service.dart';
+import 'package:mobile/core/constants/app_constants.dart';
 
 import '../../features/auth/data/auth_repository.dart';
 import '../background/background_service.dart';
@@ -77,7 +78,8 @@ class AppSession {
 
         if (userRole == UserRole.rescuer) {
           heartbeatSocket.start();
-          background.start();
+          await _startBackgroundService(token, profileResponse.userId, profileResponse.role);
+          rescuerSocket.listenSosOffer();
         }
       } catch (e, stackTrace) {
         debugPrint("🚨 LỖI INIT SESSION: $e\n$stackTrace");
@@ -89,6 +91,23 @@ class AppSession {
       controller.setLoggedIn(false);
       controller.reset();
     }
+  }
+
+  Future<void> _startBackgroundService(
+    String token,
+    String userId,
+    String role,
+  ) async {
+    await background.start();
+    // Chờ 1.5 giây để background isolate khởi động và đăng ký listener xong
+    await Future.delayed(const Duration(milliseconds: 1500));
+    background.send({
+      "type": "init",
+      "token": token,
+      "userId": userId,
+      "role": role,
+      "baseUrl": AppConstants.baseUrl,
+    });
   }
 
   // =========================
@@ -131,7 +150,7 @@ class AppSession {
 
       final profileResponse = await authRepository.getMe();
 
-      await background.start();
+      await _startBackgroundService(token, profileResponse.userId, profileResponse.role);
 
       // Đảm bảo socket đã kết nối
       await socket.ensureConnected(
@@ -143,6 +162,7 @@ class AppSession {
       // QUAN TRỌNG: Tái đăng ký lắng nghe SOS đề phòng socket vừa bị reconnect/re-init
       if (profileResponse.role == 'RESCUER') {
         rescuerSocket.listenSosOffer();
+        heartbeatSocket.start();
       }
 
       // Khởi động GPS Tracking
@@ -201,6 +221,7 @@ class AppSession {
         socket.emit(SocketEvents.goOffline);
       }
 
+      heartbeatSocket.stop();
       controller.setOnline(false);
       await background.updateNotification(
         title: BackgroundConfig.notificationTitle,

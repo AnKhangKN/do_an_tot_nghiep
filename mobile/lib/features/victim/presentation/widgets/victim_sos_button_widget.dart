@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../providers/victim_map_provider.dart';
 
 class VictimSosButtonWidget extends StatefulWidget {
-  final double victimLat;
-  final double victimLng;
+  final double? victimLat;
+  final double? victimLng;
 
   const VictimSosButtonWidget({
     super.key,
@@ -187,6 +187,17 @@ class _VictimSosButtonWidgetState
                                     return;
                                   }
 
+                                  if (widget.victimLat == null || widget.victimLng == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Không thể xác định vị trí hiện tại của bạn. Vui lòng bật định vị GPS!",
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
                                   final success =
                                   await provider.sendSos(
                                     phoneController.text
@@ -200,8 +211,8 @@ class _VictimSosButtonWidgetState
                                         : descriptionController
                                         .text
                                         .trim(),
-                                    widget.victimLat,
-                                    widget.victimLng,
+                                    widget.victimLat!,
+                                    widget.victimLng!,
                                   );
 
                                   if (!mounted) return;

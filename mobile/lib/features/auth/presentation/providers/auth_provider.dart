@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 
+import 'package:dio/dio.dart';
 import '../../../../core/session/session_state.dart';
 import '../../data/auth_repository.dart';
 import '../../models/login_request.dart';
+import '../../models/register_request.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository authRepository;
@@ -57,5 +59,37 @@ class AuthProvider extends ChangeNotifier {
     await authRepository.logout();
     await appSession.logout();
     notifyListeners();
+  }
+
+  Future<bool> register(
+    String email,
+    String password,
+    String confirmPassword,
+  ) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final request = RegisterRequest(
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword,
+        providerId: email,
+      );
+
+      await authRepository.register(request);
+      return true;
+    } catch (e) {
+      if (e is DioException) {
+        error = e.response?.data?['message'] ?? e.message ?? e.toString();
+      } else {
+        error = e.toString();
+      }
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }

@@ -16,4 +16,8 @@ class AuthService {
   Future<Response> getMe () async {
     return await dio.get('/api/auth/me');
   }
+
+  Future<Response> register(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/register', data: data);
+  }
 }

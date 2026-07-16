@@ -1,130 +1,131 @@
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import { formatTime } from '@/utils/format_date.util';
 import React from 'react';
-
-const columns = [
-  {
-    key: 'index',
-    title: 'STT',
-    render: (_, index) => (
-      <span className="text-gray-500">{index + 1}</span>
-    ),
-  },
-  {
-    key: 'fullName',
-    title: 'Họ và tên',
-    dataIndex: 'fullName',
-  },
-  {
-    key: 'email',
-    title: 'Email',
-    dataIndex: 'email',
-  },
-  {
-    key: 'phone',
-    title: 'Số điện thoại',
-    dataIndex: 'phone',
-  },
-  {
-    key: 'experience',
-    title: 'Kinh nghiệm',
-    dataIndex: 'experience',
-  },
-  {
-    key: 'status',
-    title: 'Trạng thái',
-    render: (row) => (
-      <span
-        className={`px-2 py-1 text-xs rounded-full font-medium ${
-          row.status === 'APPROVED'
-            ? 'bg-green-100 text-green-700'
-            : row.status === 'PENDING'
-            ? 'bg-yellow-100 text-yellow-700'
-            : 'bg-red-100 text-red-700'
-        }`}
-      >
-        {row.status}
-      </span>
-    ),
-  },
-  {
-    key: 'createdAt',
-    title: 'Ngày đăng ký',
-    render: (row) => (
-      <span className="text-gray-500 text-sm">
-        {formatTime(row.createdAt)}
-      </span>
-    ),
-  },
-];
-
-const mockRescuers = [
-  {
-    rescuerId: '1',
-    fullName: 'Nguyễn Văn A',
-    email: 'nguyenvana@gmail.com',
-    phone: '0901234567',
-    experience: '3 năm cứu hộ giao thông',
-    status: 'APPROVED',
-    createdAt: '2026-05-20T08:30:00',
-  },
-  {
-    rescuerId: '2',
-    fullName: 'Trần Thị B',
-    email: 'tranthib@gmail.com',
-    phone: '0912345678',
-    experience: '2 năm sơ cứu y tế',
-    status: 'PENDING',
-    createdAt: '2026-05-18T14:10:00',
-  },
-  {
-    rescuerId: '3',
-    fullName: 'Lê Văn C',
-    email: 'levanc@gmail.com',
-    phone: '0987654321',
-    experience: '5 năm cứu hộ thiên tai',
-    status: 'APPROVED',
-    createdAt: '2026-05-15T09:45:00',
-  },
-  {
-    rescuerId: '4',
-    fullName: 'Phạm Thị D',
-    email: 'phamthid@gmail.com',
-    phone: '0978123456',
-    experience: '1 năm hỗ trợ cộng đồng',
-    status: 'REJECTED',
-    createdAt: '2026-05-12T17:20:00',
-  },
-  {
-    rescuerId: '5',
-    fullName: 'Hoàng Văn E',
-    email: 'hoangvane@gmail.com',
-    phone: '0966777888',
-    experience: '4 năm cứu hộ đường thủy',
-    status: 'APPROVED',
-    createdAt: '2026-05-10T11:00:00',
-  },
-];
+import { getRescuersAdmin, verifyRescuerAdmin } from '@/api/admin/RescuerApi';
 
 const RescuerPage = () => {
-  const [rescuers, setRescuers] = React.useState(mockRescuers);
+  const [rescuers, setRescuers] = React.useState([]);
   const [page, setPage] = React.useState(1);
   const [loading, setLoading] = React.useState(false);
   const [totalPages, setTotalPages] = React.useState(1);
+  const LIMIT = 10;
+
+  const handleVerify = async (userId) => {
+    try {
+      const response = await verifyRescuerAdmin(userId);
+      if (response && response.success) {
+        setRescuers((prev) =>
+          prev.map((r) =>
+            r.userId === userId ? { ...r, isVerified: true } : r
+          )
+        );
+        alert("Duyệt người cứu hộ thành công!");
+      } else {
+        alert(response.message || "Duyệt người cứu hộ thất bại.");
+      }
+    } catch (error) {
+      console.error("Lỗi duyệt cứu hộ:", error);
+      alert("Đã xảy ra lỗi khi duyệt người cứu hộ.");
+    }
+  };
+
+  const columns = [
+    {
+      key: 'index',
+      title: 'STT',
+      render: (_, index) => (
+        <span className="text-gray-500">{index + 1}</span>
+      ),
+    },
+    {
+      key: 'fullName',
+      title: 'Họ và tên',
+      dataIndex: 'fullName',
+    },
+    {
+      key: 'email',
+      title: 'Email',
+      dataIndex: 'email',
+    },
+    {
+      key: 'phone',
+      title: 'Số điện thoại',
+      dataIndex: 'phone',
+    },
+    {
+      key: 'isVerified',
+      title: 'Xác minh hồ sơ',
+      render: (row) => (
+        row.isVerified ? (
+          <span className="px-2.5 py-1 text-xs rounded-full font-semibold bg-green-50 text-green-700 border border-green-200">
+            Đăng ký thành công
+          </span>
+        ) : (
+          <button
+            onClick={() => handleVerify(row.userId)}
+            className="px-3.5 py-1.5 text-xs rounded-2xl font-bold bg-gray-900 text-white hover:bg-gray-800 transition shadow-sm hover:shadow active:scale-95 cursor-pointer"
+          >
+            Duyệt
+          </button>
+        )
+      ),
+    },
+    {
+      key: 'status',
+      title: 'Trạng thái',
+      render: (row) => (
+        <span
+          className={`px-2 py-1 text-xs rounded-full font-medium ${
+            row.status === 'ACTIVE' || row.status === 'ONLINE'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-100 text-red-700'
+          }`}
+        >
+          {row.status === 'ACTIVE' || row.status === 'ONLINE' ? 'ONLINE' : 'OFFLINE'}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      title: 'Ngày đăng ký',
+      render: (row) => (
+        <span className="text-gray-500 text-sm">
+          {formatTime(row.createdAt)}
+        </span>
+      ),
+    },
+  ];
+
+  React.useEffect(() => {
+    const fetchRescuers = async () => {
+      setLoading(true);
+      try {
+        const response = await getRescuersAdmin(page, LIMIT);
+        if (response && response.success) {
+          setRescuers(response.data.data || []);
+          setTotalPages(response.data.totalPages || 1);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách cứu hộ:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRescuers();
+  }, [page]);
 
   return (
     <div>
-      
-        <TableComponent
-          columns={columns}
-          data={rescuers}
-          rowKey="rescuerId"
-          page={page}
-          totalPages={totalPages}
-          onPageChange={(p) => setPage(p)}
-          loading={loading}
-        />
-      
+      <TableComponent
+        columns={columns}
+        data={rescuers}
+        rowKey="userId"
+        page={page}
+        totalPages={totalPages}
+        onPageChange={(p) => setPage(p)}
+        loading={loading}
+      />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/color_constants.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -7,122 +8,59 @@ class HistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final histories = [
       {
-        "title": "Cứu hộ thành công",
+        "title": "Cứu hộ khẩn cấp",
         "location": "Cầu Ninh Kiều, Cần Thơ",
         "date": "21/05/2026 • 14:20",
         "status": "success",
-        "description":
-        "Đội cứu hộ đã tiếp cận và hỗ trợ bạn an toàn.",
+        "description": "Đội cứu hộ đã tiếp cận và hỗ trợ bạn an toàn.",
       },
       {
-        "title": "Yêu cầu bị từ chối",
+        "title": "Yêu cầu y tế",
         "location": "Bình Thủy, Cần Thơ",
         "date": "18/05/2026 • 09:15",
         "status": "rejected",
-        "description":
-        "Yêu cầu không hợp lệ hoặc không đủ thông tin xác minh.",
+        "description": "Yêu cầu không hợp lệ hoặc không đủ thông tin xác minh.",
       },
       {
-        "title": "Cứu hộ không thành công",
+        "title": "Tai nạn giao thông",
         "location": "Phong Điền, Cần Thơ",
         "date": "15/05/2026 • 22:10",
         "status": "failed",
-        "description":
-        "Đội cứu hộ không thể tiếp cận vị trí do thời tiết xấu.",
+        "description": "Đội cứu hộ không thể tiếp cận vị trí do thời tiết xấu.",
       },
       {
-        "title": "Cứu hộ thành công",
+        "title": "Hỗ trợ di dời",
         "location": "Ninh Kiều, Cần Thơ",
         "date": "10/05/2026 • 17:45",
         "status": "success",
-        "description":
-        "Bạn đã được sơ tán đến khu vực an toàn.",
+        "description": "Bạn đã được sơ tán đến khu vực an toàn.",
       },
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FC),
+      backgroundColor: ColorConstants.backgroundLight,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: ColorConstants.surfaceWhite,
         elevation: 0,
-        surfaceTintColor: Colors.white,
         centerTitle: true,
         title: const Text(
-          "Lịch sử",
+          "LỊCH SỬ HỖ TRỢ",
           style: TextStyle(
-            color: Color(0xFF1B1E28),
-            fontWeight: FontWeight.bold,
+            color: ColorConstants.redRescue,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.1,
           ),
         ),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // Header Card
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFFD6D27),
-                    Color(0xFFFF8C42),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.2),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Icon(
-                      Icons.history_rounded,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Lịch sử hỗ trợ",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          "Theo dõi các yêu cầu cứu hộ đã được xử lý.",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
+            // Header Stats Card
+            _buildStatsHeader(),
 
             // Filter Tabs
             SizedBox(
-              height: 42,
+              height: 50,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -135,7 +73,7 @@ class HistoryScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // History List
             Expanded(
@@ -144,7 +82,6 @@ class HistoryScreen extends StatelessWidget {
                 itemCount: histories.length,
                 itemBuilder: (context, index) {
                   final item = histories[index];
-
                   return _HistoryCard(
                     title: item["title"] as String,
                     location: item["location"] as String,
@@ -161,27 +98,88 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildStatsHeader() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: ColorConstants.redRescue,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: ColorConstants.redRescue.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _StatItem(label: "Tổng cộng", value: "24"),
+          _VerticalDivider(),
+          _StatItem(label: "Thành công", value: "22"),
+          _VerticalDivider(),
+          _StatItem(label: "Cảnh báo", value: "02"),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFilterChip(String label, bool active) {
     return Container(
-      margin: const EdgeInsets.only(right: 10),
-      child: Chip(
+      margin: const EdgeInsets.only(right: 8, bottom: 8, top: 8),
+      child: FilterChip(
         label: Text(
           label,
           style: TextStyle(
-            color: active ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.w600,
+            color: active ? Colors.white : ColorConstants.textSecondary,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor:
-        active ? const Color(0xFF1565C0) : Colors.white,
-        side: BorderSide(
-          color: active
-              ? const Color(0xFF1565C0)
-              : Colors.grey.withOpacity(0.2),
+        selected: active,
+        onSelected: (val) {},
+        backgroundColor: ColorConstants.surfaceWhite,
+        selectedColor: ColorConstants.redRescue,
+        checkmarkColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: active ? ColorConstants.redRescue : Colors.transparent,
+          ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 10),
       ),
     );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final String label;
+  final String value;
+  const _StatItem({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+        ),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+}
+
+class _VerticalDivider extends StatelessWidget {
+  const _VerticalDivider();
+  @override
+  Widget build(BuildContext context) {
+    return Container(height: 30, width: 1, color: Colors.white24);
   }
 }
 
@@ -202,27 +200,10 @@ class _HistoryCard extends StatelessWidget {
 
   Color get statusColor {
     switch (status) {
-      case "success":
-        return Colors.green;
-      case "failed":
-        return Colors.orange;
-      case "rejected":
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData get statusIcon {
-    switch (status) {
-      case "success":
-        return Icons.verified_rounded;
-      case "failed":
-        return Icons.warning_amber_rounded;
-      case "rejected":
-        return Icons.cancel_rounded;
-      default:
-        return Icons.history_rounded;
+      case "success": return ColorConstants.success;
+      case "failed": return ColorConstants.orangeWarning;
+      case "rejected": return ColorConstants.redRescue;
+      default: return ColorConstants.textSecondary;
     }
   }
 
@@ -230,129 +211,76 @@ class _HistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        color: ColorConstants.surfaceWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border(left: BorderSide(color: statusColor, width: 6)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Icon(
-              statusIcon,
-              color: statusColor,
-              size: 30,
-            ),
-          ),
-
-          const SizedBox(width: 14),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        status.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on_rounded,
-                      size: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        location,
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 6),
-
-                Row(
-                  children: [
-                    Icon(
-                      Icons.access_time_rounded,
-                      size: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      date,
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
                 Text(
-                  description,
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    height: 1.5,
-                    fontSize: 14,
+                  title.toUpperCase(),
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    status == "success" ? "HOÀN THÀNH" : status == "failed" ? "THẤT BẠI" : "BỊ TỪ CHỐI",
+                    style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            _IconText(icon: Icons.location_on_outlined, text: location, color: ColorConstants.textPrimary),
+            const SizedBox(height: 4),
+            _IconText(icon: Icons.access_time, text: date, color: ColorConstants.textSecondary),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(height: 1),
+            ),
+            Text(
+              description,
+              style: const TextStyle(color: ColorConstants.textSecondary, fontSize: 13, height: 1.4),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _IconText extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+  const _IconText({required this.icon, required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: ColorConstants.redRescue),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500))),
+      ],
     );
   }
 }

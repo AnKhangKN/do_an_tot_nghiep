@@ -5,6 +5,7 @@ module.exports = (socket, io) => {
     socket.on("rescuer:heartbeat", async () => {
         try {
             const userId = socket.user.userId;
+            console.log(`[SOCKET] Nhận heartbeat từ user: ${userId}`);
             await rescuerService.updateLastSeen({ userId });
         } catch (error) {
             console.error("Heartbeat error:", error);

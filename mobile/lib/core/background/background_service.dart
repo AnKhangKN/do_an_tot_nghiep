@@ -20,9 +20,12 @@ class BackgroundService {
   /// INIT CONFIG (CHỈ 1 LẦN)
   /// =========================
   Future<void> initialize() async {
-    if (_configured) return;
+    if (_configured) {
+      debugPrint("ℹ️ [BackgroundService] Already configured. Skipping.");
+      return;
+    }
 
-    debugPrint("🚀 Configuring Background Service...");
+    debugPrint("🚀 [BackgroundService] Configuring Background Service...");
 
     // =========================
     // NOTIFICATION CHANNEL
@@ -64,15 +67,50 @@ class BackgroundService {
 
     _configured = true;
 
-    debugPrint("✅ Background Service Configured");
+    debugPrint("✅ [BackgroundService] Background Service Configured Successfully");
+  }
+
+  /// =========================
+  /// REQUEST NOTIFICATION PERMISSION
+  /// =========================
+  Future<void> requestNotificationPermission() async {
+    final notifications = FlutterLocalNotificationsPlugin();
+
+    // Xin quyền trên Android 13+
+    final androidImplementation = notifications
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidImplementation != null) {
+      await androidImplementation.requestNotificationsPermission();
+    }
+
+    // Xin quyền trên iOS
+    final iosImplementation = notifications
+        .resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (iosImplementation != null) {
+      await iosImplementation.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
   }
 
   /// =========================
   /// START SERVICE
   /// =========================
   Future<void> start() async {
+    debugPrint("🚀 [BackgroundService] start() called");
+    // Xin quyền gửi thông báo trước khi khởi chạy service chạy ngầm
+    await requestNotificationPermission();
 
-    await _service.startService();
+    // Đảm bảo dịch vụ đã được cấu hình trước khi chạy
+    await initialize();
+
+    debugPrint("🚀 [BackgroundService] Invoking _service.startService()...");
+    final started = await _service.startService();
+    debugPrint("🚀 [BackgroundService] _service.startService() completed, result: $started");
   }
 
   /// =========================

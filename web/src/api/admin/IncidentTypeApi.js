@@ -12,3 +12,13 @@ export const getIncidentTypes = async (page, limit) => {
         throw error;
     }
 };
+
+export const createIncidentType = async (incidentType) => {
+    try {
+        const response = await axiosJWT.post(`/api/incident_types/admin`, { incidentType });
+        return response.data;
+    } catch (error) {
+        console.error("Create incident type error:", error);
+        throw error;
+    }
+};

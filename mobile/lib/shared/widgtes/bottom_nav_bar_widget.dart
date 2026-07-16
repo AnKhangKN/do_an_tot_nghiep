@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/color_constants.dart';
 
 class BottomNavBarWidget extends StatelessWidget {
   final int currentIndex;
@@ -12,60 +13,57 @@ class BottomNavBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: ColorConstants.surfaceWhite,
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
+          top: Radius.circular(28),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 25,
+            offset: const Offset(0, -5),
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
+          top: Radius.circular(28),
         ),
         child: NavigationBar(
-          height: 72,
+          height: 80,
           selectedIndex: currentIndex,
           onDestinationSelected: onTap,
-          backgroundColor: theme.colorScheme.surface,
-          indicatorColor:
-          theme.colorScheme.primary.withValues(alpha: 0.15),
-          labelBehavior:
-          NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: const [
+          backgroundColor: ColorConstants.surfaceWhite,
+          elevation: 0,
+          indicatorColor: ColorConstants.redRescue.withOpacity(0.12),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.map_outlined),
-              selectedIcon: Icon(Icons.map),
-              label: 'Map',
+              icon: const Icon(Icons.explore_outlined, color: ColorConstants.textSecondary),
+              selectedIcon: const Icon(Icons.explore, color: ColorConstants.redRescue),
+              label: 'Bản đồ',
             ),
             NavigationDestination(
-              icon: Icon(Icons.history_outlined),
-              selectedIcon: Icon(Icons.history),
-              label: 'History',
+              icon: const Icon(Icons.assignment_outlined, color: ColorConstants.textSecondary),
+              selectedIcon: const Icon(Icons.assignment, color: ColorConstants.redRescue),
+              label: 'Lịch sử',
             ),
             NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
-              selectedIcon: Icon(Icons.chat),
-              label: 'Chat',
+              icon: const Icon(Icons.forum_outlined, color: ColorConstants.textSecondary),
+              selectedIcon: const Icon(Icons.forum, color: ColorConstants.redRescue),
+              label: 'Tin nhắn',
             ),
             NavigationDestination(
-              icon: Icon(Icons.notifications_none),
-              selectedIcon: Icon(Icons.notifications),
-              label: 'Notify',
+              icon: const Icon(Icons.notifications_outlined, color: ColorConstants.textSecondary),
+              selectedIcon: const Icon(Icons.notifications_active, color: ColorConstants.redRescue),
+              label: 'Thông báo',
             ),
             NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Profile',
+              icon: const Icon(Icons.person_outline, color: ColorConstants.textSecondary),
+              selectedIcon: const Icon(Icons.person, color: ColorConstants.redRescue),
+              label: 'Cá nhân',
             ),
           ],
         ),

@@ -9,7 +9,7 @@ const TableComponent = ({
   // pagination props
   page = 1,
   totalPages = 1,
-  onPageChange = () => {},
+  onPageChange = () => { },
 
   loading = false,
   onRowClick, // Callback tùy chọn từ component cha
@@ -127,9 +127,15 @@ const TableComponent = ({
 
       {/* DETAIL MODAL */}
       {selectedRow && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300">
-          <div className="bg-white rounded-3xl max-w-lg w-full border border-gray-100 shadow-2xl flex flex-col overflow-hidden max-h-[90vh] animate-in fade-in zoom-in duration-200">
-            
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex justify-end backdrop-blur-sm transition-all duration-300"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white rounded-l-3xl max-w-md w-full border-l border-gray-100 shadow-2xl flex flex-col overflow-hidden h-full animate-in fade-in slide-in-from-right duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+
             {/* Modal Header */}
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900">

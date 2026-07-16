@@ -49,6 +49,20 @@ class UserService {
     
     return await this.userRepository.updatePhone(client, { userId, phone });
   }
+
+  updateRole = async (client, { userId, role }) => {
+    return await this.userRepository.updateRole(client, { userId, role });
+  }
+
+  getUsersAdmin = async ({ page, limit }) => {
+    const result = await this.userRepository.getUsersAdmin({ page, limit });
+    return {
+      data: result.data.map(row => mapFields(row, this.userModel)),
+      total: result.total,
+      page: result.page,
+      totalPages: result.totalPages
+    };
+  }
 }
 
 module.exports = new UserService();
