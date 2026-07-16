@@ -17,14 +17,9 @@ class RescuerLocationService {
             userId
         );
 
-        // Debug: Lấy vị trí của rescuer từ redis để kiểm tra
-        const pos = await redis.geopos(
-            'rescuer_locations',
-            userId
-        );
-
-        console.log(pos);
-
+        // Thiết lập key phụ hoạt động có thời hạn (TTL) 5 phút để dọn dẹp rác khi mất mạng
+        await redis.set(`active:rescuer:${userId}`, '1', 'EX', 300);
+        console.log(`[REDIS] Cập nhật active key cho user ${userId} với TTL 5 phút.`);
     };
 }
 

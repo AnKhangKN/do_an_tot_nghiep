@@ -19,7 +19,7 @@ class VictimSosButtonWidget extends StatefulWidget {
 }
 
 class _VictimSosButtonWidgetState
-    extends State<VictimSosButtonWidget> {
+    extends State<VictimSosButtonWidget> with SingleTickerProviderStateMixin {
   final TextEditingController phoneController =
   TextEditingController();
 
@@ -28,10 +28,43 @@ class _VictimSosButtonWidgetState
 
   String? selectedIncidentTypeId;
 
+  // Quản lý animation nhấn giữ
+  late AnimationController _animationController;
+  double _progressValue = 0.0;
+  bool _isPressing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2), // Thời gian nhấn giữ 2 giây
+    );
+
+    _animationController.addListener(() {
+      setState(() {
+        _progressValue = _animationController.value;
+      });
+    });
+
+    _animationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        // Nhấn giữ đủ thời gian -> Mở Form SOS
+        _animationController.reset();
+        setState(() {
+          _progressValue = 0.0;
+          _isPressing = false;
+        });
+        _showSosForm();
+      }
+    });
+  }
+
   @override
   void dispose() {
     phoneController.dispose();
     descriptionController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -293,58 +326,91 @@ class _VictimSosButtonWidgetState
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 52,
-      width: 150,
-      padding:
-      const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: const Color(0xFFDC2626),
-          width: 1.4,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() {
+          _isPressing = true;
+        });
+        _animationController.forward();
+      },
+      onTapUp: (_) {
+        if (_animationController.status != AnimationStatus.completed) {
+          _animationController.reverse();
+          setState(() {
+            _isPressing = false;
+          });
+        }
+      },
+      onTapCancel: () {
+        _animationController.reverse();
+        setState(() {
+          _isPressing = false;
+        });
+      },
+      child: Container(
+        height: 52,
+        width: 150,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(
+            color: _isPressing ? const Color(0xFFB91C1C) : const Color(0xFFDC2626),
+            width: 1.4,
           ),
-        ],
-      ),
-      child: TextButton(
-        onPressed: _showSosForm,
-        style: TextButton.styleFrom(
-          padding: EdgeInsets.zero,
-          foregroundColor:
-          const Color(0xFFDC2626),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Container(
-              height: 40,
-              width: 40,
+            const SizedBox(width: 2),
+            Stack(
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xFFDC2626),
-                shape: BoxShape.circle,
-              ),
-              child: const Text(
-                'SOS',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
+              children: [
+                if (_isPressing || _progressValue > 0.0)
+                  SizedBox(
+                    height: 44,
+                    width: 44,
+                    child: CircularProgressIndicator(
+                      value: _progressValue,
+                      strokeWidth: 2.5,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFFB91C1C),
+                      ),
+                      backgroundColor: Colors.grey.shade200,
+                    ),
+                  ),
+                Container(
+                  height: 38,
+                  width: 38,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDC2626),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Text(
+                    'SOS',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(width: 10),
-            const Text(
-              'Cứu hộ',
+            const SizedBox(width: 8),
+            Text(
+              _isPressing ? 'Giữ thêm...' : 'Cứu hộ',
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: FontWeight.w800,
+                color: _isPressing ? const Color(0xFFB91C1C) : Colors.black87,
               ),
             ),
           ],

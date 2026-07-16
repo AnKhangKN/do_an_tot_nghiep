@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:mobile/core/storage/offline_queue_service.dart';
 
 import 'background_config.dart';
 
@@ -13,13 +14,15 @@ class ServiceHandler {
   String? _role;
   String? _baseUrl;
 
-  double? _lastLat;
-  double? _lastLng;
+  // Quản lý định vị Stream và Heartbeat
+  StreamSubscription<Position>? _positionSubscription;
+  Timer? _heartbeatTimer;
+  bool _running = false;
+
+  // Quản lý hàng đợi offline
+  final OfflineQueueService _offlineQueue = OfflineQueueService();
 
   ServiceHandler(this.service);
-
-  Timer? _timer;
-  bool _running = false;
 
   /// =========================
   /// INIT
@@ -35,16 +38,36 @@ class ServiceHandler {
   void start() {
     _running = true;
 
-    _timer = Timer.periodic(
-      Duration(seconds: BackgroundConfig.locationIntervalSeconds),
-      (_) async {
+    // 1. Đăng ký lắng nghe Stream định vị (Chỉ kích hoạt khi di chuyển >= minDistanceMeters)
+    _positionSubscription = Geolocator.getPositionStream(
+      locationSettings: LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: BackgroundConfig.minDistanceMeters.toInt(),
+      ),
+    ).listen(
+      (Position position) async {
         if (!_running) return;
 
-        final location = await _getLocation();
-
-        await _sendLocation(location);
+        print("[BACKGROUND SERVICE] Stream nhận tọa độ mới: ${position.latitude}, ${position.longitude}");
+        await _sendLocation({
+          "lat": position.latitude,
+          "lng": position.longitude,
+        });
+      },
+      onError: (error) {
+        print("[BACKGROUND SERVICE] Lỗi Stream GPS: $error");
       },
     );
+
+    // 2. Chạy Timer gửi Heartbeat định kỳ độc lập mỗi 15 giây để duy trì trạng thái online
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (!_running) return;
+
+      if (_socket != null && _socket!.connected) {
+        _socket!.emit("rescuer:heartbeat");
+        print("[BACKGROUND SOCKET] Gửi heartbeat định kỳ 15s");
+      }
+    });
   }
 
   /// =========================
@@ -52,7 +75,10 @@ class ServiceHandler {
   /// =========================
   void stop() {
     _running = false;
-    _timer?.cancel();
+    _positionSubscription?.cancel();
+    _positionSubscription = null;
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
 
     // Ngắt kết nối socket chạy nền
     _socket?.disconnect();
@@ -124,9 +150,10 @@ class ServiceHandler {
 
     _socket!.connect();
 
-    _socket!.onConnect((_) {
+    _socket!.onConnect((_) async {
       print("[BACKGROUND SOCKET] Connected successfully!");
       _socket!.emit("rescuer:online");
+      await _syncPendingLocations();
     });
 
     _socket!.onConnectError((e) {
@@ -145,22 +172,44 @@ class ServiceHandler {
   /// =========================
   /// GET GPS (REAL / FALLBACK)
   /// =========================
-  Future<Map<String, double>> _getLocation() async {
+  Future<Map<String, double>?> _getLocation() async {
     try {
+      // 1. Thử lấy vị trí gần nhất trong cache (cực nhanh, không bao giờ timeout)
+      final lastPosition = await Geolocator.getLastKnownPosition();
+      if (lastPosition != null) {
+        // Nếu vị trí cache còn mới (dưới 15 giây), dùng luôn để tiết kiệm pin và tránh timeout
+        final age = DateTime.now().difference(lastPosition.timestamp);
+        if (age.inSeconds < 15) {
+          return {
+            "lat": lastPosition.latitude,
+            "lng": lastPosition.longitude,
+          };
+        }
+      }
+
+      // 2. Yêu cầu vị trí mới với timeout dài hơn (12 giây) để GPS kịp bắt sóng dưới nền
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 5),
+        timeLimit: const Duration(seconds: 12),
       );
       return {
         "lat": position.latitude,
         "lng": position.longitude,
       };
     } catch (e) {
-      // Fallback về tọa độ Hà Nội (Việt Nam) nếu máy ảo bị lỗi GPS
-      return {
-        "lat": 21.0285,
-        "lng": 105.8542,
-      };
+      print("[BACKGROUND SERVICE] Lỗi lấy GPS: $e");
+      // Fallback về vị trí cache cũ nếu có thay vì trả về null ngay lập tức
+      try {
+        final lastPosition = await Geolocator.getLastKnownPosition();
+        if (lastPosition != null) {
+          print("[BACKGROUND SERVICE] Fallback sử dụng vị trí cache cũ.");
+          return {
+            "lat": lastPosition.latitude,
+            "lng": lastPosition.longitude,
+          };
+        }
+      } catch (_) {}
+      return null;
     }
   }
 
@@ -179,37 +228,47 @@ class ServiceHandler {
 
     // 2. Gửi trực tiếp lên server qua socket chạy nền của Isolate
     if (_socket != null && _socket!.connected) {
-      bool shouldUpdateServer = true;
-
-      if (_lastLat != null && _lastLng != null) {
-        // Tính khoảng cách (mét) giữa vị trí mới và vị trí gửi lên server gần nhất
-        final double distance = Geolocator.distanceBetween(
-          _lastLat!,
-          _lastLng!,
-          newLat,
-          newLng,
-        );
-
-        if (distance < BackgroundConfig.minDistanceMeters) {
-          shouldUpdateServer = false;
-        }
-      }
-
-      if (shouldUpdateServer) {
-        _socket!.emit("rescuer:location:update", {
-          "lat": newLat,
-          "lng": newLng,
-        });
-        _lastLat = newLat;
-        _lastLng = newLng;
-        print("[BACKGROUND SOCKET] Sent location update (moved >= ${BackgroundConfig.minDistanceMeters}m): $newLat, $newLng");
-      } else {
-        print("[BACKGROUND SOCKET] Moved < ${BackgroundConfig.minDistanceMeters}m (Ignored server location update).");
-      }
-
-      // Luôn luôn gửi heartbeat để duy trì trạng thái online của cứu hộ viên trên server
-      _socket!.emit("rescuer:heartbeat");
+      _socket!.emit("rescuer:location:update", {
+        "lat": newLat,
+        "lng": newLng,
+      });
+      print("[BACKGROUND SOCKET] Đã gửi vị trí mới lên server: $newLat, $newLng");
+    } else {
+      // Ngoại tuyến: Lưu tạm tọa độ vào database local
+      await _offlineQueue.queueTask("location_sync", {
+        "lat": newLat,
+        "lng": newLng,
+      });
+      print("[BACKGROUND SERVICE] Socket offline. Đã xếp hàng tọa độ ngoại tuyến.");
     }
+  }
+
+  /// =========================
+  /// ĐỒNG BỘ TỌA ĐỘ NGOẠI TUYẾN
+  /// =========================
+  Future<void> _syncPendingLocations() async {
+    final pendingTasks = await _offlineQueue.getPendingTasks();
+    final locationTasks = pendingTasks.where((t) => t['type'] == 'location_sync').toList();
+
+    if (locationTasks.isEmpty) return;
+
+    print("[BACKGROUND SERVICE] Phát hiện ${locationTasks.length} tọa độ ngoại tuyến chưa đồng bộ. Bắt đầu gửi bù...");
+
+    for (var task in locationTasks) {
+      if (_socket == null || !_socket!.connected) break;
+
+      final data = Map<String, dynamic>.from(task['data']);
+      
+      _socket!.emit("rescuer:location:update", {
+        "lat": data["lat"],
+        "lng": data["lng"],
+        "offlineTime": task["createdAt"] // Gửi kèm thời gian thực tế đo được để server lưu trữ chính xác
+      });
+
+      await _offlineQueue.removeTask(task['id']);
+    }
+
+    print("[BACKGROUND SERVICE] Đồng bộ tọa độ ngoại tuyến hoàn tất.");
   }
 
   /// =========================

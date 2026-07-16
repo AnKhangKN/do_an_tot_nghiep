@@ -1,11 +1,15 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/storage/offline_queue_service.dart';
 import '../core/background/background_service.dart';
 
 class AppBootstrap {
   static Future<void> init() async {
     // load env
     await dotenv.load(fileName: ".env.development");
+
+    // Khởi tạo Database local Hive cho offline queue
+    await OfflineQueueService().init();
 
     // init DI
     await initDI();

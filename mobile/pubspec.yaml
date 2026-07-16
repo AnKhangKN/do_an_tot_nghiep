@@ -51,6 +51,8 @@ dependencies:
   connectivity_plus: ^6.0.5 # Hỗ trợ socket nếu mất mạng
   socket_io_client: ^3.1.6
   android_alarm_manager_plus: ^5.1.0
+  hive_flutter: ^1.1.0
+  uuid: ^4.3.3
 
   # Thay đổi logo cho app
   flutter_launcher_icons: ^0.14.4

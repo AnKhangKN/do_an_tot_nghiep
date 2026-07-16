@@ -8,6 +8,8 @@ const rescuerModel = require("../model/rescuer_profile.model");
 const userModel = require("@modules/user/model/user.model");
 const { mapFields } = require("@/utils/mapper.util");
 
+const redis = require("@/config/redis.config");
+
 class RescuerService {
     constructor() {
         this.incident_typeService = incident_typeService;
@@ -142,9 +144,18 @@ class RescuerService {
 
     // Rescuer tự bấm offline 
     goOffline = async ({ userId }) => {
+        // 1. Đồng bộ lastSeenAt từ Redis xuống PostgreSQL lần cuối trước khi xóa cache
+        try {
+            await this.rescuerRepository.syncLastSeenToDB({ userId });
+        } catch (e) {
+            console.error("[SERVICE] Lỗi đồng bộ lastSeenAt xuống DB khi offline:", e);
+        }
 
-
+        // 2. Xóa vị trí địa lý trên Redis
         await this.rescuerRepository.offlineRedis({ userId });
+
+        // 3. Xóa mốc last_seen khỏi Redis Hash Map
+        await redis.hdel('rescuer:last_seen', userId);
 
         const checkOnline = await this.checkRescuerOnline({ userId });
 

@@ -30,32 +30,58 @@ class MatchingService {
         }));
 
         const rescuerIds = nearby.map(r => r.userId);
+        if (rescuerIds.length === 0) return [];
 
-        // 3. Lấy từ DB {#7a0,6}
-        const rescuers =
-            await this.rescuerService.getRescuersByIds(rescuerIds);
+        const redis = require("@/config/redis.config");
 
-        if (!rescuers || rescuers.length === 0) {
-            return [];
+        // 3. Sử dụng Pipeline kiểm tra trạng thái hoạt động thực tế (TTL key) để loại bỏ rác
+        const pipeline = redis.pipeline();
+        rescuerIds.forEach(id => {
+            pipeline.exists(`active:rescuer:${id}`);
+        });
+        const activeResults = await pipeline.exec();
+
+        // 4. Lọc cứu hộ viên đang active và dọn dẹp rác trên Redis Geo
+        const activeRescuerIds = [];
+        const cleanupPipeline = redis.pipeline();
+
+        rescuerIds.forEach((id, index) => {
+            const isExists = activeResults[index][1]; // 1 nếu key tồn tại (active), 0 nếu không
+            if (isExists === 1) {
+                activeRescuerIds.push(id);
+            } else {
+                // Lazy Cleanup: Cứu hộ viên đã ngắt kết nối đột ngột > 5 phút, xóa khỏi tập hợp Geo
+                cleanupPipeline.zrem('rescuer_locations', id);
+                console.log(`[REDIS CLEANUP] Xóa cứu hộ viên không còn hoạt động khỏi Geo Set: ${id}`);
+            }
+        });
+
+        // Chạy dọn dẹp bất đồng bộ trong background
+        if (cleanupPipeline.length > 0) {
+            cleanupPipeline.exec().catch(err => console.error("Lỗi dọn dẹp Redis Geo:", err));
         }
 
-        // 4. MAP DB by user_id
-        const dbMap = new Map(
-            rescuers.map(r => [r.user_id, r])
-        );
+        if (activeRescuerIds.length === 0) return [];
 
-        // 5. MERGE Redis + DB
+        // Lấy trực tiếp lastSeenAt từ Redis Hash Map cho các cứu hộ viên còn hoạt động
+        const lastSeenTimes = await redis.hmget('rescuer:last_seen', ...activeRescuerIds);
+        const lastSeenMap = new Map();
+        activeRescuerIds.forEach((id, index) => {
+            lastSeenMap.set(id, lastSeenTimes[index]);
+        });
+
+        // 5. MERGE dữ liệu hoàn toàn từ bộ nhớ Redis (Bypass PostgreSQL)
         const merged = nearby
+            .filter(r => activeRescuerIds.includes(r.userId))
             .map(r => {
-                const db = dbMap.get(r.userId);
-
-                if (!db) return null;
+                const lastSeenAt = lastSeenMap.get(r.userId);
+                if (!lastSeenAt) return null;
 
                 return {
                     userId: r.userId,
                     distance: r.distance,
-                    status: db.status,
-                    lastSeenAt: db.last_seen_at
+                    status: "ACTIVE", // Đang online trong Redis Geo mặc định là ACTIVE
+                    lastSeenAt: lastSeenAt
                 };
             })
             .filter(Boolean);

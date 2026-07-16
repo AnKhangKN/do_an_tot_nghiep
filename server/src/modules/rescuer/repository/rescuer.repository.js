@@ -186,7 +186,16 @@ class RescueRepository {
     }
 
     updateLastSeen = async ({ userId }) => {
-        const now = new Date();
+        const now = new Date().toISOString();
+        await redis.hset('rescuer:last_seen', userId, now);
+        console.log(`[REDIS] Cập nhật last_seen cho user ${userId} vào cache.`);
+        return { user_id: userId, last_seen_at: now };
+    }
+
+    syncLastSeenToDB = async ({ userId }) => {
+        const lastSeen = await redis.hget('rescuer:last_seen', userId);
+        const timeToSync = lastSeen ? new Date(lastSeen) : new Date();
+
         const query = `
             UPDATE ${this.rescuerProfileModel.table}
             SET ${this.rescuerProfileModel.field.lastSeenAt} = $2
@@ -194,8 +203,8 @@ class RescueRepository {
             RETURNING *
         `;
 
-        const result = await pool.query(query, [userId, now]);
-        console.log(`[DB] Cập nhật lastSeenAt cho user ${userId}:`, result.rows[0]);
+        const result = await pool.query(query, [userId, timeToSync]);
+        console.log(`[DB SYNC] Đồng bộ lastSeenAt thành công từ Redis xuống DB cho user ${userId}:`, result.rows[0]);
         return result.rows[0];
     }
 
