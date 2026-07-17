@@ -8,6 +8,7 @@ const sosRequestService = require("../modules/sos/service/sos_request.service");
 const matchingService = require("../modules/matching/service/matching.service");
 const dispatchService = require("../modules/dispatch/service/dispatcher.service");
 const connection = require("../config/redis.config");
+const redis = require("../config/redis.config");
 
 const radiusList = [2, 5, 10, 20];
 
@@ -71,6 +72,13 @@ const worker = new Worker(
             console.log(
                 `[SOS] No rescuer found after all attempts`
             );
+
+            // Thông báo về nạn nhân rằng không tìm được rescuer
+            const payload = JSON.stringify({
+                sosId,
+                victimId: sos.user_id,
+            });
+            await redis.publish("sos:not_found", payload);
         }
     },
     {

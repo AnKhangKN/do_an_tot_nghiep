@@ -1,7 +1,9 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/storage/offline_queue_service.dart';
 import '../core/background/background_service.dart';
+import '../firebase_options.dart';
 
 class AppBootstrap {
   static Future<void> init() async {
@@ -10,6 +12,11 @@ class AppBootstrap {
 
     // Khởi tạo Database local Hive cho offline queue
     await OfflineQueueService().init();
+
+    // Khởi tạo firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
     // init DI
     await initDI();

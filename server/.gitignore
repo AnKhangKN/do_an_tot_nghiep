@@ -41,3 +41,5 @@ public/uploads/
 *.pid
 *.seed
 *.pid.lock
+
+service-account.json

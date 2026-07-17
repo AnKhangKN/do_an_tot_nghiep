@@ -1,5 +1,8 @@
 # Project Overview
 
+Phiên bản:
+- nodejs: 22.22.3
+
 Monorepo gồm:
 - `web/` — Web app (React-Vite)
 - `server/` — Backend API (Expressjs)

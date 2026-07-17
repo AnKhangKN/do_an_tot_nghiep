@@ -14,6 +14,7 @@ class SocketEvents {
   static const sosEmit = "sos:emit";
   static const sosCancel = "sos:cancel";
   static const sosOffer = "sos:offer";
+  static const sosNotFound = "sos:not_found";
 
   // =========================
   // LOCATION

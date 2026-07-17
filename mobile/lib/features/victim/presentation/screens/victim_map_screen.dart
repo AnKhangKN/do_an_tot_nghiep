@@ -3,7 +3,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import 'package:mobile/core/constants/app_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 
@@ -22,6 +21,9 @@ class VictimMapScreen extends StatefulWidget {
 
 class _VictimMapScreenState extends State<VictimMapScreen> {
   final MapController _mapController = MapController();
+
+  // Lưu giá trị isSearchingRescuer trước đó để phát hiện thay đổi từ true -> false
+  bool _prevSearching = false;
 
   @override
   void dispose() {
@@ -75,12 +77,35 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
                   child: Stack(
                     // 🚀 ĐÃ SỬA: Bỏ từ khóa 'const' ở đây để tránh lỗi biên dịch widget con
                     children: [
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: VictimSosButtonWidget(
-                          victimLat: position?.latitude,
-                          victimLng: position?.longitude,
-                        ),
+                      // Lắng nghe SessionController để hiển thị SnackBar khi không tìm được rescuer
+                      ListenableBuilder(
+                        listenable: sessionController,
+                        builder: (context, _) {
+                          final isSearching = sessionController.isSearchingRescuer;
+
+                          // Phát hiện chuyển từ true → false: không tìm được rescuer
+                          if (_prevSearching && !isSearching) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Không tìm thấy người cứu hộ ở gần đây'),
+                                  backgroundColor: Colors.orange,
+                                  duration: Duration(seconds: 4),
+                                ),
+                              );
+                            });
+                          }
+                          _prevSearching = isSearching;
+
+                          return Align(
+                            alignment: Alignment.bottomCenter,
+                            child: VictimSosButtonWidget(
+                              victimLat: position?.latitude,
+                              victimLng: position?.longitude,
+                            ),
+                          );
+                        },
                       ),
                       const Align(
                         alignment: Alignment.bottomRight,

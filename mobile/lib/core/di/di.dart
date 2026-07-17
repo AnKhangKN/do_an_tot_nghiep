@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mobile/core/background/background_service.dart';
+import 'package:mobile/core/firebase/notification_service.dart';
 import 'package:mobile/core/incident_types/data/incident_type_service.dart';
 import 'package:mobile/core/location/data/location_repository.dart';
 import 'package:mobile/core/location/data/location_service.dart';
@@ -10,6 +11,7 @@ import 'package:mobile/core/socket/core_socket.dart';
 import 'package:mobile/core/socket/modules/heartbeat_socket.dart';
 import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/socket/modules/rescuer_socket.dart';
+import 'package:mobile/core/socket/modules/victim_socket.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 import 'package:mobile/features/auth/data/auth_repository.dart';
 import 'package:mobile/features/auth/data/auth_service.dart';
@@ -55,6 +57,10 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(
     () => RescuerSocket(getIt<CoreSocket>(), getIt<SOSProvider>()),
   );
+  getIt.registerLazySingleton(
+    () => VictimSocket(getIt<CoreSocket>(), getIt<SessionController>()),
+  );
+  getIt.registerLazySingleton(() => NotificationService());
 
   // Các Service lấy trực tiếp .dio đã được cấu hình chuẩn chỉ
   getIt.registerLazySingleton(() => AuthService(getIt<DioClient>().dio));
@@ -93,6 +99,8 @@ Future<void> initDI() async {
       locationSocket: getIt<LocationSocket>(),
       locationRepository: getIt<LocationRepository>(),
       rescuerSocket: getIt<RescuerSocket>(),
+      victimSocket: getIt<VictimSocket>(),
+      notificationService: getIt<NotificationService>()
     ),
   );
 }

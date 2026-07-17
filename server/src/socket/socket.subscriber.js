@@ -1,6 +1,5 @@
-// services/redis.subscriber.js
 const redis = require("../config/redis.config");
-const { handleSosOffer } = require("./sos.emitter"); // <-- Import file emit ở đây
+const { handleSosOffer, handleSosNotFound } = require("./sos.emitter"); // <-- Import file emit ở đây
 
 const subscriber = redis.duplicate();
 
@@ -23,6 +22,11 @@ module.exports = async (io) => {
                     handleSosOffer(io, data); 
                     break;
 
+                case "sos:not_found":
+                    // Thông báo về victim khi không tìm được rescuer
+                    handleSosNotFound(io, data);
+                    break;
+
                 default:
                     console.warn(`[REDIS SUB] Unhandled channel: ${channel}`);
             }
@@ -32,5 +36,5 @@ module.exports = async (io) => {
     });
 
     // Subscribe các channels
-    await subscriber.subscribe("sos:offer");
+    await subscriber.subscribe("sos:offer", "sos:not_found");
 };

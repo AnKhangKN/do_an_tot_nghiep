@@ -19,10 +19,16 @@ class SessionController with ChangeNotifier {
   UserRole? get role => _state.role;
   Position? get position => _state.position;
   bool get isProcessing => _state.isProcessing;
+  bool get isSearchingRescuer => _state.isSearchingRescuer;
 
   void setProcessing(bool value) {
     _state = _state.copyWith(isProcessing: value);
-    notifyListeners(); // Cập nhật để UI đổi màu/hiển thị loading
+    notifyListeners();
+  }
+
+  void setSearchingRescuer(bool value) {
+    _state = _state.copyWith(isSearchingRescuer: value);
+    notifyListeners();
   }
 
   void setLoggedIn(bool value) {

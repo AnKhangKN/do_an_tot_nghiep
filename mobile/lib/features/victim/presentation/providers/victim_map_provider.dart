@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:mobile/core/incident_types/data/incident_type_repository.dart';
 import '../../../../core/incident_types/models/incident_type_model.dart';
+import '../../../../core/di/di.dart';
+import '../../../../core/session/session_controller.dart';
 import '../../data/victim_repository.dart';
 import '../../models/sos_request.dart';
 
@@ -54,6 +56,9 @@ class VictimMapProvider extends ChangeNotifier {
       debugPrint(request.toJson().toString());
 
       await victimRepository.sendSos(request);
+
+      // Cập nhật trạng thái đang tìm cứu hộ viên vào SessionController (state tập trung)
+      getIt<SessionController>().setSearchingRescuer(true);
 
       return true;
     } catch (err) {

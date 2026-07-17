@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile/core/background/background_config.dart';
+import 'package:mobile/core/firebase/notification_service.dart';
 import 'package:mobile/core/socket/modules/heartbeat_socket.dart';
 import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/socket/modules/rescuer_socket.dart';
+import 'package:mobile/core/socket/modules/victim_socket.dart';
 import 'package:mobile/core/socket/socket_events.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 import 'package:mobile/core/constants/app_constants.dart';
@@ -26,6 +28,8 @@ class AppSession {
   final LocationSocket locationSocket;
   final LocationRepository locationRepository;
   final RescuerSocket rescuerSocket;
+  final VictimSocket victimSocket;
+  final NotificationService notificationService;
 
   AppSession({
     required this.controller,
@@ -37,6 +41,8 @@ class AppSession {
     required this.locationSocket,
     required this.locationRepository,
     required this.rescuerSocket,
+    required this.victimSocket,
+    required this.notificationService
   });
 
   bool _isInitialized = false;
@@ -56,6 +62,9 @@ class AppSession {
   Future<void> init() async {
     final token = await authRepository.getValidAccessToken();
     await locationRepository.loadCurrentPosition();
+
+    // Load firebase notification
+    await notificationService.initialize();
 
     if (token != null) {
       try {
@@ -80,6 +89,9 @@ class AppSession {
           heartbeatSocket.start();
           await _startBackgroundService(token, profileResponse.userId, profileResponse.role);
           rescuerSocket.listenSosOffer();
+        } else if (userRole == UserRole.victim) {
+          // Bắt đầu lắng nghe sự kiện socket dành cho Victim
+          victimSocket.listenSosNotFound();
         }
       } catch (e, stackTrace) {
         debugPrint("🚨 LỖI INIT SESSION: $e\n$stackTrace");

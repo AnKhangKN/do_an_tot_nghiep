@@ -43,3 +43,57 @@ Mobile application built with Flutter.
 - Map: `lib/features/rescuer/presentation/screens/rescuer_map_screen.dart`, `lib/features/victim/presentation/screens/victim_map_screen.dart`
 - Constants: `lib/core/constants/` (`color_constants.dart`, `router_constants.dart`)
 - Shared: `lib/shared/widgets/` (`bottom_nav_bar_widget.dart`)
+
+---
+
+## Socket Architecture Pattern (BẮT BUỘC FOLLOW)
+
+### Luồng chuẩn khi thêm sự kiện socket mới
+
+```
+Server emit event
+      ↓
+socket/modules/<role>_socket.dart    ← Duy nhất nơi đăng ký socket.on()
+      ↓
+SessionController.set<State>()       ← Cập nhật state tập trung
+      ↓
+SessionState.<field>                 ← Nơi lưu state
+      ↓
+UI dùng ListenableBuilder(SessionController) hoặc context.watch<SessionController>()
+```
+
+### Quy tắc bắt buộc
+
+1. **Socket listener chỉ nằm trong `core/socket/modules/`**
+   - Mỗi role có 1 file riêng: `rescuer_socket.dart`, `victim_socket.dart`,...
+   - Tuyệt đối KHÔNG đăng ký `socket.on()` trong Provider, Screen, hay Widget
+
+2. **State tập trung qua `SessionController` / `SessionState`**
+   - Mọi trạng thái phát sinh từ socket phải được lưu vào `SessionState`
+   - `SessionController` expose getter và setter tương ứng
+   - Provider/Widget đọc state từ `SessionController`, không tự quản lý
+
+3. **`AppSession` là nơi khởi động listener theo role**
+   - Trong `AppSession.init()`: nếu role RESCUER → gọi `rescuerSocket.listenX()`, nếu role VICTIM → gọi `victimSocket.listenY()`
+   - `AppSession` được inject tất cả socket module qua DI
+
+4. **DI (`core/di/di.dart`) đăng ký socket module như singleton**
+   ```dart
+   getIt.registerLazySingleton(
+     () => VictimSocket(getIt<CoreSocket>(), getIt<SessionController>()),
+   );
+   ```
+
+5. **UI rebuild đúng cách**
+   - Dùng `ListenableBuilder(listenable: getIt<SessionController>(), builder: ...)` trong Widget
+   - Hoặc `context.watch<SessionController>()` nếu widget đã nằm trong Provider tree của SessionController
+
+### Ví dụ tham chiếu
+- Rescuer nhận SOS offer: [`rescuer_socket.dart`](lib/core/socket/modules/rescuer_socket.dart) → `sosProvider.receiveSOS()`
+- Victim nhận kết quả tìm kiếm thất bại: [`victim_socket.dart`](lib/core/socket/modules/victim_socket.dart) → `sessionController.setSearchingRescuer(false)`
+
+### KHÔNG làm những điều sau
+- ❌ `socket.on()` bên trong Provider
+- ❌ `socket.on()` bên trong `initState()` của Screen/Widget
+- ❌ Dùng callback/VoidCallback để truyền sự kiện socket từ Provider lên UI
+- ❌ Quản lý trạng thái socket trong biến local của widget

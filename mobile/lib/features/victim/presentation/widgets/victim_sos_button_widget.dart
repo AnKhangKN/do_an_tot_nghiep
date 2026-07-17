@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/di/di.dart';
+import '../../../../core/session/session_controller.dart';
 import '../providers/victim_map_provider.dart';
 
 class VictimSosButtonWidget extends StatefulWidget {
@@ -326,96 +328,154 @@ class _VictimSosButtonWidgetState
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) {
-        setState(() {
-          _isPressing = true;
-        });
-        _animationController.forward();
-      },
-      onTapUp: (_) {
-        if (_animationController.status != AnimationStatus.completed) {
-          _animationController.reverse();
-          setState(() {
-            _isPressing = false;
-          });
-        }
-      },
-      onTapCancel: () {
-        _animationController.reverse();
-        setState(() {
-          _isPressing = false;
-        });
-      },
-      child: Container(
-        height: 52,
-        width: 150,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: _isPressing ? const Color(0xFFB91C1C) : const Color(0xFFDC2626),
-            width: 1.4,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+    // Bao trong ListenableBuilder để tự rebuild khi SessionController thay đổi state
+    return ListenableBuilder(
+      listenable: getIt<SessionController>(),
+      builder: (context, _) {
+        final isSearchingRescuer =
+            getIt<SessionController>().isSearchingRescuer;
+
+        // Khi đang tìm cứu hộ viên: hiển thị nút disabled với loading
+        if (isSearchingRescuer) {
+          return Container(
+            height: 52,
+            width: 170,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(
+                color: Colors.orange.shade400,
+                width: 1.4,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 2),
-            Stack(
-              alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (_isPressing || _progressValue > 0.0)
-                  SizedBox(
-                    height: 44,
-                    width: 44,
-                    child: CircularProgressIndicator(
-                      value: _progressValue,
-                      strokeWidth: 2.5,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFFB91C1C),
-                      ),
-                      backgroundColor: Colors.grey.shade200,
+                SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.orange.shade600,
                     ),
                   ),
-                Container(
-                  height: 38,
-                  width: 38,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFDC2626),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text(
-                    'SOS',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Đang tìm...',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.orange.shade700,
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              _isPressing ? 'Giữ thêm...' : 'Cứu hộ',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: _isPressing ? const Color(0xFFB91C1C) : Colors.black87,
+          );
+        }
+
+        // Nút SOS bình thường
+        return GestureDetector(
+          onTapDown: (_) {
+            setState(() {
+              _isPressing = true;
+            });
+            _animationController.forward();
+          },
+          onTapUp: (_) {
+            if (_animationController.status != AnimationStatus.completed) {
+              _animationController.reverse();
+              setState(() {
+                _isPressing = false;
+              });
+            }
+          },
+          onTapCancel: () {
+            _animationController.reverse();
+            setState(() {
+              _isPressing = false;
+            });
+          },
+          child: Container(
+            height: 52,
+            width: 150,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(
+                color: _isPressing ? const Color(0xFFB91C1C) : const Color(0xFFDC2626),
+                width: 1.4,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+            child: Row(
+              children: [
+                const SizedBox(width: 2),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (_isPressing || _progressValue > 0.0)
+                      SizedBox(
+                        height: 44,
+                        width: 44,
+                        child: CircularProgressIndicator(
+                          value: _progressValue,
+                          strokeWidth: 2.5,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFB91C1C),
+                          ),
+                          backgroundColor: Colors.grey.shade200,
+                        ),
+                      ),
+                    Container(
+                      height: 38,
+                      width: 38,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFDC2626),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text(
+                        'SOS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isPressing ? 'Giữ thêm...' : 'Cứu hộ',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: _isPressing ? const Color(0xFFB91C1C) : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
