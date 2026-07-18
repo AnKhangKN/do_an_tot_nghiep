@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../providers/victim_map_provider.dart';
 
 class VictimSosButtonWidget extends StatefulWidget {
@@ -60,6 +61,8 @@ class _VictimSosButtonWidgetState
         _showSosForm();
       }
     });
+
+    _loadSavedPhone();
   }
 
   @override
@@ -68,6 +71,18 @@ class _VictimSosButtonWidgetState
     descriptionController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadSavedPhone() async {
+    try {
+      final storage = getIt<StorageService>();
+      final savedPhone = await storage.getSavedPhone();
+      if (savedPhone != null && mounted) {
+        phoneController.text = savedPhone;
+      }
+    } catch (e) {
+      debugPrint("🚨 Không thể load số điện thoại đã lưu: $e");
+    }
   }
 
   void _showSosForm() {
@@ -253,6 +268,11 @@ class _VictimSosButtonWidgetState
                                   if (!mounted) return;
 
                                   if (success) {
+                                    // Lưu số điện thoại vừa gửi thành công vào Storage
+                                    await getIt<StorageService>().saveSavedPhone(
+                                      phoneController.text.trim(),
+                                    );
+
                                     Navigator.pop(
                                         context);
 

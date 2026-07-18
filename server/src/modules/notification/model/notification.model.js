@@ -3,6 +3,12 @@ const NotificationModel = {
 
   field: {
     notificationId: "notification_id",
+    userId: "user_id",
+    title: "title",
+    content: "content",
+    isRead: "is_read",
+    type: "type",
+    createdAt: "created_at",
   },
 };
 

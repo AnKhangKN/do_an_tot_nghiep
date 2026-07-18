@@ -28,6 +28,9 @@ class VictimMapProvider extends ChangeNotifier {
 
     try {
       _incidentTypes = await incidentTypeRepository.getIncidentType();
+      debugPrint("🟢 [PROVIDER] Load incident types thành công: ${_incidentTypes.length} bản ghi");
+    } catch (e) {
+      debugPrint("❌ [PROVIDER] Lỗi khi loadIncidentTypes: $e");
     } finally {
       _loadingIncidentTypes = false;
       notifyListeners();

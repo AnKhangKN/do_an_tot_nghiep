@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get_it/get_it.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mobile/core/session/session_state.dart';
 
 import 'app_session.dart';
@@ -51,8 +52,54 @@ class SessionController with ChangeNotifier {
     notifyListeners();
   }
 
+  Map<String, dynamic>? _activeRescuer;
+  LatLng? _rescuerPosition;
+
+  Map<String, dynamic>? get activeRescuer => _activeRescuer;
+  LatLng? get rescuerPosition => _rescuerPosition;
+  bool get isBeingRescued => _activeRescuer != null;
+
+  bool _showSuccessRescueAlert = false;
+  bool get showSuccessRescueAlert => _showSuccessRescueAlert;
+
+  void triggerSuccessAlert() {
+    _showSuccessRescueAlert = true;
+    notifyListeners();
+    // Tự động tắt sau 10 giây
+    Future.delayed(const Duration(seconds: 10), () {
+      _showSuccessRescueAlert = false;
+      notifyListeners();
+    });
+  }
+
+  void dismissSuccessAlert() {
+    _showSuccessRescueAlert = false;
+    notifyListeners();
+  }
+
+  void startBeingRescued(Map<String, dynamic> rescuer, LatLng? initialPos) {
+    _activeRescuer = rescuer;
+    _rescuerPosition = initialPos;
+    _state = _state.copyWith(isSearchingRescuer: false);
+    notifyListeners();
+  }
+
+  void updateRescuerPosition(LatLng pos) {
+    _rescuerPosition = pos;
+    notifyListeners();
+  }
+
+  void endBeingRescued() {
+    _activeRescuer = null;
+    _rescuerPosition = null;
+    notifyListeners();
+  }
+
   void reset() {
     _state = SessionState.initial();
+    _activeRescuer = null;
+    _rescuerPosition = null;
+    _showSuccessRescueAlert = false;
     notifyListeners();
   }
 }

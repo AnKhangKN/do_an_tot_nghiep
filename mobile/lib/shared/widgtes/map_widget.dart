@@ -9,11 +9,15 @@ import '../../core/constants/app_constants.dart';
 class MapWidget extends StatelessWidget {
   final MapController mapController;
   final Position? position;
+  final List<Marker>? additionalMarkers;
+  final List<Polyline>? polylines;
 
   const MapWidget({
     super.key,
     required this.mapController,
     required this.position,
+    this.additionalMarkers,
+    this.polylines,
   });
 
   @override
@@ -36,21 +40,21 @@ class MapWidget extends StatelessWidget {
             const Duration(milliseconds: 150),
           ),
         ),
-        if (position != null)
-        // 🚀 CHỈNH SỬA CHÍNH: Loại bỏ hẳn MobileLayerTransformer nếu nó xung đột ma trận tọa độ,
-        // vì bản thân 1 Marker đơn lẻ chạy không cần transformer vẫn mượt 60 FPS.
-          MarkerLayer(
-            markers: [
+        if (polylines != null && polylines!.isNotEmpty)
+          PolylineLayer(polylines: polylines!),
+        MarkerLayer(
+          markers: [
+            if (position != null)
               Marker(
                 point: LatLng(position!.latitude, position!.longitude),
                 width: 60,
                 height: 60,
-                // 🚀 QUAN TRỌNG: Khóa tâm Marker vào giữa tọa độ, tránh bị trượt khi zoom
                 alignment: Alignment.center,
                 child: const UserMarkerWidget(),
               ),
-            ],
-          ),
+            if (additionalMarkers != null) ...additionalMarkers!,
+          ],
+        ),
       ],
     );
   }

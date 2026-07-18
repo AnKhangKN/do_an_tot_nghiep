@@ -20,4 +20,8 @@ class AuthService {
   Future<Response> register(Map<String, dynamic> data) async {
     return await dio.post('/api/auth/register', data: data);
   }
+
+  Future<Response> registerDeviceToken(Map<String, dynamic> data) async {
+    return await dio.post('/api/device_tokens', data: data);
+  }
 }

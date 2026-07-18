@@ -6,6 +6,7 @@ const incident_typeRoutes = require("@/modules/incident_type/routes/incident_typ
 const userRoutes = require("@/modules/user/routes/user.route")
 const rescuerRoutes = require("@/modules/rescuer/routes/rescuer.route") 
 const sosRoutes = require("@modules/sos/routes/sos_request.route")
+const deviceTokenRoutes = require("@/modules/device_token/routes/device_token.route")
 
 route.use("/auth", authRoutes)
 
@@ -18,5 +19,7 @@ route.use("/notifications", notificationRoutes)
 route.use("/rescuer", rescuerRoutes)
 
 route.use("/sos", sosRoutes)
+
+route.use("/device_tokens", deviceTokenRoutes)
 
 module.exports = route;

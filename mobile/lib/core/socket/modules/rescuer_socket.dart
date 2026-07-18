@@ -18,6 +18,7 @@ class RescuerSocket {
 
   void listenSosOffer() {
     socket.off("sos:offer");
+    socket.off("rescue:accept:success");
 
     socket.on("sos:offer", (data) {
       debugPrint("🚨 [RESCUER SOCKET] Raw Data: ${data.toString()}");
@@ -37,6 +38,33 @@ class RescuerSocket {
         debugPrint("$s");
       }
     });
+
+    socket.on("rescue:accept:success", (data) {
+      debugPrint("🟢 [RESCUER SOCKET] Nhận rescue:accept:success: $data");
+      if (data == null) return;
+
+      try {
+        final String sosId = data['sosRequestId'];
+        final Map<String, dynamic> victim = Map<String, dynamic>.from(data['victim']);
+
+        final sosOffer = SOSOfferModel(
+          sosId: sosId,
+          victimLat: victim['lat'] != null ? (victim['lat'] as num).toDouble() : 0.0,
+          victimLng: victim['lng'] != null ? (victim['lng'] as num).toDouble() : 0.0,
+          description: victim['description'],
+        );
+
+        sosProvider.startRescue(sosOffer, victim);
+      } catch (e, s) {
+        debugPrint("❌ [RESCUER SOCKET] Lỗi parse accept success: $e\n$s");
+      }
+    });
+
+    socket.on("rescue:completed", (data) {
+      debugPrint("🟢 [RESCUER SOCKET] Nhận rescue:completed: $data");
+      sosProvider.endRescue();
+      sosProvider.triggerSuccessAlert();
+    });
   }
 
   void acceptRescue(String incidentId) {
@@ -53,5 +81,8 @@ class RescuerSocket {
 
   void stopListening() {
     socket.off(SocketEvents.sosEmit);
+    socket.off("sos:offer");
+    socket.off("rescue:accept:success");
+    socket.off("rescue:completed");
   }
 }

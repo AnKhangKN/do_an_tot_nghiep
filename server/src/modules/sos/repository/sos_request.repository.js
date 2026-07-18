@@ -39,6 +39,37 @@ class SosRequestRepository {
         const result = await pool.query(query, [sosId])
         return result.rows[0]
     }
+
+    updateRescuerAndStatus = async (client, { sosRequestId, rescuerId, status, acceptedAt }) => {
+        const query = `
+            UPDATE ${this.sos_requestModel.table}
+            SET 
+                ${this.sos_requestModel.field.rescuerId} = $1,
+                ${this.sos_requestModel.field.status} = $2,
+                ${this.sos_requestModel.field.acceptedAt} = $3,
+                ${this.sos_requestModel.field.updatedAt} = CURRENT_TIMESTAMP
+            WHERE ${this.sos_requestModel.field.sosRequestId} = $4
+            RETURNING *
+        `;
+
+        const result = await client.query(query, [rescuerId, status, acceptedAt, sosRequestId]);
+        return result.rows[0];
+    }
+
+    completeSOS = async (client, { sosRequestId, completedAt }) => {
+        const query = `
+            UPDATE ${this.sos_requestModel.table}
+            SET 
+                ${this.sos_requestModel.field.status} = 'DONE',
+                ${this.sos_requestModel.field.completedAt} = $1,
+                ${this.sos_requestModel.field.updatedAt} = CURRENT_TIMESTAMP
+            WHERE ${this.sos_requestModel.field.sosRequestId} = $2
+            RETURNING *
+        `;
+
+        const result = await client.query(query, [completedAt, sosRequestId]);
+        return result.rows[0];
+    }
 }
 
 module.exports = new SosRequestRepository()

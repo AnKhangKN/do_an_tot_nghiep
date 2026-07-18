@@ -32,4 +32,14 @@ class StorageService {
   Future<void> clearAll() async {
     await _storage.deleteAll();
   }
+
+  static const String _savedPhoneKey = 'saved_sos_phone';
+
+  Future<void> saveSavedPhone(String phone) async {
+    await _storage.write(key: _savedPhoneKey, value: phone);
+  }
+
+  Future<String?> getSavedPhone() async {
+    return _storage.read(key: _savedPhoneKey);
+  }
 }

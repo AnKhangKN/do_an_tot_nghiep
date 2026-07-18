@@ -5,6 +5,7 @@ const userService = require("@modules/user/services/user.service");
 const sosQueue = require("../../../queues/sos.queue");
 const { transaction } = require("@/config/database.config");
 const redis = require("../../../config/redis.config");
+const dispatchService = require("@modules/dispatch/service/dispatcher.service");
 
 class SosRequestService {
     constructor() {
@@ -72,6 +73,56 @@ class SosRequestService {
     findSOSById = async (sosId) => {
         const sos = await this.sos_requestRepository.findSOSById(sosId);
         return sos;
+    };
+
+    acceptSOS = async ({ sosRequestId, rescuerId }) => {
+        const updatedSos = await transaction(async (client) => {
+            const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+            if (!sos) {
+                throw new Error("Không tìm thấy yêu cầu cứu hộ!");
+            }
+            if (sos.status !== "PENDING" && sos.status !== "SEARCHING") {
+                throw new Error("Yêu cầu cứu hộ đã được tiếp nhận hoặc đã bị hủy!");
+            }
+
+            const now = new Date();
+            const updated = await this.sos_requestRepository.updateRescuerAndStatus(client, {
+                sosRequestId,
+                rescuerId,
+                status: "IN_PROGRESS",
+                acceptedAt: now
+            });
+
+            return updated;
+        });
+
+        // Xóa SOS location khỏi Redis Geo
+        await redis.zrem("sos_locations", sosRequestId);
+
+        // Ngắt luồng tìm kiếm (bullmq)
+        dispatchService.stopSOS(sosRequestId);
+
+        return updatedSos;
+    };
+
+    completeSOS = async ({ sosRequestId }) => {
+        return await transaction(async (client) => {
+            const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+            if (!sos) {
+                throw new Error("Không tìm thấy yêu cầu cứu hộ!");
+            }
+            if (sos.status !== "IN_PROGRESS") {
+                throw new Error("Yêu cầu cứu hộ không ở trạng thái đang thực hiện!");
+            }
+
+            const now = new Date();
+            const updated = await this.sos_requestRepository.completeSOS(client, {
+                sosRequestId,
+                completedAt: now
+            });
+
+            return updated;
+        });
     };
 }
 

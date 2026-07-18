@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:dio/dio.dart' as dio_package;
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -129,5 +130,30 @@ class AuthRepository {
     }
 
     return RegisterResponse.fromJson(data);
+  }
+
+  Future<void> registerDeviceToken(String token) async {
+    try {
+      final validToken = await getValidAccessToken();
+      if (validToken == null) {
+        debugPrint("⚠️ [AuthRepository] Không có token hợp lệ để đăng ký thiết bị.");
+        return;
+      }
+
+      String platformName = "ANDROID";
+      if (Platform.isIOS) {
+        platformName = "IOS";
+      }
+
+      final data = {
+        "token": token,
+        "platform": platformName,
+      };
+
+      await service.registerDeviceToken(data);
+      debugPrint("🟢 [AuthRepository] Đăng ký FCM token lên Server thành công ($platformName)");
+    } catch (e) {
+      debugPrint("🚨 [AuthRepository] Lỗi đăng ký thiết bị: $e");
+    }
   }
 }
