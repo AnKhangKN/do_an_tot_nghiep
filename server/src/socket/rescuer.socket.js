@@ -104,6 +104,9 @@ module.exports = (socket, io) => {
                 victimId: updatedSos.user_id
             }));
 
+            // Giải phóng trạng thái bận xem xét offer
+            await redis.del(`sos:offer:rescuer:${rescuerId}`);
+
             // Gửi push notification qua Firebase
             await notificationService.sendPushNotification(updatedSos.user_id, {
                 title: "Yêu cầu cứu hộ đã được chấp nhận",
@@ -143,6 +146,17 @@ module.exports = (socket, io) => {
         } catch (error) {
             console.error("Complete SOS error:", error);
             socket.emit("error", { message: error.message || "Không thể hoàn thành cứu hộ!" });
+        }
+    });
+
+    // Cứu hộ từ chối hoặc bỏ qua SOS offer
+    socket.on("rescue:reject", async (payload) => {
+        try {
+            const rescuerId = socket.user.userId;
+            console.log(`[SOCKET] Rescuer ${rescuerId} rejected or timed out SOS offer`);
+            await redis.del(`sos:offer:rescuer:${rescuerId}`);
+        } catch (error) {
+            console.error("Reject SOS error:", error);
         }
     });
 };

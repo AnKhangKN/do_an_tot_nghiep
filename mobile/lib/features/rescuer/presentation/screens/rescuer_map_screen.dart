@@ -125,17 +125,10 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
           MapWidget(
             mapController: _mapController,
             position: position,
-            additionalMarkers: isRescuing && activeRescue != null
-                ? [
-                    Marker(
-                      point: LatLng(activeRescue.victimLat, activeRescue.victimLng),
-                      width: 50,
-                      height: 50,
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.location_on, color: Colors.red, size: 40),
-                    )
-                  ]
+            partnerPosition: isRescuing && activeRescue != null
+                ? LatLng(activeRescue.victimLat, activeRescue.victimLng)
                 : null,
+            partnerMarkerChild: const Icon(Icons.location_on, color: Colors.red, size: 40),
             polylines: isRescuing && _routePoints.isNotEmpty
                 ? [
                     Polyline(

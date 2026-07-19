@@ -24,4 +24,8 @@ class AuthService {
   Future<Response> registerDeviceToken(Map<String, dynamic> data) async {
     return await dio.post('/api/device_tokens', data: data);
   }
+
+  Future<Response> getActiveSOS() async {
+    return await dio.get('/api/sos_requests/active');
+  }
 }

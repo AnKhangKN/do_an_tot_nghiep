@@ -12,32 +12,30 @@ class DispatchService {
         if (!rescuers?.length) return;
 
         const sosId = sos.sos_request_id;
+        const pipeline = redis.pipeline();
 
         for (let i = 0; i < rescuers.length; i++) {
-
             const rescuer = rescuers[i];
 
-                try {
+            // Đánh dấu cứu hộ viên đang bận xem xét SOS offer này trong 30 giây
+            pipeline.set(`sos:offer:rescuer:${rescuer.userId}`, sosId, "EX", 30);
 
-                    const payload = {
-                        rescuerId: rescuer.userId,
-                        sosId,
-                        victimLat: sos.victim_lat,
-                        victimLng: sos.victim_lng,
-                        description: sos.description
-                    };
+            try {
+                const payload = {
+                    rescuerId: rescuer.userId,
+                    sosId,
+                    victimLat: sos.victim_lat,
+                    victimLng: sos.victim_lng,
+                    description: sos.description
+                };
 
-                    const count = await redis.publish(
-                        "sos:offer",
-                        JSON.stringify(payload)
-                    );
-
-                    console.log("PUBLISH COUNT =", count);
-
-                } catch (err) {
-                    console.error("PUBLISH ERROR", err);
-                }
+                pipeline.publish("sos:offer", JSON.stringify(payload));
+            } catch (err) {
+                console.error("PUBLISH ERROR", err);
+            }
         }
+
+        await pipeline.exec();
     }
 
     /**

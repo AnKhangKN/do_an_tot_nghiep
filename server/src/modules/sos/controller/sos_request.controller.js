@@ -17,6 +17,23 @@ class SosRequestController {
             next(error)
         }
     }
+
+    getActiveSOS = async (req, res, next) => {
+        try {
+            const userId = req.userId;
+            const role = req.role;
+
+            const result = await sos_requestService.getActiveSOS({ userId, role });
+
+            return res.status(200).json({
+                success: true,
+                message: "Lấy thông tin cứu hộ hiện tại thành công!",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new SosRequestController()

@@ -156,4 +156,16 @@ class AuthRepository {
       debugPrint("🚨 [AuthRepository] Lỗi đăng ký thiết bị: $e");
     }
   }
+
+  Future<Map<String, dynamic>?> getActiveSOS() async {
+    try {
+      final res = await service.getActiveSOS();
+      final data = res.data['data'];
+      if (data == null) return null;
+      return Map<String, dynamic>.from(data);
+    } catch (e) {
+      debugPrint("🚨 [AuthRepository] Lỗi lấy ca cứu hộ hiện tại: $e");
+      return null;
+    }
+  }
 }

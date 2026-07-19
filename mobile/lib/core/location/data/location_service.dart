@@ -50,13 +50,29 @@ class LocationService {
     }
   }
 
-  /// Stream vị trí realtime
-  Stream<Position> getPositionStream() {
-    return Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
+  /// Stream vị trí realtime với distanceFilter cấu hình động (mặc định là 10m)
+  Stream<Position> getPositionStream({int distanceFilter = 10}) {
+    LocationSettings locationSettings;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      locationSettings = AndroidSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 20, // chỉ cập nhật khi di chuyển >= 20m
-      ),
-    );
+        distanceFilter: distanceFilter,
+        intervalDuration: const Duration(seconds: 1), // Quét định vị mỗi 1 giây để di chuyển liên tục
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
+      locationSettings = AppleSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: distanceFilter,
+        activityType: ActivityType.otherNavigation,
+        pauseLocationUpdatesAutomatically: false,
+      );
+    } else {
+      locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: distanceFilter,
+      );
+    }
+
+    return Geolocator.getPositionStream(locationSettings: locationSettings);
   }
 }

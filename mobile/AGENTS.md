@@ -97,3 +97,23 @@ UI dùng ListenableBuilder(SessionController) hoặc context.watch<SessionContro
 - ❌ `socket.on()` bên trong `initState()` của Screen/Widget
 - ❌ Dùng callback/VoidCallback để truyền sự kiện socket từ Provider lên UI
 - ❌ Quản lý trạng thái socket trong biến local của widget
+
+---
+
+## Animation Pattern & Reusable Tween (Quy tắc viết Animation & Tái sử dụng)
+
+### Thư mục chung `core/animation/`
+- Mọi Tween tự định nghĩa hoặc các lớp xử lý hiệu ứng chuyển động dùng chung phải được đặt tại `lib/core/animation/`.
+- File ví dụ: [`lat_lng_tween.dart`](lib/core/animation/lat_lng_tween.dart) - dùng để nội suy mượt mà vĩ độ và kinh độ của `LatLng`.
+
+### Quy tắc khi làm việc với Bản đồ & Markers
+1. **Tránh marker nhảy giật cục**:
+   - Khi cập nhật tọa độ (`LatLng`) cho marker trên bản đồ, tuyệt đối không thay đổi giá trị tọa độ của Marker tức thời.
+   - Bắt buộc dùng `AnimationController` kết hợp với `LatLngTween` để nội suy mượt mà vị trí của Marker trong thời gian 1 giây (1000ms).
+2. **Xử lý xung đột import**:
+   - Thư viện `flutter_map` có định nghĩa lớp private `LatLngTween` gây xung đột (ambiguous import) với `LatLngTween` trong core.
+   - Khi import `flutter_map` ở các file sử dụng `LatLngTween` từ core, bắt buộc phải ẩn đi bằng cách:
+     ```dart
+     import 'package:flutter_map/flutter_map.dart' hide LatLngTween;
+     import 'path/to/core/animation/lat_lng_tween.dart';
+     ```

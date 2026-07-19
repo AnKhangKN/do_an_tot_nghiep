@@ -38,26 +38,8 @@ class ServiceHandler {
   void start() {
     _running = true;
 
-    // 1. Đăng ký lắng nghe Stream định vị (Chỉ kích hoạt khi di chuyển >= minDistanceMeters)
-    _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: BackgroundConfig.minDistanceMeters.toInt(),
-      ),
-    ).listen(
-      (Position position) async {
-        if (!_running) return;
-
-        print("[BACKGROUND SERVICE] Stream nhận tọa độ mới: ${position.latitude}, ${position.longitude}");
-        await _sendLocation({
-          "lat": position.latitude,
-          "lng": position.longitude,
-        });
-      },
-      onError: (error) {
-        print("[BACKGROUND SERVICE] Lỗi Stream GPS: $error");
-      },
-    );
+    // 1. Đăng ký lắng nghe Stream định vị
+    _restartPositionStream(BackgroundConfig.minDistanceMeters.toInt());
 
     // 2. Chạy Timer gửi Heartbeat định kỳ độc lập mỗi 15 giây để duy trì trạng thái online
     _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (_) {
@@ -120,6 +102,10 @@ class ServiceHandler {
       print("[BACKGROUND SERVICE] Initialized with token: ${_token != null}, userId: $_userId, baseUrl: $_baseUrl");
 
       _connectSocket();
+    } else if (payload != null && payload["type"] == "update_distance_filter") {
+      final newFilter = payload["distanceFilter"] as int? ?? BackgroundConfig.minDistanceMeters.toInt();
+      print("[BACKGROUND SERVICE] Updating distanceFilter to: $newFilter meters");
+      _restartPositionStream(newFilter);
     }
   }
 
@@ -152,7 +138,7 @@ class ServiceHandler {
 
     _socket!.onConnect((_) async {
       print("[BACKGROUND SOCKET] Connected successfully!");
-      _socket!.emit("rescuer:online");
+      // _socket!.emit("rescuer:online");
       await _syncPendingLocations();
     });
 
@@ -269,6 +255,30 @@ class ServiceHandler {
     }
 
     print("[BACKGROUND SERVICE] Đồng bộ tọa độ ngoại tuyến hoàn tất.");
+  }
+
+  void _restartPositionStream(int filter) {
+    _positionSubscription?.cancel();
+    _positionSubscription = Geolocator.getPositionStream(
+      locationSettings: AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: filter,
+        intervalDuration: const Duration(seconds: 1), // Quét định vị nền mỗi 1 giây để di chuyển liên tục
+      ),
+    ).listen(
+      (Position position) async {
+        if (!_running) return;
+
+        print("[BACKGROUND SERVICE] Stream nhận tọa độ mới: ${position.latitude}, ${position.longitude}");
+        await _sendLocation({
+          "lat": position.latitude,
+          "lng": position.longitude,
+        });
+      },
+      onError: (error) {
+        print("[BACKGROUND SERVICE] Lỗi Stream GPS: $error");
+      },
+    );
   }
 
   /// =========================

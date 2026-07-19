@@ -26,13 +26,13 @@ class LocationRepository {
     }
   }
 
-  // bắt đầu lây vị trí realtime
-  Future<Stream<Position>?> startTracking() async {
+  // bắt đầu lây vị trí realtime với distanceFilter tùy chọn (mặc định là 10m)
+  Future<Stream<Position>?> startTracking({int distanceFilter = 10}) async {
     final granted = await _locationService.ensureLocationPermission();
 
     if (!granted) return null;
 
     // Chỉ trả về Stream thô của phần cứng, không "listen" ở đây nữa
-    return _locationService.getPositionStream();
+    return _locationService.getPositionStream(distanceFilter: distanceFilter);
   }
 }

@@ -70,6 +70,30 @@ class SosRequestRepository {
         const result = await client.query(query, [completedAt, sosRequestId]);
         return result.rows[0];
     }
+
+    findActiveSOSByUser = async ({ userId, role }) => {
+        let query = '';
+        if (role === 'RESCUER') {
+            query = `
+                SELECT *
+                FROM ${this.sos_requestModel.table}
+                WHERE ${this.sos_requestModel.field.rescuerId} = $1
+                  AND ${this.sos_requestModel.field.status} = 'IN_PROGRESS'
+                LIMIT 1
+            `;
+        } else {
+            query = `
+                SELECT *
+                FROM ${this.sos_requestModel.table}
+                WHERE ${this.sos_requestModel.field.userId} = $1
+                  AND ${this.sos_requestModel.field.status} IN ('PENDING', 'SEARCHING', 'ASSIGNED', 'IN_PROGRESS')
+                LIMIT 1
+            `;
+        }
+
+        const result = await pool.query(query, [userId]);
+        return result.rows[0];
+    }
 }
 
 module.exports = new SosRequestRepository()

@@ -10,6 +10,7 @@ import 'package:mobile/core/socket/modules/victim_socket.dart';
 import 'package:mobile/core/socket/socket_events.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 import 'package:mobile/core/constants/app_constants.dart';
+import 'package:mobile/core/di/di.dart';
 
 import '../../features/auth/data/auth_repository.dart';
 import '../background/background_service.dart';
@@ -17,6 +18,9 @@ import '../location/data/location_repository.dart';
 import '../socket/core_socket.dart';
 import 'session_controller.dart';
 import 'session_state.dart';
+import 'package:mobile/features/rescuer/presentation/providers/sos_provider.dart';
+import 'package:mobile/features/rescuer/models/sos_offer_model.dart';
+import 'package:latlong2/latlong.dart';
 
 class AppSession {
   final SessionController controller;
@@ -93,6 +97,9 @@ class AppSession {
           // Bắt đầu lắng nghe sự kiện socket dành cho Victim
           victimSocket.listenSosNotFound();
         }
+
+        // Tự động kiểm tra và khôi phục tiến trình cứu hộ (nếu có)
+        await checkAndRestoreActiveRescue();
       } catch (e, stackTrace) {
         debugPrint("🚨 LỖI INIT SESSION: $e\n$stackTrace");
         _isInitialized = true;
@@ -178,7 +185,9 @@ class AppSession {
       }
 
       // Khởi động GPS Tracking
-      final positionStream = await locationRepository.startTracking();
+      final positionStream = await locationRepository.startTracking(
+        distanceFilter: BackgroundConfig.minDistanceMeters.toInt(),
+      );
       if (positionStream == null) {
         debugPrint("🚨 Không có quyền truy cập vị trí.");
         return false;
@@ -248,6 +257,94 @@ class AppSession {
     } finally {
       // Đảm bảo luôn mở khóa nút bấm
       controller.setProcessing(false);
+    }
+  }
+
+  /// Thay đổi cấu hình distanceFilter động cho GPS Tracking (cho cả Foreground và Background)
+  Future<void> updateDistanceFilter(int distanceFilter) async {
+    // 1. Gửi cấu hình mới xuống Background Service (để khi app chạy nền)
+    try {
+      background.send({
+        "type": "update_distance_filter",
+        "distanceFilter": distanceFilter,
+      });
+    } catch (e) {
+      debugPrint("⚠️ Lỗi cập nhật distanceFilter cho background service: $e");
+    }
+
+    // 2. Cập nhật cho foreground subscription (khi app đang chạy và online)
+    if (_locationSubscription != null) {
+      debugPrint("🔄 Cập nhật distanceFilter foreground thành: ${distanceFilter}m");
+      await _locationSubscription?.cancel();
+      _locationSubscription = null;
+
+      final positionStream = await locationRepository.startTracking(distanceFilter: distanceFilter);
+      if (positionStream != null) {
+        _locationSubscription = positionStream.listen((position) {
+          locationSocket.sendLocation(
+            lat: position.latitude,
+            lng: position.longitude,
+          );
+          controller.updatePosition(position);
+        });
+      }
+    }
+  }
+
+  /// Tự động kiểm tra và khôi phục ca cứu hộ đang dở dang trên server
+  Future<void> checkAndRestoreActiveRescue() async {
+    try {
+      final activeRescueData = await authRepository.getActiveSOS();
+      if (activeRescueData == null) return;
+
+      final sosRequest = activeRescueData['sosRequest'];
+      final partner = activeRescueData['partner'];
+
+      if (sosRequest == null) return;
+
+      final status = sosRequest['status'];
+
+      if (role == UserRole.rescuer) {
+        if (status == 'IN_PROGRESS') {
+          final sosId = sosRequest['sosRequestId'] ?? sosRequest['sos_request_id'];
+          final victimLat = (sosRequest['victimLat'] ?? sosRequest['victim_lat'] as num).toDouble();
+          final victimLng = (sosRequest['victimLng'] ?? sosRequest['victim_lng'] as num).toDouble();
+          final description = sosRequest['description'];
+
+          final sosOffer = SOSOfferModel(
+            sosId: sosId,
+            victimLat: victimLat,
+            victimLng: victimLng,
+            description: description,
+          );
+
+          // Cập nhật SOSProvider của Rescuer
+          getIt<SOSProvider>().startRescue(sosOffer, partner ?? {});
+
+          // Bắt đầu định vị 1m/lần
+          await updateDistanceFilter(1);
+          debugPrint("🔄 [AppSession] Đã khôi phục ca cứu hộ dở dang cho Rescuer. SOS: $sosId");
+        }
+      } else if (role == UserRole.victim) {
+        if (status == 'PENDING' || status == 'SEARCHING') {
+          controller.setSearchingRescuer(true);
+          debugPrint("🔄 [AppSession] Đã khôi phục trạng thái đang tìm kiếm cứu hộ cho Victim.");
+        } else if (status == 'ASSIGNED' || status == 'IN_PROGRESS') {
+          LatLng? initialPos;
+          if (partner != null && partner['lat'] != null && partner['lng'] != null) {
+            initialPos = LatLng(
+              (partner['lat'] as num).toDouble(),
+              (partner['lng'] as num).toDouble(),
+            );
+          }
+          controller.startBeingRescued(partner ?? {}, initialPos);
+          
+          // Bật lại định vị mượt mà cho Victim nếu cần (ở đây là nhận vị trí mượt)
+          debugPrint("🔄 [AppSession] Đã khôi phục trạng thái đang được cứu hộ cho Victim.");
+        }
+      }
+    } catch (e) {
+      debugPrint("⚠️ Lỗi khôi phục ca cứu hộ: $e");
     }
   }
 }

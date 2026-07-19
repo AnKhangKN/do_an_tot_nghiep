@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/sos_offer_model.dart';
+import '../../../../core/di/di.dart';
+import '../../../../core/session/app_session.dart';
+import '../../../../core/background/background_config.dart';
 
 class SOSProvider extends ChangeNotifier {
 
@@ -37,6 +40,9 @@ class SOSProvider extends ChangeNotifier {
     _activeVictim = victim;
     _currentSOS = null; // Tắt offer
     notifyListeners();
+
+    // Tăng tần suất cập nhật GPS khi đang làm nhiệm vụ để marker chuyển động liên tục (1m/lần)
+    getIt<AppSession>().updateDistanceFilter(1);
   }
 
   bool _showSuccessRescueAlert = false;
@@ -61,6 +67,9 @@ class SOSProvider extends ChangeNotifier {
     _activeRescue = null;
     _activeVictim = null;
     notifyListeners();
+
+    // Đưa tần suất cập nhật GPS về bình thường để tiết kiệm pin (10m/lần)
+    getIt<AppSession>().updateDistanceFilter(BackgroundConfig.minDistanceMeters.toInt());
   }
 
   void clearSOS() {

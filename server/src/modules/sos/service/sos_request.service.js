@@ -124,6 +124,49 @@ class SosRequestService {
             return updated;
         });
     };
+
+    getActiveSOS = async ({ userId, role }) => {
+        const activeSos = await this.sos_requestRepository.findActiveSOSByUser({ userId, role });
+        if (!activeSos) return null;
+
+        // Lấy thêm thông tin đối phương (nếu có)
+        let partner = null;
+        if (role === 'RESCUER') {
+            const victimInfo = await userService.getUserInfoById({ userId: activeSos.user_id });
+            partner = {
+                userId: activeSos.user_id,
+                fullName: victimInfo?.full_name,
+                phone: victimInfo?.phone,
+            };
+        } else if (activeSos.rescuer_id) {
+            const rescuerInfo = await userService.getUserInfoById({ userId: activeSos.rescuer_id });
+            
+            let rescuerLat = null;
+            let rescuerLng = null;
+            try {
+                const pos = await redis.geopos("rescuer_locations", activeSos.rescuer_id);
+                if (pos && pos[0]) {
+                    rescuerLng = parseFloat(pos[0][0]);
+                    rescuerLat = parseFloat(pos[0][1]);
+                }
+            } catch (err) {
+                console.error("[SERVICE] Lỗi lấy tọa độ Rescuer từ Redis:", err);
+            }
+
+            partner = {
+                userId: activeSos.rescuer_id,
+                fullName: rescuerInfo?.full_name,
+                phone: rescuerInfo?.phone,
+                lat: rescuerLat,
+                lng: rescuerLng,
+            };
+        }
+
+        return {
+            sosRequest: activeSos,
+            partner
+        };
+    };
 }
 
 module.exports = new SosRequestService();

@@ -100,16 +100,25 @@ class MatchingService {
         return available.slice(0, 5);
     }
 
-    /**
-     * FILTER: only active + recently online rescuers
-     */
     #filterAvailability = async (rescuers) => {
+        if (!rescuers || rescuers.length === 0) return [];
 
         const NOW_LIMIT_SECONDS = 300; // Tăng từ 30s lên 300s (5 phút) để phù hợp với độ trễ di động chạy nền
         const now = Date.now();
+        const redis = require("@/config/redis.config");
 
-        return rescuers.filter(r => {
+        const rescuerIds = rescuers.map(r => r.userId);
+        const pipeline = redis.pipeline();
 
+        // Kiểm tra xem cứu hộ viên có đang bận cứu nạn (active_rescues) hoặc đang xem xét offer khác không
+        rescuerIds.forEach(id => {
+            pipeline.hexists("active_rescues", id);
+            pipeline.exists(`sos:offer:rescuer:${id}`);
+        });
+
+        const busyResults = await pipeline.exec();
+
+        return rescuers.filter((r, index) => {
             // must be active
             if (r.status !== "ACTIVE") return false;
 
@@ -120,7 +129,16 @@ class MatchingService {
             const diffSeconds = (now - lastSeen) / 1000;
 
             // must be recently online
-            return diffSeconds <= NOW_LIMIT_SECONDS;
+            if (diffSeconds > NOW_LIMIT_SECONDS) return false;
+
+            // Lấy kết quả từ Redis pipeline
+            const isRescuing = busyResults[index * 2][1] === 1; // hexists trả về 1 nếu field tồn tại
+            if (isRescuing) return false;
+
+            const hasOffer = busyResults[index * 2 + 1][1] === 1; // exists trả về 1 nếu key tồn tại
+            if (hasOffer) return false;
+
+            return true;
         });
     }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:provider/provider.dart';
 
 import '../../../../core/di/di.dart';
 import '../../../../core/network/direction_service.dart';
@@ -100,17 +99,8 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
               return MapWidget(
                 mapController: _mapController,
                 position: position,
-                additionalMarkers: isBeingRescued && currentRescuerPos != null
-                    ? [
-                        Marker(
-                          point: currentRescuerPos,
-                          width: 50,
-                          height: 50,
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.airport_shuttle, color: Colors.green, size: 40),
-                        )
-                      ]
-                    : null,
+                partnerPosition: isBeingRescued ? currentRescuerPos : null,
+                partnerMarkerChild: const Icon(Icons.airport_shuttle, color: Colors.green, size: 40),
                 polylines: isBeingRescued && _routePoints.isNotEmpty
                     ? [
                         Polyline(
