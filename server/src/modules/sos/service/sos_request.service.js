@@ -6,6 +6,8 @@ const sosQueue = require("../../../queues/sos.queue");
 const { transaction } = require("@/config/database.config");
 const redis = require("../../../config/redis.config");
 const dispatchService = require("@modules/dispatch/service/dispatcher.service");
+const notificationService = require("@modules/notification/service/notification.service");
+const rescuerHistoryRepository = require("../repository/rescuer_history.repository");
 
 class SosRequestService {
     constructor() {
@@ -93,6 +95,14 @@ class SosRequestService {
                 acceptedAt: now
             });
 
+            // Ghi nhật ký hoạt động: ACCEPTED
+            await rescuerHistoryRepository.createHistory(client, {
+                historyId: uuidUtil.generateUUID(),
+                rescuerId,
+                sosRequestId,
+                action: 'ACCEPTED'
+            });
+
             return updated;
         });
 
@@ -101,6 +111,9 @@ class SosRequestService {
 
         // Ngắt luồng tìm kiếm (bullmq)
         dispatchService.stopSOS(sosRequestId);
+
+        // Dọn dẹp tracking keys trên Redis
+        await this.cleanupSosKeys(sosRequestId);
 
         return updatedSos;
     };
@@ -119,6 +132,14 @@ class SosRequestService {
             const updated = await this.sos_requestRepository.completeSOS(client, {
                 sosRequestId,
                 completedAt: now
+            });
+
+            // Ghi nhật ký hoạt động: COMPLETED
+            await rescuerHistoryRepository.createHistory(client, {
+                historyId: uuidUtil.generateUUID(),
+                rescuerId: sos.rescuer_id,
+                sosRequestId,
+                action: 'COMPLETED'
             });
 
             return updated;
@@ -166,6 +187,247 @@ class SosRequestService {
             sosRequest: activeSos,
             partner
         };
+    };
+
+    cleanupSosKeys = async (sosId) => {
+        try {
+            const pipeline = redis.pipeline();
+            pipeline.del(`sos:${sosId}:attempt`);
+            pipeline.del(`sos:${sosId}:offered_rescuers`);
+            pipeline.del(`sos:${sosId}:rejected_rescuers`);
+            await pipeline.exec();
+            console.log(`[SERVICE] Đã dọn dẹp Redis keys cho SOS: ${sosId}`);
+        } catch (err) {
+            console.error("[SERVICE] Lỗi dọn dẹp Redis keys của SOS:", err);
+        }
+    };
+
+    rejectSOS = async ({ sosRequestId, rescuerId }) => {
+        const radiusList = [2, 5, 10, 20];
+        try {
+            // 1. Xóa offer của rescuer này
+            await redis.del(`sos:offer:rescuer:${rescuerId}`);
+
+            // 2. Thêm vào danh sách từ chối và xóa khỏi danh sách đang offer
+            const pipeline = redis.pipeline();
+            pipeline.sadd(`sos:${sosRequestId}:rejected_rescuers`, rescuerId);
+            pipeline.srem(`sos:${sosRequestId}:offered_rescuers`, rescuerId);
+            pipeline.expire(`sos:${sosRequestId}:rejected_rescuers`, 3600);
+            await pipeline.exec();
+
+            // Ghi nhật ký hoạt động: REJECTED
+            await transaction(async (client) => {
+                await rescuerHistoryRepository.createHistory(client, {
+                    historyId: uuidUtil.generateUUID(),
+                    rescuerId,
+                    sosRequestId,
+                    action: 'REJECTED'
+                });
+            }).catch(err => console.error("Lỗi ghi log REJECTED vào DB:", err));
+
+            // 3. Kiểm trạng thái SOS trong DB
+            const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+            if (!sos || (sos.status !== "PENDING" && sos.status !== "SEARCHING")) {
+                return;
+            }
+
+            // 4. Kiểm tra xem còn cứu hộ viên nào khác đang xem xét offer của SOS này không
+            const remainingCount = await redis.scard(`sos:${sosRequestId}:offered_rescuers`);
+            if (remainingCount === 0) {
+                // Lấy attempt hiện tại từ Redis
+                const attemptStr = await redis.get(`sos:${sosRequestId}:attempt`);
+                const attempt = attemptStr ? parseInt(attemptStr) : 1;
+
+                if (attempt < radiusList.length) {
+                    console.log(`[SERVICE] Tất cả rescuers đợt này đã từ chối. Quét tiếp SOS ${sosRequestId} đợt ${attempt + 1}`);
+                    await sosQueue.add(
+                        "process-sos",
+                        {
+                            sosId: sosRequestId,
+                            attempt: attempt + 1,
+                        },
+                        {
+                            jobId: `process-sos-${sosRequestId} attempt-${attempt + 1}`,
+                            removeOnComplete: true,
+                            removeOnFail: true,
+                        }
+                    );
+                } else {
+                    console.log(`[SERVICE] Tất cả rescuers đợt cuối đã từ chối. SOS ${sosRequestId} không tìm được ai.`);
+
+                    // Cập nhật trạng thái SOS thành CANCELLED trong database trước tiên để kiểm tra race condition
+                    const updatedSos = await this.cancelSOS({
+                        sosRequestId,
+                        cancelReason: "Tất cả người cứu hộ từ chối yêu cầu cứu hộ"
+                    });
+
+                    if (updatedSos) {
+                        // Thông báo về nạn nhân rằng không tìm được rescuer qua pubsub
+                        const payload = JSON.stringify({
+                            sosId: sosRequestId,
+                            victimId: updatedSos.user_id,
+                        });
+                        await redis.publish("sos:not_found", payload);
+
+                        // Đồng thời gửi Push Notification báo thất bại cho nạn nhân
+                        await notificationService.sendPushNotification(updatedSos.user_id, {
+                            title: "Không tìm thấy người cứu hộ",
+                            body: "Chưa tìm thấy người cứu hộ phù hợp cho yêu cầu trợ giúp của bạn. Vui lòng thử lại sau.",
+                            data: {
+                                type: "SOS_NOT_FOUND",
+                                sosRequestId
+                            }
+                        }).catch(err => console.error("Lỗi gửi push notification cho victim:", err));
+
+                        // Dọn dẹp Redis
+                        await this.cleanupSosKeys(sosRequestId);
+                    } else {
+                        console.log(`[SERVICE] Bỏ qua xử lý từ chối đợt cuối do SOS ${sosRequestId} đã được nhận hoặc hủy trước đó`);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("[SERVICE] Lỗi trong rejectSOS:", error);
+        }
+    };
+
+    handleOfferTimeout = async ({ sosRequestId, attempt }) => {
+        const radiusList = [2, 5, 10, 20];
+        try {
+            // 1. Kiểm xem job check-offer-timeout này có khớp với attempt hiện tại không
+            const currentAttemptStr = await redis.get(`sos:${sosRequestId}:attempt`);
+            const currentAttempt = currentAttemptStr ? parseInt(currentAttemptStr) : null;
+            if (currentAttempt !== null && currentAttempt !== attempt) {
+                console.log(`[TIMEOUT] Job check-offer-timeout cho attempt ${attempt} bị bỏ qua vì hiện tại đang là attempt ${currentAttempt}`);
+                return;
+            }
+
+            // 2. Kiểm tra trạng thái SOS
+            const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+            if (!sos || (sos.status !== "PENDING" && sos.status !== "SEARCHING")) {
+                // Đã được nhận hoặc hủy, dọn dẹp các key
+                await this.cleanupSosKeys(sosRequestId);
+                return;
+            }
+
+            // 3. Lấy danh sách rescuers đang được offer đợt này
+            const offeredRescuers = await redis.smembers(`sos:${sosRequestId}:offered_rescuers`);
+            if (offeredRescuers && offeredRescuers.length > 0) {
+                const pipeline = redis.pipeline();
+                for (const rescuerId of offeredRescuers) {
+                    pipeline.del(`sos:offer:rescuer:${rescuerId}`);
+                    pipeline.sadd(`sos:${sosRequestId}:rejected_rescuers`, rescuerId);
+                    pipeline.srem(`sos:${sosRequestId}:offered_rescuers`, rescuerId);
+                }
+                pipeline.expire(`sos:${sosRequestId}:rejected_rescuers`, 3600);
+                await pipeline.exec();
+
+                // Ghi nhật ký hoạt động: TIMEOUT cho từng rescuer
+                await transaction(async (client) => {
+                    for (const rescuerId of offeredRescuers) {
+                        await rescuerHistoryRepository.createHistory(client, {
+                            historyId: uuidUtil.generateUUID(),
+                            rescuerId,
+                            sosRequestId,
+                            action: 'TIMEOUT'
+                        });
+                    }
+                }).catch(err => console.error("Lỗi ghi log TIMEOUT vào DB:", err));
+            }
+
+            // 4. Kích hoạt đợt quét tiếp theo
+            if (attempt < radiusList.length) {
+                console.log(`[TIMEOUT] Hết giờ xem xét offer đợt ${attempt}. Quét tiếp SOS ${sosRequestId} đợt ${attempt + 1}`);
+                await sosQueue.add(
+                    "process-sos",
+                    {
+                        sosId: sosRequestId,
+                        attempt: attempt + 1,
+                    },
+                    {
+                        jobId: `process-sos-${sosRequestId} attempt-${attempt + 1}`,
+                        removeOnComplete: true,
+                        removeOnFail: true,
+                    }
+                );
+            } else {
+                console.log(`[TIMEOUT] Hết giờ xem xét offer đợt cuối ${attempt}. SOS ${sosRequestId} không tìm được ai.`);
+
+                // Cập nhật trạng thái SOS thành CANCELLED trong database trước tiên để kiểm tra race condition
+                const updatedSos = await this.cancelSOS({
+                    sosRequestId,
+                    cancelReason: "Hết thời gian xem xét offer cứu hộ"
+                });
+
+                if (updatedSos) {
+                    // Thông báo về nạn nhân rằng không tìm được rescuer qua pubsub
+                    const payload = JSON.stringify({
+                        sosId: sosRequestId,
+                        victimId: updatedSos.user_id,
+                    });
+                    await redis.publish("sos:not_found", payload);
+
+                    // Đồng thời gửi Push Notification báo thất bại cho nạn nhân
+                    await notificationService.sendPushNotification(updatedSos.user_id, {
+                        title: "Không tìm thấy người cứu hộ",
+                        body: "Chưa tìm thấy người cứu hộ phù hợp cho yêu cầu trợ giúp của bạn. Vui lòng thử lại sau.",
+                        data: {
+                            type: "SOS_NOT_FOUND",
+                            sosRequestId
+                        }
+                    }).catch(err => console.error("Lỗi gửi push notification cho victim:", err));
+
+                    // Dọn dẹp Redis
+                    await this.cleanupSosKeys(sosRequestId);
+                } else {
+                    console.log(`[TIMEOUT] Bỏ qua xử lý timeout đợt cuối do SOS ${sosRequestId} đã được nhận hoặc hủy trước đó`);
+                }
+            }
+        } catch (error) {
+            console.error("[SERVICE] Lỗi trong handleOfferTimeout:", error);
+        }
+    };
+
+    cancelSOS = async ({ sosRequestId, cancelReason }) => {
+        try {
+            // Lấy thông tin SOS trước khi hủy để biết rescuer_id (nếu có)
+            const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+
+            const updated = await this.sos_requestRepository.updateStatusOnly({
+                sosRequestId,
+                status: 'CANCELLED',
+                cancelReason
+            });
+
+            if (updated && sos && sos.rescuer_id) {
+                // Ghi nhật ký hoạt động: FAILED cho rescuer nhận ca
+                await transaction(async (client) => {
+                    await rescuerHistoryRepository.createHistory(client, {
+                        historyId: uuidUtil.generateUUID(),
+                        rescuerId: sos.rescuer_id,
+                        sosRequestId,
+                        action: 'FAILED'
+                    });
+                }).catch(err => console.error("Lỗi ghi log FAILED vào DB:", err));
+            }
+
+            return updated;
+        } catch (error) {
+            console.error("[SERVICE] Lỗi trong cancelSOS:", error);
+        }
+    };
+
+    getSOSHistory = async ({ userId, role }) => {
+        try {
+            if (role === 'RESCUER') {
+                return await rescuerHistoryRepository.findHistoryByRescuerId({ rescuerId: userId });
+            } else {
+                return await this.sos_requestRepository.findSOSHistoryByVictimId({ victimId: userId });
+            }
+        } catch (error) {
+            console.error("[SERVICE] Lỗi trong getSOSHistory:", error);
+            throw error;
+        }
     };
 }
 

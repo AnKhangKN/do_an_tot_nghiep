@@ -17,68 +17,119 @@ const worker = new Worker(
     async (job) => {
         const { sosId, attempt } = job.data;
 
-        const sos = await sosRequestService.findSOSById(sosId);
+        if (job.name === "process-sos") {
+            const sos = await sosRequestService.findSOSById(sosId);
 
-        if (!sos) {
-            console.log(`[SOS] Not found: ${sosId}`);
-            return;
-        }
+            if (!sos) {
+                console.log(`[SOS] Not found: ${sosId}`);
+                return;
+            }
 
-        const radius = radiusList[attempt - 1];
+            // Kiểm tra trạng thái SOS
+            if (sos.status !== "PENDING" && sos.status !== "SEARCHING") {
+                console.log(`[SOS] Bỏ qua process-sos do SOS ${sosId} đã có trạng thái ${sos.status}`);
+                return;
+            }
 
-        console.log(
-            `[SOS] Search radius: ${radius} km`
-        );
+            // Lưu attempt hiện tại vào Redis
+            await redis.set(`sos:${sosId}:attempt`, attempt, "EX", 3600);
 
-        const rescuers =
-            await matchingService.findNearbyRescuersForSOS(
-                sos,
-                radius
-            );
-
-        // Nếu có rescuer phù hợp sẽ gửi sendSOS {#99ff99,9}
-        if (rescuers.length > 0) {
-            await dispatchService.broadcastSOS(rescuers, sos);
+            const radius = radiusList[attempt - 1];
 
             console.log(
-                `[SOS] Dispatched SOS ${sosId}`
+                `[SOS] Search radius: ${radius} km (Attempt ${attempt})`
             );
 
-            return;
-        }
+            const rescuers =
+                await matchingService.findNearbyRescuersForSOS(
+                    sos,
+                    radius
+                );
 
-        // Gửi tiếp nếu không tìm thấy người cứu hộ trong bán kính hiện tại {#95e,25}
-        if (attempt < radiusList.length) {
-            console.log(
-                `[SOS] Retry after 15s with radius ${radiusList[attempt]
-                } km`
-            );
+            // Nếu có rescuer phù hợp sẽ gửi offer
+            if (rescuers.length > 0) {
+                await dispatchService.broadcastSOS(rescuers, sos);
 
-            await sosQueue.add( 
-                "process-sos",
-                {
-                    sosId,
-                    attempt: attempt + 1,
-                },
-                {
+                console.log(
+                    `[SOS] Dispatched SOS ${sosId} to ${rescuers.length} rescuers`
+                );
 
-                    jobId: `process-sos-${sos.sos_request_id} attempt-${attempt + 1}`,
-                    removeOnComplete: true,
-                    removeOnFail: true,
-                    delay: 15000,
+                // Thêm job kiểm tra timeout sau 30 giây
+                await sosQueue.add(
+                    "check-offer-timeout",
+                    {
+                        sosId,
+                        attempt,
+                    },
+                    {
+                        jobId: `check-offer-timeout-${sosId}-attempt-${attempt}`,
+                        delay: 30000,
+                        removeOnComplete: true,
+                        removeOnFail: true,
+                    }
+                );
+
+                return;
+            }
+
+            // Gửi tiếp nếu không tìm thấy người cứu hộ trong bán kính hiện tại
+            if (attempt < radiusList.length) {
+                console.log(
+                    `[SOS] Retry after 15s with radius ${radiusList[attempt]} km`
+                );
+
+                await sosQueue.add( 
+                    "process-sos",
+                    {
+                        sosId,
+                        attempt: attempt + 1,
+                    },
+                    {
+                        jobId: `process-sos-${sosId} attempt-${attempt + 1}`,
+                        removeOnComplete: true,
+                        removeOnFail: true,
+                        delay: 15000,
+                    }
+                );
+            } else {
+                console.log(
+                    `[SOS] No rescuer found after all attempts`
+                );
+
+                // Cập nhật trạng thái SOS thành CANCELLED trong database trước tiên để kiểm tra race condition
+                const updatedSos = await sosRequestService.cancelSOS({
+                    sosRequestId: sosId,
+                    cancelReason: "Không tìm thấy người cứu hộ trong phạm vi"
+                });
+
+                if (updatedSos) {
+                    // Thông báo về nạn nhân rằng không tìm được rescuer qua pubsub
+                    const payload = JSON.stringify({
+                        sosId,
+                        victimId: updatedSos.user_id,
+                    });
+                    await redis.publish("sos:not_found", payload);
+
+                    // Đồng thời gửi Push Notification báo thất bại cho nạn nhân
+                    const notificationService = require("@modules/notification/service/notification.service");
+                    await notificationService.sendPushNotification(updatedSos.user_id, {
+                        title: "Không tìm thấy người cứu hộ",
+                        body: "Chưa tìm thấy người cứu hộ phù hợp cho yêu cầu trợ giúp của bạn. Vui lòng thử lại sau.",
+                        data: {
+                            type: "SOS_NOT_FOUND",
+                            sosRequestId: sosId
+                        }
+                    }).catch(err => console.error("Lỗi gửi push notification cho victim:", err));
+
+                    // Dọn dẹp Redis
+                    await sosRequestService.cleanupSosKeys(sosId);
+                } else {
+                    console.log(`[SOS] Bỏ qua gửi sos:not_found do SOS ${sosId} đã được nhận hoặc hủy trước đó`);
                 }
-            );
-        } else {
-            console.log(
-                `[SOS] No rescuer found after all attempts`
-            );
-
-            // Thông báo về nạn nhân rằng không tìm được rescuer
-            const payload = JSON.stringify({
-                sosId,
-                victimId: sos.user_id,
-            });
-            await redis.publish("sos:not_found", payload);
+            }
+        } else if (job.name === "check-offer-timeout") {
+            console.log(`[SOS] Executing check-offer-timeout for SOS ${sosId} (Attempt ${attempt})`);
+            await sosRequestService.handleOfferTimeout({ sosRequestId: sosId, attempt });
         }
     },
     {

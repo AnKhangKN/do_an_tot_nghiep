@@ -43,6 +43,7 @@ dependencies:
   flutter_background_service: ^5.1.0 # Xử lý cập nhật heartbeat background
   flutter_local_notifications: ^22.0.1 # Cần nó để xử lý background
   permission_handler: ^12.0.3 # Cần xin để cấp quyền
+  url_launcher: ^6.3.1
   dio: ^5.9.2
   flutter_secure_storage: ^10.0.0 # Lưu refresh token ở đây
   provider: ^6.1.5+1

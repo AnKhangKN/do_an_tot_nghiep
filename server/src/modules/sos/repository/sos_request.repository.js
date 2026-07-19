@@ -94,6 +94,53 @@ class SosRequestRepository {
         const result = await pool.query(query, [userId]);
         return result.rows[0];
     }
+
+    findSOSHistoryByVictimId = async ({ victimId }) => {
+        const query = `
+            SELECT 
+                s.${this.sos_requestModel.field.sosRequestId},
+                s.${this.sos_requestModel.field.userId},
+                s.${this.sos_requestModel.field.incidentTypeId},
+                s.${this.sos_requestModel.field.description},
+                s.${this.sos_requestModel.field.victimLat},
+                s.${this.sos_requestModel.field.victimLng},
+                s.${this.sos_requestModel.field.status},
+                s.${this.sos_requestModel.field.rescuerId},
+                s.${this.sos_requestModel.field.acceptedAt},
+                s.${this.sos_requestModel.field.completedAt},
+                s.${this.sos_requestModel.field.cancelReason},
+                s.${this.sos_requestModel.field.createdAt},
+                s.${this.sos_requestModel.field.updatedAt},
+                t.incident_type,
+                r.full_name as rescuer_name,
+                r.phone as rescuer_phone,
+                r.avatar_url as rescuer_avatar_url
+            FROM ${this.sos_requestModel.table} s
+            JOIN incident_types t ON s.${this.sos_requestModel.field.incidentTypeId} = t.incident_type_id
+            LEFT JOIN users r ON s.${this.sos_requestModel.field.rescuerId} = r.user_id
+            WHERE s.${this.sos_requestModel.field.userId} = $1
+            ORDER BY s.${this.sos_requestModel.field.createdAt} DESC
+        `;
+
+        const result = await pool.query(query, [victimId]);
+        return result.rows;
+    }
+
+    updateStatusOnly = async ({ sosRequestId, status, cancelReason }) => {
+        const query = `
+            UPDATE ${this.sos_requestModel.table}
+            SET 
+                ${this.sos_requestModel.field.status} = $1,
+                ${this.sos_requestModel.field.cancelReason} = $2,
+                ${this.sos_requestModel.field.updatedAt} = CURRENT_TIMESTAMP
+            WHERE ${this.sos_requestModel.field.sosRequestId} = $3
+              AND ${this.sos_requestModel.field.status} IN ('PENDING', 'SEARCHING')
+            RETURNING *
+        `;
+
+        const result = await pool.query(query, [status, cancelReason, sosRequestId]);
+        return result.rows[0];
+    }
 }
 
 module.exports = new SosRequestRepository()

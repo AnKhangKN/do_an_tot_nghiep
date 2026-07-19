@@ -10,6 +10,11 @@ class MatchingService {
      * MAIN: find suitable rescuers for SOS
      */
     findNearbyRescuersForSOS = async (sos, radius) => {
+        const sosId = sos.sos_request_id;
+        const redis = require("@/config/redis.config");
+
+        // Lấy danh sách cứu hộ viên đã từ chối SOS này từ Redis
+        const rejectedRescuers = await redis.smembers(`sos:${sosId}:rejected_rescuers`) || [];
 
         // 1. Lấy từ redis (geo search) {#7a0,10}
         const nearbyRescuers =
@@ -23,16 +28,16 @@ class MatchingService {
             return [];
         }
 
-        // 2. NORMALIZE redis result
-        const nearby = nearbyRescuers.map(([userId, distance]) => ({
-            userId,
-            distance: parseFloat(distance)
-        }));
+        // 2. NORMALIZE redis result và lọc bỏ những cứu hộ viên đã từ chối
+        const nearby = nearbyRescuers
+            .map(([userId, distance]) => ({
+                userId,
+                distance: parseFloat(distance)
+            }))
+            .filter(r => !rejectedRescuers.includes(r.userId));
 
         const rescuerIds = nearby.map(r => r.userId);
         if (rescuerIds.length === 0) return [];
-
-        const redis = require("@/config/redis.config");
 
         // 3. Sử dụng Pipeline kiểm tra trạng thái hoạt động thực tế (TTL key) để loại bỏ rác
         const pipeline = redis.pipeline();

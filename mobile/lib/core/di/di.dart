@@ -21,6 +21,7 @@ import 'package:mobile/features/user/data/user_repository.dart';
 import 'package:mobile/features/user/data/user_service.dart';
 import 'package:mobile/features/victim/data/victim_repository.dart';
 import 'package:mobile/features/victim/data/victim_service.dart';
+import 'package:mobile/features/history/data/history_service.dart';
 
 import '../../features/rescuer/data/rescuer_repository.dart';
 import '../incident_types/data/incident_type_repository.dart';
@@ -70,6 +71,7 @@ Future<void> initDI() async {
     () => IncidentTypeService(getIt<DioClient>().dio),
   );
   getIt.registerLazySingleton(() => VictimService(getIt<DioClient>().dio));
+  getIt.registerLazySingleton(() => HistoryService(getIt<DioClient>().dio));
 
   // Đăng ký các Repository
   getIt.registerLazySingleton<AuthRepository>(

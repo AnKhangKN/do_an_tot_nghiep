@@ -17,6 +17,7 @@ import '../../features/rescuer/presentation/providers/rescuer_map_provider.dart'
 import '../../features/splash/presentation/providers/splash_provider.dart';
 import '../../features/user/presentation/providers/user_provider.dart';
 import '../../features/victim/presentation/providers/victim_map_provider.dart';
+import '../../features/history/presentation/providers/history_provider.dart';
 
 class AppProviders extends StatelessWidget {
   final Widget child;
@@ -44,6 +45,9 @@ class AppProviders extends StatelessWidget {
         ),
 
         // HistoryProvider
+        ChangeNotifierProvider(
+          create: (_) => HistoryProvider(),
+        ),
         // VictimMapProvider
         ChangeNotifierProvider(
           create: (_) => VictimMapProvider(

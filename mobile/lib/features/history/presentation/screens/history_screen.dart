@@ -1,41 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
+import '../../../../core/di/di.dart';
+import '../../../../core/session/session_controller.dart';
+import '../../../../core/session/session_state.dart';
+import '../../../../shared/widgtes/phone_call_widget.dart';
+import '../providers/history_provider.dart';
+import '../../models/history_model.dart';
+import '../../../../core/utils/formatters.dart';
 
-class HistoryScreen extends StatelessWidget {
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
   @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  String _selectedFilter = "Tất cả";
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final session = getIt<SessionController>();
+      final roleStr = session.role == UserRole.rescuer ? 'RESCUER' : 'VICTIM';
+      context.read<HistoryProvider>().fetchHistory(roleStr);
+    });
+  }
+
+  List<HistoryModel> _filterHistories(List<HistoryModel> list) {
+    if (_selectedFilter == "Tất cả") return list;
+    
+    return list.where((item) {
+      final status = item.status.toUpperCase();
+      if (_selectedFilter == "Thành công") {
+        return status == "DONE" || status == "COMPLETED";
+      } else if (_selectedFilter == "Thất bại") {
+        return status == "CANCELLED" || status == "FAILED";
+      } else if (_selectedFilter == "Từ chối / Hết giờ") {
+        return status == "REJECTED" || status == "TIMEOUT";
+      }
+      return true;
+    }).toList();
+  }
+
+  int _countByStatus(List<HistoryModel> list, String filter) {
+    if (filter == "Tất cả") return list.length;
+    return _filterHistories(list).length;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final histories = [
-      {
-        "title": "Cứu hộ khẩn cấp",
-        "location": "Cầu Ninh Kiều, Cần Thơ",
-        "date": "21/05/2026 • 14:20",
-        "status": "success",
-        "description": "Đội cứu hộ đã tiếp cận và hỗ trợ bạn an toàn.",
-      },
-      {
-        "title": "Yêu cầu y tế",
-        "location": "Bình Thủy, Cần Thơ",
-        "date": "18/05/2026 • 09:15",
-        "status": "rejected",
-        "description": "Yêu cầu không hợp lệ hoặc không đủ thông tin xác minh.",
-      },
-      {
-        "title": "Tai nạn giao thông",
-        "location": "Phong Điền, Cần Thơ",
-        "date": "15/05/2026 • 22:10",
-        "status": "failed",
-        "description": "Đội cứu hộ không thể tiếp cận vị trí do thời tiết xấu.",
-      },
-      {
-        "title": "Hỗ trợ di dời",
-        "location": "Ninh Kiều, Cần Thơ",
-        "date": "10/05/2026 • 17:45",
-        "status": "success",
-        "description": "Bạn đã được sơ tán đến khu vực an toàn.",
-      },
-    ];
+    final session = getIt<SessionController>();
+    final isRescuer = session.role == UserRole.rescuer;
+    final roleStr = isRescuer ? 'RESCUER' : 'VICTIM';
 
     return Scaffold(
       backgroundColor: ColorConstants.backgroundLight,
@@ -53,52 +72,93 @@ class HistoryScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header Stats Card
-            _buildStatsHeader(),
+        child: Consumer<HistoryProvider>(
+          builder: (context, provider, _) {
+            final filteredList = _filterHistories(provider.histories);
 
-            // Filter Tabs
-            SizedBox(
-              height: 50,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+            return RefreshIndicator(
+              onRefresh: () => provider.fetchHistory(roleStr),
+              child: Column(
                 children: [
-                  _buildFilterChip("Tất cả", true),
-                  _buildFilterChip("Thành công", false),
-                  _buildFilterChip("Thất bại", false),
-                  _buildFilterChip("Bị từ chối", false),
+                  // Header Stats Card
+                  _buildStatsHeader(provider.histories),
+
+                  // Filter Tabs
+                  SizedBox(
+                    height: 50,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        _buildFilterChip("Tất cả"),
+                        _buildFilterChip("Thành công"),
+                        _buildFilterChip("Thất bại"),
+                        if (isRescuer) _buildFilterChip("Từ chối / Hết giờ"),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // History List
+                  Expanded(
+                    child: provider.isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : provider.errorMessage != null
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(32),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        provider.errorMessage!,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(color: ColorConstants.textSecondary),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ElevatedButton(
+                                        onPressed: () => provider.fetchHistory(roleStr),
+                                        child: const Text("Tải lại"),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : filteredList.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      "Không tìm thấy lịch sử phù hợp.",
+                                      style: TextStyle(color: ColorConstants.textSecondary),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    itemCount: filteredList.length,
+                                    itemBuilder: (context, index) {
+                                      final item = filteredList[index];
+                                      return _HistoryCard(
+                                        item: item,
+                                        isRescuer: isRescuer,
+                                        formattedDate: Formatters.formatDateTime(item.date),
+                                      );
+                                    },
+                                  ),
+                  ),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // History List
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: histories.length,
-                itemBuilder: (context, index) {
-                  final item = histories[index];
-                  return _HistoryCard(
-                    title: item["title"] as String,
-                    location: item["location"] as String,
-                    date: item["date"] as String,
-                    description: item["description"] as String,
-                    status: item["status"] as String,
-                  );
-                },
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildStatsHeader() {
+  Widget _buildStatsHeader(List<HistoryModel> list) {
+    int total = list.length;
+    int success = list.where((item) => item.status == "DONE" || item.status == "COMPLETED").length;
+    int failed = list.where((item) => item.status == "CANCELLED" || item.status == "FAILED").length;
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -113,20 +173,21 @@ class HistoryScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _StatItem(label: "Tổng cộng", value: "24"),
-          _VerticalDivider(),
-          _StatItem(label: "Thành công", value: "22"),
-          _VerticalDivider(),
-          _StatItem(label: "Cảnh báo", value: "02"),
+          _StatItem(label: "Tổng cộng", value: total.toString().padLeft(2, '0')),
+          const _VerticalDivider(),
+          _StatItem(label: "Thành công", value: success.toString().padLeft(2, '0')),
+          const _VerticalDivider(),
+          _StatItem(label: "Thất bại / Hủy", value: failed.toString().padLeft(2, '0')),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, bool active) {
+  Widget _buildFilterChip(String label) {
+    final active = _selectedFilter == label;
     return Container(
       margin: const EdgeInsets.only(right: 8, bottom: 8, top: 8),
       child: FilterChip(
@@ -138,7 +199,11 @@ class HistoryScreen extends StatelessWidget {
           ),
         ),
         selected: active,
-        onSelected: (val) {},
+        onSelected: (val) {
+          setState(() {
+            _selectedFilter = label;
+          });
+        },
         backgroundColor: ColorConstants.surfaceWhite,
         selectedColor: ColorConstants.redRescue,
         checkmarkColor: Colors.white,
@@ -184,26 +249,55 @@ class _VerticalDivider extends StatelessWidget {
 }
 
 class _HistoryCard extends StatelessWidget {
-  final String title;
-  final String location;
-  final String date;
-  final String description;
-  final String status;
+  final HistoryModel item;
+  final bool isRescuer;
+  final String formattedDate;
 
   const _HistoryCard({
-    required this.title,
-    required this.location,
-    required this.date,
-    required this.description,
-    required this.status,
+    required this.item,
+    required this.isRescuer,
+    required this.formattedDate,
   });
 
   Color get statusColor {
+    final status = item.status.toUpperCase();
     switch (status) {
-      case "success": return ColorConstants.success;
-      case "failed": return ColorConstants.orangeWarning;
-      case "rejected": return ColorConstants.redRescue;
-      default: return ColorConstants.textSecondary;
+      case "DONE":
+      case "COMPLETED":
+        return ColorConstants.success;
+      case "CANCELLED":
+      case "FAILED":
+        return ColorConstants.orangeWarning;
+      case "REJECTED":
+      case "TIMEOUT":
+        return ColorConstants.redRescue;
+      case "ACCEPTED":
+        return Colors.blue;
+      default:
+        return ColorConstants.textSecondary;
+    }
+  }
+
+  String get statusText {
+    final status = item.status.toUpperCase();
+    switch (status) {
+      case "DONE":
+      case "COMPLETED":
+        return "HOÀN THÀNH";
+      case "CANCELLED":
+      case "FAILED":
+        return "THẤT BẠI / HỦY";
+      case "REJECTED":
+        return "ĐÃ TỪ CHỐI";
+      case "TIMEOUT":
+        return "HẾT GIỜ OFFER";
+      case "ACCEPTED":
+        return "ĐÃ CHẤP NHẬN";
+      case "PENDING":
+      case "SEARCHING":
+        return "ĐANG TÌM KIẾM";
+      default:
+        return status;
     }
   }
 
@@ -231,10 +325,14 @@ class _HistoryCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title.toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                Expanded(
+                  child: Text(
+                    item.incidentType.toUpperCase(),
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
@@ -242,24 +340,78 @@ class _HistoryCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    status == "success" ? "HOÀN THÀNH" : status == "failed" ? "THẤT BẠI" : "BỊ TỪ CHỐI",
+                    statusText,
                     style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            _IconText(icon: Icons.location_on_outlined, text: location, color: ColorConstants.textPrimary),
+            _IconText(
+              icon: Icons.location_on_outlined, 
+              text: "Tọa độ: ${item.victimLat.toStringAsFixed(5)}, ${item.victimLng.toStringAsFixed(5)}", 
+              color: ColorConstants.textPrimary,
+            ),
             const SizedBox(height: 4),
-            _IconText(icon: Icons.access_time, text: date, color: ColorConstants.textSecondary),
+            _IconText(
+              icon: Icons.access_time, 
+              text: formattedDate, 
+              color: ColorConstants.textSecondary,
+            ),
+            
+            // Partner Information block
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 10),
               child: Divider(height: 1),
             ),
-            Text(
-              description,
-              style: const TextStyle(color: ColorConstants.textSecondary, fontSize: 13, height: 1.4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isRescuer 
+                            ? "Nạn nhân: ${item.partnerName ?? 'Không rõ'}"
+                            : "Cứu hộ: ${item.partnerName ?? 'Đang tìm kiếm...'}",
+                        style: const TextStyle(
+                          color: ColorConstants.textPrimary, 
+                          fontSize: 13, 
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (item.partnerPhone != null && item.partnerPhone!.isNotEmpty)
+                        Text(
+                          "SĐT: ${item.partnerPhone}",
+                          style: const TextStyle(color: ColorConstants.textSecondary, fontSize: 12),
+                        ),
+                    ],
+                  ),
+                ),
+                if (item.partnerPhone != null && item.partnerPhone!.isNotEmpty)
+                  PhoneCallWidget(phoneNumber: item.partnerPhone!, size: 24),
+              ],
             ),
+
+            if (item.description.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Divider(height: 1),
+              ),
+              Text(
+                "Mô tả: ${item.description}",
+                style: const TextStyle(color: ColorConstants.textSecondary, fontSize: 13, height: 1.4),
+              ),
+            ],
+            
+            if (item.cancelReason != null && item.cancelReason!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                "Lý do hủy: ${item.cancelReason}",
+                style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
           ],
         ),
       ),

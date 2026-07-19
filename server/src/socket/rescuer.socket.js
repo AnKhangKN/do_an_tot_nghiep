@@ -153,8 +153,14 @@ module.exports = (socket, io) => {
     socket.on("rescue:reject", async (payload) => {
         try {
             const rescuerId = socket.user.userId;
-            console.log(`[SOCKET] Rescuer ${rescuerId} rejected or timed out SOS offer`);
-            await redis.del(`sos:offer:rescuer:${rescuerId}`);
+            const sosRequestId = payload?.incidentId || payload?.sosRequestId;
+            console.log(`[SOCKET] Rescuer ${rescuerId} rejected or timed out SOS offer: ${sosRequestId}`);
+
+            if (sosRequestId) {
+                await sosRequestService.rejectSOS({ sosRequestId, rescuerId });
+            } else {
+                await redis.del(`sos:offer:rescuer:${rescuerId}`);
+            }
         } catch (error) {
             console.error("Reject SOS error:", error);
         }

@@ -14,11 +14,17 @@ class DispatchService {
         const sosId = sos.sos_request_id;
         const pipeline = redis.pipeline();
 
+        // Xóa tập hợp offered cũ nếu có
+        pipeline.del(`sos:${sosId}:offered_rescuers`);
+
         for (let i = 0; i < rescuers.length; i++) {
             const rescuer = rescuers[i];
 
             // Đánh dấu cứu hộ viên đang bận xem xét SOS offer này trong 30 giây
             pipeline.set(`sos:offer:rescuer:${rescuer.userId}`, sosId, "EX", 30);
+
+            // Lưu cứu hộ viên vào Redis Set offered_rescuers
+            pipeline.sadd(`sos:${sosId}:offered_rescuers`, rescuer.userId);
 
             try {
                 const payload = {
@@ -34,6 +40,9 @@ class DispatchService {
                 console.error("PUBLISH ERROR", err);
             }
         }
+
+        // Tự động dọn dẹp key này sau 120 giây đề phòng job timeout không chạy
+        pipeline.expire(`sos:${sosId}:offered_rescuers`, 120);
 
         await pipeline.exec();
     }

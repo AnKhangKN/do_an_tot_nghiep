@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mobile/shared/widgtes/phone_call_widget.dart';
 import 'package:mobile/shared/widgtes/map_widget.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/di/di.dart';
@@ -199,18 +200,36 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              "Nạn nhân: ${sosProvider.activeVictim?['fullName'] ?? 'Không rõ'}",
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Nạn nhân: ${sosProvider.activeVictim?['fullName'] ?? 'Không rõ'}",
+                                        style: const TextStyle(fontWeight: FontWeight.w600),
+                                      ),
+                                      Text(
+                                        "SĐT: ${sosProvider.activeVictim?['phone'] ?? 'Không rõ'}",
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (sosProvider.activeVictim?['phone'] != null)
+                                  PhoneCallWidget(
+                                    phoneNumber: sosProvider.activeVictim!['phone'],
+                                  ),
+                              ],
                             ),
-                            Text(
-                              "SĐT: ${sosProvider.activeVictim?['phone'] ?? 'Không rõ'}",
-                            ),
-                            if (activeRescue.description != null && activeRescue.description!.isNotEmpty)
+                            if (activeRescue.description != null && activeRescue.description!.isNotEmpty) ...[
+                              const SizedBox(height: 4),
                               Text(
                                 "Mô tả sự cố: ${activeRescue.description}",
                                 style: const TextStyle(color: Colors.grey),
                               ),
+                            ],
                             const SizedBox(height: 12),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(

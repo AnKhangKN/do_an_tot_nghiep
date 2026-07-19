@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mobile/shared/widgtes/phone_call_widget.dart';
 
 import '../../../../core/di/di.dart';
 import '../../../../core/network/direction_service.dart';
@@ -153,14 +154,15 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
                         listenable: sessionController,
                         builder: (context, _) {
                           final isSearching = sessionController.isSearchingRescuer;
+                          final currentIsBeingRescued = sessionController.isBeingRescued;
 
                           // Phát hiện chuyển từ true → false: không tìm được rescuer
-                          if (_prevSearching && !isSearching && !isBeingRescued) {
+                          if (_prevSearching && !isSearching && !currentIsBeingRescued) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (!mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Không tìm thấy người cứu hộ ở gần đây'),
+                                  content: Text('Chưa tìm thấy người cứu hộ phù hợp. Vui lòng thử lại sau!'),
                                   backgroundColor: Colors.orange,
                                   duration: Duration(seconds: 4),
                                 ),
@@ -171,7 +173,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
 
                           return Align(
                             alignment: Alignment.bottomCenter,
-                            child: isBeingRescued
+                            child: currentIsBeingRescued
                                 ? Container(
                                     width: double.infinity,
                                     padding: const EdgeInsets.all(16),
@@ -201,13 +203,29 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
                                           ],
                                         ),
                                         const SizedBox(height: 8),
-                                        Text(
-                                          "Họ tên: ${sessionController.activeRescuer?['fullName'] ?? 'Không rõ'}",
-                                          style: const TextStyle(fontWeight: FontWeight.w600),
-                                        ),
-                                        Text(
-                                          "SĐT: ${sessionController.activeRescuer?['phone'] ?? 'Không rõ'}",
-                                        ),
+                                         Row(
+                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                           children: [
+                                             Expanded(
+                                               child: Column(
+                                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                                 children: [
+                                                   Text(
+                                                     "Họ tên: ${sessionController.activeRescuer?['fullName'] ?? 'Không rõ'}",
+                                                     style: const TextStyle(fontWeight: FontWeight.w600),
+                                                   ),
+                                                   Text(
+                                                     "SĐT: ${sessionController.activeRescuer?['phone'] ?? 'Không rõ'}",
+                                                   ),
+                                                 ],
+                                               ),
+                                             ),
+                                             if (sessionController.activeRescuer?['phone'] != null)
+                                               PhoneCallWidget(
+                                                 phoneNumber: sessionController.activeRescuer!['phone'],
+                                               ),
+                                           ],
+                                         )
                                       ],
                                     ),
                                   )
@@ -218,9 +236,21 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
                           );
                         },
                       ),
-                      const Align(
-                        alignment: Alignment.bottomRight,
-                        child: VictimUtilWidget(),
+                      ListenableBuilder(
+                        listenable: sessionController,
+                        builder: (context, _) {
+                          final isSearching = sessionController.isSearchingRescuer;
+                          final isBeingRescued = sessionController.isBeingRescued;
+
+                          if (isSearching || isBeingRescued) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return const Align(
+                            alignment: Alignment.bottomRight,
+                            child: VictimUtilWidget(),
+                          );
+                        },
                       ),
                     ],
                   ),

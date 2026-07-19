@@ -34,6 +34,23 @@ class SosRequestController {
             next(error);
         }
     }
+
+    getSOSHistory = async (req, res, next) => {
+        try {
+            const userId = req.userId;
+            const role = req.role;
+
+            const result = await sos_requestService.getSOSHistory({ userId, role });
+
+            return res.status(200).json({
+                success: true,
+                message: "Lấy lịch sử cứu hộ thành công!",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new SosRequestController()
