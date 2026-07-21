@@ -310,18 +310,21 @@ class AppSession {
           final victimLat = (sosRequest['victimLat'] ?? sosRequest['victim_lat'] as num).toDouble();
           final victimLng = (sosRequest['victimLng'] ?? sosRequest['victim_lng'] as num).toDouble();
           final description = sosRequest['description'];
+          final incidentTypeName = sosRequest['incidentTypeName'] ?? sosRequest['incident_type_name'];
 
           final sosOffer = SOSOfferModel(
             sosId: sosId,
             victimLat: victimLat,
             victimLng: victimLng,
             description: description,
+            incidentTypeName: incidentTypeName,
           );
 
           // Cập nhật SOSProvider của Rescuer
           getIt<SOSProvider>().startRescue(sosOffer, partner ?? {});
 
           // Bắt đầu định vị 1m/lần
+          await goOnline();
           await updateDistanceFilter(1);
           debugPrint("🔄 [AppSession] Đã khôi phục ca cứu hộ dở dang cho Rescuer. SOS: $sosId");
         }

@@ -31,9 +31,10 @@ class SosRequestRepository {
 
     findSOSById = async (sosId) => {
         const query = `
-            SELECT *
-            FROM ${this.sos_requestModel.table}
-            WHERE ${this.sos_requestModel.field.sosRequestId} = $1
+            SELECT s.*, it.incident_type as incident_type_name
+            FROM ${this.sos_requestModel.table} s
+            LEFT JOIN incident_types it ON s.${this.sos_requestModel.field.incidentTypeId} = it.incident_type_id
+            WHERE s.${this.sos_requestModel.field.sosRequestId} = $1
         `
 
         const result = await pool.query(query, [sosId])
@@ -75,18 +76,24 @@ class SosRequestRepository {
         let query = '';
         if (role === 'RESCUER') {
             query = `
-                SELECT *
-                FROM ${this.sos_requestModel.table}
-                WHERE ${this.sos_requestModel.field.rescuerId} = $1
-                  AND ${this.sos_requestModel.field.status} = 'IN_PROGRESS'
+                SELECT s.*, it.incident_type as incident_type_name
+                FROM ${this.sos_requestModel.table} s
+                LEFT JOIN incident_types it ON s.${this.sos_requestModel.field.incidentTypeId} = it.incident_type_id
+                WHERE s.${this.sos_requestModel.field.rescuerId} = $1
+                  AND s.${this.sos_requestModel.field.status} = 'IN_PROGRESS'
+                  AND s.${this.sos_requestModel.field.createdAt} > (CURRENT_TIMESTAMP - INTERVAL '24 hours')
+                ORDER BY s.${this.sos_requestModel.field.createdAt} DESC
                 LIMIT 1
             `;
         } else {
             query = `
-                SELECT *
-                FROM ${this.sos_requestModel.table}
-                WHERE ${this.sos_requestModel.field.userId} = $1
-                  AND ${this.sos_requestModel.field.status} IN ('PENDING', 'SEARCHING', 'ASSIGNED', 'IN_PROGRESS')
+                SELECT s.*, it.incident_type as incident_type_name
+                FROM ${this.sos_requestModel.table} s
+                LEFT JOIN incident_types it ON s.${this.sos_requestModel.field.incidentTypeId} = it.incident_type_id
+                WHERE s.${this.sos_requestModel.field.userId} = $1
+                  AND s.${this.sos_requestModel.field.status} IN ('PENDING', 'SEARCHING', 'ASSIGNED', 'IN_PROGRESS')
+                  AND s.${this.sos_requestModel.field.createdAt} > (CURRENT_TIMESTAMP - INTERVAL '24 hours')
+                ORDER BY s.${this.sos_requestModel.field.createdAt} DESC
                 LIMIT 1
             `;
         }

@@ -18,6 +18,7 @@ import '../../features/splash/presentation/providers/splash_provider.dart';
 import '../../features/user/presentation/providers/user_provider.dart';
 import '../../features/victim/presentation/providers/victim_map_provider.dart';
 import '../../features/history/presentation/providers/history_provider.dart';
+import '../../features/chat/presentation/providers/chat_provider.dart';
 
 class AppProviders extends StatelessWidget {
   final Widget child;
@@ -62,8 +63,10 @@ class AppProviders extends StatelessWidget {
             getIt<LocationRepository>(),
           ),
         ),
-        // MessageProvider
-        // Notification
+        // ChatProvider
+        ChangeNotifierProvider(
+          create: (_) => getIt<ChatProvider>(),
+        ),
         // SosProvider
         ChangeNotifierProvider(
           create: (_) => getIt<SOSProvider>(),

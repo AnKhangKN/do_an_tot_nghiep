@@ -1,0 +1,174 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
+import 'package:mobile/features/chat/presentation/screens/messenger_screen.dart';
+import 'package:mobile/shared/widgtes/messenger_widget.dart';
+import 'package:mobile/shared/widgtes/phone_call_widget.dart';
+
+class RescuerRescueInfoWidget extends StatelessWidget {
+  final Map<String, dynamic>? activeVictim;
+  final String? sosRequestId;
+  final String? description;
+  final String? incidentTypeName;
+  final VoidCallback onComplete;
+
+  const RescuerRescueInfoWidget({
+    super.key,
+    required this.activeVictim,
+    this.sosRequestId,
+    this.description,
+    this.incidentTypeName,
+    required this.onComplete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final victimName = activeVictim?['fullName'] ?? 'Không rõ';
+    final victimPhone = activeVictim?['phone'];
+    final displayIncidentType = incidentTypeName ?? activeVictim?['incidentTypeName'] ?? activeVictim?['serviceType'];
+    final victimUserId = activeVictim?['userId'] ?? activeVictim?['user_id'] ?? activeVictim?['victimId'] ?? activeVictim?['victim_id'] ?? activeVictim?['id'];
+    final resolvedSosId = sosRequestId ?? activeVictim?['sosRequestId'] ?? activeVictim?['sos_request_id'] ?? activeVictim?['sosId'] ?? activeVictim?['sos_id'];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.airport_shuttle, color: Colors.red, size: 22),
+              SizedBox(width: 8),
+              Text(
+                "Đang đi cứu nạn...",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Nạn nhân: $victimName",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "SĐT: ${victimPhone ?? 'Không rõ'}",
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              
+              if (victimPhone != null && victimPhone.toString().isNotEmpty) ...[
+                MessengerWidget(
+                  phoneNumber: victimPhone.toString(),
+                  partnerId: victimUserId?.toString(),
+                  partnerName: '$victimName (Nạn nhân)',
+                  sosRequestId: resolvedSosId?.toString(),
+                  onTap: () async {
+                    final chatProvider = context.read<ChatProvider>();
+                    final conv = await chatProvider.getOrCreateConversation(
+                      id: victimUserId?.toString() ?? 'victim_${victimPhone ?? victimName}',
+                      partnerId: victimUserId?.toString(),
+                      name: '$victimName (Nạn nhân)',
+                      phone: victimPhone?.toString(),
+                      sosRequestId: resolvedSosId?.toString(),
+                    );
+                    if (context.mounted) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => MessengerScreen(conversation: conv),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                PhoneCallWidget(
+                  phoneNumber: victimPhone.toString(),
+                ),
+              ],
+            ],
+          ),
+          if (displayIncidentType != null && displayIncidentType.toString().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.build_circle_outlined, size: 16, color: Color(0xFFD97706)),
+                const SizedBox(width: 4),
+                Text(
+                  "Loại sự cố: $displayIncidentType",
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFD97706),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (description != null && description!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              "Mô tả sự cố: $description",
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              minimumSize: const Size.fromHeight(44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            onPressed: onComplete,
+            child: const Text(
+              "Hoàn thành cứu hộ",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

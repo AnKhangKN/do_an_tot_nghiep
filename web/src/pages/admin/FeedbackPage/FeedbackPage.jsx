@@ -1,6 +1,7 @@
 import React from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import { formatTime } from '@/utils/format_date.util';
+import ButtonComponent from '@/components/shared/ButtonComponent/ButtonComponent';
 
 const feedbackColumns = [
   {
@@ -88,11 +89,10 @@ const messageColumns = [
     title: 'Trạng thái',
     render: (row) => (
       <span
-        className={`px-2 py-1 text-xs rounded-full font-medium ${
-          row.status === 'READ'
-            ? 'bg-green-100 text-green-700'
-            : 'bg-yellow-100 text-yellow-700'
-        }`}
+        className={`px-2 py-1 text-xs rounded-full font-medium ${row.status === 'READ'
+          ? 'bg-green-100 text-green-700'
+          : 'bg-yellow-100 text-yellow-700'
+          }`}
       >
         {row.status}
       </span>
@@ -171,7 +171,7 @@ const FeedbackPage = () => {
             rowKey="id"
             page={1}
             totalPages={1}
-            onPageChange={() => {}}
+            onPageChange={() => { }}
             loading={false}
           />
         );
@@ -184,7 +184,7 @@ const FeedbackPage = () => {
             rowKey="id"
             page={1}
             totalPages={1}
-            onPageChange={() => {}}
+            onPageChange={() => { }}
             loading={false}
           />
         );
@@ -197,7 +197,7 @@ const FeedbackPage = () => {
             rowKey="id"
             page={1}
             totalPages={1}
-            onPageChange={() => {}}
+            onPageChange={() => { }}
             loading={false}
           />
         );
@@ -209,42 +209,39 @@ const FeedbackPage = () => {
 
   return (
     <div className="">
-      
+
 
       {/* Tabs */}
       <div className="flex gap-3 mb-5">
-        <button
+        <ButtonComponent
           onClick={() => setActiveTab('feedback')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-            activeTab === 'feedback'
-              ? 'bg-gray-900 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+          className={`${activeTab === 'feedback'
+            ? 'bg-gray-900 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
         >
           Phản hồi
-        </button>
+        </ButtonComponent>
 
-        <button
+        <ButtonComponent
           onClick={() => setActiveTab('report')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-            activeTab === 'report'
-              ? 'bg-gray-900 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+          className={`${activeTab === 'report'
+            ? 'bg-gray-900 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
         >
           Báo cáo
-        </button>
+        </ButtonComponent>
 
-        <button
+        <ButtonComponent
           onClick={() => setActiveTab('message')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-            activeTab === 'message'
-              ? 'bg-gray-900 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+          className={`${activeTab === 'message'
+            ? 'bg-gray-900 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
         >
           Tin nhắn
-        </button>
+        </ButtonComponent>
       </div>
 
       {renderContent()}

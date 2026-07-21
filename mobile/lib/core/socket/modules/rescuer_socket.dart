@@ -52,6 +52,7 @@ class RescuerSocket {
           victimLat: victim['lat'] != null ? (victim['lat'] as num).toDouble() : 0.0,
           victimLng: victim['lng'] != null ? (victim['lng'] as num).toDouble() : 0.0,
           description: victim['description'],
+          incidentTypeName: victim['incidentTypeName'] ?? victim['serviceType'] ?? data['incidentTypeName'],
         );
 
         sosProvider.startRescue(sosOffer, victim);

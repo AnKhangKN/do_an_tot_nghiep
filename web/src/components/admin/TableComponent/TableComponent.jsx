@@ -43,9 +43,8 @@ const TableComponent = ({
   };
 
   return (
-    <div className="rounded-3xl border border-gray-200 shadow-sm overflow-hidden bg-white">
+    <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-white">
 
-      {/* TABLE */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
 

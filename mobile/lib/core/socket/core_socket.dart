@@ -17,9 +17,18 @@ class CoreSocket {
 
   void connect(String token, String userId, String role) {
     // Nếu socket đang kết nối hoặc đã kết nối rồi thì KHÔNG tạo mới
-    if (_socket != null && (_socket!.connected || _socket!.active)) {
+    if (_socket != null && _socket!.connected) {
       debugPrint("⚠️ Socket đã tồn tại và đang hoạt động.");
       return;
+    }
+
+    if (_socket != null) {
+      try {
+        _socket!.clearListeners();
+        _socket!.disconnect();
+        _socket!.dispose();
+      } catch (_) {}
+      _socket = null;
     }
 
     _connectCompleter = Completer<void>();
@@ -27,24 +36,25 @@ class CoreSocket {
     _socket = IO.io(
       AppConstants.baseUrl,
       IO.OptionBuilder()
-          .setTransports(['websocket'])
+          .setTransports(['websocket', 'polling'])
           .enableReconnection()
           .setReconnectionAttempts(999999)
-          .setReconnectionDelay(2000)
-          .setReconnectionDelayMax(5000)
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(3000)
           .setAuth({'token': token, 'userId': userId, 'role': role})
           .build(),
     );
 
     _socket!
       ..onConnect((_) {
+        debugPrint("🟢 [SOCKET] Connected");
         _isConnected = true;
         if (_connectCompleter != null && !_connectCompleter!.isCompleted) {
           _connectCompleter!.complete();
         }
       })
-      ..onDisconnect((_) {
-        debugPrint("❌ [SOCKET] Disconnected");
+      ..onDisconnect((reason) {
+        debugPrint("❌ [SOCKET] Disconnected. Lý do: $reason");
         _isConnected = false;
       })
       ..onConnectError((e) {

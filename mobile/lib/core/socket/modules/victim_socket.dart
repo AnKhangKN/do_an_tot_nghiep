@@ -27,7 +27,8 @@ class VictimSocket {
     socket.on("rescue:accepted", (data) {
       debugPrint('🟢 [VICTIM SOCKET] Nhận rescue:accepted: $data');
       if (data != null) {
-        final rescuer = Map<String, dynamic>.from(data['rescuer']);
+        final rescuer = Map<String, dynamic>.from(data['rescuer'] ?? {});
+        rescuer['sosRequestId'] = data['sosRequestId'] ?? data['sos_request_id'] ?? data['sosId'] ?? data['sos_id'] ?? rescuer['sosRequestId'] ?? rescuer['sos_request_id'];
         final double? lat = rescuer['lat'] != null ? (rescuer['lat'] as num).toDouble() : null;
         final double? lng = rescuer['lng'] != null ? (rescuer['lng'] as num).toDouble() : null;
         

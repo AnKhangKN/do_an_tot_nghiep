@@ -22,6 +22,10 @@ import 'package:mobile/features/user/data/user_service.dart';
 import 'package:mobile/features/victim/data/victim_repository.dart';
 import 'package:mobile/features/victim/data/victim_service.dart';
 import 'package:mobile/features/history/data/history_service.dart';
+import 'package:mobile/features/chat/data/chat_service.dart';
+import 'package:mobile/features/chat/data/chat_repository.dart';
+import 'package:mobile/core/socket/modules/chat_socket.dart';
+import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
 
 import '../../features/rescuer/data/rescuer_repository.dart';
 import '../incident_types/data/incident_type_repository.dart';
@@ -54,7 +58,16 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(() => SessionController());
   getIt.registerLazySingleton(() => HeartbeatSocket(getIt<CoreSocket>()));
   getIt.registerLazySingleton(() => LocationSocket(getIt<CoreSocket>()));
+  getIt.registerLazySingleton(() => ChatSocket(getIt<CoreSocket>()));
   getIt.registerLazySingleton<SOSProvider>(() => SOSProvider());
+  getIt.registerLazySingleton(
+    () => ChatProvider(
+      chatRepository: getIt<ChatRepository>(),
+      chatSocket: getIt<ChatSocket>(),
+      sessionController: getIt<SessionController>(),
+      storageService: getIt<StorageService>(),
+    ),
+  );
   getIt.registerLazySingleton(
     () => RescuerSocket(getIt<CoreSocket>(), getIt<SOSProvider>()),
   );
@@ -72,6 +85,7 @@ Future<void> initDI() async {
   );
   getIt.registerLazySingleton(() => VictimService(getIt<DioClient>().dio));
   getIt.registerLazySingleton(() => HistoryService(getIt<DioClient>().dio));
+  getIt.registerLazySingleton(() => ChatService(getIt<DioClient>().dio));
 
   // Đăng ký các Repository
   getIt.registerLazySingleton<AuthRepository>(
@@ -89,6 +103,7 @@ Future<void> initDI() async {
     () => IncidentTypeRepository(getIt<IncidentTypeService>()),
   );
   getIt.registerLazySingleton(() => VictimRepository(getIt<VictimService>()));
+  getIt.registerLazySingleton(() => ChatRepository(getIt<ChatService>()));
 
   getIt.registerLazySingleton(
     () => AppSession(

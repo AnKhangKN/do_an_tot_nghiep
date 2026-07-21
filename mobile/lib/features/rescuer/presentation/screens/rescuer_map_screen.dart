@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:mobile/shared/widgtes/phone_call_widget.dart';
 import 'package:mobile/shared/widgtes/map_widget.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/di/di.dart';
+import '../../../../core/location/data/location_service.dart';
 import '../../../../core/network/direction_service.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/socket/modules/rescuer_socket.dart';
@@ -13,7 +13,9 @@ import '../../../../shared/widgtes/layer_widget.dart';
 import '../providers/sos_provider.dart';
 import '../widgets/rescuer_go_online_button_widget.dart';
 import '../widgets/rescuer_util_widget.dart';
+import '../widgets/rescuer_rescue_info_widget.dart';
 import '../../../../shared/widgtes/search_widget.dart';
+import '../../../../shared/widgtes/emergency_dialog_widget.dart';
 import '../widgets/sos_offer_overlay_widget.dart';
 import '../../models/sos_offer_model.dart';
 
@@ -24,7 +26,7 @@ class RescuerMapScreen extends StatefulWidget {
   State<RescuerMapScreen> createState() => _RescuerMapScreenState();
 }
 
-class _RescuerMapScreenState extends State<RescuerMapScreen> {
+class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
 
   @override
@@ -41,6 +43,58 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
     getIt<SOSProvider>().removeListener(_onSessionOrProviderChanged);
     _mapController.dispose();
     super.dispose();
+  }
+
+  void _animatedMapMove(LatLng destLocation, double destZoom) {
+    final camera = _mapController.camera;
+    final latTween = Tween<double>(begin: camera.center.latitude, end: destLocation.latitude);
+    final lngTween = Tween<double>(begin: camera.center.longitude, end: destLocation.longitude);
+    final zoomTween = Tween<double>(begin: camera.zoom, end: destZoom);
+
+    final controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    final Animation<double> animation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.fastOutSlowIn,
+    );
+
+    controller.addListener(() {
+      if (!mounted) return;
+      _mapController.move(
+        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+        zoomTween.evaluate(animation),
+      );
+    });
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
+        controller.dispose();
+      }
+    });
+
+    controller.forward();
+  }
+
+  Future<void> _moveToCurrentLocation() async {
+    final session = getIt<SessionController>();
+    var position = session.state.position;
+
+    if (position == null) {
+      position = await LocationService().getCurrentPosition();
+      if (position != null) {
+        session.updatePosition(position);
+      }
+    }
+
+    if (position != null && mounted) {
+      final destLatLng = LatLng(position.latitude, position.longitude);
+      final currentZoom = _mapController.camera.zoom;
+      final destZoom = currentZoom < 15.0 ? 16.0 : currentZoom;
+      _animatedMapMove(destLatLng, destZoom);
+    }
   }
 
   void _onSessionOrProviderChanged() {
@@ -172,85 +226,15 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: isRescuing && activeRescue != null
-                    ? Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: const [
-                            BoxShadow(color: Colors.black12, blurRadius: 10)
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              children: [
-                                Icon(Icons.airport_shuttle, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text(
-                                  "Đang đi cứu nạn...",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "Nạn nhân: ${sosProvider.activeVictim?['fullName'] ?? 'Không rõ'}",
-                                        style: const TextStyle(fontWeight: FontWeight.w600),
-                                      ),
-                                      Text(
-                                        "SĐT: ${sosProvider.activeVictim?['phone'] ?? 'Không rõ'}",
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (sosProvider.activeVictim?['phone'] != null)
-                                  PhoneCallWidget(
-                                    phoneNumber: sosProvider.activeVictim!['phone'],
-                                  ),
-                              ],
-                            ),
-                            if (activeRescue.description != null && activeRescue.description!.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                "Mô tả sự cố: ${activeRescue.description}",
-                                style: const TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onPressed: () {
-                                getIt<RescuerSocket>().completeRescue(activeRescue.sosId);
-                                sosProvider.endRescue();
-                              },
-                              child: const Center(
-                                child: Text(
-                                  "Hoàn thành cứu hộ",
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            )
-                          ],
-                        ),
+                    ? RescuerRescueInfoWidget(
+                        activeVictim: sosProvider.activeVictim,
+                        sosRequestId: activeRescue.sosId,
+                        description: activeRescue.description,
+                        incidentTypeName: activeRescue.incidentTypeName,
+                        onComplete: () {
+                          getIt<RescuerSocket>().completeRescue(activeRescue.sosId);
+                          sosProvider.endRescue();
+                        },
                       )
                     : SizedBox(
                         height: 180,
@@ -277,9 +261,12 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
                                 );
                               },
                             ),
-                            const Align(
+                            Align(
                               alignment: Alignment.bottomRight,
-                              child: RescuerUtilWidget(),
+                              child: RescuerUtilWidget(
+                                onLocationTap: _moveToCurrentLocation,
+                                onEmergencyTap: () => EmergencyDialogWidget.show(context),
+                              ),
                             ),
                           ],
                         ),
@@ -329,7 +316,7 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> {
             // Lớp nền đen mờ che phủ bản đồ
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
               ),
             ),
             // Widget thông báo khẩn cấp (có đếm ngược 30s)

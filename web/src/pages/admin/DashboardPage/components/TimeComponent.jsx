@@ -1,3 +1,4 @@
+import ButtonComponent from "@/components/shared/ButtonComponent/ButtonComponent";
 import React, { useState } from "react";
 
 const TimeComponent = () => {
@@ -6,18 +7,17 @@ const TimeComponent = () => {
   return (
     <>
       {/* Button */}
-      <button
+      <ButtonComponent
         onClick={() => setOpen(true)}
-        className="border border-gray-300 bg-white px-4 py-2 rounded-xl shadow-sm hover:shadow-md hover:bg-gray-50 transition-all duration-200"
       >
         Thời gian
-      </button>
+      </ButtonComponent>
 
       {/* Modal */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="w-100 rounded-2xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-            
+
             {/* Header */}
             <div className="flex items-center justify-between border-b pb-3">
               <h2 className="text-lg font-semibold text-gray-800">

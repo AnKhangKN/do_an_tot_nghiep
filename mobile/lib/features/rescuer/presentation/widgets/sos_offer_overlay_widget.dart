@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../models/sos_offer_model.dart';
@@ -53,14 +52,12 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
   }
 
   void _calculateDistance() {
-    if (widget.currentPosition != null &&
-        widget.sos.victimLat != null &&
-        widget.sos.victimLng != null) {
+    if (widget.currentPosition != null) {
       final distanceInMeters = Geolocator.distanceBetween(
         widget.currentPosition!.latitude,
         widget.currentPosition!.longitude,
-        widget.sos.victimLat!,
-        widget.sos.victimLng!,
+        widget.sos.victimLat,
+        widget.sos.victimLng,
       );
 
       setState(() {
@@ -94,7 +91,7 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
           border: Border.all(color: Colors.red.shade600, width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.red.withOpacity(0.2),
+              color: Colors.red.withValues(alpha: 0.2),
               blurRadius: 20,
               spreadRadius: 5,
             ),
@@ -174,7 +171,45 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
+
+                  // --- HIỂN THỊ LOẠI SỰ CỐ ---
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFFCD34D)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.build_circle_rounded,
+                            color: Color(0xFFD97706), size: 20),
+                        const SizedBox(width: 8),
+                        const Text(
+                          "Sự cố: ",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF92400E),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            widget.sos.incidentTypeName ?? "Chưa xác định",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),

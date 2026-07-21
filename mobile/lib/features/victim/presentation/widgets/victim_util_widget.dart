@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
 class VictimUtilWidget extends StatefulWidget {
-  const VictimUtilWidget({super.key});
+  final VoidCallback? onWarningTap;
+  final VoidCallback? onCallTap;
+  final VoidCallback? onLocationTap;
+
+  const VictimUtilWidget({
+    super.key,
+    this.onWarningTap,
+    this.onCallTap,
+    this.onLocationTap,
+  });
 
   @override
   State<VictimUtilWidget> createState() => _VictimUtilWidgetState();
@@ -15,23 +24,23 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
       children: [
         _UtilButton(
           tooltip: 'Canh bao',
-          icon: Icons.warning_amber_rounded,
+          icon: Icons.warning_rounded,
           color: const Color(0xFFF97316),
-          onPressed: () {},
+          onPressed: widget.onWarningTap ?? () {},
         ),
         const SizedBox(height: 6),
         _UtilButton(
-          tooltip: 'Goi dien',
+          tooltip: 'Khan cap',
           icon: Icons.phone,
-          color: const Color(0xFF16A34A),
-          onPressed: () {},
+          color: const Color(0xFFF91616),
+          onPressed: widget.onCallTap ?? () {},
         ),
         const SizedBox(height: 6),
         _UtilButton(
           tooltip: 'Vi tri cua toi',
           icon: Icons.my_location,
           color: const Color(0xFF2563EB),
-          onPressed: () {},
+          onPressed: widget.onLocationTap ?? () {},
         ),
       ],
     );

@@ -94,7 +94,8 @@ module.exports = (socket, io) => {
                     phone: victimInfo?.phone,
                     lat: updatedSos.victim_lat,
                     lng: updatedSos.victim_lng,
-                    description: updatedSos.description
+                    description: updatedSos.description,
+                    incidentTypeName: updatedSos.incident_type_name
                 }
             });
 

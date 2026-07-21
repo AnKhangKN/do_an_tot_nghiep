@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:mobile/shared/widgtes/phone_call_widget.dart';
 
 import '../../../../core/di/di.dart';
+import '../../../../core/location/data/location_service.dart';
 import '../../../../core/network/direction_service.dart';
 import '../../../../core/session/session_controller.dart';
 
@@ -12,6 +13,8 @@ import '../../../../shared/widgtes/layer_widget.dart';
 import '../../../../shared/widgtes/search_widget.dart';
 import '../widgets/victim_sos_button_widget.dart';
 import '../widgets/victim_util_widget.dart';
+import '../widgets/victim_rescue_info_widget.dart';
+import '../../../../shared/widgtes/emergency_dialog_widget.dart';
 
 class VictimMapScreen extends StatefulWidget {
   const VictimMapScreen({super.key});
@@ -20,7 +23,7 @@ class VictimMapScreen extends StatefulWidget {
   State<VictimMapScreen> createState() => _VictimMapScreenState();
 }
 
-class _VictimMapScreenState extends State<VictimMapScreen> {
+class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
 
   // Lưu giá trị isSearchingRescuer trước đó để phát hiện thay đổi từ true -> false
@@ -29,6 +32,58 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
   List<LatLng> _routePoints = [];
   LatLng? _lastStart;
   LatLng? _lastEnd;
+
+  void _animatedMapMove(LatLng destLocation, double destZoom) {
+    final camera = _mapController.camera;
+    final latTween = Tween<double>(begin: camera.center.latitude, end: destLocation.latitude);
+    final lngTween = Tween<double>(begin: camera.center.longitude, end: destLocation.longitude);
+    final zoomTween = Tween<double>(begin: camera.zoom, end: destZoom);
+
+    final controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    final Animation<double> animation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.fastOutSlowIn,
+    );
+
+    controller.addListener(() {
+      if (!mounted) return;
+      _mapController.move(
+        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+        zoomTween.evaluate(animation),
+      );
+    });
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
+        controller.dispose();
+      }
+    });
+
+    controller.forward();
+  }
+
+  Future<void> _moveToCurrentLocation() async {
+    final sessionController = getIt<SessionController>();
+    var position = sessionController.state.position;
+
+    if (position == null) {
+      position = await LocationService().getCurrentPosition();
+      if (position != null) {
+        sessionController.updatePosition(position);
+      }
+    }
+
+    if (position != null && mounted) {
+      final destLatLng = LatLng(position.latitude, position.longitude);
+      final currentZoom = _mapController.camera.zoom;
+      final destZoom = currentZoom < 15.0 ? 16.0 : currentZoom;
+      _animatedMapMove(destLatLng, destZoom);
+    }
+  }
 
   @override
   void initState() {
@@ -174,60 +229,8 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
                           return Align(
                             alignment: Alignment.bottomCenter,
                             child: currentIsBeingRescued
-                                ? Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: const [
-                                        BoxShadow(color: Colors.black12, blurRadius: 10)
-                                      ],
-                                    ),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Row(
-                                          children: [
-                                            Icon(Icons.check_circle, color: Colors.green),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              "Người cứu hộ đang đến!",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                                color: Colors.green,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                         Row(
-                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                           children: [
-                                             Expanded(
-                                               child: Column(
-                                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                                 children: [
-                                                   Text(
-                                                     "Họ tên: ${sessionController.activeRescuer?['fullName'] ?? 'Không rõ'}",
-                                                     style: const TextStyle(fontWeight: FontWeight.w600),
-                                                   ),
-                                                   Text(
-                                                     "SĐT: ${sessionController.activeRescuer?['phone'] ?? 'Không rõ'}",
-                                                   ),
-                                                 ],
-                                               ),
-                                             ),
-                                             if (sessionController.activeRescuer?['phone'] != null)
-                                               PhoneCallWidget(
-                                                 phoneNumber: sessionController.activeRescuer!['phone'],
-                                               ),
-                                           ],
-                                         )
-                                      ],
-                                    ),
+                                ? VictimRescueInfoWidget(
+                                    activeRescuer: sessionController.activeRescuer,
                                   )
                                 : VictimSosButtonWidget(
                                     victimLat: position?.latitude,
@@ -246,9 +249,12 @@ class _VictimMapScreenState extends State<VictimMapScreen> {
                             return const SizedBox.shrink();
                           }
 
-                          return const Align(
+                          return Align(
                             alignment: Alignment.bottomRight,
-                            child: VictimUtilWidget(),
+                            child: VictimUtilWidget(
+                              onLocationTap: _moveToCurrentLocation,
+                              onCallTap: () => EmergencyDialogWidget.show(context),
+                            ),
                           );
                         },
                       ),

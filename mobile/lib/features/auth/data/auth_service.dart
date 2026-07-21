@@ -26,6 +26,6 @@ class AuthService {
   }
 
   Future<Response> getActiveSOS() async {
-    return await dio.get('/api/sos_requests/active');
+    return await dio.get('/api/sos/sos_requests/active');
   }
 }

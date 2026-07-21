@@ -1,7 +1,10 @@
 const socketAuth = require("@middlewares/socket.middleware");
 const initRedisSubscriber = require("../socket/socket.subscriber");
 
-module.exports = (io) => {
+let ioInstance = null;
+
+const initSocket = (io) => {
+    ioInstance = io;
 
     io.use(socketAuth);
 
@@ -11,6 +14,8 @@ module.exports = (io) => {
         const { userId, role } = socket.user;
 
         console.log("role: ", role)
+
+        socket.join(`user:${userId}`);
 
         if (role === "RESCUER") {
             socket.join(`rescuer:${userId}`);
@@ -29,6 +34,7 @@ module.exports = (io) => {
             console.warn(`Unknown role: ${role} for user ${userId}`);
         }
 
+        require("./chat.socket")(socket, io);
         require("./rescuer.socket")(socket, io);
         require("./rescuer_location.socket")(socket, io);
 
@@ -36,3 +42,8 @@ module.exports = (io) => {
         require("./connection.socket")(socket, io);
     });
 };
+
+const getIO = () => ioInstance;
+
+module.exports = initSocket;
+module.exports.getIO = getIO;

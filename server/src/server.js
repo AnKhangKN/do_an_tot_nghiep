@@ -14,11 +14,12 @@ const io = new Server(server, {
         origin: FRONTEND_URL, // hoặc FRONTEND_URL
         credentials: true,
     },
+    pingTimeout: 30000,
+    pingInterval: 10000,
 });
 
 // 3. attach socket handlers (index socket của bạn)
-require("./socket/index")(io); 
-// require("./socket/socket.subscriber")(io);
+require("./socket/index")(io);
 // hoặc path bạn đang dùng: ./socket/index
 
 // 4. connect DB

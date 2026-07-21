@@ -7,6 +7,7 @@ const userRoutes = require("@/modules/user/routes/user.route")
 const rescuerRoutes = require("@/modules/rescuer/routes/rescuer.route") 
 const sosRoutes = require("@modules/sos/routes/sos_request.route")
 const deviceTokenRoutes = require("@/modules/device_token/routes/device_token.route")
+const chatRoutes = require("@/modules/chat/routes/chat.route")
 
 route.use("/auth", authRoutes)
 
@@ -21,5 +22,7 @@ route.use("/rescuer", rescuerRoutes)
 route.use("/sos", sosRoutes)
 
 route.use("/device_tokens", deviceTokenRoutes)
+
+route.use("/chat", chatRoutes)
 
 module.exports = route;
