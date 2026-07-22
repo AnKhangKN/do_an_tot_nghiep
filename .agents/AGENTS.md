@@ -4,6 +4,24 @@ Dưới đây là các quy tắc nghiêm ngặt mà AI phải tuân thủ khi l�
 
 ---
 
+## 0. Quy định Kích hoạt Skill Thông minh (Smart On-Demand Skill Triggering)
+* **Khởi tạo Session**: Mỗi khi bắt đầu một phiên làm việc mới, AI chủ động tham chiếu các quy tắc trong tệp `.agents/AGENTS.md` này.
+* **Đọc Skill theo nhu cầu (Lazy Loading)**: AI KHÔNG đọc tất cả các Skill cùng lúc để tiết kiệm Token. AI chỉ mở tệp `SKILL.md` của đúng skill liên quan khi tác vụ của người dùng khớp với phạm vi của skill đó, và ưu tiên chỉ đọc các đoạn cần thiết.
+  - Khi sửa lỗi, debug, gặp bug hay xem log → Đọc tệp [debug_logging_assistance](./skills/debug_logging_assistance/SKILL.md).
+  - Khi viết code UI Flutter, làm việc với Express.js API, React Web hay chỉnh sửa DB → Đọc tệp [project_development_assistance](./skills/project_development_assistance/SKILL.md).
+  - Khi yêu cầu mơ hồ, thiếu thông tin log, hoặc cần xác nhận thiết kế → Đọc tệp [strict_clarification_assistance](./skills/strict_clarification_assistance/SKILL.md).
+  - Khi cần phân tích kiến trúc dự án, luồng dữ liệu, hoặc refactor lớn → Đọc tệp [project_analyzer_assistance](./skills/project_analyzer_assistance/SKILL.md).
+  - Khi viết code mới, refactor, kiểm tra SOLID/DRY/KISS hay vi phạm phân tầng → Đọc tệp [clean_architecture_guardian](./skills/clean_architecture_guardian/SKILL.md).
+  - Khi sửa bug phức tạp, truy vết nguyên nhân sự cố → Đọc tệp [bug_hunter_expert](./skills/bug_hunter_expert/SKILL.md).
+  - Khi hoàn thành tính năng, rà soát trùng lặp hay tối ưu lại code → Đọc tệp [refactoring_expert](./skills/refactoring_expert/SKILL.md).
+  - Khi xử lý API Auth, Query SQL, Token/Password hoặc rà soát an ninh → Đọc tệp [security_reviewer_expert](./skills/security_reviewer_expert/SKILL.md).
+  - Khi thiết kế CSDL, chỉnh sửa Model/Repository hoặc tối ưu query SQL → Đọc tệp [database_reviewer_expert](./skills/database_reviewer_expert/SKILL.md).
+  - Khi thiết kế API, Controller, Route hoặc định dạng Response → Đọc tệp [api_reviewer_expert](./skills/api_reviewer_expert/SKILL.md).
+  - Khi sinh tài liệu kỹ thuật, API docs, sơ đồ Mermaid → Đọc tệp [documentation_writer_expert](./skills/documentation_writer_expert/SKILL.md).
+  - Khi tạo Unit Test, Integration Test → Đọc tệp [test_generator_expert](./skills/test_generator_expert/SKILL.md).
+
+---
+
 ## 1. Ngôn ngữ Giao tiếp (Communication Language)
 * **Bắt buộc**: Luôn luôn trả lời bằng **Tiếng Việt** chuẩn, rõ ràng, dễ hiểu khi tương tác với người dùng.
 * **Ngoại lệ**: Chỉ phản hồi bằng Tiếng Anh khi người dùng yêu cầu rõ ràng bằng văn bản (ví dụ: "Please reply in English").

@@ -8,9 +8,9 @@ description: Helps the AI developer in this monorepo project to minimize token u
 Tài liệu này đóng vai trò như một kỹ năng (Skill) tự động kích hoạt để hướng dẫn các AI developer làm việc trên dự án monorepo này một cách hiệu quả nhất.
 
 ## 1. Tiết kiệm Token tối đa (Token Optimization)
-- **Đọc file thông minh**: Chỉ sử dụng `view_file` cho các dải dòng cụ thể cần chỉnh sửa (sử dụng `StartLine` và `EndLine`). Không đọc cả file nếu không cần thiết.
-- **Tìm kiếm chính xác**: Sử dụng `grep_search` để định vị hàm, class hoặc biến thay vì đọc bừa bãi.
-- **Viết code tối thiểu**: Khi thay đổi code, chỉ thay thế đúng đoạn code cần thiết thông qua `replace_file_content` hoặc `multi_replace_file_content`. Tránh ghi đè toàn bộ file trừ khi tạo mới.
+- **Đọc file thông minh**: Chỉ sử dụng `read_file` cho các dải dòng cụ thể cần chỉnh sửa (sử dụng `start_line` và `end_line`). Không đọc cả file nếu không cần thiết.
+- **Tìm kiếm chính xác**: Sử dụng `search_files` để định vị hàm, class hoặc biến thay vì đọc bừa bãi.
+- **Viết code tối thiểu**: Khi thay đổi code, chỉ thay thế đúng đoạn code cần thiết thông qua `replace_in_file` hoặc `write_to_file` khi thật sự cần tạo mới. Tránh ghi đè toàn bộ file nếu không cần.
 
 ## 2. Ngôn ngữ giao tiếp & Ghi chú
 - **Luôn phản hồi bằng tiếng Việt** đối với mọi câu hỏi của người dùng, ngoại trừ khi có yêu cầu hoặc ghi chú cụ thể bằng tiếng Anh.
@@ -30,7 +30,6 @@ Tài liệu này đóng vai trò như một kỹ năng (Skill) tự động kíc
   - Sử dụng Bloc/Cubit để quản lý state và xử lý logic UI. Không lạm dụng `setState` hay viết logic gọi API trong file Widget.
 
 ## 5. Quy tắc làm việc với Cơ sở dữ liệu & Repository
-- **Tuân thủ tệp Script DB**: Bắt buộc tham chiếu tệp [script-db.sql](../../../script-db.sql) khi viết Model và viết SQL trong Repository để đồng bộ kiểu dữ liệu và cấu trúc quan hệ.
 - **Thao tác dữ liệu qua luồng API**: Mọi thay đổi dữ liệu (thêm/sửa/xóa) phải được lập trình chạy theo đúng luồng API chuẩn (Route -> Validator -> Controller -> Service -> Repository), tuyệt đối không thực thi các câu lệnh SQL trực tiếp trên database của người dùng để can thiệp dữ liệu thủ công.
 - **Không thực thi các câu lệnh phá hủy**: Nghiêm cấm chạy các câu lệnh thay đổi cấu trúc bảng (DROP, ALTER,...) trực tiếp trên database của khách hàng để đảm bảo an toàn tuyệt đối cho hệ thống dữ liệu.
 
