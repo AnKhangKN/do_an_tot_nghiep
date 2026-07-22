@@ -1,5 +1,4 @@
-require("module-alias/register");
-require("@events");
+require("module-alias/register")
 
 const { Worker } = require("bullmq");
 
@@ -78,7 +77,7 @@ const worker = new Worker(
                     `[SOS] Retry after 15s with radius ${radiusList[attempt]} km`
                 );
 
-                await sosQueue.add( 
+                await sosQueue.add(
                     "process-sos",
                     {
                         sosId,

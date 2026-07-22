@@ -1,6 +1,6 @@
 const dotenv = require("dotenv");
 
-dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` }); 
+dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 
 module.exports = {
   // PORT
@@ -16,18 +16,14 @@ module.exports = {
   DB_PASSWORD: process.env.DB_PASSWORD,
   DB_NAME: process.env.DB_NAME,
 
-  // jwt
+  // REDIS
+  REDIS_HOST: process.env.REDIS_HOST,
+  REDIS_PORT: process.env.REDIS_PORT,
+
+  // JWT
   ACCESS_TOKEN: process.env.JWT_ACCESS_TOKEN,
   REFRESH_TOKEN: process.env.JWT_REFRESH_TOKEN,
 
-  // OSM
-  PHOTON_API: process.env.PHOTON_API,
-  OSM_API: process.env.OSM_API,
-
-  // cookie
+  // COOKIE
   COOKIE_SECURE: process.env.COOKIE_SECURE,
-
-  // redis
-  REDIS_HOST: process.env.REDIS_HOST,
-  REDIS_PORT: process.env.REDIS_PORT,
 };

@@ -9,7 +9,11 @@ const sosRoutes = require("@modules/sos/routes/sos_request.route")
 const deviceTokenRoutes = require("@/modules/device_token/routes/device_token.route")
 const chatRoutes = require("@/modules/chat/routes/chat.route")
 
+const adminRoutes = require("@/modules/admin/routes/admin.route")
+
 route.use("/auth", authRoutes)
+
+route.use("/admin", adminRoutes)
 
 route.use("/users", userRoutes)
 

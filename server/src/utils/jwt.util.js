@@ -3,9 +3,9 @@ const jwt = require('jsonwebtoken');
 
 const generateAccessToken = async (payload) => {
     return jwt.sign(payload, ACCESS_TOKEN, {
-        expiresIn: "30m"
+        expiresIn: "10m"
     })
-}   
+}
 
 const generateRefreshToken = async (payload) => {
     return jwt.sign(payload, REFRESH_TOKEN, {

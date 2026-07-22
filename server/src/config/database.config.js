@@ -20,9 +20,6 @@ const connectDB = async () => {
     const client = await pool.connect();
     console.log("Connected to PostgreSQL");
 
-    // Gỡ bỏ constraint unique_users_conversation để cho phép tạo nhiều conversation theo các ca SOS khác nhau
-    await client.query("ALTER TABLE conversations DROP CONSTRAINT IF EXISTS unique_users_conversation;");
-
     client.release();
   } catch (err) {
     console.error("DB Connection Error:", err.message);

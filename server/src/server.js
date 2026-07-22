@@ -11,21 +11,20 @@ const server = http.createServer(app);
 // 2. init socket.io trên server
 const io = new Server(server, {
     cors: {
-        origin: FRONTEND_URL, // hoặc FRONTEND_URL
+        origin: FRONTEND_URL,
         credentials: true,
     },
     pingTimeout: 30000,
     pingInterval: 10000,
 });
 
-// 3. attach socket handlers (index socket của bạn)
+// 3. attach socket handlers
 require("./socket/index")(io);
-// hoặc path bạn đang dùng: ./socket/index
 
 // 4. connect DB
 connectDB();
 
-// 5. start server (QUAN TRỌNG: dùng server.listen)
-server.listen(PORT, "0.0.0.0", () => {
+// 5. start server
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

@@ -4,10 +4,8 @@ const { ACCESS_TOKEN } = require("@config/env.config");
 const socketAuth = (socket, next) => {
     try {
         const token = socket.handshake.auth?.token;
-
-        // Trong socket.middleware.js
         const decoded = jwt.verify(token, ACCESS_TOKEN, {
-            clockTolerance: 120 // Cho phép token lệch/quá hạn tối đa 120 giây vẫn chấp nhận
+            clockTolerance: 120
         });
         socket.user = decoded;
 

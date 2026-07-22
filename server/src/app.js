@@ -1,5 +1,4 @@
 require("module-alias/register");
-require("@events");
 
 const express = require("express");
 const cookieParser = require("cookie-parser");

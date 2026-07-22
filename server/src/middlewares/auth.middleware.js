@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 
 const extractToken = (req) => {
     const authHeader = req.headers["authorization"];
-    if (authHeader && authHeader.startsWith("Bearer ")) {
+    if (authHeader && authHeader.startsWith("Bearer")) {
         return authHeader.split(" ")[1];
     }
     return null;
@@ -34,8 +34,8 @@ const isAdmin = (req, res, next) => {
 };
 
 const isRescuer = (req, res, next) => {
-    if (req.role !== "RESCUER" && req.role !== "ADMIN") {
-        return res.status(403).json({ message: "Quyền truy cập bị từ chối. Yêu cầu vai trò Cứu hộ hoặc Admin!" });
+    if (req.role !== "RESCUER") {
+        return res.status(403).json({ message: "Quyền truy cập bị từ chối. Yêu cầu vai trò Cứu hộ!" });
     }
     next();
 };
