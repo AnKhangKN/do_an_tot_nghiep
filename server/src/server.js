@@ -14,8 +14,8 @@ const io = new Server(server, {
         origin: FRONTEND_URL,
         credentials: true,
     },
-    pingTimeout: 30000,
-    pingInterval: 10000,
+    pingTimeout: 60000,
+    pingInterval: 25000,
 });
 
 // 3. attach socket handlers

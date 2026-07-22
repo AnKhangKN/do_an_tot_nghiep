@@ -43,7 +43,7 @@ module.exports = (socket, io) => {
         try {
             const rescuerId = socket.user.userId;
             const sosRequestId = payload.sosRequestId || payload.incidentId;
-            
+
             if (!sosRequestId) {
                 throw new Error("Mã yêu cầu cứu hộ là bắt buộc!");
             }
@@ -140,7 +140,7 @@ module.exports = (socket, io) => {
             // Gửi sự kiện hoàn thành về cho cả Victim và Rescuer
             const victimRoom = `victim:${updatedSos.user_id}`;
             io.to(victimRoom).emit("rescue:completed", { sosRequestId });
-            
+
             socket.emit("rescue:completed", { sosRequestId });
             console.log(`[SOCKET] SOS ${sosRequestId} completed successfully.`);
 

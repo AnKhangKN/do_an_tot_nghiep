@@ -76,4 +76,40 @@ class SOSProvider extends ChangeNotifier {
     _currentSOS = null;
     notifyListeners();
   }
+
+  String? _cancelledNotice;
+  String? get cancelledNotice => _cancelledNotice;
+
+  void handleSosCancelled(String? cancelledSosId, {String? message}) {
+    final msg = message ?? "Người gặp nạn đã dừng yêu cầu cứu hộ.";
+    debugPrint("🚨 [SOSProvider] Xử lý SOS bị hủy bởi Victim: $cancelledSosId, currentSOSId: ${_currentSOS?.sosId}");
+    bool shouldNotify = false;
+
+    if (_currentSOS != null) {
+      if (cancelledSosId == null || cancelledSosId.isEmpty || _currentSOS!.sosId == cancelledSosId) {
+        _currentSOS = null;
+        _cancelledNotice = msg;
+        shouldNotify = true;
+      }
+    }
+
+    if (_activeRescue != null) {
+      if (cancelledSosId == null || cancelledSosId.isEmpty || _activeRescue!.sosId == cancelledSosId) {
+        _activeRescue = null;
+        _activeVictim = null;
+        _cancelledNotice = msg;
+        shouldNotify = true;
+        getIt<AppSession>().updateDistanceFilter(BackgroundConfig.minDistanceMeters.toInt());
+      }
+    }
+
+    if (shouldNotify) {
+      notifyListeners();
+    }
+  }
+
+  void clearCancelledNotice() {
+    _cancelledNotice = null;
+    notifyListeners();
+  }
 }

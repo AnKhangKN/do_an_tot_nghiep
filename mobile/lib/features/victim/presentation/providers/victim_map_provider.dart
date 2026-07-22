@@ -37,6 +37,9 @@ class VictimMapProvider extends ChangeNotifier {
     }
   }
 
+  String? _activeSosRequestId;
+  String? get activeSosRequestId => _activeSosRequestId;
+
   Future<bool> sendSos(
     String phone,
     String incidentTypeId,
@@ -58,7 +61,11 @@ class VictimMapProvider extends ChangeNotifier {
 
       debugPrint(request.toJson().toString());
 
-      await victimRepository.sendSos(request);
+      final resData = await victimRepository.sendSos(request);
+      if (resData != null && resData['data'] != null) {
+        _activeSosRequestId = (resData['data']['sos_request_id'] ?? resData['data']['sosRequestId'])?.toString();
+        debugPrint("🟢 [PROVIDER] Lưu activeSosRequestId: $_activeSosRequestId");
+      }
 
       // Cập nhật trạng thái đang tìm cứu hộ viên vào SessionController (state tập trung)
       getIt<SessionController>().setSearchingRescuer(true);
@@ -66,6 +73,32 @@ class VictimMapProvider extends ChangeNotifier {
       return true;
     } catch (err) {
       debugPrint(err.toString());
+      return false;
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> cancelSos({String? sosRequestId, String? cancelReason}) async {
+    _loading = true;
+    notifyListeners();
+
+    final targetSosId = sosRequestId ?? _activeSosRequestId;
+
+    try {
+      await victimRepository.cancelSos(
+        sosRequestId: targetSosId,
+        cancelReason: cancelReason ?? 'Người gặp nạn chủ động hủy yêu cầu',
+      );
+      _activeSosRequestId = null;
+      getIt<SessionController>().setSearchingRescuer(false);
+      return true;
+    } catch (err) {
+      debugPrint("❌ [PROVIDER] Lỗi khi cancelSos: $err");
+      _activeSosRequestId = null;
+      // Dù API gặp lỗi thì cũng đặt lại state local về false để cho phép nạn nhân thao tác lại
+      getIt<SessionController>().setSearchingRescuer(false);
       return false;
     } finally {
       _loading = false;

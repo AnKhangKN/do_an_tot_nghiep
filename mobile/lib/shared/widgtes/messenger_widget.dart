@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/constants/router_constants.dart';
 import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
 import 'package:mobile/features/chat/presentation/screens/messenger_screen.dart';
@@ -42,11 +44,12 @@ class MessengerWidget extends StatelessWidget {
           sosRequestId: sosRequestId,
         );
         if (context.mounted) {
-          Navigator.of(context).push(
+          await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => MessengerScreen(conversation: conv),
             ),
           );
+          getIt<AppSession>().checkAndRestoreActiveRescue();
         }
         return;
       } catch (e) {

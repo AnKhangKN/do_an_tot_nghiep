@@ -36,7 +36,7 @@ class CoreSocket {
     _socket = IO.io(
       AppConstants.baseUrl,
       IO.OptionBuilder()
-          .setTransports(['websocket', 'polling'])
+          .setTransports(['websocket'])
           .enableReconnection()
           .setReconnectionAttempts(999999)
           .setReconnectionDelay(1000)

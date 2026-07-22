@@ -388,27 +388,73 @@ class SosRequestService {
         }
     };
 
-    cancelSOS = async ({ sosRequestId, cancelReason }) => {
+    cancelSOS = async ({ sosRequestId, userId, cancelReason }) => {
         try {
+            let targetSosId = sosRequestId;
+
+            // Nếu không truyền sosRequestId, tự tìm ca SOS active gần nhất của nạn nhân
+            if (!targetSosId && userId) {
+                const activeSos = await this.sos_requestRepository.findActiveSOSByUser({ userId, role: 'VICTIM' });
+                if (activeSos) {
+                    targetSosId = activeSos.sos_request_id;
+                } else {
+                    const pool = require("@config/database.config").pool;
+                    const pendingQuery = `
+                        SELECT sos_request_id, rescuer_id, user_id 
+                        FROM sos_requests 
+                        WHERE user_id = $1 
+                          AND status IN ('PENDING', 'SEARCHING', 'ASSIGNED') 
+                        ORDER BY created_at DESC LIMIT 1
+                    `;
+                    const result = await pool.query(pendingQuery, [userId]);
+                    if (result.rows.length > 0) {
+                        targetSosId = result.rows[0].sos_request_id;
+                    }
+                }
+            }
+
+            if (!targetSosId) {
+                console.warn(`[SERVICE] cancelSOS không tìm thấy sosRequestId cho user: ${userId}`);
+                return null;
+            }
+
             // Lấy thông tin SOS trước khi hủy để biết rescuer_id (nếu có)
-            const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+            const sos = await this.sos_requestRepository.findSOSById(targetSosId);
 
             const updated = await this.sos_requestRepository.updateStatusOnly({
-                sosRequestId,
+                sosRequestId: targetSosId,
                 status: 'CANCELLED',
                 cancelReason
             });
 
-            if (updated && sos && sos.rescuer_id) {
-                // Ghi nhật ký hoạt động: FAILED cho rescuer nhận ca
-                await transaction(async (client) => {
-                    await rescuerHistoryRepository.createHistory(client, {
-                        historyId: uuidUtil.generateUUID(),
-                        rescuerId: sos.rescuer_id,
-                        sosRequestId,
-                        action: 'FAILED'
-                    });
-                }).catch(err => console.error("Lỗi ghi log FAILED vào DB:", err));
+            if (updated) {
+                // Ngắt luồng tìm kiếm BullMQ cho ca SOS này
+                dispatchService.stopSOS(targetSosId);
+
+                // Dọn dẹp Redis tracking keys
+                await this.cleanupSosKeys(targetSosId);
+
+                // Publish sự kiện hủy qua Redis pubsub để Socket Server emit tới các Rescuer
+                const payload = JSON.stringify({
+                    sosId: targetSosId,
+                    sosRequestId: targetSosId,
+                    rescuerId: sos?.rescuer_id || null,
+                    victimId: sos?.user_id || userId,
+                    message: "Người gặp nạn đã dừng yêu cầu cứu hộ."
+                });
+                await redis.publish("sos:cancelled", payload);
+
+                if (sos && sos.rescuer_id) {
+                    // Ghi nhật ký hoạt động: FAILED cho rescuer nhận ca
+                    await transaction(async (client) => {
+                        await rescuerHistoryRepository.createHistory(client, {
+                            historyId: uuidUtil.generateUUID(),
+                            rescuerId: sos.rescuer_id,
+                            sosRequestId: targetSosId,
+                            action: 'FAILED'
+                        });
+                    }).catch(err => console.error("Lỗi ghi log FAILED vào DB:", err));
+                }
             }
 
             return updated;

@@ -106,6 +106,21 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     final isRescuing = sosProvider.isRescuing;
     final activeRescue = sosProvider.activeRescue;
 
+    final cancelledNotice = sosProvider.cancelledNotice;
+    if (cancelledNotice != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(cancelledNotice),
+            backgroundColor: Colors.orange.shade800,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        sosProvider.clearCancelledNotice();
+      });
+    }
+
     if (isRescuing && activeRescue != null && position != null) {
       _updateRoute(
         LatLng(position.latitude, position.longitude),
@@ -136,6 +151,8 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
   LatLng? _lastStart;
   LatLng? _lastEnd;
 
+  DateTime? _lastRouteFetchTime;
+
   Future<void> _updateRoute(LatLng start, LatLng end) async {
     if (_lastStart?.latitude == start.latitude &&
         _lastStart?.longitude == start.longitude &&
@@ -143,14 +160,32 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
         _lastEnd?.longitude == end.longitude) {
       return;
     }
+
+    if (_routePoints.isNotEmpty && _lastStart != null && _lastRouteFetchTime != null) {
+      final distanceInMeters = const Distance().as(
+        LengthUnit.Meter,
+        _lastStart!,
+        start,
+      );
+      final secondsSinceLastFetch = DateTime.now().difference(_lastRouteFetchTime!).inSeconds;
+      if (distanceInMeters < 15 && secondsSinceLastFetch < 4) {
+        return;
+      }
+    }
+
     _lastStart = start;
     _lastEnd = end;
+    _lastRouteFetchTime = DateTime.now();
 
-    final route = await DirectionService().getRoute(start, end);
-    if (mounted) {
-      setState(() {
-        _routePoints = route;
-      });
+    try {
+      final route = await DirectionService().getRoute(start, end);
+      if (mounted && route.isNotEmpty) {
+        setState(() {
+          _routePoints = route;
+        });
+      }
+    } catch (e) {
+      debugPrint("⚠️ [RescuerMap] Lỗi lấy tuyến đường: $e");
     }
   }
 
@@ -161,7 +196,6 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     final position = session.state.position;
 
     final sosProvider = context.watch<SOSProvider>();
-    debugPrint("Mã bộ nhớ Provider lúc VẼ UI: ${sosProvider.hashCode}");
     final currentSOS = sosProvider.currentSOS;
     final isRescuing = sosProvider.isRescuing;
     final activeRescue = sosProvider.activeRescue;

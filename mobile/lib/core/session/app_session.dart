@@ -295,12 +295,21 @@ class AppSession {
   Future<void> checkAndRestoreActiveRescue() async {
     try {
       final activeRescueData = await authRepository.getActiveSOS();
-      if (activeRescueData == null) return;
+      if (activeRescueData == null || activeRescueData['sosRequest'] == null) {
+        // Nếu trên server không còn ca cứu hộ nào active, tự động tắt trạng thái cứu hộ ở local
+        if (role == UserRole.victim && controller.isBeingRescued) {
+          controller.endBeingRescued();
+          controller.setSearchingRescuer(false);
+          debugPrint("🔄 [AppSession] Ca cứu hộ đã kết thúc trên server. Đã tắt màn hình cứu hộ của Victim.");
+        } else if (role == UserRole.rescuer && getIt<SOSProvider>().isRescuing) {
+          getIt<SOSProvider>().endRescue();
+          debugPrint("🔄 [AppSession] Ca cứu hộ đã kết thúc trên server. Đã tắt màn hình cứu hộ của Rescuer.");
+        }
+        return;
+      }
 
       final sosRequest = activeRescueData['sosRequest'];
       final partner = activeRescueData['partner'];
-
-      if (sosRequest == null) return;
 
       final status = sosRequest['status'];
 
@@ -344,6 +353,9 @@ class AppSession {
           
           // Bật lại định vị mượt mà cho Victim nếu cần (ở đây là nhận vị trí mượt)
           debugPrint("🔄 [AppSession] Đã khôi phục trạng thái đang được cứu hộ cho Victim.");
+        } else if (status == 'DONE' || status == 'CANCELLED') {
+          controller.endBeingRescued();
+          controller.setSearchingRescuer(false);
         }
       }
     } catch (e) {

@@ -55,7 +55,14 @@ class SosRequestController {
     cancelSOS = async (req, res, next) => {
         try {
             const { sosRequestId, cancelReason } = req.body;
-            const result = await sos_requestService.cancelSOS({ sosRequestId, cancelReason: cancelReason || "Nạn nhân tự hủy yêu cầu" });
+            const userId = req.userId;
+
+            const result = await sos_requestService.cancelSOS({
+                sosRequestId,
+                userId,
+                cancelReason: cancelReason || "Người gặp nạn tự hủy yêu cầu"
+            });
+
             return res.status(200).json({
                 success: true,
                 message: "Hủy yêu cầu cứu hộ thành công!",

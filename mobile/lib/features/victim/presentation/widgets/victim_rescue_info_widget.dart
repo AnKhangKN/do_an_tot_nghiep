@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
 import 'package:mobile/features/chat/presentation/screens/messenger_screen.dart';
 import 'package:mobile/shared/widgtes/messenger_widget.dart';
@@ -97,11 +99,13 @@ class VictimRescueInfoWidget extends StatelessWidget {
                       sosRequestId: sosRequestId?.toString(),
                     );
                     if (context.mounted) {
-                      Navigator.of(context).push(
+                      await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => MessengerScreen(conversation: conv),
                         ),
                       );
+                      // Tự động đồng bộ lại trạng thái khi quay về màn hình bản đồ
+                      getIt<AppSession>().checkAndRestoreActiveRescue();
                     }
                   },
                 ),

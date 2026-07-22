@@ -19,6 +19,9 @@ class RescuerSocket {
   void listenSosOffer() {
     socket.off("sos:offer");
     socket.off("rescue:accept:success");
+    socket.off("rescue:completed");
+    socket.off("sos:cancelled");
+    socket.off("rescue:cancelled");
 
     socket.on("sos:offer", (data) {
       debugPrint("🚨 [RESCUER SOCKET] Raw Data: ${data.toString()}");
@@ -66,6 +69,24 @@ class RescuerSocket {
       sosProvider.endRescue();
       sosProvider.triggerSuccessAlert();
     });
+
+    socket.on("sos:cancelled", (data) {
+      debugPrint("🚨 [RESCUER SOCKET] Nhận sos:cancelled: $data");
+      final String? cancelledSosId = data != null ? (data['sosRequestId'] ?? data['sosId'])?.toString() : null;
+      final String? msg = data != null && data['message'] != null
+          ? data['message'].toString()
+          : "Người gặp nạn đã dừng yêu cầu cứu hộ.";
+      sosProvider.handleSosCancelled(cancelledSosId, message: msg);
+    });
+
+    socket.on("rescue:cancelled", (data) {
+      debugPrint("🚨 [RESCUER SOCKET] Nhận rescue:cancelled: $data");
+      final String? cancelledSosId = data != null ? (data['sosRequestId'] ?? data['sosId'])?.toString() : null;
+      final String? msg = data != null && data['message'] != null
+          ? data['message'].toString()
+          : "Người gặp nạn đã dừng yêu cầu cứu hộ.";
+      sosProvider.handleSosCancelled(cancelledSosId, message: msg);
+    });
   }
 
   void acceptRescue(String incidentId) {
@@ -85,5 +106,7 @@ class RescuerSocket {
     socket.off("sos:offer");
     socket.off("rescue:accept:success");
     socket.off("rescue:completed");
+    socket.off("sos:cancelled");
+    socket.off("rescue:cancelled");
   }
 }

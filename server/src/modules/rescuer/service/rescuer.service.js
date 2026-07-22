@@ -154,8 +154,11 @@ class RescuerService {
         // 2. Xóa vị trí địa lý trên Redis
         await this.rescuerRepository.offlineRedis({ userId });
 
-        // 3. Xóa mốc last_seen khỏi Redis Hash Map
+        // 3. Dọn dẹp toàn bộ cache trạng thái online/bận của rescuer
         await redis.hdel('rescuer:last_seen', userId);
+        await redis.hdel('active_rescues', userId);
+        await redis.del(`active:rescuer:${userId}`);
+        await redis.del(`sos:offer:rescuer:${userId}`);
 
         const checkOnline = await this.checkRescuerOnline({ userId });
 

@@ -33,8 +33,34 @@ const handleSosNotFound = (io, data) => {
     }
 };
 
-// Sau này có thêm các event khác của SOS thì viết thêm function và export ra ở đây
+/**
+ * Emit sự kiện sos:cancelled tới tất cả các Rescuer (hoặc phòng cụ thể) khi Nạn nhân hủy SOS
+ * @param {Object} io - Đối tượng Socket.IO Server chính
+ * @param {Object} data - { sosId, sosRequestId, rescuerId, victimId, message }
+ */
+const handleSosCancelled = (io, data) => {
+    try {
+        const sosRequestId = data.sosRequestId || data.sosId;
+        const payload = {
+            sosRequestId,
+            sosId: sosRequestId,
+            message: data.message || "Nạn nhân đã hủy yêu cầu cứu hộ.",
+        };
+
+        if (data.rescuerId) {
+            io.to(`rescuer:${data.rescuerId}`).emit("sos:cancelled", payload);
+        }
+
+        // Broadcast tới tất cả Rescuer để đóng offer trên các thiết bị đang nhận offer
+        io.emit("sos:cancelled", payload);
+        console.log(`[SOS EMITTER] Emitted 'sos:cancelled' for SOS: ${sosRequestId}`);
+    } catch (err) {
+        console.error(`[SOS EMITTER] Error emitting sos:cancelled:`, err);
+    }
+};
+
 module.exports = {
     handleSosOffer,
     handleSosNotFound,
+    handleSosCancelled,
 };

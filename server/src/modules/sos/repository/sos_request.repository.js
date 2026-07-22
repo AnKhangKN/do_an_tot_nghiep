@@ -141,7 +141,7 @@ class SosRequestRepository {
                 ${this.sos_requestModel.field.cancelReason} = $2,
                 ${this.sos_requestModel.field.updatedAt} = CURRENT_TIMESTAMP
             WHERE ${this.sos_requestModel.field.sosRequestId} = $3
-              AND ${this.sos_requestModel.field.status} IN ('PENDING', 'SEARCHING')
+              AND ${this.sos_requestModel.field.status} IN ('PENDING', 'SEARCHING', 'ASSIGNED', 'IN_PROGRESS')
             RETURNING *
         `;
 

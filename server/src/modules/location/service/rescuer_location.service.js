@@ -17,9 +17,8 @@ class RescuerLocationService {
             userId
         );
 
-        // Thiết lập key phụ hoạt động có thời hạn (TTL) 5 phút để dọn dẹp rác khi mất mạng
         await redis.set(`active:rescuer:${userId}`, '1', 'EX', 300);
-        console.log(`[REDIS] Cập nhật active key cho user ${userId} với TTL 5 phút.`);
+        await redis.hset("rescuer:last_seen", userId, new Date().toISOString());
     };
 }
 

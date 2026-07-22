@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 import 'package:mobile/shared/widgtes/phone_call_widget.dart';
 
 import '../../../../core/di/di.dart';
@@ -14,6 +15,7 @@ import '../../../../shared/widgtes/search_widget.dart';
 import '../widgets/victim_sos_button_widget.dart';
 import '../widgets/victim_util_widget.dart';
 import '../widgets/victim_rescue_info_widget.dart';
+import '../providers/victim_map_provider.dart';
 import '../../../../shared/widgtes/emergency_dialog_widget.dart';
 
 class VictimMapScreen extends StatefulWidget {
@@ -89,7 +91,11 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
   void initState() {
     super.initState();
     getIt<SessionController>().addListener(_onSessionChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onSessionChanged());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _onSessionChanged();
+      context.read<VictimMapProvider>().loadIncidentTypes();
+    });
   }
 
   @override
@@ -120,6 +126,8 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     }
   }
 
+  DateTime? _lastRouteFetchTime;
+
   Future<void> _updateRoute(LatLng start, LatLng end) async {
     if (_lastStart?.latitude == start.latitude &&
         _lastStart?.longitude == start.longitude &&
@@ -127,14 +135,33 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
         _lastEnd?.longitude == end.longitude) {
       return;
     }
+
+    // Tối ưu: Nếu đã có đường đi và Rescuer di chuyển < 15m HOẶC vừa fetch chỉ đường trong vòng 4 giây -> Bỏ qua HTTP request
+    if (_routePoints.isNotEmpty && _lastEnd != null && _lastRouteFetchTime != null) {
+      final distanceInMeters = const Distance().as(
+        LengthUnit.Meter,
+        _lastEnd!,
+        end,
+      );
+      final secondsSinceLastFetch = DateTime.now().difference(_lastRouteFetchTime!).inSeconds;
+      if (distanceInMeters < 15 && secondsSinceLastFetch < 4) {
+        return;
+      }
+    }
+
     _lastStart = start;
     _lastEnd = end;
+    _lastRouteFetchTime = DateTime.now();
 
-    final route = await DirectionService().getRoute(start, end);
-    if (mounted) {
-      setState(() {
-        _routePoints = route;
-      });
+    try {
+      final route = await DirectionService().getRoute(start, end);
+      if (mounted && route.isNotEmpty) {
+        setState(() {
+          _routePoints = route;
+        });
+      }
+    } catch (e) {
+      debugPrint("⚠️ [VictimMap] Lỗi lấy tuyến đường: $e");
     }
   }
 
@@ -201,7 +228,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: SizedBox(
-                  height: 160,
+                  height: 180,
                   child: Stack(
                     children: [
                       // Lắng nghe SessionController để hiển thị SnackBar khi không tìm được rescuer

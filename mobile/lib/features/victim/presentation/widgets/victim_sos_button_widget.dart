@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/storage/storage_service.dart';
+import '../../../auth/data/auth_repository.dart';
 import '../providers/victim_map_provider.dart';
+import 'victim_searching_widget.dart';
 
 class VictimSosButtonWidget extends StatefulWidget {
   final double? victimLat;
@@ -77,8 +79,17 @@ class _VictimSosButtonWidgetState
     try {
       final storage = getIt<StorageService>();
       final savedPhone = await storage.getSavedPhone();
-      if (savedPhone != null && mounted) {
-        phoneController.text = savedPhone;
+      if (savedPhone != null && savedPhone.trim().isNotEmpty && mounted) {
+        phoneController.text = savedPhone.trim();
+        return;
+      }
+
+      // Nếu trong storage chưa có, tự động lấy SĐT từ Profile User (GetMe)
+      final authRepo = getIt<AuthRepository>();
+      final user = await authRepo.getMe();
+      if (user.phone != null && user.phone!.trim().isNotEmpty && mounted) {
+        phoneController.text = user.phone!.trim();
+        await storage.saveSavedPhone(user.phone!.trim());
       }
     } catch (e) {
       debugPrint("🚨 Không thể load số điện thoại đã lưu: $e");
@@ -86,7 +97,11 @@ class _VictimSosButtonWidgetState
   }
 
   void _showSosForm() {
-    context.read<VictimMapProvider>().loadIncidentTypes();
+    // Nếu danh sách loại sự cố chưa load thì mới fetch
+    final provider = context.read<VictimMapProvider>();
+    if (provider.incidentTypes.isEmpty) {
+      provider.loadIncidentTypes();
+    }
 
     showModalBottomSheet(
       context: context,
@@ -223,6 +238,18 @@ class _VictimSosButtonWidgetState
                                 onPressed: provider.loading
                                     ? null
                                     : () async {
+                                  if (phoneController.text.trim().isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Vui lòng nhập số điện thoại liên hệ để gửi cứu hộ!",
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
                                   if (selectedIncidentTypeId ==
                                       null) {
                                     ScaffoldMessenger.of(
@@ -355,52 +382,9 @@ class _VictimSosButtonWidgetState
         final isSearchingRescuer =
             getIt<SessionController>().isSearchingRescuer;
 
-        // Khi đang tìm cứu hộ viên: hiển thị nút disabled với loading
+        // Khi đang tìm cứu hộ viên: hiển thị Box thông tin tìm kiếm kèm nút Hủy cứu hộ
         if (isSearchingRescuer) {
-          return Container(
-            height: 52,
-            width: 170,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(26),
-              border: Border.all(
-                color: Colors.orange.shade400,
-                width: 1.4,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Colors.orange.shade600,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Đang tìm...',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.orange.shade700,
-                  ),
-                ),
-              ],
-            ),
-          );
+          return const VictimSearchingWidget();
         }
 
         // Nút SOS bình thường

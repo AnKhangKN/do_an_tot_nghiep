@@ -15,8 +15,9 @@ class MatchingService {
 
         // Lấy danh sách cứu hộ viên đã từ chối SOS này từ Redis
         const rejectedRescuers = await redis.smembers(`sos:${sosId}:rejected_rescuers`) || [];
+        console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - rejected rescuers:`, rejectedRescuers);
 
-        // 1. Lấy từ redis (geo search) {#7a0,10}
+        // 1. Lấy từ redis (geo search)
         const nearbyRescuers =
             await this.rescuerService.findNearbyRescuers({
                 lat: sos.victim_lat,
@@ -24,7 +25,10 @@ class MatchingService {
                 radius
             });
 
+        console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - nearby rescuer raw:`, nearbyRescuers);
+
         if (!nearbyRescuers || nearbyRescuers.length === 0) {
+            console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - no nearby rescuers found from GEOSEARCH`);
             return [];
         }
 
@@ -36,8 +40,13 @@ class MatchingService {
             }))
             .filter(r => !rejectedRescuers.includes(r.userId));
 
+        console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - nearby after reject filter:`, nearby);
+
         const rescuerIds = nearby.map(r => r.userId);
-        if (rescuerIds.length === 0) return [];
+        if (rescuerIds.length === 0) {
+            console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - all nearby rescuers were rejected`);
+            return [];
+        }
 
         // 3. Sử dụng Pipeline kiểm tra trạng thái hoạt động thực tế (TTL key) để loại bỏ rác
         const pipeline = redis.pipeline();
@@ -45,6 +54,14 @@ class MatchingService {
             pipeline.exists(`active:rescuer:${id}`);
         });
         const activeResults = await pipeline.exec();
+
+        console.log(
+            `[MATCHING] SOS ${sosId} radius ${radius}km - active key results:`,
+            rescuerIds.map((id, index) => ({
+                rescuerId: id,
+                activeKeyExists: activeResults[index]?.[1] === 1
+            }))
+        );
 
         // 4. Lọc cứu hộ viên đang active và dọn dẹp rác trên Redis Geo
         const activeRescuerIds = [];
@@ -57,7 +74,7 @@ class MatchingService {
             } else {
                 // Lazy Cleanup: Cứu hộ viên đã ngắt kết nối đột ngột > 5 phút, xóa khỏi tập hợp Geo
                 cleanupPipeline.zrem('rescuer_locations', id);
-                console.log(`[REDIS CLEANUP] Xóa cứu hộ viên không còn hoạt động khỏi Geo Set: ${id}`);
+                console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - loại ${id} vì thiếu active:rescuer:${id}`);
             }
         });
 
@@ -66,7 +83,10 @@ class MatchingService {
             cleanupPipeline.exec().catch(err => console.error("Lỗi dọn dẹp Redis Geo:", err));
         }
 
-        if (activeRescuerIds.length === 0) return [];
+        if (activeRescuerIds.length === 0) {
+            console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - không có rescuer active sau khi check TTL key`);
+            return [];
+        }
 
         // Lấy trực tiếp lastSeenAt từ Redis Hash Map cho các cứu hộ viên còn hoạt động
         const lastSeenTimes = await redis.hmget('rescuer:last_seen', ...activeRescuerIds);
@@ -75,12 +95,23 @@ class MatchingService {
             lastSeenMap.set(id, lastSeenTimes[index]);
         });
 
+        console.log(
+            `[MATCHING] SOS ${sosId} radius ${radius}km - last_seen map:`,
+            activeRescuerIds.map(id => ({
+                rescuerId: id,
+                lastSeenAt: lastSeenMap.get(id)
+            }))
+        );
+
         // 5. MERGE dữ liệu hoàn toàn từ bộ nhớ Redis (Bypass PostgreSQL)
         const merged = nearby
             .filter(r => activeRescuerIds.includes(r.userId))
             .map(r => {
                 const lastSeenAt = lastSeenMap.get(r.userId);
-                if (!lastSeenAt) return null;
+                if (!lastSeenAt) {
+                    console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - loại ${r.userId} vì thiếu rescuer:last_seen`);
+                    return null;
+                }
 
                 return {
                     userId: r.userId,
@@ -91,10 +122,14 @@ class MatchingService {
             })
             .filter(Boolean);
 
+        console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - merged rescuers:`, merged);
+
         // 6. FILTER AVAILABLE
         const available = await this.#filterAvailability(merged);
+        console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - available rescuers:`, available);
 
         if (!available.length) {
+            console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - không có rescuer khả dụng sau filter cuối`);
             return [];
         }
 
@@ -123,25 +158,52 @@ class MatchingService {
 
         const busyResults = await pipeline.exec();
 
+        console.log(
+            `[MATCHING] availability check - busy results:`,
+            rescuers.map((r, index) => ({
+                rescuerId: r.userId,
+                isRescuing: busyResults[index * 2]?.[1] === 1,
+                hasOffer: busyResults[index * 2 + 1]?.[1] === 1,
+                lastSeenAt: r.lastSeenAt
+            }))
+        );
+
         return rescuers.filter((r, index) => {
             // must be active
-            if (r.status !== "ACTIVE") return false;
+            if (r.status !== "ACTIVE") {
+                console.log(`[MATCHING] loại ${r.userId} vì status != ACTIVE`);
+                return false;
+            }
 
             // must have lastSeen
-            if (!r.lastSeenAt) return false;
+            if (!r.lastSeenAt) {
+                console.log(`[MATCHING] loại ${r.userId} vì thiếu lastSeenAt`);
+                return false;
+            }
 
             const lastSeen = new Date(r.lastSeenAt).getTime();
             const diffSeconds = (now - lastSeen) / 1000;
 
             // must be recently online
-            if (diffSeconds > NOW_LIMIT_SECONDS) return false;
+            if (diffSeconds > NOW_LIMIT_SECONDS) {
+                console.log(
+                    `[MATCHING] loại ${r.userId} vì lastSeenAt quá cũ: ${diffSeconds.toFixed(1)}s`
+                );
+                return false;
+            }
 
             // Lấy kết quả từ Redis pipeline
             const isRescuing = busyResults[index * 2][1] === 1; // hexists trả về 1 nếu field tồn tại
-            if (isRescuing) return false;
+            if (isRescuing) {
+                console.log(`[MATCHING] loại ${r.userId} vì đang có active_rescues`);
+                return false;
+            }
 
             const hasOffer = busyResults[index * 2 + 1][1] === 1; // exists trả về 1 nếu key tồn tại
-            if (hasOffer) return false;
+            if (hasOffer) {
+                console.log(`[MATCHING] loại ${r.userId} vì đang có sos:offer:rescuer:${r.userId}`);
+                return false;
+            }
 
             return true;
         });

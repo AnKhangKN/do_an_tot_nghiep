@@ -7,7 +7,12 @@ class VictimRepository {
 
   VictimRepository(this.victimService);
 
-  Future<void> sendSos(SosRequest sosRequest) async {
-    await victimService.sendSos(sosRequest.toJson());
+  Future<dynamic> sendSos(SosRequest sosRequest) async {
+    final res = await victimService.sendSos(sosRequest.toJson());
+    return res.data;
+  }
+
+  Future<void> cancelSos({String? sosRequestId, String? cancelReason}) async {
+    await victimService.cancelSos(sosRequestId: sosRequestId, cancelReason: cancelReason);
   }
 }
