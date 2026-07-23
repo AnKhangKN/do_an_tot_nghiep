@@ -133,11 +133,37 @@ class MatchingService {
             return [];
         }
 
-        // 7. SORT BY DISTANCE (closest first)
-        available.sort((a, b) => a.distance - b.distance);
+        // 7. Lấy loại sự cố chuyên môn của các rescuer khả dụng
+        const availableRescuerIds = available.map(r => r.userId);
+        const incidentTypesMap = await this.rescuerService.getRescuersIncidentTypes(availableRescuerIds);
+        console.log(`[MATCHING] SOS ${sosId} - incident types map:`, Object.fromEntries(incidentTypesMap));
 
-        // 8. RETURN TOP 5
-        return available.slice(0, 5);
+        // 8. Chia thành 2 nhóm: phù hợp chuyên môn và không phù hợp
+        const sosIncidentTypeId = sos.incident_type_id;
+        const matchedRescuers = [];
+        const unmatchedRescuers = [];
+
+        available.forEach(rescuer => {
+            const rescuerIncidentTypes = incidentTypesMap.get(rescuer.userId) || new Set();
+            if (rescuerIncidentTypes.has(sosIncidentTypeId)) {
+                matchedRescuers.push(rescuer);
+            } else {
+                unmatchedRescuers.push(rescuer);
+            }
+        });
+
+        console.log(`[MATCHING] SOS ${sosId} - matched rescuers (${matchedRescuers.length}):`, matchedRescuers);
+        console.log(`[MATCHING] SOS ${sosId} - unmatched rescuers (${unmatchedRescuers.length}):`, unmatchedRescuers);
+
+        // 9. Sắp xếp mỗi nhóm theo khoảng cách
+        matchedRescuers.sort((a, b) => a.distance - b.distance);
+        unmatchedRescuers.sort((a, b) => a.distance - b.distance);
+
+        // 10. Nối 2 nhóm lại (phù hợp trước) và trả về top 5
+        const finalRescuers = [...matchedRescuers, ...unmatchedRescuers];
+        console.log(`[MATCHING] SOS ${sosId} - final rescuers:`, finalRescuers);
+
+        return finalRescuers.slice(0, 5);
     }
 
     #filterAvailability = async (rescuers) => {

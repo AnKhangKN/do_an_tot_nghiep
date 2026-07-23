@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/location/data/location_service.dart';
+import 'package:mobile/core/session/session_controller.dart';
+import 'package:mobile/features/dangerous_points/presentation/widgets/add_dangerous_point_dialog.dart';
 
 class VictimUtilWidget extends StatefulWidget {
-  final VoidCallback? onWarningTap;
   final VoidCallback? onCallTap;
   final VoidCallback? onLocationTap;
 
   const VictimUtilWidget({
     super.key,
-    this.onWarningTap,
     this.onCallTap,
     this.onLocationTap,
   });
@@ -17,27 +19,58 @@ class VictimUtilWidget extends StatefulWidget {
 }
 
 class _VictimUtilWidgetState extends State<VictimUtilWidget> {
+  Future<void> _handleWarningTap(BuildContext context) async {
+    final session = getIt<SessionController>();
+    var position = session.state.position;
+    
+    if (position == null) {
+      // Try to get current position directly if session's position is null
+      position = await LocationService().getCurrentPosition();
+      if (position != null) {
+        session.updatePosition(position);
+      }
+    }
+    
+    if (position != null && context.mounted) {
+      AddDangerousPointDialog.show(
+        context,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng bật định vị để báo cáo điểm nguy hiểm!'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         _UtilButton(
-          tooltip: 'Canh bao',
+          tooltip: 'Cảnh báo',
           icon: Icons.warning_rounded,
           color: const Color(0xFFF97316),
-          onPressed: widget.onWarningTap ?? () {},
+          onPressed: () => _handleWarningTap(context),
         ),
         const SizedBox(height: 6),
         _UtilButton(
-          tooltip: 'Khan cap',
+          tooltip: 'Khẩn cấp',
           icon: Icons.phone,
           color: const Color(0xFFF91616),
           onPressed: widget.onCallTap ?? () {},
         ),
         const SizedBox(height: 6),
         _UtilButton(
-          tooltip: 'Vi tri cua toi',
+          tooltip: 'Vị trí của tôi',
           icon: Icons.my_location,
           color: const Color(0xFF2563EB),
           onPressed: widget.onLocationTap ?? () {},

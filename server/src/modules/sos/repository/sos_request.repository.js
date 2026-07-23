@@ -6,7 +6,7 @@ class SosRequestRepository {
         this.sos_requestModel = sos_requestModel
     }
 
-    createSOS = async (client, {sosRequestId, userId, incidentTypeId, description, victimLat, victimLng, geohash}) => {
+    createSOS = async (client, {sosRequestId, userId, incidentTypeId, description, victimLat, victimLng}) => {
         const query = `
                     INSERT INTO ${this.sos_requestModel.table} (
                         ${this.sos_requestModel.field.sosRequestId},
@@ -14,16 +14,15 @@ class SosRequestRepository {
                         ${this.sos_requestModel.field.incidentTypeId},
                         ${this.sos_requestModel.field.description},
                         ${this.sos_requestModel.field.victimLat},
-                        ${this.sos_requestModel.field.victimLng},
-                        ${this.sos_requestModel.field.geohash}
+                        ${this.sos_requestModel.field.victimLng}
                         
                     )
-                    VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    VALUES ($1, $2, $3, $4, $5, $6)
                     RETURNING *
                     `
 
         const result = await client.query(query, [
-            sosRequestId, userId, incidentTypeId, description, victimLat, victimLng, geohash
+            sosRequestId, userId, incidentTypeId, description, victimLat, victimLng
         ])
 
         return result.rows[0]

@@ -1,6 +1,5 @@
 const uuidUtil = require("@/utils/uuid.util");
 const sos_requestRepository = require("../repository/sos_request.repository");
-const { hashLocation } = require("@/utils/geohash.util");
 const userService = require("@modules/user/services/user.service");
 const sosQueue = require("../../../queues/sos.queue");
 const { transaction } = require("@/config/database.config");
@@ -25,7 +24,6 @@ class SosRequestService {
     }) => {
         const sos = await transaction(async (client) => {
             const sosRequestId = uuidUtil.generateUUID();
-            const geohash = hashLocation({ latitude: victimLat, longitude: victimLng });
 
             const sos = await this.sos_requestRepository.createSOS(client, {
                 sosRequestId,
@@ -34,7 +32,6 @@ class SosRequestService {
                 description,
                 victimLat,
                 victimLng,
-                geohash,
             });
 
             if (phone) {

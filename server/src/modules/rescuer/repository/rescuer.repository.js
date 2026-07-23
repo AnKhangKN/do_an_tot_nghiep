@@ -257,6 +257,36 @@ class RescueRepository {
         return result.rows;
     };
 
+    getRescuersIncidentTypes = async (rescuerIds) => {
+        if (!rescuerIds.length) {
+            return new Map();
+        }
+
+        const query = `
+            SELECT 
+                ${this.rescuer_incident_typesModel.field.userId},
+                ${this.rescuer_incident_typesModel.field.incidentTypeId}
+            FROM ${this.rescuer_incident_typesModel.table}
+            WHERE ${this.rescuer_incident_typesModel.field.userId} = ANY($1)
+        `;
+
+        const result = await pool.query(query, [rescuerIds]);
+        
+        // Tạo Map: userId -> Set of incidentTypeIds
+        const incidentTypesMap = new Map();
+        result.rows.forEach(row => {
+            const userId = row.user_id;
+            const incidentTypeId = row.incident_type_id;
+            
+            if (!incidentTypesMap.has(userId)) {
+                incidentTypesMap.set(userId, new Set());
+            }
+            incidentTypesMap.get(userId).add(incidentTypeId);
+        });
+
+        return incidentTypesMap;
+    };
+
 }
 
 module.exports = new RescueRepository()

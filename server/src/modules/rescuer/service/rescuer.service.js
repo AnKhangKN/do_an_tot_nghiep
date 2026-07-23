@@ -180,6 +180,10 @@ class RescuerService {
         return await this.rescuerRepository.getRescuersByIds(rescuerIds);
     }
 
+    getRescuersIncidentTypes = async (rescuerIds) => {
+        return await this.rescuerRepository.getRescuersIncidentTypes(rescuerIds);
+    }
+
 }
 
 module.exports = new RescuerService();

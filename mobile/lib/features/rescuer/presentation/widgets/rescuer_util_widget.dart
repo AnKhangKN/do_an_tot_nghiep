@@ -1,18 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/location/data/location_service.dart';
+import 'package:mobile/core/session/session_controller.dart';
+import 'package:mobile/features/dangerous_points/presentation/widgets/add_dangerous_point_dialog.dart';
 
 class RescuerUtilWidget extends StatelessWidget {
   final VoidCallback? onIncidentTypeTap;
   final VoidCallback? onLocationTap;
   final VoidCallback? onEmergencyTap;
-  final VoidCallback? onWarningTap;
 
   const RescuerUtilWidget({
     super.key,
     this.onIncidentTypeTap,
     this.onLocationTap,
     this.onEmergencyTap,
-    this.onWarningTap,
   });
+
+  Future<void> _handleWarningTap(BuildContext context) async {
+    final session = getIt<SessionController>();
+    var position = session.state.position;
+    
+    if (position == null) {
+      // Try to get current position directly if session's position is null
+      position = await LocationService().getCurrentPosition();
+      if (position != null) {
+        session.updatePosition(position);
+      }
+    }
+    
+    if (position != null && context.mounted) {
+      AddDangerousPointDialog.show(
+        context,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng bật định vị để báo cáo điểm nguy hiểm!'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +86,7 @@ class RescuerUtilWidget extends StatelessWidget {
             _UtilButton(
               icon: Icons.flag,
               label: "Cảnh báo",
-              onTap: onWarningTap,
+              onTap: () => _handleWarningTap(context),
             ),
           ],
         ),

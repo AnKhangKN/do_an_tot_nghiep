@@ -31,6 +31,8 @@ import '../../features/rescuer/data/rescuer_repository.dart';
 import '../incident_types/data/incident_type_repository.dart';
 import '../network/dio_client.dart';
 import '../network/interceptor/refresh_interceptor.dart';
+import '../dangerous_points/data/dangerous_point_service.dart';
+import '../dangerous_points/data/dangerous_point_repository.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -83,6 +85,9 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(
     () => IncidentTypeService(getIt<DioClient>().dio),
   );
+  getIt.registerLazySingleton(
+    () => DangerousPointService(getIt<DioClient>().dio),
+  );
   getIt.registerLazySingleton(() => VictimService(getIt<DioClient>().dio));
   getIt.registerLazySingleton(() => HistoryService(getIt<DioClient>().dio));
   getIt.registerLazySingleton(() => ChatService(getIt<DioClient>().dio));
@@ -101,6 +106,9 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(() => RescuerRepository(getIt<RescuerService>()));
   getIt.registerLazySingleton(
     () => IncidentTypeRepository(getIt<IncidentTypeService>()),
+  );
+  getIt.registerLazySingleton(
+    () => DangerousPointRepository(getIt<DangerousPointService>()),
   );
   getIt.registerLazySingleton(() => VictimRepository(getIt<VictimService>()));
   getIt.registerLazySingleton(() => ChatRepository(getIt<ChatService>()));

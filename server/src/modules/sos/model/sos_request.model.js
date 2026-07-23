@@ -9,7 +9,6 @@ const sosRequestModel = {
 
         victimLat: 'victim_lat',
         victimLng: 'victim_lng',
-        geohash: 'geohash',
 
         status: 'status', 
         // PENDING → SEARCHING → ASSIGNED → IN_PROGRESS → DONE

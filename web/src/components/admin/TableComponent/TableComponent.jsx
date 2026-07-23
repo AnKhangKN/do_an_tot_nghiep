@@ -9,7 +9,7 @@ const TableComponent = ({
   // pagination props
   page = 1,
   totalPages = 1,
-  onPageChange = () => { },
+  onPageChange = () => {},
 
   loading = false,
   onRowClick, // Callback tùy chọn từ component cha

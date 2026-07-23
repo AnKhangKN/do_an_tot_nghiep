@@ -8,6 +8,7 @@ const rescuerRoutes = require("@/modules/rescuer/routes/rescuer.route")
 const sosRoutes = require("@modules/sos/routes/sos_request.route")
 const deviceTokenRoutes = require("@/modules/device_token/routes/device_token.route")
 const chatRoutes = require("@/modules/chat/routes/chat.route")
+const dangerousPointRoutes = require("@/modules/dangerous_points/routes/dangerous_point.route")
 
 const adminRoutes = require("@/modules/admin/routes/admin.route")
 
@@ -28,5 +29,7 @@ route.use("/sos", sosRoutes)
 route.use("/device_tokens", deviceTokenRoutes)
 
 route.use("/chat", chatRoutes)
+
+route.use("/dangerous_points", dangerousPointRoutes)
 
 module.exports = route;
