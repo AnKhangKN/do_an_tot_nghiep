@@ -1,118 +1,157 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
+import '../../../../core/di/di.dart';
+import '../../../../core/utils/formatters.dart';
+import '../providers/notification_provider.dart';
 import '../widgets/notification_card.dart';
 
-class NotificationScreen extends StatelessWidget {
+class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
   @override
+  State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends State<NotificationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getIt<NotificationProvider>().fetchNotifications();
+    });
+  }
+
+  String _mapType(String rawType) {
+    switch (rawType.toUpperCase()) {
+      case 'EMERGENCY':
+        return 'emergency';
+      case 'WARNING':
+        return 'warning';
+      case 'SUCCESS':
+        return 'success';
+      case 'SYSTEM':
+      default:
+        return 'system';
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final notifications = [
-      {
-        "title": "Yêu cầu cứu hộ khẩn cấp!",
-        "message": "Có nạn nhân đang cần hỗ trợ tại khu vực Cầu Ninh Kiều.",
-        "time": "2 phút trước",
-        "type": "emergency",
-        "isRead": false,
-      },
-      {
-        "title": "Đội cứu hộ đang di chuyển",
-        "message": "Cứu hộ viên Nguyễn Văn Minh đang trên đường đến vị trí của bạn.",
-        "time": "10 phút trước",
-        "type": "moving",
-        "isRead": false,
-      },
-      {
-        "title": "Cảnh báo thiên tai diện rộng",
-        "message": "Dự báo triều cường vượt mức báo động 3 trong 24 giờ tới.",
-        "time": "1 giờ trước",
-        "type": "warning",
-        "isRead": true,
-      },
-      {
-        "title": "Xác nhận hỗ trợ thành công",
-        "message": "Yêu cầu số #SOS-102 đã được xử lý hoàn tất.",
-        "time": "Hôm nay",
-        "type": "success",
-        "isRead": true,
-      },
-    ];
-
-    return Scaffold(
-      backgroundColor: ColorConstants.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: ColorConstants.surfaceWhite,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          "THÔNG BÁO HỆ THỐNG",
-          style: TextStyle(
-            color: ColorConstants.redRescue,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.1,
+    return ChangeNotifierProvider.value(
+      value: getIt<NotificationProvider>(),
+      child: Scaffold(
+        backgroundColor: ColorConstants.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: ColorConstants.surfaceWhite,
+          elevation: 0,
+          centerTitle: true,
+          title: const Text(
+            "THÔNG BÁO HỆ THỐNG",
+            style: TextStyle(
+              color: ColorConstants.redRescue,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.1,
+            ),
           ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.done_all, color: ColorConstants.redRescue),
-            tooltip: "Đánh dấu đã đọc",
-          )
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Quick Filter or Summary
-            _buildSummaryRow(),
-
-            const SizedBox(height: 8),
-
-            // Notification list
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: notifications.length,
-                itemBuilder: (context, index) {
-                  final item = notifications[index];
-                  return NotificationCard(
-                    title: item["title"] as String,
-                    message: item["message"] as String,
-                    time: item["time"] as String,
-                    type: item["type"] as String,
-                    isRead: item["isRead"] as bool,
-                  );
-                },
-              ),
+          actions: [
+            Consumer<NotificationProvider>(
+              builder: (context, provider, _) {
+                return IconButton(
+                  onPressed: () => provider.markAllAsRead(),
+                  icon: const Icon(Icons.done_all, color: ColorConstants.redRescue),
+                  tooltip: "Đánh dấu đã đọc tất cả",
+                );
+              },
             ),
           ],
         ),
-      ),
-    );
-  }
+        body: SafeArea(
+          child: Consumer<NotificationProvider>(
+            builder: (context, provider, _) {
+              if (provider.isLoading && provider.notifications.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-  Widget _buildSummaryRow() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            "Gần đây",
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              final notifications = provider.notifications;
+              final unreadCount = provider.unreadCount;
+
+              return RefreshIndicator(
+                onRefresh: () => provider.fetchNotifications(),
+                child: Column(
+                  children: [
+                    // Header Summary Row
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Gần đây",
+                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: unreadCount > 0
+                                  ? ColorConstants.redRescue.withOpacity(0.1)
+                                  : Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              unreadCount > 0
+                                  ? "$unreadCount Thông báo mới"
+                                  : "Không có thông báo chưa đọc",
+                              style: TextStyle(
+                                color: unreadCount > 0
+                                    ? ColorConstants.redRescue
+                                    : Colors.grey.shade700,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Notification list
+                    Expanded(
+                      child: notifications.isEmpty
+                          ? ListView(
+                              children: const [
+                                SizedBox(height: 100),
+                                Center(
+                                  child: Text(
+                                    "Chưa có thông báo nào từ hệ thống.",
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: notifications.length,
+                              itemBuilder: (context, index) {
+                                final item = notifications[index];
+                                return NotificationCard(
+                                  title: item.title,
+                                  message: item.content,
+                                  time: Formatters.formatDateTime(item.createdAt),
+                                  type: _mapType(item.type),
+                                  isRead: item.isRead,
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: ColorConstants.redRescue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              "2 Thông báo mới",
-              style: TextStyle(color: ColorConstants.redRescue, fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

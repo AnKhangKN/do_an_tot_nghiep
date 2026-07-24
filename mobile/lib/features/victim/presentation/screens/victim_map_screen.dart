@@ -34,6 +34,8 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
   List<LatLng> _routePoints = [];
   LatLng? _lastStart;
   LatLng? _lastEnd;
+  double? _distanceKm;   // Khoảng cách của cứu hộ viên tới đây (km)
+  int? _durationSec;     // ETA ước tính (đơn vị giây)
 
   void _animatedMapMove(LatLng destLocation, double destZoom) {
     final camera = _mapController.camera;
@@ -113,15 +115,19 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     final rescuerPos = sessionController.rescuerPosition;
 
     if (isBeingRescued && rescuerPos != null && position != null) {
+      // Tính route theo hướng cứu hộ viên đi tới nạn nhân (giống bên Rescuer screen)
+      // để cả 2 phía hiển thị cùng một khoảng cách OSRM
       _updateRoute(
-        LatLng(position.latitude, position.longitude),
-        rescuerPos,
+        rescuerPos,                                        // START = cứu hộ viên
+        LatLng(position.latitude, position.longitude),     // END   = nạn nhân
       );
     } else if (!isBeingRescued && _routePoints.isNotEmpty) {
       setState(() {
         _routePoints = [];
         _lastStart = null;
         _lastEnd = null;
+        _distanceKm = null;
+        _durationSec = null;
       });
     }
   }
@@ -136,12 +142,12 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
       return;
     }
 
-    // Tối ưu: Nếu đã có đường đi và Rescuer di chuyển < 15m HOẶC vừa fetch chỉ đường trong vòng 4 giây -> Bỏ qua HTTP request
-    if (_routePoints.isNotEmpty && _lastEnd != null && _lastRouteFetchTime != null) {
+    // Debounce: bỏ qua nếu điểm xuất phát (cứu hộ viên) chưa di chuyển quá 15m và chưa quá 4 giây
+    if (_routePoints.isNotEmpty && _lastStart != null && _lastRouteFetchTime != null) {
       final distanceInMeters = const Distance().as(
         LengthUnit.Meter,
-        _lastEnd!,
-        end,
+        _lastStart!,   // điểm di chuyển = rescuerPos (start)
+        start,
       );
       final secondsSinceLastFetch = DateTime.now().difference(_lastRouteFetchTime!).inSeconds;
       if (distanceInMeters < 15 && secondsSinceLastFetch < 4) {
@@ -154,10 +160,12 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     _lastRouteFetchTime = DateTime.now();
 
     try {
-      final route = await DirectionService().getRoute(start, end);
-      if (mounted && route.isNotEmpty) {
+      final info = await DirectionService().getRouteInfo(start, end);
+      if (mounted && info != null && info.points.isNotEmpty) {
         setState(() {
-          _routePoints = route;
+          _routePoints = info.points;
+          _distanceKm = info.distanceKm;
+          _durationSec = info.durationSec;
         });
       }
     } catch (e) {
@@ -258,6 +266,8 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                             child: currentIsBeingRescued
                                 ? VictimRescueInfoWidget(
                                     activeRescuer: sessionController.activeRescuer,
+                                    distanceKm: _distanceKm,
+                                    durationSec: _durationSec,
                                   )
                                 : VictimSosButtonWidget(
                                     victimLat: position?.latitude,

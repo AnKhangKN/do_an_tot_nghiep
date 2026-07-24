@@ -26,6 +26,8 @@ import 'package:mobile/features/chat/data/chat_service.dart';
 import 'package:mobile/features/chat/data/chat_repository.dart';
 import 'package:mobile/core/socket/modules/chat_socket.dart';
 import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
+import 'package:mobile/features/notification/data/notification_service.dart';
+import 'package:mobile/features/notification/presentation/providers/notification_provider.dart';
 
 import '../../features/rescuer/data/rescuer_repository.dart';
 import '../incident_types/data/incident_type_repository.dart';
@@ -91,6 +93,8 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(() => VictimService(getIt<DioClient>().dio));
   getIt.registerLazySingleton(() => HistoryService(getIt<DioClient>().dio));
   getIt.registerLazySingleton(() => ChatService(getIt<DioClient>().dio));
+  getIt.registerLazySingleton(() => MobileNotificationService(getIt<DioClient>().dio));
+  getIt.registerLazySingleton(() => NotificationProvider());
 
   // Đăng ký các Repository
   getIt.registerLazySingleton<AuthRepository>(

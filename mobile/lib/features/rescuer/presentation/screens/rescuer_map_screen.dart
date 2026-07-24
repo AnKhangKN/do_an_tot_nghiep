@@ -131,6 +131,8 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
         _routePoints = [];
         _lastStart = null;
         _lastEnd = null;
+        _distanceKm = null;
+        _durationSec = null;
       });
     }
   }
@@ -150,6 +152,8 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
   List<LatLng> _routePoints = [];
   LatLng? _lastStart;
   LatLng? _lastEnd;
+  double? _distanceKm;    // Khoảng cách còn lại đến nạn nhân (km)
+  int? _durationSec;      // Thời gian di chuyển ước tính (giây)
 
   DateTime? _lastRouteFetchTime;
 
@@ -178,10 +182,12 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     _lastRouteFetchTime = DateTime.now();
 
     try {
-      final route = await DirectionService().getRoute(start, end);
-      if (mounted && route.isNotEmpty) {
+      final info = await DirectionService().getRouteInfo(start, end);
+      if (mounted && info != null && info.points.isNotEmpty) {
         setState(() {
-          _routePoints = route;
+          _routePoints = info.points;
+          _distanceKm = info.distanceKm;
+          _durationSec = info.durationSec;
         });
       }
     } catch (e) {
@@ -265,6 +271,8 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                         sosRequestId: activeRescue.sosId,
                         description: activeRescue.description,
                         incidentTypeName: activeRescue.incidentTypeName,
+                        distanceKm: _distanceKm,
+                        durationSec: _durationSec,
                         onComplete: () {
                           getIt<RescuerSocket>().completeRescue(activeRescue.sosId);
                           sosProvider.endRescue();

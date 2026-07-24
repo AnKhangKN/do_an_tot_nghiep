@@ -10,6 +10,8 @@ class RescuerRescueInfoWidget extends StatelessWidget {
   final String? sosRequestId;
   final String? description;
   final String? incidentTypeName;
+  final double? distanceKm;   // Khoảng cách còn lại (km)
+  final int? durationSec;     // Thời gian ước tính (giây)
   final VoidCallback onComplete;
 
   const RescuerRescueInfoWidget({
@@ -18,8 +20,20 @@ class RescuerRescueInfoWidget extends StatelessWidget {
     this.sosRequestId,
     this.description,
     this.incidentTypeName,
+    this.distanceKm,
+    this.durationSec,
     required this.onComplete,
   });
+
+  /// Chuyển số giây thành chuỗi hiển thị phù hợp (ví dụ: "3 phút", "1 giờ 10 phút")
+  String _formatDuration(int seconds) {
+    if (seconds < 60) return "< 1 phút";
+    final minutes = seconds ~/ 60;
+    if (minutes < 60) return "$minutes phút";
+    final hours = minutes ~/ 60;
+    final remainMins = minutes % 60;
+    return remainMins > 0 ? "$hours giờ $remainMins ph" : "$hours giờ";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +75,55 @@ class RescuerRescueInfoWidget extends StatelessWidget {
               ),
             ],
           ),
+
+          // Thanh ETA + khoảng cách (hiện ra khi đã có dữ liệu OSRM)
+          if (distanceKm != null || durationSec != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF3CD),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFD97706), width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (distanceKm != null) ...[
+                    const Icon(Icons.route, size: 15, color: Color(0xFFD97706)),
+                    const SizedBox(width: 4),
+                    Text(
+                      distanceKm! < 1
+                          ? "${(distanceKm! * 1000).toStringAsFixed(0)} m"
+                          : "${distanceKm!.toStringAsFixed(1)} km",
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFD97706),
+                      ),
+                    ),
+                  ],
+                  if (distanceKm != null && durationSec != null)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text("·", style: TextStyle(color: Color(0xFFD97706))),
+                    ),
+                  if (durationSec != null) ...[
+                    const Icon(Icons.access_time, size: 15, color: Color(0xFFD97706)),
+                    const SizedBox(width: 4),
+                    Text(
+                      "ETA: ${_formatDuration(durationSec!)}",
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFD97706),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -9,11 +9,25 @@ import 'package:mobile/shared/widgtes/phone_call_widget.dart';
 
 class VictimRescueInfoWidget extends StatelessWidget {
   final Map<String, dynamic>? activeRescuer;
+  final double? distanceKm;   // Khoảng cách của cứu hộ viên tới vị trí nạn nhân (km)
+  final int? durationSec;     // Thời gian dự kiến đến nơi (giây)
 
   const VictimRescueInfoWidget({
     super.key,
     required this.activeRescuer,
+    this.distanceKm,
+    this.durationSec,
   });
+
+  /// Chuyển số giây thành chuỗi dễ đọc
+  String _formatDuration(int seconds) {
+    if (seconds < 60) return "< 1 phút";
+    final minutes = seconds ~/ 60;
+    if (minutes < 60) return "~$minutes phút nữa";
+    final hours = minutes ~/ 60;
+    final remainMins = minutes % 60;
+    return remainMins > 0 ? "~$hours giờ $remainMins ph" : "~$hours giờ nữa";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +68,55 @@ class VictimRescueInfoWidget extends StatelessWidget {
               ),
             ],
           ),
+
+          // Chip ETA có màu xanh lá tạo cảm giác an toàn cho nạn nhân
+          if (distanceKm != null || durationSec != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF16A34A), width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (distanceKm != null) ...[
+                    const Icon(Icons.route, size: 15, color: Color(0xFF16A34A)),
+                    const SizedBox(width: 4),
+                    Text(
+                      distanceKm! < 1
+                          ? "${(distanceKm! * 1000).toStringAsFixed(0)} m"
+                          : "${distanceKm!.toStringAsFixed(1)} km",
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF16A34A),
+                      ),
+                    ),
+                  ],
+                  if (distanceKm != null && durationSec != null)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text("·", style: TextStyle(color: Color(0xFF16A34A))),
+                    ),
+                  if (durationSec != null) ...[
+                    const Icon(Icons.access_time, size: 15, color: Color(0xFF16A34A)),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatDuration(durationSec!),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF16A34A),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
