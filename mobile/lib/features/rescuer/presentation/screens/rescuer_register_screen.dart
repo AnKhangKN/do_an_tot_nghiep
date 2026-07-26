@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -104,6 +105,14 @@ class _RescuerRegisterScreenState
     } catch (e) {
       if (!mounted) return;
 
+      String errorMessage = e.toString().replaceAll("Exception: ", "");
+      if (e is DioException) {
+        final resData = e.response?.data;
+        if (resData is Map && resData['message'] != null) {
+          errorMessage = resData['message'].toString();
+        }
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: ColorConstants.error,
@@ -115,7 +124,7 @@ class _RescuerRegisterScreenState
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  e.toString().replaceAll("Exception: ", ""),
+                  errorMessage,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),

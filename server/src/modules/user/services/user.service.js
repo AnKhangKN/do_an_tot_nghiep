@@ -46,8 +46,27 @@ class UserService {
   }
 
   updatePhone = async (client, { userId, phone }) => {
-    
-    return await this.userRepository.updatePhone(client, { userId, phone });
+    if (!phone || !phone.toString().trim()) {
+      const err = new Error("Số điện thoại không được để trống!");
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const cleanPhone = phone.toString().trim();
+
+    // Kiểm tra xem số điện thoại đã thuộc về tài khoản khác chưa
+    const existingUser = await this.userRepository.findUserByPhone(client, {
+      phone: cleanPhone,
+      excludeUserId: userId,
+    });
+
+    if (existingUser) {
+      const err = new Error("Số điện thoại này đã được sử dụng bởi một tài khoản khác. Vui lòng nhập đúng số điện thoại của bạn để người cứu hộ liên lạc!");
+      err.statusCode = 400;
+      throw err;
+    }
+
+    return await this.userRepository.updatePhone(client, { userId, phone: cleanPhone });
   }
 
   updateRole = async (client, { userId, role }) => {

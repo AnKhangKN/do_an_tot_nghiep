@@ -88,6 +88,27 @@ class UserRepository {
         return result.rows[0] ? result.rows[0] : null;
     }
 
+    findUserByPhone = async (client, { phone, excludeUserId }) => {
+        const db = client || pool;
+        let query = `
+            SELECT 
+                ${this.user.field.userId},  
+                ${this.user.field.fullName}, 
+                ${this.user.field.phone}
+            FROM ${this.user.table}
+            WHERE ${this.user.field.phone} = $1
+        `;
+        const params = [phone];
+        if (excludeUserId) {
+            query += ` AND ${this.user.field.userId} != $2`;
+            params.push(excludeUserId);
+        }
+        query += ` LIMIT 1`;
+
+        const result = await db.query(query, params);
+        return result.rows[0] ? result.rows[0] : null;
+    }
+
     updatePhone = async (client, { userId, phone }) => {
         const query = `
         UPDATE ${this.user.table}

@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -37,6 +40,90 @@ class EmergencyQRDialogWidget extends StatelessWidget {
         lng: lng,
       ),
     );
+  }
+
+  Future<Uint8List> _generateQrPng(String data) async {
+    final painter = QrPainter(
+      data: data,
+      version: QrVersions.auto,
+      eyeStyle: const QrEyeStyle(
+        eyeShape: QrEyeShape.square,
+        color: Colors.black,
+      ),
+      dataModuleStyle: const QrDataModuleStyle(
+        dataModuleShape: QrDataModuleShape.square,
+        color: Colors.black,
+      ),
+      emptyColor: Colors.white,
+    );
+
+    final picRecorder = ui.PictureRecorder();
+    final canvas = Canvas(picRecorder);
+    const size = 600.0;
+
+    final bgPaint = Paint()..color = Colors.white;
+    canvas.drawRect(const Rect.fromLTWH(0, 0, size, size), bgPaint);
+
+    painter.paint(canvas, const Size(size, size));
+
+    final picture = picRecorder.endRecording();
+    final img = await picture.toImage(size.toInt(), size.toInt());
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+    return byteData!.buffer.asUint8List();
+  }
+
+  Future<void> _saveQrImage(BuildContext context) async {
+    try {
+      final bytes = await _generateQrPng(sosRequestId.trim());
+
+      Directory? targetDir;
+      if (Platform.isAndroid) {
+        final downloadDir = Directory('/storage/emulated/0/Download');
+        if (await downloadDir.exists()) {
+          targetDir = downloadDir;
+        } else {
+          final picturesDir = Directory('/storage/emulated/0/Pictures');
+          if (await picturesDir.exists()) {
+            targetDir = picturesDir;
+          }
+        }
+      }
+
+      final shortId = sosRequestId.length > 8 ? sosRequestId.substring(0, 8) : sosRequestId;
+      final fileName = 'QR_CuuHo_$shortId.png';
+
+      File file;
+      if (targetDir != null) {
+        file = File('${targetDir.path}/$fileName');
+      } else {
+        final tempDir = Directory.systemTemp;
+        file = File('${tempDir.path}/$fileName');
+      }
+
+      await file.writeAsBytes(bytes);
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '✅ Đã tải ảnh QR về máy:\n${file.path}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+          backgroundColor: Colors.green.shade700,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } catch (e) {
+      debugPrint("❌ [QR SAVE] Lỗi lưu ảnh QR: $e");
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không thể tải ảnh QR: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
   }
 
   @override
@@ -138,6 +225,30 @@ class EmergencyQRDialogWidget extends StatelessWidget {
 
           const SizedBox(height: 18),
 
+          // Download QR Image Button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _saveQrImage(context),
+              icon: const Icon(Icons.download_rounded, size: 20),
+              label: const Text(
+                'Tải hình ảnh QR về máy',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF9333EA),
+                side: const BorderSide(color: Color(0xFFC084FC), width: 1.5),
+                backgroundColor: const Color(0xFFFAF5FF),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
           // Instruction card
           Container(
             padding: const EdgeInsets.all(14),
@@ -152,7 +263,7 @@ class EmergencyQRDialogWidget extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Đưa màn hình này cho Cứu hộ viên hoặc Người trợ giúp ở gần quét mã để tiếp nhận ca ngay.',
+                    'Đưa màn hình này cho Cứu hộ viên quét trực tiếp hoặc tải ảnh QR về máy để gửi qua Zalo, Messenger, SMS.',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

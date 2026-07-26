@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:mobile/core/incident_types/data/incident_type_repository.dart';
@@ -15,6 +16,9 @@ class VictimMapProvider extends ChangeNotifier {
 
   bool _loading = false;
   bool get loading => _loading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
 
   bool _loadingIncidentTypes = false;
   bool get loadingIncidentTypes => _loadingIncidentTypes;
@@ -48,6 +52,7 @@ class VictimMapProvider extends ChangeNotifier {
     double victimLng,
   ) async {
     _loading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
@@ -72,7 +77,17 @@ class VictimMapProvider extends ChangeNotifier {
 
       return true;
     } catch (err) {
-      debugPrint(err.toString());
+      debugPrint("❌ [SEND SOS ERROR]: $err");
+      if (err is DioException) {
+        final resData = err.response?.data;
+        if (resData is Map && resData['message'] != null) {
+          _errorMessage = resData['message'].toString();
+        } else {
+          _errorMessage = "Không thể gửi yêu cầu cứu hộ. Vui lòng kiểm tra lại thông tin!";
+        }
+      } else {
+        _errorMessage = "Lỗi kết nối. Vui lòng kiểm tra đường truyền mạng!";
+      }
       return false;
     } finally {
       _loading = false;

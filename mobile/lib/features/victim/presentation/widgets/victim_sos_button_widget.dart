@@ -313,13 +313,15 @@ class _VictimSosButtonWidgetState
                                       ),
                                     );
                                   } else {
-                                    ScaffoldMessenger.of(
-                                        context)
-                                        .showSnackBar(
-                                      const SnackBar(
+                                    final errorMsg = provider.errorMessage ?? "Gửi yêu cầu thất bại!";
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
                                         content: Text(
-                                          "Gửi yêu cầu thất bại",
+                                          errorMsg,
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
                                         ),
+                                        backgroundColor: Colors.red.shade700,
+                                        duration: const Duration(seconds: 5),
                                       ),
                                     );
                                   }
