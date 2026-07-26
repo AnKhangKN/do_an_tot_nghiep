@@ -8,8 +8,10 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
+import "leaflet.heat";
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
+import { getSosHeatmap } from "@/api/admin/MapApi";
 
 // ================= FIX ICON =================
 delete L.Icon.Default.prototype._getIconUrl;
@@ -50,6 +52,33 @@ const icons = {
   accident: createIcon("https://cdn-icons-png.flaticon.com/512/296/296216.png"),
   repair: createIcon("https://cdn-icons-png.flaticon.com/512/684/684908.png"),
   rescuer: createIcon("https://cdn-icons-png.flaticon.com/512/149/149071.png"),
+  sos: createIcon("https://cdn-icons-png.flaticon.com/512/564/564619.png"),
+};
+
+// ================= HEATMAP LAYER =================
+const HeatmapLayer = ({ points }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map || !points || points.length === 0) return;
+
+    const heatData = points.map((p) => [p.lat, p.lng, p.intensity || 0.8]);
+
+    const heatLayer = L.heatLayer(heatData, {
+      radius: 30,
+      blur: 20,
+      maxZoom: 17,
+      gradient: { 0.4: "blue", 0.65: "lime", 0.8: "yellow", 1.0: "red" },
+    });
+
+    heatLayer.addTo(map);
+
+    return () => {
+      map.removeLayer(heatLayer);
+    };
+  }, [map, points]);
+
+  return null;
 };
 
 // ================= LAYERS =================
@@ -88,6 +117,26 @@ const RescuerLayer = ({ data }) => (
     {data.map((item) => (
       <Marker key={item.id} position={item.position} icon={icons.rescuer}>
         <Popup>🚑 {item.name}</Popup>
+      </Marker>
+    ))}
+  </>
+);
+
+const SosMarkerLayer = ({ points }) => (
+  <>
+    {points.map((item) => (
+      <Marker
+        key={item.sosRequestId}
+        position={[item.lat, item.lng]}
+        icon={icons.sos}
+      >
+        <Popup>
+          <div className="p-1">
+            <h4 className="font-bold text-red-600">🚨 {item.incidentType}</h4>
+            <p className="text-xs text-gray-600 mt-1">Trạng thái: <b>{item.status}</b></p>
+            <p className="text-xs text-gray-500">Tọa độ: {item.lat.toFixed(4)}, {item.lng.toFixed(4)}</p>
+          </div>
+        </Popup>
       </Marker>
     ))}
   </>
@@ -225,7 +274,7 @@ const FlyToLocation = ({ location }) => {
     if (location) {
       map.flyTo(location, 15);
     }
-  }, [location]);
+  }, [location, map]);
 
   if (!location) return null;
 
@@ -240,6 +289,22 @@ const FlyToLocation = ({ location }) => {
 const MapPage = () => {
   const center = [10.0452, 105.7469];
   const [location, setLocation] = useState(null);
+  const [heatmapPoints, setHeatmapPoints] = useState([]);
+
+  useEffect(() => {
+    const fetchHeatmapData = async () => {
+      try {
+        const res = await getSosHeatmap();
+        if (res && res.data) {
+          setHeatmapPoints(res.data);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải dữ liệu heatmap điểm nóng:", err);
+      }
+    };
+
+    fetchHeatmapData();
+  }, []);
 
   return (
     <div className="w-full h-146 relative">
@@ -251,6 +316,14 @@ const MapPage = () => {
         <FlyToLocation location={location} />
 
         <LayersControl position="topright">
+          <LayersControl.Overlay checked name="🔥 Điểm nóng tai nạn (Heatmap)">
+            <HeatmapLayer points={heatmapPoints} />
+          </LayersControl.Overlay>
+
+          <LayersControl.Overlay name="📍 Vị trí SOS Cứu hộ">
+            <SosMarkerLayer points={heatmapPoints} />
+          </LayersControl.Overlay>
+
           <LayersControl.Overlay checked name="🚨 Điểm nguy hiểm">
             <DangerLayer data={dangerPoints} />
           </LayersControl.Overlay>

@@ -157,30 +157,46 @@ sequenceDiagram
 ---
 
 ### ✅ Đề xuất 2: Xây Dựng Màn Hình Lịch Sử Ca Cứu Hộ (Rescue History + Statistics)
-> **Độ khó:** Dễ · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐
+> **Độ khó:** Dễ · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**
 
-**Vấn đề hiện tại:** Feature `history` đã có cấu trúc thư mục trong Flutter. Dashboard Web Admin đã có nhưng chưa rõ nội dung.
+**Vấn đề ban đầu:** Feature `history` đã có cấu trúc thư mục trong Flutter nhưng chưa có bản đồ xem lại vị trí. Dashboard Web Admin chưa có các thẻ thống kê trực quan thực tế.
 
-**Việc cần làm:**
-- **Mobile:** Màn hình "Lịch sử Ca Cứu Hộ" của Rescuer: danh sách các SOS đã tham gia, trạng thái (Hoàn thành/Hủy), thời gian, vị trí nạn nhân trên minimap.
-- **Mobile (Victim):** Màn hình "Lịch sử SOS đã gửi" với tất cả trạng thái.
-- **Web Admin Dashboard:** Thêm các thống kê: Tổng SOS hôm nay, Đang xử lý, Hoàn thành, Tỷ lệ ghép đôi thành công.
+**Đã thực hiện End-to-End (4 file trên Server, Web Admin và Mobile):**
+- **Server API (`server/`):**
+  - **`admin.repository.js`** — Thêm truy vấn SQL đếm số ca SOS phát sinh hôm nay (`today_sos`) và tổng số ca ghép đôi thành công (`matched_sos`).
+  - **`admin.service.js`** — Bổ sung tính toán `todaySos`, `activeSos`, `completedSos` và `matchingSuccessRate` (tỷ lệ ghép đôi thành công) trả về trong API tổng quan `/api/admin/dashboard/overview`.
+- **Web Admin Dashboard (`web/`):**
+  - **`StatisticComponent.jsx`** — Thiết kế lại 4 thẻ thống kê chuẩn Sleek & Minimalist:
+    1. **Tổng SOS Hôm Nay** (Hiển thị số ca phát sinh mới trong ngày và tổng số ca khẩn cấp).
+    2. **Ca Đang Xử Lý Khẩn** (Số ca đang được hệ thống điều phối & hỗ trợ).
+    3. **Ca Cứu Hộ Hoàn Thành** (Số ca cứu hộ thành công & tổng số ca hủy).
+    4. **Tỷ Lệ Ghép Đôi Thành Công** (% ghép đôi cứu hộ thành công giữa Nạn nhân & Người cứu hộ).
+- **Mobile Flutter App (`mobile/`):**
+  - **`history_screen.dart`** — Nâng cấp toàn diện màn hình lịch sử hỗ trợ cho cả Rescuer & Victim:
+    - **Minimap Preview Widget:** Tích hợp bản đồ `FlutterMap` xem trực tiếp vị trí nạn nhân (`victimLat`, `victimLng`) kèm Marker màu đỏ ngay trong từng thẻ lịch sử.
+    - **Bộ lọc trạng thái linh hoạt:** Thêm các tab lọc "Tất cả", "Thành công", "Đang xử lý", "Thất bại / Hủy", "Từ chối / Hết giờ".
+    - **Header thống kê tổng quan:** Thống kê nhanh tổng ca, thành công, đang xử lý và hủy/lỗi.
 
-**Giá trị demo:** Dữ liệu thống kê thực tế từ DB PostgreSQL → minh chứng hệ thống đang vận hành thực sự.
+**Giá trị demo:** Dữ liệu thống kê thực tế từ DB PostgreSQL hiển thị trực quan trên Web Admin, ứng dụng di động có minimap xem lại tọa độ nạn nhân rõ ràng.
 
 ---
 
 ### ✅ Đề xuất 3: Bản Đồ Heatmap Điểm Nóng Tai Nạn trên Web Admin
-> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐
+> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**
 
-**Vấn đề hiện tại:** `DangerousZonePage` đã có CRUD điểm nguy hiểm, `MapPage` đã có Leaflet.
+**Vấn đề ban đầu:** `MapPage` trên Web Admin chỉ có các Marker tĩnh, chưa trực quan hóa được mật độ và điểm nóng tai nạn/cứu hộ khẩn cấp trên địa bàn.
 
-**Việc cần làm:**
-- Cài thêm `leaflet.heat` (plugin Leaflet, miễn phí, không cần API key)
-- Hiển thị layer Heatmap trên `MapPage` dựa trên tọa độ các SOS Request lịch sử trong PostgreSQL
-- Toggle bật/tắt Heatmap layer trên giao diện Admin
+**Đã thực hiện End-to-End (6 file trên Server và Web Admin):**
+- **Thư viện Web Admin (`web/`):**
+  - Cài đặt plugin Leaflet Heatmap chính thức: `leaflet.heat` (miễn phí, không phụ thuộc API Key bên thứ ba).
+- **Backend API (`server/`):**
+  - **`admin.repository.js`** — Thêm phương thức `getSosHeatmapPoints()` truy vấn mảng tọa độ thực tế (`lat`, `lng`, `incident_type`, `status`) của toàn bộ ca SOS từ CSDL PostgreSQL.
+  - **`admin.service.js`**, **`admin.controller.js`** & **`admin.route.js`** — Xây dựng endpoint bảo mật `GET /api/admin/sos-heatmap` (có `verifyToken`, `isAdmin`).
+- **Web Admin Frontend (`web/`):**
+  - **`MapApi.js`** — Thêm helper `getSosHeatmap()` kết nối Backend qua `axiosJWT`.
+  - **`MapPage.jsx`** — Khai báo component `HeatmapLayer` tự động render gradient màu điểm nhiệt (Xanh dương → Xanh lá → Vàng → Đỏ), tích hợp đồng bộ vào `LayersControl.Overlay` "🔥 Điểm nóng tai nạn (Heatmap)" cho phép bật/tắt (Toggle) trực quan trên bản đồ.
 
-**Giá trị demo:** Trực quan hóa dữ liệu địa lý — điểm cộng lớn khi trình bày trước hội đồng.
+**Giá trị demo:** Trực quan hóa dữ liệu địa lý thời gian thực từ PostgreSQL — điểm cộng nổi bật khi trình bày trước hội đồng.
 
 ---
 
@@ -189,15 +205,20 @@ sequenceDiagram
 
 **Vấn đề ban đầu:** `NotificationPage` hiện chỉ là 9 dòng placeholder trống — nguy cơ rủi ro bị phát hiện khi demo.
 
-**Đã thực hiện (2 file):**
-- **`web/src/api/admin/NotificationApi.js`** — Định nghĩa API client cho thông báo (`getNotifications`, `sendNotification`, `deleteNotificationLog`).
-- **`web/src/pages/admin/NotificationPage/NotificationPage.jsx`** — Thiết kế lại hoàn chỉnh giao diện Admin theo phong cách Sleek & Minimalist (Tông xám tối đen `bg-gray-900`, `rounded-3xl`, Phosphor Icons `react-icons/pi`):
-  - Form soạn và phát sóng thông báo FCM khẩn cấp/hệ thống tới từng nhóm đối tượng (Tất cả, Rescuer, Victim)
-  - 3 Thẻ thống kê lượt phát thông báo & tỷ lệ nhận FCM thành công
-  - Nhật ký danh sách thông báo đã phát với bộ lọc đối tượng, tìm kiếm và thao tác xóa
-  - Hiệu ứng Toast notification thông báo kết quả phát sóng tức thì
+**Đã thực hiện End-to-End (11 file trên Server, Web Admin và Mobile):**
+- **Backend (`server/`):**
+  - `notification.repository.js`: Thêm các phương thức lọc user theo vai trò (`RESCUER`, `VICTIM`, `ALL`), ghi lưu thông báo vào PostgreSQL và truy vấn thông báo cá nhân.
+  - `notification.service.js`: Xây dựng `broadcastNotification` tự động ghi DB và phát Push Notification thời gian thực qua Firebase Cloud Messaging (FCM). Tách riêng lưu DB để chống trùng lặp.
+  - `notification.controller.js` & `notification.route.js`: Đã thêm bộ endpoint `POST /api/notifications/broadcast`, `GET /api/notifications`, `PUT /api/notifications/read-all`.
+- **Web Admin (`web/`):**
+  - `NotificationApi.js`: Kết nối chính xác API Backend sử dụng `axiosJWT`.
+  - `NotificationPage.jsx`: Thiết kế giao diện Sleek & Minimalist (`bg-gray-900`, `rounded-3xl`, Phosphor Icons), load nhật ký thực từ DB và hỗ trợ phát thông báo trực tiếp tới thiết bị di động.
+- **Mobile Flutter (`mobile/`):**
+  - `notification_model.dart`, `notification_service.dart`, `notification_provider.dart`: Tích hợp Provider quản lý state thông báo cá nhân.
+  - `notification_screen.dart`: Đã kết nối hiển thị danh sách thông báo thực từ Server PostgreSQL thay cho dữ liệu mock, hỗ trợ vuốt để làm mới (Pull-to-refresh) và đánh dấu đã đọc.
+  - `notification_service.dart` (Firebase Core): Fix lỗi tương thích `flutter_local_notifications ^22.0.1` (named parameters API), đăng ký Android Notification Channel và sử dụng flag `_isInitialized` để chống việc trùng lặp thông báo khi nhận tin nhắn.
 
-**Kết quả:** Trang Web Admin Notification không còn bị hổng placeholder, giao diện chuyên nghiệp ấn tượng sẵn sàng cho demo trước hội đồng.
+**Kết quả:** Hệ thống phát thông báo đã hoạt động hoàn chỉnh 100% từ Web Admin -> Backend Node.js -> PostgreSQL -> Firebase FCM Push -> Mobile Flutter (Rescuer & Victim).
 
 ---
 

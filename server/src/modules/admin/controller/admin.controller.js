@@ -15,6 +15,19 @@ class UserAdminController {
         }
     };
 
+    getSosHeatmap = async (req, res, next) => {
+        try {
+            const data = await adminService.getSosHeatmap();
+            return res.status(200).json({
+                status: 200,
+                message: "Lấy dữ liệu điểm nóng tai nạn thành công",
+                data
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     // admin dọn rác - xóa vĩnh viễn tài khoản rác
     hardDeleteUser = async (req, res, next) => { }
 

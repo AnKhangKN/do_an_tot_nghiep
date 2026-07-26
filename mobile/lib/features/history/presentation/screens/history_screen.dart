@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
@@ -36,18 +39,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
       final status = item.status.toUpperCase();
       if (_selectedFilter == "Thành công") {
         return status == "DONE" || status == "COMPLETED";
-      } else if (_selectedFilter == "Thất bại") {
+      } else if (_selectedFilter == "Đang xử lý") {
+        return ["PENDING", "SEARCHING", "ACCEPTED", "IN_PROGRESS", "ASSIGNED"].contains(status);
+      } else if (_selectedFilter == "Thất bại / Hủy") {
         return status == "CANCELLED" || status == "FAILED";
       } else if (_selectedFilter == "Từ chối / Hết giờ") {
         return status == "REJECTED" || status == "TIMEOUT";
       }
       return true;
     }).toList();
-  }
-
-  int _countByStatus(List<HistoryModel> list, String filter) {
-    if (filter == "Tất cả") return list.length;
-    return _filterHistories(list).length;
   }
 
   @override
@@ -62,9 +62,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
         backgroundColor: ColorConstants.surfaceWhite,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          "LỊCH SỬ HỖ TRỢ",
-          style: TextStyle(
+        title: Text(
+          isRescuer ? "LỊCH SỬ CA CỨU HỘ" : "LỊCH SỬ SOS ĐÃ GỬI",
+          style: const TextStyle(
             color: ColorConstants.redRescue,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.1,
@@ -92,7 +92,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       children: [
                         _buildFilterChip("Tất cả"),
                         _buildFilterChip("Thành công"),
-                        _buildFilterChip("Thất bại"),
+                        _buildFilterChip("Đang xử lý"),
+                        _buildFilterChip("Thất bại / Hủy"),
                         if (isRescuer) _buildFilterChip("Từ chối / Hết giờ"),
                       ],
                     ),
@@ -157,7 +158,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget _buildStatsHeader(List<HistoryModel> list) {
     int total = list.length;
     int success = list.where((item) => item.status == "DONE" || item.status == "COMPLETED").length;
-    int failed = list.where((item) => item.status == "CANCELLED" || item.status == "FAILED").length;
+    int active = list.where((item) => ["PENDING", "SEARCHING", "ACCEPTED", "IN_PROGRESS", "ASSIGNED"].contains(item.status.toUpperCase())).length;
+    int failed = list.where((item) => ["CANCELLED", "FAILED", "REJECTED", "TIMEOUT"].contains(item.status.toUpperCase())).length;
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -180,7 +182,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           const _VerticalDivider(),
           _StatItem(label: "Thành công", value: success.toString().padLeft(2, '0')),
           const _VerticalDivider(),
-          _StatItem(label: "Thất bại / Hủy", value: failed.toString().padLeft(2, '0')),
+          _StatItem(label: "Đang xử lý", value: active.toString().padLeft(2, '0')),
+          const _VerticalDivider(),
+          _StatItem(label: "Hủy / Lỗi", value: failed.toString().padLeft(2, '0')),
         ],
       ),
     );
@@ -229,11 +233,12 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
         ),
+        const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+          style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500),
         ),
       ],
     );
@@ -244,7 +249,7 @@ class _VerticalDivider extends StatelessWidget {
   const _VerticalDivider();
   @override
   Widget build(BuildContext context) {
-    return Container(height: 30, width: 1, color: Colors.white24);
+    return Container(height: 28, width: 1, color: Colors.white24);
   }
 }
 
@@ -272,6 +277,8 @@ class _HistoryCard extends StatelessWidget {
       case "TIMEOUT":
         return ColorConstants.redRescue;
       case "ACCEPTED":
+      case "IN_PROGRESS":
+      case "ASSIGNED":
         return Colors.blue;
       default:
         return ColorConstants.textSecondary;
@@ -293,6 +300,10 @@ class _HistoryCard extends StatelessWidget {
         return "HẾT GIỜ OFFER";
       case "ACCEPTED":
         return "ĐÃ CHẤP NHẬN";
+      case "IN_PROGRESS":
+        return "ĐANG ĐẾN CỨU HỘ";
+      case "ASSIGNED":
+        return "ĐÃ ĐIỀU PHỐI";
       case "PENDING":
       case "SEARCHING":
         return "ĐANG TÌM KIẾM";
@@ -303,6 +314,8 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasValidLocation = item.victimLat != 0.0 && item.victimLng != 0.0;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -358,6 +371,61 @@ class _HistoryCard extends StatelessWidget {
               text: formattedDate, 
               color: ColorConstants.textSecondary,
             ),
+
+            // Minimap Preview (Vị trí nạn nhân trên minimap)
+            if (hasValidLocation) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  height: 120,
+                  width: double.infinity,
+                  child: FlutterMap(
+                    options: MapOptions(
+                      initialCenter: LatLng(item.victimLat, item.victimLng),
+                      initialZoom: 14.5,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.none,
+                      ),
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: AppConstants.urlTemplateDefault,
+                        userAgentPackageName: 'com.example.mobile',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: LatLng(item.victimLat, item.victimLng),
+                            width: 36,
+                            height: 36,
+                            alignment: Alignment.center,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: ColorConstants.redRescue,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26, 
+                                    blurRadius: 4, 
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.location_on,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             
             // Partner Information block
             const Padding(

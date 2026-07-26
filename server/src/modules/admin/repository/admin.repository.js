@@ -8,9 +8,11 @@ class AdminRepository {
         (SELECT COUNT(*) FROM users WHERE role = 'RESCUER') AS total_rescuers,
         (SELECT COUNT(*) FROM rescuer_profiles WHERE is_verified = false) AS pending_rescuers,
         (SELECT COUNT(*) FROM sos_requests) AS total_sos,
+        (SELECT COUNT(*) FROM sos_requests WHERE DATE(created_at) = CURRENT_DATE) AS today_sos,
         (SELECT COUNT(*) FROM sos_requests WHERE status IN ('PENDING', 'SEARCHING', 'ASSIGNED', 'IN_PROGRESS')) AS active_sos,
         (SELECT COUNT(*) FROM sos_requests WHERE status = 'DONE') AS completed_sos,
         (SELECT COUNT(*) FROM sos_requests WHERE status = 'CANCELLED') AS cancelled_sos,
+        (SELECT COUNT(*) FROM sos_requests WHERE rescuer_id IS NOT NULL) AS matched_sos,
         (SELECT COUNT(*) FROM incident_types WHERE status = 'ACTIVE') AS total_incident_types
     `;
     const result = await pool.query(query);
@@ -81,6 +83,27 @@ class AdminRepository {
       LIMIT $1
     `;
     const result = await pool.query(query, [limit]);
+    return result.rows;
+  };
+
+  getSosHeatmapPoints = async () => {
+    const query = `
+      SELECT 
+        s.sos_request_id,
+        s.victim_lat AS lat,
+        s.victim_lng AS lng,
+        s.status,
+        it.incident_type,
+        s.created_at
+      FROM sos_requests s
+      LEFT JOIN incident_types it ON s.incident_type_id = it.incident_type_id
+      WHERE s.victim_lat IS NOT NULL 
+        AND s.victim_lng IS NOT NULL 
+        AND s.victim_lat != 0 
+        AND s.victim_lng != 0
+      ORDER BY s.created_at DESC
+    `;
+    const result = await pool.query(query);
     return result.rows;
   };
 }
