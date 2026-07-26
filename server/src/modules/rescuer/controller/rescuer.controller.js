@@ -60,6 +60,24 @@ class RescuerController {
             next(error);
         }
     }
+
+    getRescuerPerformanceAnalytics = async (req, res, next) => {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const search = req.query.search || '';
+
+            const result = await rescuerService.getRescuerPerformanceAnalytics({ page, limit, search });
+
+            return res.status(200).json({
+                success: true,
+                message: "Lấy báo cáo phân tích hiệu suất cứu hộ viên thành công!",
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new RescuerController()

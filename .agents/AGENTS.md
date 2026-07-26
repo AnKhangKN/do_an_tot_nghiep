@@ -42,7 +42,14 @@ Dưới đây là các quy tắc nghiêm ngặt mà AI phải tuân thủ khi l�
 * **Tuân thủ Kiến trúc**:
   - **Server (Expressjs)**: Kiến trúc Layered Modular: `routes` -> `validator` -> `controller` -> `service` -> `repository` -> `model` -> `database`. Không viết SQL ngoài `repository`. Không import chéo repo. **Quy định liên hệ**: Khi các module cần giao tiếp với nhau, các Service bắt buộc phải gọi trực tiếp thông qua Service của module kia. Tuyệt đối không được gọi chéo qua Controller hoặc Repository của module khác để giữ tính độc lập và phân tách trách nhiệm.
   - **Mobile (Flutter)**: Kiến trúc Feature-First Clean Architecture: `models`, `data`, `presentation` (UI và Bloc/Cubit). Không import chéo từ `features` vào `core`.
-  - **Web (React/Vite)**: Quản lý API tập trung ở `src/api/`, Global State dùng Redux Toolkit tại `src/store/`. Tách biệt rõ `components` (tái sử dụng) và `pages` (giao diện route).
+  - **Web (React/Vite)**: 
+    - **Thư mục `src/api/`**: Quản lý RESTful API tập trung (dùng `axiosJWT`). Tuyệt đối KHÔNG để bất kỳ file hay code Socket nào trong `src/api/`.
+    - **Cấu trúc Socket Web Client (`src/socket/`)**: Quản lý riêng toàn bộ Socket.io thời gian thực.
+      - **Quản lý Token**: `accessToken` được lưu và quản lý bởi Redux Toolkit (`store.getState().auth?.accessToken`), tuyệt đối KHÔNG đọc hay lưu token ở `localStorage`.
+      - `src/socket/core/socketCore.js`: Cấu hình khởi tạo Socket.io core và đọc token từ Redux state.
+      - `src/socket/features/<feature>/`: Chứa các bộ xử lý sự kiện socket theo từng tính năng (ví dụ `connectionSocket.js`, `dashboardSocket.js`).
+      - `src/socket/index.js`: Entrypoint tổng hợp tất cả helper function để tái sử dụng trên toàn ứng dụng.
+  - **State & Routing**: Global State dùng Redux Toolkit tại `src/store/`. Tách biệt rõ `components` (tái sử dụng) và `pages` (giao diện route).
 
 ---
 

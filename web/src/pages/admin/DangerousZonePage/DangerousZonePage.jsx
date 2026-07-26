@@ -4,7 +4,7 @@ import { formatTime } from '@/utils/format_date.util';
 import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones } from '@/api/admin/DangerousZoneApi';
 import { PiLightningFill } from 'react-icons/pi';
 
-const columns = ({ onApprove, onReject, loading }) => [
+const columns = ({ onApprove, onReject, expandedRows, onToggleExpand, loading }) => [
   {
     key: 'index',
     title: 'STT',
@@ -25,18 +25,18 @@ const columns = ({ onApprove, onReject, loading }) => [
     key: 'address',
     title: 'Địa chỉ',
     render: (row) => (
-      <span className="text-xs text-gray-600 max-w-[180px] line-clamp-2 block leading-relaxed">
+      <p className="text-xs text-gray-600 leading-relaxed max-w-[200px] line-clamp-2 overflow-hidden">
         {row.address || '--'}
-      </span>
+      </p>
     ),
   },
   {
     key: 'description',
-    title: 'Mô tả',
+    title: 'Mô tả chi tiết',
     render: (row) => (
-      <span className="text-xs text-gray-500 max-w-[220px] line-clamp-2 block leading-relaxed">
+      <p className="text-xs text-gray-600 leading-relaxed max-w-[280px] line-clamp-2 overflow-hidden">
         {row.description || '--'}
-      </span>
+      </p>
     ),
   },
   {
@@ -51,13 +51,12 @@ const columns = ({ onApprove, onReject, loading }) => [
             : 'Thấp';
       return (
         <span
-          className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold shadow-2xs ${
-            row.dangerLevel === 'HIGH'
-              ? 'bg-rose-50 text-rose-700 border border-rose-200/80'
-              : row.dangerLevel === 'MEDIUM'
-                ? 'bg-amber-50 text-amber-700 border border-amber-200/80'
-                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-          }`}
+          className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold shadow-2xs ${row.dangerLevel === 'HIGH'
+            ? 'bg-rose-50 text-rose-700 border border-rose-200/80'
+            : row.dangerLevel === 'MEDIUM'
+              ? 'bg-amber-50 text-amber-700 border border-amber-200/80'
+              : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+            }`}
         >
           {levelLabel}
         </span>
@@ -76,13 +75,12 @@ const columns = ({ onApprove, onReject, loading }) => [
             : 'Đã từ chối';
       return (
         <span
-          className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold shadow-2xs ${
-            row.status === 'PENDING'
-              ? 'bg-amber-50 text-amber-700 border border-amber-200/80'
-              : row.status === 'APPROVED'
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                : 'bg-rose-50 text-rose-700 border border-rose-200/80'
-          }`}
+          className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold shadow-2xs ${row.status === 'PENDING'
+            ? 'bg-amber-50 text-amber-700 border border-amber-200/80'
+            : row.status === 'APPROVED'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+              : 'bg-rose-50 text-rose-700 border border-rose-200/80'
+            }`}
         >
           {statusLabel}
         </span>
@@ -93,16 +91,19 @@ const columns = ({ onApprove, onReject, loading }) => [
     key: 'reporterName',
     title: 'Người báo cáo',
     render: (row) => {
-      const name = row.reporterName || '';
-      if (name.includes('Crowd-Sourced') || name.includes('Hệ thống')) {
-        return (
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold bg-purple-50 text-purple-700 border border-purple-200/80 shadow-2xs">
-            <PiLightningFill className="text-purple-500 text-xs shrink-0" />
-            <span>{name}</span>
-          </span>
-        );
-      }
-      return <span className="whitespace-nowrap text-xs text-gray-700 font-medium">{name || '--'}</span>;
+      const name = row.reporterName || '--';
+      const isSystem = name.includes('Crowd-Sourced') || name.includes('Hệ thống');
+
+      return (
+        <span
+          className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold border shadow-2xs ${isSystem
+            ? 'bg-gray-900 text-white border-gray-900'
+            : 'bg-gray-100 text-gray-800 border-gray-200'
+            }`}
+        >
+          <span>{name}</span>
+        </span>
+      );
     },
   },
   {
@@ -123,7 +124,7 @@ const columns = ({ onApprove, onReject, loading }) => [
           <button
             onClick={() => onApprove(row.dangerousPointId)}
             disabled={loading}
-            className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-all active:scale-95 shadow-2xs"
+            className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-all active:scale-95 shadow-2xs cursor-pointer"
           >
             Duyệt
           </button>
@@ -131,7 +132,7 @@ const columns = ({ onApprove, onReject, loading }) => [
           <button
             onClick={() => onReject(row.dangerousPointId)}
             disabled={loading}
-            className="px-3 py-1.5 text-xs font-semibold bg-rose-600 text-white rounded-xl hover:bg-rose-700 disabled:opacity-50 transition-all active:scale-95 shadow-2xs"
+            className="px-3 py-1.5 text-xs font-semibold bg-rose-600 text-white rounded-xl hover:bg-rose-700 disabled:opacity-50 transition-all active:scale-95 shadow-2xs cursor-pointer"
           >
             Từ chối
           </button>
@@ -152,6 +153,14 @@ const DangerousZonePage = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [autoDetecting, setAutoDetecting] = useState(false);
   const [detectMsg, setDetectMsg] = useState(null);
+  const [expandedRows, setExpandedRows] = useState({});
+
+  const toggleExpandRow = (key) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   const fetchDangerousZones = async () => {
     const limit = 10;
@@ -229,22 +238,27 @@ const DangerousZonePage = () => {
         <button
           onClick={handleAutoDetect}
           disabled={autoDetecting}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white rounded-2xl font-medium shadow-sm transition-all disabled:opacity-50 text-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl font-medium shadow-sm transition-all disabled:opacity-50 text-sm cursor-pointer"
         >
-          <PiLightningFill className={autoDetecting ? "animate-spin text-amber-300" : "text-amber-300"} />
-          {autoDetecting ? "Đang phân tích gom cụm..." : "⚡ Quét tự động (Crowd-Sourced)"}
+          {autoDetecting ? "Đang phân tích gom cụm..." : "Quét tự động"}
         </button>
       </div>
 
       {detectMsg && (
-        <div className="px-4 py-3 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900 text-sm flex items-center justify-between shadow-sm">
+        <div className="px-4 py-3 rounded-2xl bg-gray-100 border border-gray-200 text-gray-900 text-sm flex items-center justify-between shadow-xs">
           <span>{detectMsg}</span>
-          <button onClick={() => setDetectMsg(null)} className="text-purple-500 hover:text-purple-700 font-bold ml-4">✕</button>
+          <button onClick={() => setDetectMsg(null)} className="text-gray-500 hover:text-gray-700 font-bold ml-4 cursor-pointer">✕</button>
         </div>
       )}
 
       <TableComponent
-        columns={columns({ onApprove: handleApprove, onReject: handleReject, loading: actionLoading })}
+        columns={columns({
+          onApprove: handleApprove,
+          onReject: handleReject,
+          expandedRows,
+          onToggleExpand: toggleExpandRow,
+          loading: actionLoading,
+        })}
         data={dangerousZones}
         rowKey="dangerousPointId"
         page={page}

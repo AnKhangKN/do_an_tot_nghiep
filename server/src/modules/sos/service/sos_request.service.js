@@ -66,6 +66,19 @@ class SosRequestService {
 
         console.log("Sos location", sosLocation);
 
+        try {
+            const { emitAdminDashboardEvent } = require("@/socket");
+            emitAdminDashboardEvent("SOS_CREATED", {
+                sosId: sos.sos_request_id,
+                victimLat,
+                victimLng,
+                incidentTypeId,
+                createdAt: sos.created_at
+            });
+        } catch (e) {
+            console.error("[SERVICE] Lỗi phát event socket admin dashboard:", e);
+        }
+
         return sos;
     };
 
@@ -112,11 +125,21 @@ class SosRequestService {
         // Dọn dẹp tracking keys trên Redis
         await this.cleanupSosKeys(sosRequestId);
 
+        try {
+            const { emitAdminDashboardEvent } = require("@/socket");
+            emitAdminDashboardEvent("SOS_ACCEPTED", {
+                sosId: sosRequestId,
+                rescuerId
+            });
+        } catch (e) {
+            console.error("[SERVICE] Lỗi phát event socket admin dashboard:", e);
+        }
+
         return updatedSos;
     };
 
     completeSOS = async ({ sosRequestId }) => {
-        return await transaction(async (client) => {
+        const result = await transaction(async (client) => {
             const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
             if (!sos) {
                 throw new Error("Không tìm thấy yêu cầu cứu hộ!");
@@ -141,6 +164,17 @@ class SosRequestService {
 
             return updated;
         });
+
+        try {
+            const { emitAdminDashboardEvent } = require("@/socket");
+            emitAdminDashboardEvent("SOS_COMPLETED", {
+                sosId: sosRequestId
+            });
+        } catch (e) {
+            console.error("[SERVICE] Lỗi phát event socket admin dashboard:", e);
+        }
+
+        return result;
     };
 
     getActiveSOS = async ({ userId, role }) => {

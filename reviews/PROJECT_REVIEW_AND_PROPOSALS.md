@@ -142,8 +142,8 @@ Có **10 trang** Admin:
   - **Lọc bán kính 5km (`getNearbyPoints`)**: Tự động lọc & sắp xếp các điểm nguy hiểm trong phạm vi 5km xung quanh Nạn nhân để render trên bản đồ, tránh quá tải RAM và giúp ứng dụng hoạt động cực kỳ mượt mà.
   - **Khởi động quét tức thì**: Tự động lấy tọa độ ban đầu và bật Popup cảnh báo ngay khi mở ứng dụng nếu Nạn nhân đang ở trong vùng nguy hiểm (< 500m), không bị trễ hay cần chuyển màn hình.
   - **Cơ chế Cooldown 10 phút**: Quản lý Map `_alertCooldowns` ngăn ngừa lặp lại popup cảnh báo phiền phức khi Nạn nhân di chuyển trong bán kính 500m.
-  - **`geofence_alert_dialog.dart`**: Popup nổi bật phân loại mức độ nguy hiểm theo màu sắc (`HIGH` = Đỏ, `MEDIUM` = Cam, `LOW` = Vàng), hiển thị tên khu vực, địa chỉ, mô tả mối nguy và khoảng cách thực tế (mét).
-  - **Nút "Vị trí của tôi" 0ms Instant Feedback**: Phản hồi xoay camera & cập nhật Marker lập tức ngay lần bấm đầu tiên (0ms delay), kết hợp luồng đọc GPS phần cứng chạy ngầm và animation lướt mượt 750ms (`Curves.fastOutSlowIn`).
+  - **`geofence_alert_dialog.dart` & `geofence_provider.dart`**: Popup nổi bật phân loại mức độ nguy hiểm theo màu sắc (`HIGH` = Đỏ, `MEDIUM` = Cam, `LOW` = Xanh lá Emerald), hiển thị tên khu vực, địa chỉ, mô tả mối nguy và khoảng cách thực tế (mét). Hộp thoại pop-up chỉ hiển thị **duy nhất 1 lần khi mở app** (`_hasShownSessionAlert`), triệt tiêu hoàn toàn hiện tượng spam thông báo gây khó chịu cho người dùng.
+  - **Nút "Vị trí của tôi" 0ms Instant Feedback**: Phản hồi xoay camera & cập nhật Marker lập tức ngay lần bấm đầu tiên (0ms delay), kết hợp luồng đọc GPS phần ứng chạy ngầm và animation lướt mượt 750ms (`Curves.fastOutSlowIn`).
   - **Bản đồ `VictimMapScreen` & `RescuerMapScreen`**: Đồng bộ Marker vị trí thời gian thực trong `ListenableBuilder`, đảm bảo vị trí và biểu tượng Marker luôn di chuyển khớp tuyệt đối với tọa độ GPS mới nhất.
 
 #### ✅ Crowd-Sourced Dangerous Zones — Hệ Thống Tự Phát Hiện Điểm Nguy Hiểm
@@ -156,7 +156,39 @@ Có **10 trang** Admin:
   - **`admin_dangerous_point.controller.js`**: Endpoint `POST /api/dangerous_points/admin/auto-detect` hỗ trợ Admin chủ động kích hoạt quét gom cụm dữ liệu thời gian thực.
 - **Web Admin (`web/`):**
   - **`DangerousZonePage.jsx`**: Nút **"⚡ Quét tự động (Crowd-Sourced)"** với hiệu ứng loading và thông báo phản hồi số cụm mới vừa phát hiện.
-  - **Badge hiển thị**: Điểm do hệ thống phát hiện có Badge nổi bật màu tím `⚡ Hệ thống (Crowd-Sourced)` ở cột Người báo cáo. Admin có thể xem xét và nhấn **Duyệt** (`APPROVED`) hoặc **Từ chối** (`REJECTED`).
+  - **Badge hiển thị**: Điểm do hệ thống phát hiện có Badge nổi bật màu tím `Hệ thống` ở cột Người báo cáo. Admin có thể xem xét và nhấn **Duyệt** (`APPROVED`) hoặc **Từ chối** (`REJECTED`).
+
+#### ✅ Rescuer Performance Analytics — Phân Tích Hiệu Suất Cứu Hộ Viên
+> **Backend Performance SQL Analytics + Web Admin Leaderboard** · Hoàn thành trong 0.5 ngày
+
+- **Backend Node.js (`server/`):**
+  - **`rescuer.repository.js`**: Thêm truy vấn SQL thuần kết hợp `users`, `rescuer_profiles`, `sos_requests`, `rescuer_histories`, `rescuer_ratings` để tính số ca hoàn thành, tỷ lệ nhận ca (`responseRate`), thời gian nhận ca trung bình (`avgResponseTimeSeconds`), điểm đánh giá trung bình (`avgRating`) và tổng hợp KPI toàn hệ thống.
+  - **`rescuer.controller.js` & `rescuer.route.js`**: Đăng ký API endpoint `GET /api/rescuers/admin/analytics` bảo vệ bởi Token Admin.
+- **Web Admin (`web/`):**
+  - **`RescuerAnalyticsPage.jsx`**: Trang quản trị hiệu suất cứu hộ viên với 4 thẻ KPI tổng quan (Tổng số Cứu hộ viên, Ca hoàn thành, Thời gian phản hồi TB, Đánh giá TB) và Bảng xếp hạng Leaderboard có huy hiệu xếp hạng (🥇 🥈 🥉), thanh tỷ lệ nhận ca (%), badge trạng thái online/offline.
+  - **`SidebarComponent.jsx` & `routes/index.js`**: Thêm mục điều hướng **"Hiệu suất Cứu hộ"** (`/admin/rescuer-analytics`) với icon `<PiTrophyFill />`.
+
+#### ✅ Live Dashboard Real-Time (Socket.io Push)
+> **Backend Socket Broadcast + Web Admin Live Push Banner & Counter** · Hoàn thành trong 0.5 ngày
+
+- **Backend Node.js (`server/`):**
+  - **`socket/index.js`**: Tự động gán kết nối Admin vào phòng Socket `admin:dashboard` và tạo hàm `emitAdminDashboardEvent(eventType, payload)`.
+  - **`sos_request.service.js`**: Phát sự kiện `dashboard:event` tới room Admin khi có SOS mới được khởi tạo (`SOS_CREATED`), Cứu hộ viên tiếp nhận ca (`SOS_ACCEPTED`), Ca cứu hộ hoàn thành (`SOS_COMPLETED`) hoặc Hủy ca (`SOS_CANCELLED`).
+- **Web Admin (`web/`):**
+  - **Kiến trúc Mô-đun Socket (`src/socket/`)**:
+    - **Token Management**: Tự động đọc `accessToken` từ Redux Store (`store.getState().auth?.accessToken`) thay vì `localStorage`.
+    - **`src/socket/core/socketCore.js`**: Cấu hình khởi tạo Socket.io core & Redux token state.
+    - **`src/socket/features/`**: Tách biệt module `connectionSocket.js` và `dashboardSocket.js` xử lý từng nhóm sự kiện.
+    - **`src/socket/index.js`**: Entrypoint tổng hợp xuất các helper function `subscribeDashboardEvents`, `subscribeConnectionStatus`.
+  - **`DashboardPage.jsx`**: Đăng ký lắng nghe sự kiện qua helper `subscribeDashboardEvents`, hiển thị Badge phát sáng nhấp nháy `LIVE PUSH ACTIVE` và Toast Banner nổi ở góc phải màn hình (`"⚡ Yêu cầu SOS mới vừa xuất hiện..."`). Cập nhật ngầm dữ liệu số liệu tổng quan thời gian thực không làm gián đoạn trải nghiệm người dùng.
+
+#### ✅ Smart Priority Matching — Thuật Toán Ghép Nối Thông Minh & Ưu Tiên Tức Thì
+> **BullMQ Queue + Redis Geo 4 Radius Rings (2km ➔ 5km ➔ 10km ➔ 20km)** · Cập nhật thuật toán ghép nối cứu hộ
+
+- **Cơ chế hoạt động:**
+  - **Ưu tiên Đúng Chuyên môn**: Cứu hộ viên có chuyên môn khớp với loại sự cố của nạn nhân sẽ luôn được tự động xếp vào **đầu danh sách nhận offer**.
+  - **Fallback Tức thì Không Bỏ Sắp**: Nếu chưa có cứu hộ viên đúng chuyên môn ở gần, hệ thống sẽ lấy ngay các **Cứu hộ viên rảnh rỗi gần nhất** ở lượt quét bán kính hiện tại thay vì bỏ qua hay bắt chờ đợi, đảm bảo nạn nhân luôn được hỗ trợ 0ms delay.
+  - **Quét Bán kính Đa cấp**: Lặp 4 đợt tăng dần bán kính (2km, 5km, 10km, 20km) qua BullMQ Worker. Các cứu hộ viên rảnh rỗi (`isRescuing: false`, `hasOffer: false`) và online trên Redis Geo (`rescuer_locations`) được ưu tiên theo thứ tự khoảng cách thực tế.
 
 ---
 
@@ -208,8 +240,6 @@ sequenceDiagram
 > [!IMPORTANT]
 > Các đề xuất dưới đây được chọn lọc **không yêu cầu chi phí API tốn kém**, phù hợp để Demo trực tiếp trước hội đồng. Các đề xuất đã triển khai được lưu nhật ký chi tiết tại **Mục I.4**.
 
----
-
 ### A. Các Đề Xuất Đã Triển Khai Hoàn Thành (🟢 Finished)
 
 #### ✅ Đề xuất 1: Hoàn thiện Màn hình Chỉ Đường cho Cứu Hộ Viên (Rescuer Navigation)
@@ -240,57 +270,33 @@ sequenceDiagram
 > **Độ khó:** Dễ · **Thời gian:** 0.5 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
 > *(Xem chi tiết code đã sửa tại [Mục I.4 - Crowd-Sourced Dangerous Zones](#-crowd-sourced-dangerous-zones--hệ-thống-tự-phát-hiện-điểm-nguy-hiểm))*
 
+#### ✅ Đề xuất 8: Rescuer Performance Analytics — Phân Tích Hiệu Suất Cứu Hộ Viên
+> **Độ khó:** Dễ · **Thời gian:** 0.5 ngày · **Impact:** ⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
+> *(Xem chi tiết code đã sửa tại [Mục I.4 - Rescuer Performance Analytics](#-rescuer-performance-analytics--phân-tích-hiệu-suất-cứu-hộ-viên))*
+
+#### ✅ Đề xuất 9: Live Dashboard Real-Time (Socket.io Push)
+> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
+> *(Xem chi tiết code đã sửa tại [Mục I.4 - Live Dashboard Real-Time](#-live-dashboard-real-time--socketio-push))*
+
 ---
 
 ### B. Các Đề Xuất Nâng Cấp Tiếp Theo (🔵 Pending)
 
-### ⬜ Đề xuất 8: Rescuer Performance Analytics — Phân Tích Hiệu Suất Cứu Hộ Viên
-> **Độ khó:** Dễ · **Thời gian:** 0.5 ngày · **Chi phí:** $0 · **Impact:** ⭐⭐⭐⭐
-
-**Ý tưởng:** Trang Web Admin hiển thị bảng xếp hạng + chỉ số hiệu suất của từng cứu hộ viên: tổng ca, ca thành công, ca từ chối, tỷ lệ phản hồi, **thời gian trung bình nhận ca** (Response Time).
-
-**Cách triển khai (không tốn chi phí):**
-- Data đã có hoàn toàn: bảng `rescuer_histories` (action: `ACCEPTED`, `REJECTED`, `TIMEOUT`, `COMPLETED`, `FAILED`) + `sos_requests` (`assigned_at`, `accepted_at`, `completed_at`)
-- SQL thuần: `GROUP BY rescuer_id`, tính `AVG(EXTRACT(EPOCH FROM (accepted_at - assigned_at)))` → response time trung bình
-- Thêm 1 API endpoint mới + 1 trang React mới trong Web Admin — **không đụng đến schema DB**
-
-**Điểm nổi bật:** Hội đồng thấy hệ thống không chỉ điều phối cứu hộ mà còn **quản trị được chất lượng đội ngũ cứu hộ viên** — góc nhìn enterprise-grade, rất ít đồ án sinh viên đạt được.
-
----
-
-### ⬜ Đề xuất 9: Live Dashboard Real-Time (Socket.io Push)
-> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Chi phí:** $0 · **Impact:** ⭐⭐⭐⭐⭐
-
-**Ý tưởng:** Thay vì Dashboard Web Admin chỉ hiển thị thống kê tĩnh (load 1 lần khi vào trang), nâng lên **tự cập nhật số liệu thời gian thực** khi có SOS mới, ca hoàn thành mới — không cần F5.
-
-**Cách triển khai (không tốn chi phí):**
-- Socket.io **đã có sẵn** ở server — chỉ cần thêm emit `dashboard:stats:updated` vào các event SOS hiện có (`sos:created`, `sos:done`)
-- Web Admin subscribe Socket event → tự cập nhật counter không cần reload
-- Kết hợp với Heatmap đã có: khi SOS mới → điểm Heatmap cũng tự xuất hiện trên bản đồ
-
-**Điểm nổi bật khi demo:** Admin đang mở màn hình → Victim bấm SOS trên điện thoại → số liệu Dashboard tăng **ngay lập tức** trước mắt hội đồng. Đây là wow-effect khó quên nhất khi thuyết trình live.
-
----
-
 ### ⬜ Đề xuất 10: QR Code Emergency Fallback — Cứu Hộ Ngoài Hệ Thống
 > **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Chi phí:** $0 · **Impact:** ⭐⭐⭐⭐⭐
 
-**Bài toán:** Khi BullMQ Worker đã thử hết 4 vòng (2→5→10→20km) mà **không tìm được rescuer nào online**, Victim bị "treo" không có ai hỗ trợ — đây là điểm yếu nghiệp vụ nghiêm trọng nhất của hệ thống hiện tại.
+**Bài toán:** Khi BullMQ Worker đã thử hết 4 vòng mà **không tìm được rescuer nào online**. 
 
-**Giải pháp:** Tự động hiện tùy chọn **"Tạo mã QR cứu trợ"** — QR nhúng đầy đủ thông tin nạn nhân + tọa độ GPS. Bất kỳ cứu hộ viên nào **trong vùng thực địa** (dù offline) quét mã sẽ thấy ngay thông tin và có thể nhận ca.
+**Giải pháp:** Tự động hiện tùy chọn **"Tạo mã QR cứu trợ"** chứa đầy đủ thông tin nạn nhân. Bất kỳ cứu hộ viên nào (dù offline) quét mã sẽ thấy thông tin và có thể nhận ca ngay.
 
-**Luồng hoạt động:**
-1. **Victim:** Khi SOS hết vòng không ghép được → app hiện nút "Tạo QR cứu trợ" → sinh QR chứa `sos_request_id`, `victim_lat`, `victim_lng`, `incident_type`, `description`, `phone`, `full_name`, `timestamp`
-2. **Chia sẻ QR:** Victim có thể gửi ảnh QR qua Zalo/Messenger cho người xung quanh, hoặc Admin in ra / hiển thị trên Web Admin
-3. **Rescuer quét QR:** Mở app → quét mã → hiện màn hình xác nhận với đầy đủ thông tin nạn nhân + bản đồ tọa độ + **nút "Gọi ngay"** (deep link `tel:phone`) để liên hệ trực tiếp trước khi nhận ca
-4. **Rescuer liên hệ & xác nhận:** Rescuer có thể gọi điện xác nhận tình huống → nhấn **"Nhận cứu hộ"** — Server tự động tạo bản ghi `rescuer_histories` với `action = 'ACCEPTED'`, cập nhật `sos_requests` sang `ASSIGNED` + tag `source = 'QR_RESCUE'` → tiếp tục luồng cứu hộ bình thường (chat, chỉ đường OSRM, đánh dấu DONE)
+**Điểm nổi bật học thuật:** Giải quyết **bài toán "vùng trắng cứu hộ"** — tư duy Hybrid Online-Offline System thực tiễn.
 
-**Cách triển khai (không tốn chi phí):**
-- **Mobile:** Package `qr_flutter` (generate QR) + `mobile_scanner` (scan QR) — cả 2 miễn phí, phổ biến trên pub.dev
-- **Backend:** Thêm 1 endpoint `POST /api/sos/qr-accept` nhận `{ sos_request_id, rescuer_id }` → update DB → emit Socket như luồng accept bình thường
-- **Không cần schema DB mới:** Chỉ thêm column `source VARCHAR(20) DEFAULT 'AUTO'` vào `sos_requests` (hoặc dùng `cancel_reason` field đang trống)
+### ⬜ Đề xuất 11: Community Emergency Amenities — Bản Đồ Tiện Ích Cộng Đồng
+> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Chi phí:** $0 · **Impact:** ⭐⭐⭐⭐⭐
 
-**Điểm nổi bật học thuật:** Giải quyết **bài toán "vùng trắng cứu hộ"** — nơi không có rescuer online nhưng vẫn có người có thể giúp. Đây là tư tư Hybrid Online-Offline System rất thực tiễn, thể hiện sự hiểu biết sâu về edge cases của hệ thống phân tán. **Chưa thấy đồ án sinh viên nào nghĩ đến fallback mechanism kiểu này.**
+**Ý tưởng:** Lọc nhanh các tiện ích (Tiệm sửa xe, Trạm xăng, Y tế) xung quanh. Người dùng có thể đóng góp điểm mới lên hệ thống.
+
+**Điểm nổi bật:** Biến ứng dụng thành một hệ sinh thái cứu hộ giao thông toàn diện, hỗ trợ người đi đường trong mọi tình huống.
 
 ---
 
@@ -298,9 +304,9 @@ sequenceDiagram
 
 | Đề xuất | Lý do loại |
 |---|---|
-| **WebRTC Video/Voice Call** | Phức tạp, cần STUN/TURN server riêng, chi phí hosting cao, thời gian phát triển 3-5 ngày, dễ bị lỗi khi demo live |
-| **SMS Fallback (Twilio)** | Twilio có chi phí per-SMS, cần mua số điện thoại, setup phức tạp; trong phòng thi vẫn có WiFi nên không cần thiết |
-| **AI Incident Triage (OpenAI/Gemini)** | Chi phí API theo lượt gọi, cần setup API key tốn tiền, lợi ích thực tiễn không rõ ràng cho đồ án tốt nghiệp |
+| **WebRTC Video/Voice Call** | Phức tạp, cần STUN/TURN server, tốn thời gian, dễ lỗi khi demo live |
+| **SMS Fallback (Twilio)** | Chi phí per-SMS, setup phức tạp, không cần thiết khi có WiFi |
+| **AI Incident Triage** | Chi phí API, không cần thiết cho đồ án tốt nghiệp |
 
 ---
 
@@ -315,39 +321,10 @@ sequenceDiagram
 | **5** | ~~Rating & Feedback sau ca cứu hộ~~ | Trung bình | 1.5 ngày | ✅ Hoàn thành |
 | **6** | ~~Geo-Fence Cảnh báo vùng nguy hiểm tự động~~ | Dễ | 1 ngày | ✅ Hoàn thành |
 | **7** | ~~Crowd-Sourced Dangerous Zones (tự phát hiện điểm nguy hiểm)~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
-| **8** | Rescuer Performance Analytics (bảng xếp hạng KPI) | Dễ | 0.5 ngày | 🔵 Chưa làm |
-| **9** | Live Dashboard Real-Time (Socket.io Push) | Trung bình | 1 ngày | 🔵 Chưa làm |
+| **8** | ~~Rescuer Performance Analytics (bảng xếp hạng KPI)~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
+| **9** | ~~Live Dashboard Real-Time (Socket.io Push)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
 | **10** | QR Code Emergency Fallback (cứu hộ ngoài hệ thống) | Trung bình | 1 ngày | 🔵 Chưa làm |
-
----
-
-### ❌ ĐỀ XUẤT BỊ LOẠI (Không phù hợp quy mô Đồ án)
-
-| Đề xuất | Lý do loại |
-|---|---|
-| **WebRTC Video/Voice Call** | Phức tạp, cần STUN/TURN server riêng, chi phí hosting cao, thời gian phát triển 3-5 ngày, dễ bị lỗi khi demo live |
-| **SMS Fallback (Twilio)** | Twilio có chi phí per-SMS, cần mua số điện thoại, setup phức tạp; trong phòng thi vẫn có WiFi nên không cần thiết |
-| **AI Incident Triage (OpenAI/Gemini)** | Chi phí API theo lượt gọi, cần setup API key tốn tiền, lợi ích thực tiễn không rõ ràng cho đồ án tốt nghiệp |
-
----
-
-## IV. BẢNG TỔNG HỢP ĐỀ XUẤT
-
-| STT | Đề xuất | Độ khó | Thời gian | Trạng thái |
-|---|---|---|---|---|
-| **1** | ~~Chỉ đường OSRM cho Rescuer + ETA~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
-| **2** | ~~Lịch sử Ca Cứu Hộ Mobile + Thống kê Dashboard~~ | Dễ | 1 ngày | ✅ Hoàn thành |
-| **3** | ~~Heatmap điểm nóng tai nạn Web Admin~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
-| **4** | ~~Hoàn thiện NotificationPage Web Admin~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
-| **5** | ~~Rating & Feedback sau ca cứu hộ~~ | Trung bình | 1.5 ngày | ✅ Hoàn thành |
-| **6** | ~~Geo-Fence Cảnh báo vùng nguy hiểm tự động~~ | Dễ | 1 ngày | ✅ Hoàn thành |
-| **7** | ~~Crowd-Sourced Dangerous Zones (tự phát hiện điểm nguy hiểm)~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
-| **8** | Rescuer Performance Analytics (bảng xếp hạng KPI) | Dễ | 0.5 ngày | 🔵 Chưa làm |
-| **9** | Live Dashboard Real-Time (Socket.io Push) | Trung bình | 1 ngày | 🔵 Chưa làm |
-| **10** | QR Code Emergency Fallback (cứu hộ ngoài hệ thống) | Trung bình | 1 ngày | 🔵 Chưa làm |
-
-**Tổng thời gian đã hoàn thành: ~6.0 ngày.**  
-**Tổng thời gian còn lại (nếu làm hết 8–10): ~2.5 ngày.**
+| **11** | Community Emergency Amenities (tiệm sửa xe, trạm xăng, y tế) | Trung bình | 1 ngày | 🔵 Chưa làm |
 
 > [!TIP]
 > **Khuyến nghị ưu tiên cao nhất:** Đề xuất **10 (QR Fallback)** và **6 (Geo-Fence)** — độc đáo nhất, giải quyết edge case thực tế, ít người làm nhất, không tốn chi phí.

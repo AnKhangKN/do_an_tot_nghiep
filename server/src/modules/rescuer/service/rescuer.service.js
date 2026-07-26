@@ -184,6 +184,10 @@ class RescuerService {
         return await this.rescuerRepository.getRescuersIncidentTypes(rescuerIds);
     }
 
+    getRescuerPerformanceAnalytics = async ({ page, limit, search }) => {
+        return await this.rescuerRepository.getRescuerPerformanceAnalytics({ page, limit, search });
+    }
+
 }
 
 module.exports = new RescuerService();

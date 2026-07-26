@@ -55,14 +55,6 @@ class MatchingService {
         });
         const activeResults = await pipeline.exec();
 
-        console.log(
-            `[MATCHING] SOS ${sosId} radius ${radius}km - active key results:`,
-            rescuerIds.map((id, index) => ({
-                rescuerId: id,
-                activeKeyExists: activeResults[index]?.[1] === 1
-            }))
-        );
-
         // 4. Lọc cứu hộ viên đang active và dọn dẹp rác trên Redis Geo
         const activeRescuerIds = [];
         const cleanupPipeline = redis.pipeline();
@@ -72,13 +64,10 @@ class MatchingService {
             if (isExists === 1) {
                 activeRescuerIds.push(id);
             } else {
-                // Lazy Cleanup: Cứu hộ viên đã ngắt kết nối đột ngột > 5 phút, xóa khỏi tập hợp Geo
                 cleanupPipeline.zrem('rescuer_locations', id);
-                console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - loại ${id} vì thiếu active:rescuer:${id}`);
             }
         });
 
-        // Chạy dọn dẹp bất đồng bộ trong background
         if (cleanupPipeline.length > 0) {
             cleanupPipeline.exec().catch(err => console.error("Lỗi dọn dẹp Redis Geo:", err));
         }
@@ -95,39 +84,24 @@ class MatchingService {
             lastSeenMap.set(id, lastSeenTimes[index]);
         });
 
-        console.log(
-            `[MATCHING] SOS ${sosId} radius ${radius}km - last_seen map:`,
-            activeRescuerIds.map(id => ({
-                rescuerId: id,
-                lastSeenAt: lastSeenMap.get(id)
-            }))
-        );
-
         // 5. MERGE dữ liệu hoàn toàn từ bộ nhớ Redis (Bypass PostgreSQL)
         const merged = nearby
             .filter(r => activeRescuerIds.includes(r.userId))
             .map(r => {
                 const lastSeenAt = lastSeenMap.get(r.userId);
-                if (!lastSeenAt) {
-                    console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - loại ${r.userId} vì thiếu rescuer:last_seen`);
-                    return null;
-                }
+                if (!lastSeenAt) return null;
 
                 return {
                     userId: r.userId,
                     distance: r.distance,
-                    status: "ACTIVE", // Đang online trong Redis Geo mặc định là ACTIVE
+                    status: "ACTIVE",
                     lastSeenAt: lastSeenAt
                 };
             })
             .filter(Boolean);
 
-        console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - merged rescuers:`, merged);
-
         // 6. FILTER AVAILABLE
         const available = await this.#filterAvailability(merged);
-        console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - available rescuers:`, available);
-
         if (!available.length) {
             console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - không có rescuer khả dụng sau filter cuối`);
             return [];
@@ -136,7 +110,6 @@ class MatchingService {
         // 7. Lấy loại sự cố chuyên môn của các rescuer khả dụng
         const availableRescuerIds = available.map(r => r.userId);
         const incidentTypesMap = await this.rescuerService.getRescuersIncidentTypes(availableRescuerIds);
-        console.log(`[MATCHING] SOS ${sosId} - incident types map:`, Object.fromEntries(incidentTypesMap));
 
         // 8. Chia thành 2 nhóm: phù hợp chuyên môn và không phù hợp
         const sosIncidentTypeId = sos.incident_type_id;
@@ -152,17 +125,12 @@ class MatchingService {
             }
         });
 
-        console.log(`[MATCHING] SOS ${sosId} - matched rescuers (${matchedRescuers.length}):`, matchedRescuers);
-        console.log(`[MATCHING] SOS ${sosId} - unmatched rescuers (${unmatchedRescuers.length}):`, unmatchedRescuers);
-
-        // 9. Sắp xếp mỗi nhóm theo khoảng cách
         matchedRescuers.sort((a, b) => a.distance - b.distance);
         unmatchedRescuers.sort((a, b) => a.distance - b.distance);
 
-        // 10. Nối 2 nhóm lại (phù hợp trước) và trả về top 5
+        // Nối 2 nhóm lại: Ưu tiên đúng chuyên môn đứng ĐẦU, cứu hộ viên khác đứng SAU
         const finalRescuers = [...matchedRescuers, ...unmatchedRescuers];
-        console.log(`[MATCHING] SOS ${sosId} - final rescuers:`, finalRescuers);
-
+        console.log(`[MATCHING] SOS ${sosId} radius ${radius}km - matched: ${matchedRescuers.length}, unmatched: ${unmatchedRescuers.length}, total: ${finalRescuers.length}`);
         return finalRescuers.slice(0, 5);
     }
 

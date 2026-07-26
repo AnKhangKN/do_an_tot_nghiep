@@ -3,14 +3,13 @@ import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import { formatTime } from '@/utils/format_date.util';
 import ButtonComponent from '@/components/shared/ButtonComponent/ButtonComponent';
 import { getAllRatingsAdmin } from '@/api/admin/RatingApi';
-import { PiStarFill } from 'react_icons_pi_placeholder'; // Use phosphor icon or standard icon
 
-const ratingColumns = [
+const ratingColumns = ({ expandedRows, onToggleExpand }) => [
   {
     key: 'index',
     title: 'STT',
     render: (_, index) => (
-      <span className="text-gray-500">{index + 1}</span>
+      <span className="text-xs font-medium text-gray-400">{index + 1}</span>
     ),
   },
   {
@@ -19,13 +18,13 @@ const ratingColumns = [
     render: (row) => (
       <div className="flex items-center gap-2">
         {row.victim_avatar ? (
-          <img src={row.victim_avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+          <img src={row.victim_avatar} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
             {(row.victim_name || 'N/A').charAt(0)}
           </div>
         )}
-        <span className="font-medium text-gray-900">{row.victim_name || 'Khách'}</span>
+        <span className="font-medium text-gray-900 text-xs">{row.victim_name || 'Khách'}</span>
       </div>
     ),
   },
@@ -35,13 +34,13 @@ const ratingColumns = [
     render: (row) => (
       <div className="flex items-center gap-2">
         {row.rescuer_avatar ? (
-          <img src={row.rescuer_avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+          <img src={row.rescuer_avatar} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700">
+          <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700 shrink-0">
             {(row.rescuer_name || 'CHV').charAt(0)}
           </div>
         )}
-        <span className="font-medium text-gray-900">{row.rescuer_name || 'Cứu hộ viên'}</span>
+        <span className="font-medium text-gray-900 text-xs">{row.rescuer_name || 'Cứu hộ viên'}</span>
       </div>
     ),
   },
@@ -49,9 +48,9 @@ const ratingColumns = [
     key: 'rating',
     title: 'Đánh giá',
     render: (row) => (
-      <div className="flex items-center gap-1 font-semibold text-amber-600">
+      <div className="flex items-center gap-1 font-bold text-amber-600 text-xs">
         <span>⭐ {row.rating}/5</span>
-        <div className="flex text-amber-400 text-sm ml-1">
+        <div className="flex text-amber-400 text-xs ml-0.5">
           {Array.from({ length: 5 }).map((_, i) => (
             <span key={i} className={i < row.rating ? 'text-amber-400' : 'text-gray-300'}>
               ★
@@ -65,16 +64,16 @@ const ratingColumns = [
     key: 'comment',
     title: 'Nội dung nhận xét',
     render: (row) => (
-      <span className="text-gray-700 italic">
-        {row.comment ? `"${row.comment}"` : <span className="text-gray-400 font-normal">Không có lời nhắn</span>}
-      </span>
+      <p className="text-xs text-gray-700 italic leading-relaxed max-w-[300px] line-clamp-2 overflow-hidden">
+        {row.comment ? `"${row.comment}"` : <span className="text-gray-400 font-normal not-italic">Không có lời nhắn</span>}
+      </p>
     ),
   },
   {
     key: 'created_at',
     title: 'Thời gian',
     render: (row) => (
-      <span className="text-sm text-gray-500">
+      <span className="text-xs text-gray-500 font-medium whitespace-nowrap">
         {formatTime(row.created_at)}
       </span>
     ),
@@ -103,7 +102,7 @@ const reportColumns = [
     key: 'index',
     title: 'STT',
     render: (_, index) => (
-      <span className="text-gray-500">{index + 1}</span>
+      <span className="text-xs text-gray-500">{index + 1}</span>
     ),
   },
   {
@@ -125,7 +124,7 @@ const reportColumns = [
     key: 'createdAt',
     title: 'Ngày báo cáo',
     render: (row) => (
-      <span className="text-sm text-gray-500">
+      <span className="text-xs text-gray-500">
         {formatTime(row.createdAt)}
       </span>
     ),
@@ -138,6 +137,14 @@ const FeedbackPage = () => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [expandedRows, setExpandedRows] = useState({});
+
+  const toggleExpandRow = (id) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const fetchRatings = async (currentPage = 1) => {
     setLoading(true);
@@ -166,7 +173,7 @@ const FeedbackPage = () => {
       case 'rating':
         return (
           <TableComponent
-            columns={ratingColumns}
+            columns={ratingColumns({ expandedRows, onToggleExpand: toggleExpandRow })}
             data={ratings}
             rowKey="rating_id"
             page={page}
@@ -195,15 +202,15 @@ const FeedbackPage = () => {
   };
 
   return (
-    <div className="p-2">
+    <div className="p-2 space-y-4">
       {/* Header */}
-      <div className="mb-6">
+      <div>
         <h1 className="text-2xl font-bold text-gray-900">Quản Lý Phản Hồi & Đánh Giá Cứu Hộ</h1>
         <p className="text-sm text-gray-500">Theo dõi đánh giá chất lượng phục vụ của Cứu hộ viên từ Nạn nhân</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-3 mb-5">
+      <div className="flex gap-3">
         <ButtonComponent
           onClick={() => setActiveTab('rating')}
           className={`${activeTab === 'rating'

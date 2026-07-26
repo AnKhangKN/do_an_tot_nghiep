@@ -29,7 +29,8 @@ const initSocket = (io) => {
             console.log(`Mã phòng khi "Victim" join room: victim:${userId}`);
         } else if (role === "ADMIN") {
             socket.join(`admin:${userId}`);
-            console.log(`Mã phòng khi "Admin" join room: admin:${userId}`);
+            socket.join("admin:dashboard");
+            console.log(`Mã phòng khi "Admin" join room: admin:${userId} và admin:dashboard`);
         } else {
             console.warn(`Unknown role: ${role} for user ${userId}`);
         }
@@ -45,5 +46,16 @@ const initSocket = (io) => {
 
 const getIO = () => ioInstance;
 
+const emitAdminDashboardEvent = (eventType, payload = {}) => {
+    if (ioInstance) {
+        ioInstance.to("admin:dashboard").emit("dashboard:event", {
+            type: eventType,
+            timestamp: new Date().toISOString(),
+            ...payload
+        });
+    }
+};
+
 module.exports = initSocket;
 module.exports.getIO = getIO;
+module.exports.emitAdminDashboardEvent = emitAdminDashboardEvent;

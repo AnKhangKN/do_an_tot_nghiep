@@ -4,7 +4,18 @@ const userRepository = require("@modules/user/repository/user.repository");
 
 const socketAuth = async (socket, next) => {
     try {
-        const token = socket.handshake.auth?.token;
+        let token = socket.handshake.auth?.token || socket.handshake.headers?.authorization;
+        
+        if (!token) {
+            return next(new Error("Token missing"));
+        }
+
+        // Tách bỏ tiền tố 'Bearer ' nếu có
+        if (typeof token === 'string' && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        token = typeof token === 'string' ? token.trim() : token;
+
         const decoded = jwt.verify(token, ACCESS_TOKEN, {
             clockTolerance: 120
         });
@@ -19,7 +30,7 @@ const socketAuth = async (socket, next) => {
 
         next();
     } catch (error) {
-        console.error("SOCKET AUTH ERROR:", error);
+        console.error("SOCKET AUTH ERROR:", error.message);
 
         next(new Error("Unauthorized"));
     }

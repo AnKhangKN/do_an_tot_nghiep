@@ -66,7 +66,7 @@ class DangerousPointRepository {
         return {
             data: dataResult.rows.map(row => ({
                 ...mapFields(row, this.dangerousPointModel),
-                reporterName: row.reporter_name || (row.reported_by === null ? '⚡ Hệ thống (Crowd-Sourced)' : '--'),
+                reporterName: row.reporter_name || (row.reported_by === null ? 'Hệ thống' : '--'),
                 approverName: row.approver_name
             })),
             total,
@@ -107,7 +107,7 @@ class DangerousPointRepository {
         `;
 
         const params = [status, dangerousPointId];
-        
+
         if (approvedBy) {
             query += `, ${this.dangerousPointModel.field.approvedBy} = $2`;
             params.splice(1, 0, approvedBy);

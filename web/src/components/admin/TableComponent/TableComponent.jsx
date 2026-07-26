@@ -89,13 +89,19 @@ const TableComponent = ({
                   onClick={(e) => handleRowClick(row, index, e)}
                   className="hover:bg-gray-50/80 transition-colors duration-150 cursor-pointer"
                 >
-                  {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-3.5 text-sm text-gray-700 align-middle">
-                      {col.render
-                        ? col.render(row, index)
-                        : row[col.dataIndex]}
-                    </td>
-                  ))}
+                  {columns.map((col) => {
+                    const content = col.render ? col.render(row, index) : row[col.dataIndex];
+                    const isSpecialCol = col.key === "action" || col.key === "index";
+                    return (
+                      <td key={col.key} className="px-4 py-3.5 text-sm text-gray-700 align-middle">
+                        {isSpecialCol ? (
+                          content
+                        ) : (
+                          <div className="line-clamp-2 overflow-hidden leading-relaxed">{content}</div>
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
           </tbody>

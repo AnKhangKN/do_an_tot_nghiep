@@ -14,7 +14,7 @@ const radiusList = [2, 5, 10, 20];
 const worker = new Worker(
     "sos",
     async (job) => {
-        const { sosId, attempt } = job.data;
+        const { sosId, attempt = 1 } = job.data;
 
         if (job.name === "process-sos") {
             const sos = await sosRequestService.findSOSById(sosId);
@@ -36,7 +36,7 @@ const worker = new Worker(
             const radius = radiusList[attempt - 1];
 
             console.log(
-                `[SOS] Search radius: ${radius} km (Attempt ${attempt})`
+                `[SOS] Search radius: ${radius} km (Attempt ${attempt}/${radiusList.length})`
             );
 
             const rescuers =
@@ -73,18 +73,21 @@ const worker = new Worker(
 
             // Gửi tiếp nếu không tìm thấy người cứu hộ trong bán kính hiện tại
             if (attempt < radiusList.length) {
+                const nextAttempt = attempt + 1;
+                const nextRadius = radiusList[nextAttempt - 1];
+
                 console.log(
-                    `[SOS] Retry after 15s with radius ${radiusList[attempt]} km`
+                    `[SOS] Retry after 15s with radius ${nextRadius} km (Attempt ${nextAttempt})`
                 );
 
                 await sosQueue.add(
                     "process-sos",
                     {
                         sosId,
-                        attempt: attempt + 1,
+                        attempt: nextAttempt,
                     },
                     {
-                        jobId: `process-sos-${sosId} attempt-${attempt + 1}`,
+                        jobId: `process-sos-${sosId}-attempt-${nextAttempt}`,
                         removeOnComplete: true,
                         removeOnFail: true,
                         delay: 15000,
@@ -92,7 +95,7 @@ const worker = new Worker(
                 );
             } else {
                 console.log(
-                    `[SOS] No rescuer found after all attempts`
+                    `[SOS] No rescuer found after all ${radiusList.length} attempts`
                 );
 
                 // Cập nhật trạng thái SOS thành CANCELLED trong database trước tiên để kiểm tra race condition

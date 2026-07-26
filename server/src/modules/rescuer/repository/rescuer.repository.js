@@ -287,6 +287,109 @@ class RescueRepository {
         return incidentTypesMap;
     };
 
+    getRescuerPerformanceAnalytics = async ({ page = 1, limit = 10, search = '' }) => {
+        const offset = (page - 1) * limit;
+        const searchPattern = `%${search}%`;
+
+        const query = `
+        SELECT 
+            u.user_id,
+            u.full_name,
+            u.email,
+            u.phone,
+            u.avatar_url,
+            u.status as user_status,
+            rp.area,
+            rp.is_verified,
+            COUNT(DISTINCT sr.sos_request_id) FILTER (WHERE sr.status IN ('DONE', 'COMPLETED')) AS completed_count,
+            COUNT(DISTINCT rh.rescuer_history_id) FILTER (WHERE rh.action = 'ACCEPTED') AS accepted_count,
+            COUNT(DISTINCT rh.rescuer_history_id) FILTER (WHERE rh.action = 'REJECTED') AS rejected_count,
+            COUNT(DISTINCT rh.rescuer_history_id) FILTER (WHERE rh.action = 'TIMEOUT') AS timeout_count,
+            ROUND(COALESCE(AVG(EXTRACT(EPOCH FROM (sr.accepted_at - sr.assigned_at))) FILTER (WHERE sr.accepted_at IS NOT NULL AND sr.assigned_at IS NOT NULL), 0)::numeric, 1) AS avg_response_time_seconds,
+            ROUND(COALESCE(AVG(rr.rating), 0)::numeric, 1) AS avg_rating,
+            COUNT(DISTINCT rr.rating_id) AS total_ratings
+        FROM users u
+        JOIN rescuer_profiles rp ON u.user_id = rp.user_id
+        LEFT JOIN sos_requests sr ON u.user_id = sr.rescuer_id
+        LEFT JOIN rescuer_histories rh ON u.user_id = rh.rescuer_id
+        LEFT JOIN rescuer_ratings rr ON u.user_id = rr.rescuer_id
+        WHERE u.role = 'RESCUER'
+          AND ($1 = '%%' OR u.full_name ILIKE $1 OR u.email ILIKE $1 OR u.phone ILIKE $1)
+        GROUP BY u.user_id, u.full_name, u.email, u.phone, u.avatar_url, u.status, rp.area, rp.is_verified
+        ORDER BY completed_count DESC, avg_rating DESC, avg_response_time_seconds ASC
+        LIMIT $2 OFFSET $3
+        `;
+
+        const countQuery = `
+        SELECT COUNT(DISTINCT u.user_id) AS total
+        FROM users u
+        JOIN rescuer_profiles rp ON u.user_id = rp.user_id
+        WHERE u.role = 'RESCUER'
+          AND ($1 = '%%' OR u.full_name ILIKE $1 OR u.email ILIKE $1 OR u.phone ILIKE $1)
+        `;
+
+        const overviewQuery = `
+        SELECT
+            COUNT(DISTINCT u.user_id) AS total_rescuers,
+            COUNT(DISTINCT sr.sos_request_id) FILTER (WHERE sr.status IN ('DONE', 'COMPLETED')) AS total_completed_sos,
+            ROUND(COALESCE(AVG(EXTRACT(EPOCH FROM (sr.accepted_at - sr.assigned_at))) FILTER (WHERE sr.accepted_at IS NOT NULL AND sr.assigned_at IS NOT NULL), 0)::numeric, 1) AS overall_avg_response_time,
+            ROUND(COALESCE(AVG(rr.rating), 0)::numeric, 1) AS overall_avg_rating
+        FROM users u
+        JOIN rescuer_profiles rp ON u.user_id = rp.user_id
+        LEFT JOIN sos_requests sr ON u.user_id = sr.rescuer_id
+        LEFT JOIN rescuer_ratings rr ON u.user_id = rr.rescuer_id
+        WHERE u.role = 'RESCUER'
+        `;
+
+        const [dataResult, countResult, overviewResult] = await Promise.all([
+            pool.query(query, [searchPattern, limit, offset]),
+            pool.query(countQuery, [searchPattern]),
+            pool.query(overviewQuery)
+        ]);
+
+        const total = parseInt(countResult.rows[0].total, 10);
+        const overview = overviewResult.rows[0] || {};
+
+        return {
+            data: dataResult.rows.map(row => {
+                const accepted = parseInt(row.accepted_count, 10);
+                const rejected = parseInt(row.rejected_count, 10);
+                const timeout = parseInt(row.timeout_count, 10);
+                const totalOffers = accepted + rejected + timeout;
+                const responseRate = totalOffers > 0 ? Math.round((accepted / totalOffers) * 100) : 100;
+
+                return {
+                    userId: row.user_id,
+                    fullName: row.full_name,
+                    email: row.email,
+                    phone: row.phone,
+                    avatarUrl: row.avatar_url,
+                    status: row.user_status,
+                    area: row.area,
+                    isVerified: row.is_verified,
+                    completedCount: parseInt(row.completed_count, 10),
+                    acceptedCount: accepted,
+                    rejectedCount: rejected,
+                    timeoutCount: timeout,
+                    totalOffers,
+                    responseRate,
+                    avgResponseTimeSeconds: parseFloat(row.avg_response_time_seconds) || 0,
+                    avgRating: parseFloat(row.avg_rating) || 0,
+                    totalRatings: parseInt(row.total_ratings, 10)
+                };
+            }),
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+            overview: {
+                totalRescuers: parseInt(overview.total_rescuers || 0, 10),
+                totalCompletedSos: parseInt(overview.total_completed_sos || 0, 10),
+                overallAvgResponseTime: parseFloat(overview.overall_avg_response_time) || 0,
+                overallAvgRating: parseFloat(overview.overall_avg_rating) || 0
+            }
+        };
+    }
+
 }
 
 module.exports = new RescueRepository()
