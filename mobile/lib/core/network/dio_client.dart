@@ -16,8 +16,8 @@ class DioClient {
   }) {
     dio.options
       ..baseUrl = AppConstants.baseUrl
-      ..connectTimeout = const Duration(seconds: 15)
-      ..receiveTimeout = const Duration(seconds: 15)
+      ..connectTimeout = const Duration(seconds: 30)
+      ..receiveTimeout = const Duration(seconds: 30)
       ..contentType = Headers.jsonContentType;
 
     // Quản lý tất cả Interceptor tập trung tại đây cho sạch code

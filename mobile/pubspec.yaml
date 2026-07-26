@@ -54,6 +54,8 @@ dependencies:
   android_alarm_manager_plus: ^5.1.0
   hive_flutter: ^1.1.0
   uuid: ^4.3.3
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^6.0.4
 
   # firebase
   firebase_auth: ^6.5.6

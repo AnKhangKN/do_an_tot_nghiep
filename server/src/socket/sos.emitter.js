@@ -59,8 +59,46 @@ const handleSosCancelled = (io, data) => {
     }
 };
 
+/**
+ * Emit sự kiện rescue:accepted (tới Victim) và rescue:accept:success (tới Rescuer) khi ca SOS được tiếp nhận
+ * @param {Object} io - Socket.IO Server
+ * @param {Object} data - Dữ liệu parse từ Redis PubSub
+ */
+const handleSosAccepted = (io, data) => {
+    try {
+        const victimRoom = `victim:${data.victimId}`;
+        const rescuerRoom = `rescuer:${data.rescuerId}`;
+
+        // 1. Emit tới Victim
+        io.to(victimRoom).emit("rescue:accepted", {
+            sosRequestId: data.sosRequestId,
+            status: "IN_PROGRESS",
+            rescuer: data.rescuer
+        });
+
+        // 2. Emit tới Rescuer
+        io.to(rescuerRoom).emit("rescue:accept:success", {
+            sosRequestId: data.sosRequestId,
+            status: "IN_PROGRESS",
+            victim: data.victim
+        });
+
+        // 3. Emit tới Admin Dashboard
+        io.to("admin:dashboard").emit("SOS_ACCEPTED", {
+            sosId: data.sosRequestId,
+            rescuerId: data.rescuerId,
+            viaQR: data.via === 'QR_CODE'
+        });
+
+        console.log(`[SOS EMITTER] Emitted 'rescue:accepted' and 'rescue:accept:success' for SOS: ${data.sosRequestId}`);
+    } catch (err) {
+        console.error(`[SOS EMITTER] Error emitting handleSosAccepted:`, err);
+    }
+};
+
 module.exports = {
     handleSosOffer,
     handleSosNotFound,
     handleSosCancelled,
+    handleSosAccepted,
 };

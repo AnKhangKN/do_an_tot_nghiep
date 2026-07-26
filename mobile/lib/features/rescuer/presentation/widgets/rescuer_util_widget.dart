@@ -4,6 +4,7 @@ import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/location/data/location_service.dart';
 import 'package:mobile/core/session/session_controller.dart';
 import 'package:mobile/features/dangerous_points/presentation/widgets/add_dangerous_point_dialog.dart';
+import '../screens/qr_scanner_screen.dart';
 
 class RescuerUtilWidget extends StatelessWidget {
   final VoidCallback? onIncidentTypeTap;
@@ -69,9 +70,19 @@ class RescuerUtilWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _UtilButton(
-              icon: Icons.motorcycle,
-              label: "Loại sự cố",
-              onTap: onIncidentTypeTap,
+              icon: Icons.qr_code_scanner_rounded,
+              label: "Quét QR",
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) => const QRScannerScreen(),
+                  ),
+                );
+                if (result == true) {
+                  getIt<SessionController>().notifyListeners();
+                }
+              },
             ),
             _UtilButton(
               icon: Icons.my_location,

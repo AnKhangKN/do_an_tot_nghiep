@@ -55,8 +55,8 @@ class AuthRepository {
       // Tạo một Dio trần trụi, sạch sẽ tuyệt đối
       final cleanDio = dio_package.Dio(dio_package.BaseOptions(
         baseUrl: service.dio.options.baseUrl, // Dùng chung baseUrl với hệ thống
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
       ));
 
       // Không gắn token cũ
@@ -152,6 +152,13 @@ class AuthRepository {
 
       await service.registerDeviceToken(data);
       debugPrint("🟢 [AuthRepository] Đăng ký FCM token lên Server thành công ($platformName)");
+    } on dio_package.DioException catch (e) {
+      if (e.type == dio_package.DioExceptionType.connectionTimeout ||
+          e.type == dio_package.DioExceptionType.receiveTimeout) {
+        debugPrint("⚠️ [AuthRepository] Đăng ký FCM token bị quá thời gian kết nối (timeout). Sẽ tự động thử lại ở lần khởi động sau.");
+      } else {
+        debugPrint("🚨 [AuthRepository] Lỗi đăng ký thiết bị: ${e.message}");
+      }
     } catch (e) {
       debugPrint("🚨 [AuthRepository] Lỗi đăng ký thiết bị: $e");
     }

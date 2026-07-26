@@ -17,6 +17,7 @@ import '../../../../shared/widgtes/search_widget.dart';
 import '../widgets/victim_sos_button_widget.dart';
 import '../widgets/victim_util_widget.dart';
 import '../widgets/victim_rescue_info_widget.dart';
+import '../widgets/emergency_qr_dialog_widget.dart';
 import 'package:geolocator/geolocator.dart';
 import '../providers/victim_map_provider.dart';
 import '../../../../shared/widgtes/emergency_dialog_widget.dart';
@@ -388,7 +389,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: SizedBox(
-                  height: 180,
+                  height: 240,
                   child: Stack(
                     children: [
                       // Lắng nghe SessionController để hiển thị SnackBar khi không tìm được rescuer
@@ -402,11 +403,24 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                           if (_prevSearching && !isSearching && !currentIsBeingRescued) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (!mounted) return;
+                              final activeSosId = context.read<VictimMapProvider>().activeSosRequestId;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Chưa tìm thấy người cứu hộ phù hợp. Vui lòng thử lại sau!'),
-                                  backgroundColor: Colors.orange,
-                                  duration: Duration(seconds: 4),
+                                SnackBar(
+                                  content: const Text('Chưa tìm thấy cứu hộ online. Tạo mã QR cho cứu hộ xung quanh quét?'),
+                                  backgroundColor: Colors.amber.shade900,
+                                  duration: const Duration(seconds: 8),
+                                  action: activeSosId != null
+                                      ? SnackBarAction(
+                                          label: 'MÃ QR',
+                                          textColor: Colors.amberAccent,
+                                          onPressed: () {
+                                            EmergencyQRDialogWidget.show(
+                                              context,
+                                              sosRequestId: activeSosId,
+                                            );
+                                          },
+                                        )
+                                      : null,
                                 ),
                               );
                             });
@@ -434,7 +448,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                           final isSearching = sessionController.isSearchingRescuer;
                           final isBeingRescued = sessionController.isBeingRescued;
 
-                          if (isSearching || isBeingRescued) {
+                          if (isBeingRescued) {
                             return const SizedBox.shrink();
                           }
 

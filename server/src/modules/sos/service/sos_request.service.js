@@ -138,6 +138,8 @@ class SosRequestService {
         return updatedSos;
     };
 
+
+
     completeSOS = async ({ sosRequestId }) => {
         const result = await transaction(async (client) => {
             const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
@@ -505,6 +507,138 @@ class SosRequestService {
             console.error("[SERVICE] Lỗi trong getSOSHistory:", error);
             throw error;
         }
+    };
+
+    acceptSOSByQR = async ({ sosRequestId, rescuerId }) => {
+        console.log(`[QR] acceptSOSByQR nhận được sosRequestId='${sosRequestId}' rescuerId='${rescuerId}'`);
+        // 1. Tìm ca SOS - chấp nhận cả PENDING, SEARCHING, và CANCELLED (do hết lượt tìm rescuer online)
+        const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+        if (!sos) {
+            console.warn(`[QR] Không tìm thấy SOS với id='${sosRequestId}'`);
+            const err = new Error("Không tìm thấy yêu cầu cứu hộ!");
+            err.statusCode = 404;
+            throw err;
+        }
+
+        const allowedStatuses = ['PENDING', 'SEARCHING', 'CANCELLED'];
+        if (!allowedStatuses.includes(sos.status)) {
+            const err = new Error("Yêu cầu cứu hộ đã có người nhận hoặc đã hoàn thành, không thể tiếp nhận qua QR!");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        const acceptedAt = new Date().toISOString();
+
+        // 2. Cập nhật DB
+        const updated = await transaction(async (client) => {
+            const result = await client.query(
+                `UPDATE sos_requests
+                 SET rescuer_id = $1, status = 'IN_PROGRESS', accepted_at = $2, updated_at = CURRENT_TIMESTAMP
+                 WHERE sos_request_id = $3
+                 RETURNING *`,
+                [rescuerId, acceptedAt, sosRequestId]
+            );
+
+            const updatedSOS = result.rows[0];
+
+            // Ghi nhật ký hoạt động: ACCEPTED_VIA_QR
+            await rescuerHistoryRepository.createHistory(client, {
+                historyId: uuidUtil.generateUUID(),
+                rescuerId,
+                sosRequestId,
+                action: 'ACCEPTED_VIA_QR',
+            });
+
+            return updatedSOS;
+        });
+
+        if (!updated) {
+            const err = new Error("Không thể cập nhật trạng thái ca cứu hộ. Vui lòng thử lại!");
+            err.statusCode = 500;
+            throw err;
+        }
+
+        // 3. Xóa SOS location khỏi Redis Geo, dừng BullMQ, dọn dẹp Redis keys
+        await redis.zrem("sos_locations", sosRequestId);
+        dispatchService.stopSOS(sosRequestId);
+        await this.cleanupSosKeys(sosRequestId);
+
+        // 4. Lưu mối liên kết vào Redis Hash "active_rescues" (để stream vị trí real-time của rescuer cho victim)
+        await redis.hset("active_rescues", rescuerId, JSON.stringify({
+            sosRequestId,
+            victimId: sos.user_id
+        }));
+
+        // 5. Lấy thông tin rescuer và victim để đẩy về client
+        const rescuerInfo = await userService.getUserInfoById({ userId: rescuerId }).catch(() => null);
+        const victimInfo = await userService.getUserInfoById({ userId: sos.user_id }).catch(() => null);
+
+        let rescuerLat = null;
+        let rescuerLng = null;
+        try {
+            const pos = await redis.geopos("rescuer_locations", rescuerId);
+            if (pos && pos[0]) {
+                rescuerLng = parseFloat(pos[0][0]);
+                rescuerLat = parseFloat(pos[0][1]);
+            }
+        } catch (err) {
+            console.error("[SERVICE] Lỗi lấy tọa độ Rescuer từ Redis Geo:", err);
+        }
+
+        // 6. Phát sự kiện Redis PubSub để Socket Server đồng bộ màn hình cứu hộ cho cả Victim và Rescuer
+        const pubsubPayload = JSON.stringify({
+            sosRequestId,
+            sosId: sosRequestId,
+            victimId: sos.user_id,
+            rescuerId,
+            status: 'IN_PROGRESS',
+            rescuer: {
+                userId: rescuerId,
+                fullName: rescuerInfo?.full_name || 'Người cứu hộ',
+                phone: rescuerInfo?.phone || '',
+                avatarUrl: rescuerInfo?.avatar_url || null,
+                lat: rescuerLat,
+                lng: rescuerLng
+            },
+            victim: {
+                userId: sos.user_id,
+                fullName: victimInfo?.full_name || 'Người gặp nạn',
+                phone: victimInfo?.phone || '',
+                avatarUrl: victimInfo?.avatar_url || null,
+                lat: sos.victim_lat,
+                lng: sos.victim_lng,
+                description: sos.description,
+                incidentTypeName: sos.incident_type_name
+            },
+            via: 'QR_CODE',
+        });
+        await redis.publish("sos:accepted", pubsubPayload);
+
+        // 7. Gửi Push Notification qua Firebase tới Victim
+        notificationService.sendPushNotification(sos.user_id, {
+            title: "Yêu cầu cứu hộ đã được chấp nhận",
+            body: `${rescuerInfo?.full_name || 'Người cứu hộ'} đã quét mã QR và đang trực tiếp hỗ trợ bạn.`,
+            data: {
+                type: "RESCUE_ACCEPTED",
+                sosRequestId,
+                rescuerId
+            }
+        }).catch(err => console.error("Lỗi gửi push notification cho victim qua QR:", err));
+
+        console.log(`✅ [SERVICE] Cứu hộ viên ${rescuerId} tiếp nhận ca ${sosRequestId} thành công qua QR Code!`);
+
+        return {
+            ...updated,
+            victim: {
+                userId: sos.user_id,
+                fullName: victimInfo?.full_name,
+                phone: victimInfo?.phone,
+                lat: sos.victim_lat,
+                lng: sos.victim_lng,
+                description: sos.description,
+                incidentTypeName: sos.incident_type_name
+            }
+        };
     };
 }
 

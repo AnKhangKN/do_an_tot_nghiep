@@ -72,6 +72,33 @@ class SosRequestController {
             next(error);
         }
     }
+
+    acceptSOSByQR = async (req, res, next) => {
+        try {
+            const { sosRequestId } = req.body;
+            const rescuerId = req.userId;
+
+            if (!sosRequestId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Thiếu thông tin mã ca SOS (sosRequestId)!"
+                });
+            }
+
+            const result = await sos_requestService.acceptSOSByQR({
+                sosRequestId,
+                rescuerId
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Tiếp nhận ca cứu hộ qua QR code thành công!",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new SosRequestController()

@@ -9,4 +9,8 @@ class RescuerRepository {
   Future<void> registerRescuer(RescuerRegisterRequest request) async {
     await _rescuerService.registerRescuer(request);
   }
+
+  Future<dynamic> acceptSosByQr(String sosRequestId) async {
+    return await _rescuerService.acceptSosByQr(sosRequestId);
+  }
 }

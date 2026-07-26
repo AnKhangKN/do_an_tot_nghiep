@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/location/data/location_service.dart';
 import 'package:mobile/core/session/session_controller.dart';
 import 'package:mobile/features/dangerous_points/presentation/widgets/add_dangerous_point_dialog.dart';
+import '../providers/victim_map_provider.dart';
+import 'emergency_qr_dialog_widget.dart';
 
 class VictimUtilWidget extends StatefulWidget {
   final VoidCallback? onCallTap;
@@ -52,9 +55,25 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final activeSosId = context.watch<VictimMapProvider>().activeSosRequestId;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (activeSosId != null) ...[
+          _UtilButton(
+            tooltip: 'Mã QR Cứu Hộ',
+            icon: Icons.qr_code_2_rounded,
+            color: const Color(0xFF9333EA),
+            onPressed: () {
+              EmergencyQRDialogWidget.show(
+                context,
+                sosRequestId: activeSosId,
+              );
+            },
+          ),
+          const SizedBox(height: 6),
+        ],
         _UtilButton(
           tooltip: 'Cảnh báo',
           icon: Icons.warning_rounded,

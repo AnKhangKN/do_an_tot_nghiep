@@ -10,4 +10,11 @@ class RescuerService {
   Future<void> registerRescuer(RescuerRegisterRequest request) async {
     await dio.post('/api/rescuer/register', data: request.toJson());
   }
+
+  Future<dynamic> acceptSosByQr(String sosRequestId) async {
+    final response = await dio.post('/api/sos/sos_requests/accept-qr', data: {
+      'sosRequestId': sosRequestId,
+    });
+    return response.data;
+  }
 }

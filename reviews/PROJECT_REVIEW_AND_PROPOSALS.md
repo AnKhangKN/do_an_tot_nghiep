@@ -182,13 +182,12 @@ Có **10 trang** Admin:
     - **`src/socket/index.js`**: Entrypoint tổng hợp xuất các helper function `subscribeDashboardEvents`, `subscribeConnectionStatus`.
   - **`DashboardPage.jsx`**: Đăng ký lắng nghe sự kiện qua helper `subscribeDashboardEvents`, hiển thị Badge phát sáng nhấp nháy `LIVE PUSH ACTIVE` và Toast Banner nổi ở góc phải màn hình (`"⚡ Yêu cầu SOS mới vừa xuất hiện..."`). Cập nhật ngầm dữ liệu số liệu tổng quan thời gian thực không làm gián đoạn trải nghiệm người dùng.
 
-#### ✅ Smart Priority Matching — Thuật Toán Ghép Nối Thông Minh & Ưu Tiên Tức Thì
-> **BullMQ Queue + Redis Geo 4 Radius Rings (2km ➔ 5km ➔ 10km ➔ 20km)** · Cập nhật thuật toán ghép nối cứu hộ
+#### ✅ QR Code Emergency Fallback — Cứu Hộ Ngoài Hệ Thống (Mã QR Cấp Cứu)
+> **QR Code Generation + Camera Scan-to-Accept API** · Đã hoàn thành
 
 - **Cơ chế hoạt động:**
-  - **Ưu tiên Đúng Chuyên môn**: Cứu hộ viên có chuyên môn khớp với loại sự cố của nạn nhân sẽ luôn được tự động xếp vào **đầu danh sách nhận offer**.
-  - **Fallback Tức thì Không Bỏ Sắp**: Nếu chưa có cứu hộ viên đúng chuyên môn ở gần, hệ thống sẽ lấy ngay các **Cứu hộ viên rảnh rỗi gần nhất** ở lượt quét bán kính hiện tại thay vì bỏ qua hay bắt chờ đợi, đảm bảo nạn nhân luôn được hỗ trợ 0ms delay.
-  - **Quét Bán kính Đa cấp**: Lặp 4 đợt tăng dần bán kính (2km, 5km, 10km, 20km) qua BullMQ Worker. Các cứu hộ viên rảnh rỗi (`isRescuing: false`, `hasOffer: false`) và online trên Redis Geo (`rescuer_locations`) được ưu tiên theo thứ tự khoảng cách thực tế.
+  - **Tạo Mã QR Khẩn Cấp (`EmergencyQRDialogWidget`)**: Khi Nạn nhân gặp tình huống không tìm thấy Cứu hộ viên online sau các lượt quét bán kính, ứng dụng cho phép tạo mã QR cấp cứu trực tiếp trên màn hình.
+  - **Quét Mã Ứng Cứu (`QRScannerScreen` + API `POST /api/sos_requests/accept-qr`)**: Bất kỳ Cứu hộ viên hoặc Người hỗ trợ nào ở gần (dù đang Offline) dùng ứng dụng quét mã QR này sẽ lập tức tiếp nhận ca SOS và hệ thống tự động chuyển cả 2 sang chế độ dẫn đường cứu hộ thời gian thực.
 
 ---
 
@@ -278,18 +277,18 @@ sequenceDiagram
 > **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
 > *(Xem chi tiết code đã sửa tại [Mục I.4 - Live Dashboard Real-Time](#-live-dashboard-real-time--socketio-push))*
 
----
-
-### B. Các Đề Xuất Nâng Cấp Tiếp Theo (🔵 Pending)
-
-### ⬜ Đề xuất 10: QR Code Emergency Fallback — Cứu Hộ Ngoài Hệ Thống
-> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Chi phí:** $0 · **Impact:** ⭐⭐⭐⭐⭐
+#### ✅ Đề xuất 10: QR Code Emergency Fallback — Cứu Hộ Ngoài Hệ Thống
+> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
 
 **Bài toán:** Khi BullMQ Worker đã thử hết 4 vòng mà **không tìm được rescuer nào online**. 
 
-**Giải pháp:** Tự động hiện tùy chọn **"Tạo mã QR cứu trợ"** chứa đầy đủ thông tin nạn nhân. Bất kỳ cứu hộ viên nào (dù offline) quét mã sẽ thấy thông tin và có thể nhận ca ngay.
+**Giải pháp:** Tự động hiện tùy chọn **"Tạo mã QR cứu trợ"** chứa mã ca SOS. Bất kỳ cứu hộ viên nào (dù đang offline) quét mã sẽ thấy thông tin và có thể nhận ca ngay qua API `POST /api/sos/sos_requests/accept-qr`. Đồng bộ trạng thái cứu hộ 0ms cho cả Nạn nhân và Cứu hộ viên qua Redis PubSub và Socket Server.
 
 **Điểm nổi bật học thuật:** Giải quyết **bài toán "vùng trắng cứu hộ"** — tư duy Hybrid Online-Offline System thực tiễn.
+
+---
+
+### B. Các Đề Xuất Nâng Cấp Tiếp Theo (🔵 Pending)
 
 ### ⬜ Đề xuất 11: Community Emergency Amenities — Bản Đồ Tiện Ích Cộng Đồng
 > **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Chi phí:** $0 · **Impact:** ⭐⭐⭐⭐⭐
@@ -323,7 +322,7 @@ sequenceDiagram
 | **7** | ~~Crowd-Sourced Dangerous Zones (tự phát hiện điểm nguy hiểm)~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
 | **8** | ~~Rescuer Performance Analytics (bảng xếp hạng KPI)~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
 | **9** | ~~Live Dashboard Real-Time (Socket.io Push)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
-| **10** | QR Code Emergency Fallback (cứu hộ ngoài hệ thống) | Trung bình | 1 ngày | 🔵 Chưa làm |
+| **10** | ~~QR Code Emergency Fallback (cứu hộ ngoài hệ thống)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
 | **11** | Community Emergency Amenities (tiệm sửa xe, trạm xăng, y tế) | Trung bình | 1 ngày | 🔵 Chưa làm |
 
 > [!TIP]

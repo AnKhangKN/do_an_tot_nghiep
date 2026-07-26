@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/victim_map_provider.dart';
+import 'emergency_qr_dialog_widget.dart';
 
 class VictimSearchingWidget extends StatefulWidget {
   const VictimSearchingWidget({super.key});
@@ -86,6 +87,8 @@ class _VictimSearchingWidgetState extends State<VictimSearchingWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final activeSosId = context.watch<VictimMapProvider>().activeSosRequestId;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -129,7 +132,7 @@ class _VictimSearchingWidgetState extends State<VictimSearchingWidget> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Hệ thống đang quét và gửi tín hiệu đến cứu hộ viên ở gần bạn nhất. Vui lòng chờ trong giây lát.',
+            'Hệ thống đang quét và gửi tín hiệu đến cứu hộ viên ở gần bạn nhất.',
             style: TextStyle(
               fontSize: 13,
               color: Color(0xFF64748B),
@@ -137,34 +140,64 @@ class _VictimSearchingWidgetState extends State<VictimSearchingWidget> {
             ),
           ),
           const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            height: 42,
-            child: OutlinedButton.icon(
-              onPressed: _isCancelling ? null : () => _handleCancel(context),
-              icon: _isCancelling
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.close_rounded, size: 18, color: Color(0xFFDC2626)),
-              label: Text(
-                _isCancelling ? 'Đang hủy...' : 'Hủy yêu cầu cứu hộ',
-                style: const TextStyle(
-                  color: Color(0xFFDC2626),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13.5,
+          Row(
+            children: [
+              if (activeSosId != null) ...[
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      EmergencyQRDialogWidget.show(
+                        context,
+                        sosRequestId: activeSosId,
+                      );
+                    },
+                    icon: const Icon(Icons.qr_code_2_rounded, size: 18),
+                    label: const Text(
+                      'Mã QR Cứu Hộ',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF9333EA),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isCancelling ? null : () => _handleCancel(context),
+                  icon: _isCancelling
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.close_rounded, size: 18, color: Color(0xFFDC2626)),
+                  label: Text(
+                    _isCancelling ? 'Đang hủy...' : 'Hủy yêu cầu',
+                    style: const TextStyle(
+                      color: Color(0xFFDC2626),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.2),
+                    backgroundColor: const Color(0xFFFEF2F2),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.2),
-                backgroundColor: const Color(0xFFFEF2F2),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
+            ],
           ),
         ],
       ),

@@ -129,21 +129,22 @@ class RescuerService {
             throwError("Người cứu hộ đã online!", 400);
         }
 
+        await redis.set(`rescuer:status:${userId}`, 'ACTIVE');
         return await this.rescuerRepository.updateStatus({ userId, status: 'ACTIVE' });
     }
 
     updateLastSeen = async ({ userId }) => {
-        // const rescuer = await this.findRescuerByUserId({ userId });
-
-        // if (!rescuer) {
-        //     throwError("Không tìm thấy người cứu hộ!", 404);
-        // }
-
         return await this.rescuerRepository.updateLastSeen({ userId })
     }
 
     // Rescuer tự bấm offline 
     goOffline = async ({ userId }) => {
+        const checkOnline = await this.checkRescuerOnline({ userId });
+
+        if (!checkOnline) {
+            throwError("Người cứu hộ đã offline!", 400);
+        }
+
         // 1. Đồng bộ lastSeenAt từ Redis xuống PostgreSQL lần cuối trước khi xóa cache
         try {
             await this.rescuerRepository.syncLastSeenToDB({ userId });
@@ -151,7 +152,8 @@ class RescuerService {
             console.error("[SERVICE] Lỗi đồng bộ lastSeenAt xuống DB khi offline:", e);
         }
 
-        // 2. Xóa vị trí địa lý trên Redis
+        // 2. Cập nhật status Redis thành OFFLINE và xóa vị trí địa lý trên Redis
+        await redis.set(`rescuer:status:${userId}`, 'OFFLINE');
         await this.rescuerRepository.offlineRedis({ userId });
 
         // 3. Dọn dẹp toàn bộ cache trạng thái online/bận của rescuer
@@ -160,13 +162,7 @@ class RescuerService {
         await redis.del(`active:rescuer:${userId}`);
         await redis.del(`sos:offer:rescuer:${userId}`);
 
-        const checkOnline = await this.checkRescuerOnline({ userId });
-
-        if (!checkOnline) {
-            throwError("Người cứu hộ đã offline!", 400);
-        }
-
-        console.log("Đã offline");
+        console.log(`[SERVICE] Cứu hộ viên ${userId} đã OFFLINE thành công`);
         return await this.rescuerRepository.updateStatus({ userId, status: 'OFFLINE' });
     };
 
