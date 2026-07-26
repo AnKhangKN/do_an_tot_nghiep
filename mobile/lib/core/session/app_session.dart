@@ -65,10 +65,21 @@ class AppSession {
   // =========================
   Future<void> init() async {
     final token = await authRepository.getValidAccessToken();
-    await locationRepository.loadCurrentPosition();
+    
+    // Tải vị trí và notification dịch vụ chạy song song không nghẽn tiến trình splash
+    unawaited(
+      locationRepository.loadCurrentPosition().timeout(
+        const Duration(seconds: 4),
+        onTimeout: () => debugPrint('⚠️ [Location] Tải vị trí quá thời gian 4s, bỏ qua'),
+      ),
+    );
 
-    // Load firebase notification
-    await notificationService.initialize();
+    unawaited(
+      notificationService.initialize().timeout(
+        const Duration(seconds: 4),
+        onTimeout: () => debugPrint('⚠️ [Notification] Khởi tạo notification quá thời gian 4s, bỏ qua'),
+      ),
+    );
 
     if (token != null) {
       try {

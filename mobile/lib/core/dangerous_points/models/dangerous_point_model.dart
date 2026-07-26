@@ -7,7 +7,7 @@ class DangerousPointModel {
   final double longitude;
   final String dangerLevel;
   final String status;
-  final String reportedBy;
+  final String? reportedBy;
   final String? approvedBy;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -21,7 +21,7 @@ class DangerousPointModel {
     required this.longitude,
     required this.dangerLevel,
     required this.status,
-    required this.reportedBy,
+    this.reportedBy,
     this.approvedBy,
     required this.createdAt,
     required this.updatedAt,
@@ -29,22 +29,18 @@ class DangerousPointModel {
 
   factory DangerousPointModel.fromJson(Map<String, dynamic> json) {
     return DangerousPointModel(
-      dangerousPointId: json['dangerousPointId'],
-      zoneName: json['zoneName'],
-      address: json['address'],
-      description: json['description'],
-      latitude: json['latitude'] is int 
-          ? (json['latitude'] as int).toDouble() 
-          : json['latitude'] as double,
-      longitude: json['longitude'] is int 
-          ? (json['longitude'] as int).toDouble() 
-          : json['longitude'] as double,
-      dangerLevel: json['dangerLevel'],
-      status: json['status'],
-      reportedBy: json['reportedBy'],
-      approvedBy: json['approvedBy'],
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      dangerousPointId: json['dangerousPointId']?.toString() ?? '',
+      zoneName: json['zoneName']?.toString() ?? '',
+      address: json['address']?.toString(),
+      description: json['description']?.toString(),
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      dangerLevel: json['dangerLevel']?.toString() ?? 'LOW',
+      status: json['status']?.toString() ?? 'PENDING',
+      reportedBy: json['reportedBy']?.toString(),
+      approvedBy: json['approvedBy']?.toString(),
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
     );
   }
 }

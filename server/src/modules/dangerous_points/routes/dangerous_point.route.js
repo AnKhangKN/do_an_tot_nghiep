@@ -11,6 +11,7 @@ route.get('/approved', dangerousPointController.getApprovedDangerousPoints);
 
 // Routes for admin
 route.get('/admin', verifyToken, isAdmin, adminDangerousPointController.getDangerousPointsAdmin);
+route.post('/admin/auto-detect', verifyToken, isAdmin, adminDangerousPointController.autoDetectDangerousPoints);
 route.put('/admin/:dangerousPointId/approve', verifyToken, isAdmin, adminDangerousPointController.approveDangerousPoint);
 route.put('/admin/:dangerousPointId/reject', verifyToken, isAdmin, adminDangerousPointController.rejectDangerousPoint);
 

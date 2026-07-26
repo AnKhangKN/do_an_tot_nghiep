@@ -61,12 +61,18 @@ class SessionController with ChangeNotifier {
 
   bool _showSuccessRescueAlert = false;
   bool get showSuccessRescueAlert => _showSuccessRescueAlert;
+  String? _completedSosRequestId;
+  String? _completedRescuerName;
+  String? get completedSosRequestId => _completedSosRequestId;
+  String? get completedRescuerName => _completedRescuerName;
 
-  void triggerSuccessAlert() {
+  void triggerSuccessAlert({String? sosRequestId, String? rescuerName}) {
     _showSuccessRescueAlert = true;
+    _completedSosRequestId = sosRequestId ?? _activeRescuer?['sosRequestId'] ?? _activeRescuer?['sos_request_id'];
+    _completedRescuerName = rescuerName ?? _activeRescuer?['fullName'] ?? _activeRescuer?['full_name'];
     notifyListeners();
-    // Tự động tắt sau 10 giây
-    Future.delayed(const Duration(seconds: 10), () {
+    // Tự động tắt sau 15 giây
+    Future.delayed(const Duration(seconds: 15), () {
       _showSuccessRescueAlert = false;
       notifyListeners();
     });

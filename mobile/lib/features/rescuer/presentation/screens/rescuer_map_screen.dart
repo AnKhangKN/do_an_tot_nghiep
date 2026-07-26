@@ -52,7 +52,7 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     final zoomTween = Tween<double>(begin: camera.zoom, end: destZoom);
 
     final controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 750),
       vsync: this,
     );
 
@@ -80,20 +80,31 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
 
   Future<void> _moveToCurrentLocation() async {
     final session = getIt<SessionController>();
-    var position = session.state.position;
+    
+    // 1. Phản hồi tức thì 0ms: Chuyển bản đồ đến vị trí hiện có trong máy ngay lần bấm đầu tiên
+    var initialPos = session.state.position;
+    initialPos ??= await LocationService().getCurrentPosition();
 
-    if (position == null) {
-      position = await LocationService().getCurrentPosition();
-      if (position != null) {
-        session.updatePosition(position);
-      }
+    if (initialPos != null && mounted) {
+      session.updatePosition(initialPos);
+      final destLatLng = LatLng(initialPos.latitude, initialPos.longitude);
+      final currentZoom = _mapController.camera.zoom;
+      final destZoom = currentZoom < 15.5 ? 16.5 : currentZoom;
+      _animatedMapMove(destLatLng, destZoom);
     }
 
-    if (position != null && mounted) {
-      final destLatLng = LatLng(position.latitude, position.longitude);
-      final currentZoom = _mapController.camera.zoom;
-      final destZoom = currentZoom < 15.0 ? 16.0 : currentZoom;
-      _animatedMapMove(destLatLng, destZoom);
+    // 2. Chạy ngầm đọc GPS tươi mới nhất từ phần cứng và tự động cập nhật lại nếu tọa độ thay đổi
+    try {
+      final freshPosition = await LocationService().getFreshPosition();
+      if (freshPosition != null && mounted) {
+        session.updatePosition(freshPosition);
+        final freshLatLng = LatLng(freshPosition.latitude, freshPosition.longitude);
+        final currentZoom = _mapController.camera.zoom;
+        final destZoom = currentZoom < 15.5 ? 16.5 : currentZoom;
+        _animatedMapMove(freshLatLng, destZoom);
+      }
+    } catch (e) {
+      debugPrint("⚠️ [RescuerMap] Lỗi lấy GPS tươi: $e");
     }
   }
 

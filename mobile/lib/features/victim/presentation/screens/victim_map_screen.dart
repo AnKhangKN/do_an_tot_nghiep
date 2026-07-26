@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -6,6 +7,7 @@ import 'package:mobile/shared/widgtes/phone_call_widget.dart';
 
 import '../../../../core/di/di.dart';
 import '../../../../core/location/data/location_service.dart';
+import '../../../../core/location/data/location_repository.dart';
 import '../../../../core/network/direction_service.dart';
 import '../../../../core/session/session_controller.dart';
 
@@ -15,8 +17,12 @@ import '../../../../shared/widgtes/search_widget.dart';
 import '../widgets/victim_sos_button_widget.dart';
 import '../widgets/victim_util_widget.dart';
 import '../widgets/victim_rescue_info_widget.dart';
+import 'package:geolocator/geolocator.dart';
 import '../providers/victim_map_provider.dart';
 import '../../../../shared/widgtes/emergency_dialog_widget.dart';
+import '../../../../shared/widgtes/rating_dialog_widget.dart';
+import '../../../dangerous_points/presentation/providers/geofence_provider.dart';
+import '../../../../shared/widgtes/geofence_alert_dialog.dart';
 
 class VictimMapScreen extends StatefulWidget {
   const VictimMapScreen({super.key});
@@ -27,6 +33,7 @@ class VictimMapScreen extends StatefulWidget {
 
 class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
+  StreamSubscription<Position>? _realtimeLocationSubscription;
 
   // Lưu giá trị isSearchingRescuer trước đó để phát hiện thay đổi từ true -> false
   bool _prevSearching = false;
@@ -44,7 +51,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     final zoomTween = Tween<double>(begin: camera.zoom, end: destZoom);
 
     final controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 750),
       vsync: this,
     );
 
@@ -70,41 +77,113 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     controller.forward();
   }
 
-  Future<void> _moveToCurrentLocation() async {
-    final sessionController = getIt<SessionController>();
-    var position = sessionController.state.position;
-
-    if (position == null) {
-      position = await LocationService().getCurrentPosition();
-      if (position != null) {
-        sessionController.updatePosition(position);
+  Future<void> _startRealtimeLocationTracking() async {
+    try {
+      final locationRepository = getIt<LocationRepository>();
+      final positionStream = await locationRepository.startTracking(distanceFilter: 5);
+      if (positionStream != null && mounted) {
+        await _realtimeLocationSubscription?.cancel();
+        _realtimeLocationSubscription = positionStream.listen((position) {
+          if (!mounted) return;
+          getIt<SessionController>().updatePosition(position);
+          getIt<GeofenceProvider>().checkGeofence(position.latitude, position.longitude);
+        });
       }
-    }
-
-    if (position != null && mounted) {
-      final destLatLng = LatLng(position.latitude, position.longitude);
-      final currentZoom = _mapController.camera.zoom;
-      final destZoom = currentZoom < 15.0 ? 16.0 : currentZoom;
-      _animatedMapMove(destLatLng, destZoom);
+    } catch (e) {
+      debugPrint("⚠️ [VictimMap] Lỗi bắt đầu theo dõi vị trí realtime: $e");
     }
   }
+
+  Future<void> _moveToCurrentLocation() async {
+    final sessionController = getIt<SessionController>();
+    
+    // 1. Phản hồi tức thì 0ms: Chuyển bản đồ đến vị trí hiện có trong máy ngay lần bấm đầu tiên
+    var initialPos = sessionController.state.position;
+    initialPos ??= await LocationService().getCurrentPosition();
+
+    if (initialPos != null && mounted) {
+      sessionController.updatePosition(initialPos);
+      final destLatLng = LatLng(initialPos.latitude, initialPos.longitude);
+      final currentZoom = _mapController.camera.zoom;
+      final destZoom = currentZoom < 15.5 ? 16.5 : currentZoom;
+      _animatedMapMove(destLatLng, destZoom);
+    }
+
+    // 2. Chạy ngầm đọc GPS tươi mới nhất từ phần cứng và tự động cập nhật lại nếu tọa độ thay đổi
+    try {
+      final freshPosition = await LocationService().getFreshPosition();
+      if (freshPosition != null && mounted) {
+        sessionController.updatePosition(freshPosition);
+        final freshLatLng = LatLng(freshPosition.latitude, freshPosition.longitude);
+        final currentZoom = _mapController.camera.zoom;
+        final destZoom = currentZoom < 15.5 ? 16.5 : currentZoom;
+        _animatedMapMove(freshLatLng, destZoom);
+      }
+    } catch (e) {
+      debugPrint("⚠️ [VictimMap] Lỗi lấy GPS tươi: $e");
+    }
+  }
+
+  bool _showingGeofenceDialog = false;
 
   @override
   void initState() {
     super.initState();
     getIt<SessionController>().addListener(_onSessionChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    getIt<GeofenceProvider>().addListener(_onGeofenceChanged);
+    _startRealtimeLocationTracking();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       _onSessionChanged();
       context.read<VictimMapProvider>().loadIncidentTypes();
+
+      // Lấy vị trí khởi tạo ban đầu lập tức
+      final sessionController = getIt<SessionController>();
+      var pos = sessionController.state.position;
+      pos ??= await LocationService().getCurrentPosition();
+
+      if (pos != null) {
+        sessionController.updatePosition(pos);
+      }
+
+      // Tải điểm nguy hiểm và tự động trigger kiểm tra geofence ngay tức thì
+      await getIt<GeofenceProvider>().loadApprovedPoints(
+        userLat: pos?.latitude,
+        userLng: pos?.longitude,
+      );
     });
   }
 
   @override
   void dispose() {
+    _realtimeLocationSubscription?.cancel();
     getIt<SessionController>().removeListener(_onSessionChanged);
+    getIt<GeofenceProvider>().removeListener(_onGeofenceChanged);
     _mapController.dispose();
     super.dispose();
+  }
+
+  void _onGeofenceChanged() {
+    if (!mounted) return;
+    final geofenceProvider = getIt<GeofenceProvider>();
+    final activeAlert = geofenceProvider.activeAlertPoint;
+    final distance = geofenceProvider.activeAlertDistanceMeters;
+
+    if (activeAlert != null && distance != null && !_showingGeofenceDialog) {
+      _showingGeofenceDialog = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        GeofenceAlertDialog.show(
+          context,
+          point: activeAlert,
+          distanceMeters: distance,
+          onDismiss: () {
+            _showingGeofenceDialog = false;
+            geofenceProvider.dismissAlert();
+          },
+        );
+      });
+    }
   }
 
   void _onSessionChanged() {
@@ -113,6 +192,10 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     final position = sessionController.state.position;
     final isBeingRescued = sessionController.isBeingRescued;
     final rescuerPos = sessionController.rescuerPosition;
+
+    if (position != null) {
+      getIt<GeofenceProvider>().checkGeofence(position.latitude, position.longitude);
+    }
 
     if (isBeingRescued && rescuerPos != null && position != null) {
       // Tính route theo hướng cứu hộ viên đi tới nạn nhân (giống bên Rescuer screen)
@@ -173,6 +256,73 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     }
   }
 
+  List<Marker> _buildDangerousPointMarkers(Position? currentPos) {
+    final geofenceProvider = getIt<GeofenceProvider>();
+    // Chỉ lấy các điểm trong bán kính 5km xung quanh Nạn nhân để tránh nặng bản đồ
+    final points = geofenceProvider.getNearbyPoints(
+      currentPos?.latitude,
+      currentPos?.longitude,
+      maxRadiusMeters: 5000.0,
+    );
+
+    return points.map((pt) {
+      final String level = pt.dangerLevel.toUpperCase();
+
+      Color bgColor;
+      Color shadowColor;
+      IconData iconData;
+
+      if (level == 'HIGH') {
+        bgColor = const Color(0xFFDC2626); // Đỏ nổi bật
+        shadowColor = const Color(0x66DC2626);
+        iconData = Icons.dangerous_rounded;
+      } else if (level == 'MEDIUM') {
+        bgColor = const Color(0xFFF97316); // Cam
+        shadowColor = const Color(0x66F97316);
+        iconData = Icons.warning_amber_rounded;
+      } else {
+        bgColor = const Color(0xFF10B981); // Xanh lá dịu
+        shadowColor = const Color(0x6610B981);
+        iconData = Icons.info_outline_rounded;
+      }
+
+      return Marker(
+        point: LatLng(pt.latitude, pt.longitude),
+        width: 36,
+        height: 36,
+        child: GestureDetector(
+          onTap: () {
+            final dist = currentPos != null
+                ? Geolocator.distanceBetween(
+                    currentPos.latitude,
+                    currentPos.longitude,
+                    pt.latitude,
+                    pt.longitude,
+                  )
+                : 0.0;
+            GeofenceAlertDialog.show(
+              context,
+              point: pt,
+              distanceMeters: dist,
+              onDismiss: () {},
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: bgColor,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(color: shadowColor, blurRadius: 6, spreadRadius: 1, offset: const Offset(0, 2)),
+              ],
+            ),
+            child: Icon(iconData, color: Colors.white, size: 20),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final sessionController = getIt<SessionController>();
@@ -183,15 +333,17 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
       body: Stack(
         children: [
           ListenableBuilder(
-            listenable: sessionController,
+            listenable: Listenable.merge([sessionController, getIt<GeofenceProvider>()]),
             builder: (context, _) {
+              final currentPosition = sessionController.state.position;
               final currentRescuerPos = sessionController.rescuerPosition;
 
               return MapWidget(
                 mapController: _mapController,
-                position: position,
+                position: currentPosition,
                 partnerPosition: isBeingRescued ? currentRescuerPos : null,
                 partnerMarkerChild: const Icon(Icons.airport_shuttle, color: Colors.green, size: 40),
+                additionalMarkers: _buildDangerousPointMarkers(currentPosition),
                 polylines: isBeingRescued && _routePoints.isNotEmpty
                     ? [
                         Polyline(
@@ -270,8 +422,8 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                                     durationSec: _durationSec,
                                   )
                                 : VictimSosButtonWidget(
-                                    victimLat: position?.latitude,
-                                    victimLng: position?.longitude,
+                                    victimLat: sessionController.state.position?.latitude,
+                                    victimLng: sessionController.state.position?.longitude,
                                   ),
                           );
                         },
@@ -306,6 +458,9 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
             builder: (context, _) {
               if (!sessionController.showSuccessRescueAlert) return const SizedBox.shrink();
 
+              final sosId = sessionController.completedSosRequestId;
+              final rName = sessionController.completedRescuerName;
+
               return Positioned(
                 left: 16,
                 right: 16,
@@ -321,19 +476,41 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                   child: Row(
                     children: [
                       const Icon(Icons.check_circle, color: Colors.green, size: 28),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       const Expanded(
                         child: Text(
-                          "Đã cứu hộ thành công! Cảm ơn bạn.",
+                          "Đã cứu hộ thành công!",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.green,
-                            fontSize: 15,
+                            fontSize: 14,
                           ),
                         ),
                       ),
+                      if (sosId != null)
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            sessionController.dismissSuccessAlert();
+                            RatingDialogWidget.show(
+                              context,
+                              sosRequestId: sosId,
+                              rescuerName: rName,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.star, size: 16),
+                          label: const Text('Đánh giá', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                      const SizedBox(width: 4),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.green),
+                        icon: const Icon(Icons.close, color: Colors.green, size: 20),
                         onPressed: () => sessionController.dismissSuccessAlert(),
                       )
                     ],

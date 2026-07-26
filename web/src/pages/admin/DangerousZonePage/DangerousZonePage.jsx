@@ -1,31 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import { formatTime } from '@/utils/format_date.util';
-import { getDangerousZones, approveDangerousZone, rejectDangerousZone } from '@/api/admin/DangerousZoneApi';
+import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones } from '@/api/admin/DangerousZoneApi';
+import { PiLightningFill } from 'react-icons/pi';
 
 const columns = ({ onApprove, onReject, loading }) => [
   {
     key: 'index',
     title: 'STT',
     render: (_, index) => (
-      <span className="text-gray-500">{index + 1}</span>
+      <span className="text-xs font-medium text-gray-400 text-center block">{index + 1}</span>
     ),
   },
   {
     key: 'zoneName',
     title: 'Tên khu vực',
-    render: (row) => row.zoneName || '--',
+    render: (row) => (
+      <span className="font-semibold text-gray-900 text-sm leading-snug block max-w-[180px]">
+        {row.zoneName || '--'}
+      </span>
+    ),
   },
   {
     key: 'address',
     title: 'Địa chỉ',
-    render: (row) => row.address || '--',
+    render: (row) => (
+      <span className="text-xs text-gray-600 max-w-[180px] line-clamp-2 block leading-relaxed">
+        {row.address || '--'}
+      </span>
+    ),
   },
   {
     key: 'description',
     title: 'Mô tả',
     render: (row) => (
-      <span className="text-sm text-gray-600 max-w-xs truncate">
+      <span className="text-xs text-gray-500 max-w-[220px] line-clamp-2 block leading-relaxed">
         {row.description || '--'}
       </span>
     ),
@@ -42,12 +51,12 @@ const columns = ({ onApprove, onReject, loading }) => [
             : 'Thấp';
       return (
         <span
-          className={`px-2 py-1 text-xs rounded-full font-medium ${
+          className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold shadow-2xs ${
             row.dangerLevel === 'HIGH'
-              ? 'bg-red-100 text-red-700'
+              ? 'bg-rose-50 text-rose-700 border border-rose-200/80'
               : row.dangerLevel === 'MEDIUM'
-                ? 'bg-yellow-100 text-yellow-700'
-                : 'bg-green-100 text-green-700'
+                ? 'bg-amber-50 text-amber-700 border border-amber-200/80'
+                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
           }`}
         >
           {levelLabel}
@@ -67,12 +76,12 @@ const columns = ({ onApprove, onReject, loading }) => [
             : 'Đã từ chối';
       return (
         <span
-          className={`px-2 py-1 text-xs rounded-full font-medium ${
+          className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold shadow-2xs ${
             row.status === 'PENDING'
-              ? 'bg-yellow-100 text-yellow-700'
+              ? 'bg-amber-50 text-amber-700 border border-amber-200/80'
               : row.status === 'APPROVED'
-                ? 'bg-green-100 text-green-700'
-                : 'bg-red-100 text-red-700'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                : 'bg-rose-50 text-rose-700 border border-rose-200/80'
           }`}
         >
           {statusLabel}
@@ -83,23 +92,38 @@ const columns = ({ onApprove, onReject, loading }) => [
   {
     key: 'reporterName',
     title: 'Người báo cáo',
-    render: (row) => row.reporterName || '--',
+    render: (row) => {
+      const name = row.reporterName || '';
+      if (name.includes('Crowd-Sourced') || name.includes('Hệ thống')) {
+        return (
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold bg-purple-50 text-purple-700 border border-purple-200/80 shadow-2xs">
+            <PiLightningFill className="text-purple-500 text-xs shrink-0" />
+            <span>{name}</span>
+          </span>
+        );
+      }
+      return <span className="whitespace-nowrap text-xs text-gray-700 font-medium">{name || '--'}</span>;
+    },
   },
   {
     key: 'createdAt',
     title: 'Ngày tạo',
-    render: (row) => formatTime(row.createdAt),
+    render: (row) => (
+      <span className="whitespace-nowrap text-xs text-gray-500 font-medium">
+        {formatTime(row.createdAt)}
+      </span>
+    ),
   },
   {
     key: 'action',
     title: 'Hành động',
     render: (row) =>
       row.status === 'PENDING' ? (
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <button
             onClick={() => onApprove(row.dangerousPointId)}
             disabled={loading}
-            className="px-3 py-1 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+            className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-all active:scale-95 shadow-2xs"
           >
             Duyệt
           </button>
@@ -107,13 +131,13 @@ const columns = ({ onApprove, onReject, loading }) => [
           <button
             onClick={() => onReject(row.dangerousPointId)}
             disabled={loading}
-            className="px-3 py-1 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+            className="px-3 py-1.5 text-xs font-semibold bg-rose-600 text-white rounded-xl hover:bg-rose-700 disabled:opacity-50 transition-all active:scale-95 shadow-2xs"
           >
             Từ chối
           </button>
         </div>
       ) : (
-        <span className="text-gray-400 text-sm">
+        <span className="whitespace-nowrap text-xs text-gray-400 font-medium">
           Đã xử lý
         </span>
       ),
@@ -126,6 +150,8 @@ const DangerousZonePage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [autoDetecting, setAutoDetecting] = useState(false);
+  const [detectMsg, setDetectMsg] = useState(null);
 
   const fetchDangerousZones = async () => {
     const limit = 10;
@@ -177,11 +203,45 @@ const DangerousZonePage = () => {
     }
   };
 
+  const handleAutoDetect = async () => {
+    try {
+      setAutoDetecting(true);
+      setDetectMsg(null);
+      const res = await autoDetectDangerousZones();
+      setDetectMsg(res?.message || 'Quét thành công!');
+      fetchDangerousZones();
+    } catch (error) {
+      console.error(error);
+      setDetectMsg('⚠️ Có lỗi xảy ra khi quét tự động.');
+    } finally {
+      setAutoDetecting(false);
+    }
+  };
+
   return (
-    <div className="">
-      <div className="flex items-center justify-between pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Quản lý điểm nguy hiểm</h1>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-gray-100">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Quản lý điểm nguy hiểm</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Duyệt các vị trí rủi ro báo cáo bởi người dùng hoặc hệ thống tự phát hiện</p>
+        </div>
+
+        <button
+          onClick={handleAutoDetect}
+          disabled={autoDetecting}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white rounded-2xl font-medium shadow-sm transition-all disabled:opacity-50 text-sm"
+        >
+          <PiLightningFill className={autoDetecting ? "animate-spin text-amber-300" : "text-amber-300"} />
+          {autoDetecting ? "Đang phân tích gom cụm..." : "⚡ Quét tự động (Crowd-Sourced)"}
+        </button>
       </div>
+
+      {detectMsg && (
+        <div className="px-4 py-3 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900 text-sm flex items-center justify-between shadow-sm">
+          <span>{detectMsg}</span>
+          <button onClick={() => setDetectMsg(null)} className="text-purple-500 hover:text-purple-700 font-bold ml-4">✕</button>
+        </div>
+      )}
 
       <TableComponent
         columns={columns({ onApprove: handleApprove, onReject: handleReject, loading: actionLoading })}

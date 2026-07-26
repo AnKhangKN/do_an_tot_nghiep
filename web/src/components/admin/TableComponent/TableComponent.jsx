@@ -53,7 +53,7 @@ const TableComponent = ({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-5 py-4 text-left font-semibold text-white text-sm tracking-wider"
+                  className="px-4 py-3.5 text-left font-semibold text-white text-xs uppercase tracking-wider whitespace-nowrap align-middle"
                 >
                   {col.title}
                 </th>
@@ -90,7 +90,7 @@ const TableComponent = ({
                   className="hover:bg-gray-50/80 transition-colors duration-150 cursor-pointer"
                 >
                   {columns.map((col) => (
-                    <td key={col.key} className="px-5 py-4 text-sm text-gray-700">
+                    <td key={col.key} className="px-4 py-3.5 text-sm text-gray-700 align-middle">
                       {col.render
                         ? col.render(row, index)
                         : row[col.dataIndex]}

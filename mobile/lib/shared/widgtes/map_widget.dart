@@ -50,7 +50,7 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
 
     _myPositionController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 750),
     )..addListener(() {
         if (!mounted) return;
         setState(() {
@@ -65,7 +65,7 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
 
     _partnerPositionController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 750),
     )..addListener(() {
         if (!mounted) return;
         setState(() {
@@ -102,35 +102,43 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
     // Xử lý vị trí của mình
     if (widget.position != null) {
       final newMyLatLng = LatLng(widget.position!.latitude, widget.position!.longitude);
-      if (_myTargetLatLng == null) {
-        _myCurrentLatLng = newMyLatLng;
-        _myTargetLatLng = newMyLatLng;
-      } else if (_myTargetLatLng != newMyLatLng) {
-        _myStartLatLng = _myCurrentLatLng ?? newMyLatLng;
-        _myTargetLatLng = newMyLatLng;
-        _myPositionController!.forward(from: 0.0);
+      if (_myTargetLatLng == null ||
+          _myTargetLatLng!.latitude != newMyLatLng.latitude ||
+          _myTargetLatLng!.longitude != newMyLatLng.longitude) {
+        setState(() {
+          _myStartLatLng = _myCurrentLatLng ?? newMyLatLng;
+          _myTargetLatLng = newMyLatLng;
+          _myCurrentLatLng = newMyLatLng;
+        });
+        _myPositionController?.forward(from: 0.0);
       }
-    } else {
-      _myCurrentLatLng = null;
-      _myTargetLatLng = null;
-      _myPositionController!.stop();
+    } else if (_myCurrentLatLng != null) {
+      setState(() {
+        _myCurrentLatLng = null;
+        _myTargetLatLng = null;
+      });
+      _myPositionController?.stop();
     }
 
     // Xử lý vị trí của đối phương
     if (widget.partnerPosition != null) {
       final newPartnerLatLng = widget.partnerPosition!;
-      if (_partnerTargetLatLng == null) {
-        _partnerCurrentLatLng = newPartnerLatLng;
-        _partnerTargetLatLng = newPartnerLatLng;
-      } else if (_partnerTargetLatLng != newPartnerLatLng) {
-        _partnerStartLatLng = _partnerCurrentLatLng ?? newPartnerLatLng;
-        _partnerTargetLatLng = newPartnerLatLng;
-        _partnerPositionController!.forward(from: 0.0);
+      if (_partnerTargetLatLng == null ||
+          _partnerTargetLatLng!.latitude != newPartnerLatLng.latitude ||
+          _partnerTargetLatLng!.longitude != newPartnerLatLng.longitude) {
+        setState(() {
+          _partnerStartLatLng = _partnerCurrentLatLng ?? newPartnerLatLng;
+          _partnerTargetLatLng = newPartnerLatLng;
+          _partnerCurrentLatLng = newPartnerLatLng;
+        });
+        _partnerPositionController?.forward(from: 0.0);
       }
-    } else {
-      _partnerCurrentLatLng = null;
-      _partnerTargetLatLng = null;
-      _partnerPositionController!.stop();
+    } else if (_partnerCurrentLatLng != null) {
+      setState(() {
+        _partnerCurrentLatLng = null;
+        _partnerTargetLatLng = null;
+      });
+      _partnerPositionController?.stop();
     }
   }
 

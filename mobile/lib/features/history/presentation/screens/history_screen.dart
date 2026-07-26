@@ -8,6 +8,7 @@ import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/session/session_state.dart';
 import '../../../../shared/widgtes/phone_call_widget.dart';
+import '../../../../shared/widgtes/rating_dialog_widget.dart';
 import '../providers/history_provider.dart';
 import '../../models/history_model.dart';
 import '../../../../core/utils/formatters.dart';
@@ -478,6 +479,33 @@ class _HistoryCard extends StatelessWidget {
               Text(
                 "Lý do hủy: ${item.cancelReason}",
                 style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+
+            if (!isRescuer && (item.status.toUpperCase() == "DONE" || item.status.toUpperCase() == "COMPLETED")) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    RatingDialogWidget.show(
+                      context,
+                      sosRequestId: item.id,
+                      rescuerName: item.partnerName,
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.amber.shade800,
+                    side: BorderSide(color: Colors.amber.shade700, width: 1.5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  icon: const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+                  label: const Text(
+                    "Đánh giá ca cứu hộ này",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
               ),
             ],
           ],

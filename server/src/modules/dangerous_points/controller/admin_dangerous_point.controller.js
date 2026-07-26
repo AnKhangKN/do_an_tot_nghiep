@@ -54,6 +54,19 @@ class AdminDangerousPointController {
             next(error)
         }
     }
+
+    async autoDetectDangerousPoints(req, res, next) {
+        try {
+            const result = await dangerousPointService.autoDetectAndCreateCrowdSourcedZones();
+            return res.status(200).json({
+                success: true,
+                message: `Quét tự động hoàn tất! Đã tạo ${result.createdCount} điểm nguy hiểm mới từ ${result.totalClustersFound} cụm SOS.`,
+                data: result
+            })
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 module.exports = new AdminDangerousPointController()

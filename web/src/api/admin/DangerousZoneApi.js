@@ -31,3 +31,13 @@ export const rejectDangerousZone = async (dangerousPointId) => {
         throw error;
     }
 };
+
+export const autoDetectDangerousZones = async () => {
+    try {
+        const response = await axiosJWT.post(`/api/dangerous_points/admin/auto-detect`);
+        return response.data;
+    } catch (error) {
+        console.error("Auto detect dangerous zones error:", error);
+        throw error;
+    }
+};

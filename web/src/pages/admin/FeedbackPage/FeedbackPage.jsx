@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import { formatTime } from '@/utils/format_date.util';
 import ButtonComponent from '@/components/shared/ButtonComponent/ButtonComponent';
+import { getAllRatingsAdmin } from '@/api/admin/RatingApi';
+import { PiStarFill } from 'react_icons_pi_placeholder'; // Use phosphor icon or standard icon
 
-const feedbackColumns = [
+const ratingColumns = [
   {
     key: 'index',
     title: 'STT',
@@ -12,23 +14,87 @@ const feedbackColumns = [
     ),
   },
   {
-    key: 'user',
-    title: 'Người dùng',
-    dataIndex: 'user',
-  },
-  {
-    key: 'content',
-    title: 'Nội dung phản hồi',
-    dataIndex: 'content',
-  },
-  {
-    key: 'createdAt',
-    title: 'Ngày gửi',
+    key: 'victim_name',
+    title: 'Nạn nhân (Người gửi)',
     render: (row) => (
-      <span className="text-sm text-gray-500">
-        {formatTime(row.createdAt)}
+      <div className="flex items-center gap-2">
+        {row.victim_avatar ? (
+          <img src={row.victim_avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+            {(row.victim_name || 'N/A').charAt(0)}
+          </div>
+        )}
+        <span className="font-medium text-gray-900">{row.victim_name || 'Khách'}</span>
+      </div>
+    ),
+  },
+  {
+    key: 'rescuer_name',
+    title: 'Cứu hộ viên',
+    render: (row) => (
+      <div className="flex items-center gap-2">
+        {row.rescuer_avatar ? (
+          <img src={row.rescuer_avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700">
+            {(row.rescuer_name || 'CHV').charAt(0)}
+          </div>
+        )}
+        <span className="font-medium text-gray-900">{row.rescuer_name || 'Cứu hộ viên'}</span>
+      </div>
+    ),
+  },
+  {
+    key: 'rating',
+    title: 'Đánh giá',
+    render: (row) => (
+      <div className="flex items-center gap-1 font-semibold text-amber-600">
+        <span>⭐ {row.rating}/5</span>
+        <div className="flex text-amber-400 text-sm ml-1">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span key={i} className={i < row.rating ? 'text-amber-400' : 'text-gray-300'}>
+              ★
+            </span>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: 'comment',
+    title: 'Nội dung nhận xét',
+    render: (row) => (
+      <span className="text-gray-700 italic">
+        {row.comment ? `"${row.comment}"` : <span className="text-gray-400 font-normal">Không có lời nhắn</span>}
       </span>
     ),
+  },
+  {
+    key: 'created_at',
+    title: 'Thời gian',
+    render: (row) => (
+      <span className="text-sm text-gray-500">
+        {formatTime(row.created_at)}
+      </span>
+    ),
+  },
+];
+
+const mockReports = [
+  {
+    id: '1',
+    reportedBy: 'Lê Văn C',
+    reason: 'Spam bình luận',
+    target: 'Bài viết khu vực nguy hiểm',
+    createdAt: '2026-05-17T10:00:00',
+  },
+  {
+    id: '2',
+    reportedBy: 'Phạm Thị D',
+    reason: 'Thông tin sai lệch',
+    target: 'Bình luận người dùng',
+    createdAt: '2026-05-16T09:20:00',
   },
 ];
 
@@ -66,113 +132,47 @@ const reportColumns = [
   },
 ];
 
-const messageColumns = [
-  {
-    key: 'index',
-    title: 'STT',
-    render: (_, index) => (
-      <span className="text-gray-500">{index + 1}</span>
-    ),
-  },
-  {
-    key: 'sender',
-    title: 'Người gửi',
-    dataIndex: 'sender',
-  },
-  {
-    key: 'message',
-    title: 'Tin nhắn',
-    dataIndex: 'message',
-  },
-  {
-    key: 'status',
-    title: 'Trạng thái',
-    render: (row) => (
-      <span
-        className={`px-2 py-1 text-xs rounded-full font-medium ${row.status === 'READ'
-          ? 'bg-green-100 text-green-700'
-          : 'bg-yellow-100 text-yellow-700'
-          }`}
-      >
-        {row.status}
-      </span>
-    ),
-  },
-  {
-    key: 'createdAt',
-    title: 'Ngày gửi',
-    render: (row) => (
-      <span className="text-sm text-gray-500">
-        {formatTime(row.createdAt)}
-      </span>
-    ),
-  },
-];
-
-const mockFeedbacks = [
-  {
-    id: '1',
-    user: 'Nguyễn Văn A',
-    content: 'Ứng dụng hoạt động rất tốt',
-    createdAt: '2026-05-20T08:30:00',
-  },
-  {
-    id: '2',
-    user: 'Trần Thị B',
-    content: 'Cần cải thiện tốc độ tải bản đồ',
-    createdAt: '2026-05-18T14:10:00',
-  },
-];
-
-const mockReports = [
-  {
-    id: '1',
-    reportedBy: 'Lê Văn C',
-    reason: 'Spam bình luận',
-    target: 'Bài viết khu vực nguy hiểm',
-    createdAt: '2026-05-17T10:00:00',
-  },
-  {
-    id: '2',
-    reportedBy: 'Phạm Thị D',
-    reason: 'Thông tin sai lệch',
-    target: 'Bình luận người dùng',
-    createdAt: '2026-05-16T09:20:00',
-  },
-];
-
-const mockMessages = [
-  {
-    id: '1',
-    sender: 'Hoàng Văn E',
-    message: 'Tôi cần hỗ trợ khẩn cấp',
-    status: 'UNREAD',
-    createdAt: '2026-05-20T11:00:00',
-  },
-  {
-    id: '2',
-    sender: 'Nguyễn Thị F',
-    message: 'Cảm ơn đội cứu hộ',
-    status: 'READ',
-    createdAt: '2026-05-19T15:30:00',
-  },
-];
-
 const FeedbackPage = () => {
-  const [activeTab, setActiveTab] = React.useState('feedback');
+  const [activeTab, setActiveTab] = useState('rating');
+  const [ratings, setRatings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchRatings = async (currentPage = 1) => {
+    setLoading(true);
+    try {
+      const res = await getAllRatingsAdmin(currentPage, 10);
+      if (res?.data) {
+        setRatings(res.data.ratings || []);
+        const total = res.data.total || 0;
+        setTotalPages(Math.ceil(total / 10) || 1);
+      }
+    } catch (err) {
+      console.error("Failed to load ratings:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'rating') {
+      fetchRatings(page);
+    }
+  }, [activeTab, page]);
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'feedback':
+      case 'rating':
         return (
           <TableComponent
-            columns={feedbackColumns}
-            data={mockFeedbacks}
-            rowKey="id"
-            page={1}
-            totalPages={1}
-            onPageChange={() => { }}
-            loading={false}
+            columns={ratingColumns}
+            data={ratings}
+            rowKey="rating_id"
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => setPage(p)}
+            loading={loading}
           />
         );
 
@@ -189,38 +189,29 @@ const FeedbackPage = () => {
           />
         );
 
-      case 'message':
-        return (
-          <TableComponent
-            columns={messageColumns}
-            data={mockMessages}
-            rowKey="id"
-            page={1}
-            totalPages={1}
-            onPageChange={() => { }}
-            loading={false}
-          />
-        );
-
       default:
         return null;
     }
   };
 
   return (
-    <div className="">
-
+    <div className="p-2">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Quản Lý Phản Hồi & Đánh Giá Cứu Hộ</h1>
+        <p className="text-sm text-gray-500">Theo dõi đánh giá chất lượng phục vụ của Cứu hộ viên từ Nạn nhân</p>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-3 mb-5">
         <ButtonComponent
-          onClick={() => setActiveTab('feedback')}
-          className={`${activeTab === 'feedback'
+          onClick={() => setActiveTab('rating')}
+          className={`${activeTab === 'rating'
             ? 'bg-gray-900 text-white'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
         >
-          Phản hồi
+          ⭐ Đánh giá Cứu hộ
         </ButtonComponent>
 
         <ButtonComponent
@@ -230,17 +221,7 @@ const FeedbackPage = () => {
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
         >
-          Báo cáo
-        </ButtonComponent>
-
-        <ButtonComponent
-          onClick={() => setActiveTab('message')}
-          className={`${activeTab === 'message'
-            ? 'bg-gray-900 text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-        >
-          Tin nhắn
+          🚩 Báo cáo vi phạm
         </ButtonComponent>
       </div>
 

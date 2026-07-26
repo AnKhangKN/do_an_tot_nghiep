@@ -13,28 +13,7 @@ class ChatProvider extends ChangeNotifier {
   final SessionController? sessionController;
   final StorageService? storageService;
 
-  List<ConversationModel> _conversations = [
-    const ConversationModel(
-      id: 'admin_center',
-      name: "Trung tâm điều phối SOS",
-      lastMessage: "Admin đang theo dõi yêu cầu cứu hộ của bạn.",
-      time: "2 phút",
-      unreadCount: 2,
-      isEmergency: true,
-      isOnline: true,
-      phone: "18001199",
-    ),
-    const ConversationModel(
-      id: 'rescuer_minh',
-      name: "Nguyễn Văn Minh (Cứu hộ viên)",
-      lastMessage: "Tôi đang di chuyển đến vị trí của bạn.",
-      time: "5 phút",
-      unreadCount: 1,
-      isEmergency: false,
-      isOnline: true,
-      phone: "0912345678",
-    ),
-  ];
+  List<ConversationModel> _conversations = [];
 
   final Map<String, List<ChatMessageModel>> _messagesMap = {};
   bool _isLoading = false;
@@ -147,9 +126,7 @@ class ChatProvider extends ChangeNotifier {
     try {
       await resolveCurrentUserId();
       final remoteList = await chatRepository!.getUserConversations();
-      if (remoteList.isNotEmpty) {
-        _conversations = remoteList;
-      }
+      _conversations = remoteList;
     } catch (e) {
       debugPrint('Error fetching conversations: $e');
     } finally {
@@ -168,11 +145,9 @@ class ChatProvider extends ChangeNotifier {
           conversationId,
           currentUserId: _currentUserId,
         );
-        if (remoteMessages.isNotEmpty) {
-          _messagesMap[conversationId] = remoteMessages;
-          notifyListeners();
-          return;
-        }
+        _messagesMap[conversationId] = remoteMessages;
+        notifyListeners();
+        return;
       } catch (e) {
         debugPrint('Error loading messages: $e');
       }
@@ -185,34 +160,7 @@ class ChatProvider extends ChangeNotifier {
 
   List<ChatMessageModel> getMessages(String conversationId) {
     if (!_messagesMap.containsKey(conversationId)) {
-      final conv = _conversations.firstWhere(
-        (c) => c.id == conversationId,
-        orElse: () => ConversationModel(
-          id: conversationId,
-          name: 'Đối tác cứu hộ',
-          lastMessage: '',
-          time: 'Vừa xong',
-        ),
-      );
-
-      _messagesMap[conversationId] = [
-        ChatMessageModel(
-          id: '1',
-          senderId: conversationId,
-          text: 'Xin chào! Tôi là ${conv.name}. Bạn đang cần hỗ trợ gì?',
-          time: '10:30',
-          isMe: false,
-          isEmergency: conv.isEmergency,
-        ),
-        if (conv.lastMessage.isNotEmpty && conv.lastMessage != "Bắt đầu cuộc trò chuyện...")
-          ChatMessageModel(
-            id: '2',
-            senderId: _currentUserId,
-            text: conv.lastMessage,
-            time: conv.time,
-            isMe: true,
-          ),
-      ];
+      _messagesMap[conversationId] = [];
     }
     return List.unmodifiable(_messagesMap[conversationId]!);
   }

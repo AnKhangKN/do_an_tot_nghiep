@@ -34,19 +34,42 @@ class LocationService {
     return true;
   }
 
-  /// Lấy vị trí hiện tại
+  /// Lấy vị trí hiện tại với fallback nhanh từ vị trí đã biết gần nhất
   Future<Position?> getCurrentPosition() async {
     try {
       final granted = await ensureLocationPermission();
-
       if (!granted) return null;
 
+      // 1. Lấy vị trí đã biết gần nhất trước để nhanh chóng (dưới 10ms)
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null) {
+        return lastKnown;
+      }
+
+      // 2. Nếu chưa có, lấy vị trí hiện tại với timeLimit 4 giây tránh treo app
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best,
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 4),
       );
     } catch (e) {
       debugPrint('Get current position error: $e');
       return null;
+    }
+  }
+
+  /// Lấy vị trí GPS phần cứng thực tế mới nhất (bỏ qua cache, đọc trực tiếp từ sensor GPS)
+  Future<Position?> getFreshPosition() async {
+    try {
+      final granted = await ensureLocationPermission();
+      if (!granted) return null;
+
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 5),
+      );
+    } catch (e) {
+      debugPrint('Get fresh position error: $e');
+      return await Geolocator.getLastKnownPosition();
     }
   }
 

@@ -59,6 +59,43 @@ class DangerousPointService {
 
         return updatedPoint ? mapFields(updatedPoint, this.dangerousPointModel) : null
     }
+
+    /// Tự động quét và phát hiện các điểm nguy hiểm từ cụm dữ liệu SOS (Crowd-Sourced)
+    async autoDetectAndCreateCrowdSourcedZones() {
+        const clusters = await this.dangerousPointRepository.detectSosClusters(200, 3);
+        let createdCount = 0;
+
+        for (const cluster of clusters) {
+            const exists = await this.dangerousPointRepository.findNearbyDangerousPoint(
+                cluster.avgLat,
+                cluster.avgLng,
+                300
+            );
+
+            if (!exists) {
+                const dangerousPointId = generateUUID();
+                const dangerLevel = cluster.sosCount >= 5 ? 'HIGH' : 'MEDIUM';
+                const zoneName = `Điểm nóng SOS (Tự động phát hiện ${cluster.sosCount} ca)`;
+                const address = `Khu vực có mật độ cứu hộ cao (${cluster.avgLat.toFixed(4)}, ${cluster.avgLng.toFixed(4)})`;
+                const description = `Hệ thống phân tích dữ liệu tự động ghi nhận ${cluster.sosCount} ca SOS phát sinh trong bán kính 200m. Cần Admin kiểm duyệt.`;
+
+                await transaction(async (client) => {
+                    await this.dangerousPointRepository.createSystemDangerousPoint(client, {
+                        dangerousPointId,
+                        zoneName,
+                        address,
+                        description,
+                        latitude: cluster.avgLat,
+                        longitude: cluster.avgLng,
+                        dangerLevel
+                    });
+                });
+                createdCount++;
+            }
+        }
+
+        return { createdCount, totalClustersFound: clusters.length };
+    }
 }
 
 module.exports = new DangerousPointService()

@@ -52,8 +52,11 @@ class VictimSocket {
 
     socket.on("rescue:completed", (data) {
       debugPrint('🟢 [VICTIM SOCKET] Nhận rescue:completed: $data');
+      final activeRescuer = sessionController.activeRescuer;
+      final String? sosId = data != null ? (data['sosRequestId'] ?? data['sos_request_id'] ?? data['sosId']) : null;
+      final String? rName = activeRescuer != null ? (activeRescuer['fullName'] ?? activeRescuer['full_name']) : null;
+      sessionController.triggerSuccessAlert(sosRequestId: sosId, rescuerName: rName);
       sessionController.endBeingRescued();
-      sessionController.triggerSuccessAlert();
     });
   }
 

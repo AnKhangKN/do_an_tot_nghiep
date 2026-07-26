@@ -2,8 +2,8 @@ class BackgroundConfig {
   // =========================
   // LOCATION
   // =========================
-  static const int locationIntervalSeconds = 5;
-  static const double minDistanceMeters = 10;
+  static const int locationIntervalSeconds = 2;
+  static const double minDistanceMeters = 2;
 
   // =========================
   // SOCKET
