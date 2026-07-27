@@ -21,13 +21,16 @@ class UserRepository {
         return result.rows.length > 0;
     };
 
-    createUser = async (client, { userId, fullName, email }) => {
+    createUser = async (client, { userId, fullName, email, phone, avatarUrl, isVerified = false }) => {
         const query = `
         INSERT INTO ${this.user.table} 
             (${this.user.field.userId}, 
             ${this.user.field.fullName}, 
-            ${this.user.field.email})
-        VALUES ($1, $2, $3)
+            ${this.user.field.email},
+            ${this.user.field.phone},
+            ${this.user.field.avatarUrl},
+            ${this.user.field.isVerified})
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
         `;
 
@@ -35,8 +38,26 @@ class UserRepository {
             userId,
             fullName,
             email,
+            phone || null,
+            avatarUrl || null,
+            isVerified,
         ]);
 
+        return result.rows[0];
+    };
+
+    updateGoogleProfile = async (client, { userId, fullName, avatarUrl, isVerified = true }) => {
+        const query = `
+        UPDATE ${this.user.table}
+        SET 
+            ${this.user.field.fullName} = COALESCE(NULLIF($2, ''), ${this.user.field.fullName}),
+            ${this.user.field.avatarUrl} = COALESCE(NULLIF($3, ''), ${this.user.field.avatarUrl}),
+            ${this.user.field.isVerified} = $4
+        WHERE ${this.user.field.userId} = $1
+        RETURNING *
+        `;
+
+        const result = await client.query(query, [userId, fullName || '', avatarUrl || '', isVerified]);
         return result.rows[0];
     };
 
@@ -185,6 +206,19 @@ class UserRepository {
             page,
             totalPages: Math.ceil(total / limit)
         };
+    }
+
+    updateIsVerified = async (client, { email, isVerified = true }) => {
+        const query = `
+            UPDATE ${this.user.table}
+            SET ${this.user.field.isVerified} = $1,
+                ${this.user.field.updatedAt} = CURRENT_TIMESTAMP
+            WHERE ${this.user.field.email} = $2
+            RETURNING *
+        `;
+        const executor = client || pool;
+        const result = await executor.query(query, [isVerified, email]);
+        return result.rows[0];
     }
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/constants/color_constants.dart';
 
 class EmergencyContactItem {
   final String title;
@@ -26,83 +27,61 @@ class EmergencyDialogWidget extends StatelessWidget {
       phoneNumber: '115',
       description: 'Gọi cấp cứu y tế khẩn cấp, xe thương bệnh nhân',
       icon: Icons.medical_services_rounded,
-      color: Color(0xFFEF4444),
+      color: ColorConstants.danger,
     ),
     EmergencyContactItem(
       title: '114 - Cứu hộ & Cứu hỏa',
       phoneNumber: '114',
       description: 'Phòng cháy chữa cháy, cứu hộ cứu nạn thiên tai',
       icon: Icons.local_fire_department_rounded,
-      color: Color(0xFFF97316),
+      color: ColorConstants.dangerMedium,
     ),
     EmergencyContactItem(
       title: '113 - Cảnh sát phản ứng nhanh',
       phoneNumber: '113',
       description: 'Cảnh sát trật tự, sự cố an ninh trật tự giao thông',
       icon: Icons.local_police_rounded,
-      color: Color(0xFF2563EB),
+      color: ColorConstants.primary,
     ),
     EmergencyContactItem(
       title: '112 - Tìm kiếm Cứu nạn Quốc gia',
       phoneNumber: '112',
       description: 'Yêu cầu trợ giúp tìm kiếm cứu nạn trên toàn quốc',
       icon: Icons.sos_rounded,
-      color: Color(0xFFDC2626),
-    ),
-    EmergencyContactItem(
-      title: 'Hotline Cứu hộ Giao thông 24/7',
-      phoneNumber: '19001000',
-      description: 'Đường dây nóng hỗ trợ kéo xe, sự cố giao thông',
-      icon: Icons.minor_crash_rounded,
-      color: Color(0xFF16A34A),
-    ),
-    EmergencyContactItem(
-      title: 'Tổng đài Hỗ trợ SOS Hệ thống',
-      phoneNumber: '18001199',
-      description: 'Tổng đài điều phối cứu hộ và hỗ trợ người dùng',
-      icon: Icons.headset_mic_rounded,
-      color: Color(0xFF7C3AED),
+      color: ColorConstants.dangerHigh,
     ),
   ];
 
-  static Future<void> show(BuildContext context) {
-    return showDialog(
+  static void show(BuildContext context) {
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => const EmergencyDialogWidget(),
     );
   }
 
   Future<void> _makeCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
-    try {
-      if (await canLaunchUrl(launchUri)) {
-        await launchUrl(launchUri);
-      }
-    } catch (e) {
-      debugPrint('Error making call to $phoneNumber: $e');
+    final Uri uri = Uri.parse('tel:$phoneNumber');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.70,
       ),
-      elevation: 10,
-      backgroundColor: Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: size.height * 0.75,
-          maxWidth: 420,
+      decoration: const BoxDecoration(
+        color: ColorConstants.surfaceWhite,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
         ),
+      ),
+      child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -111,7 +90,7 @@ class EmergencyDialogWidget extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 18, 12, 16),
               decoration: const BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+                  bottom: BorderSide(color: ColorConstants.divider, width: 1),
                 ),
               ),
               child: Row(
@@ -119,12 +98,12 @@ class EmergencyDialogWidget extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFEE2E2),
+                      color: ColorConstants.dangerHighLight,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
                       Icons.phone_in_talk_rounded,
-                      color: Color(0xFFEF4444),
+                      color: ColorConstants.danger,
                       size: 24,
                     ),
                   ),
@@ -138,7 +117,7 @@ class EmergencyDialogWidget extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
+                            color: ColorConstants.slateDark,
                           ),
                         ),
                         SizedBox(height: 2),
@@ -146,7 +125,7 @@ class EmergencyDialogWidget extends StatelessWidget {
                           'Danh sách số điện thoại hỗ trợ 24/7',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF64748B),
+                            color: ColorConstants.textMuted,
                           ),
                         ),
                       ],
@@ -154,7 +133,7 @@ class EmergencyDialogWidget extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: Color(0xFF64748B)),
+                    icon: const Icon(Icons.close, color: ColorConstants.textMuted),
                     tooltip: 'Đóng',
                   ),
                 ],
@@ -172,10 +151,10 @@ class EmergencyDialogWidget extends StatelessWidget {
                     final item = _contacts[index];
                     return Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: ColorConstants.bgCanvas,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0xFFE2E8F0),
+                          color: ColorConstants.border,
                           width: 1,
                         ),
                       ),
@@ -202,7 +181,7 @@ class EmergencyDialogWidget extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1E293B),
+                            color: ColorConstants.textPrimary,
                           ),
                         ),
                         subtitle: Padding(
@@ -211,7 +190,7 @@ class EmergencyDialogWidget extends StatelessWidget {
                             item.description,
                             style: const TextStyle(
                               fontSize: 11,
-                              color: Color(0xFF64748B),
+                              color: ColorConstants.textMuted,
                               height: 1.25,
                             ),
                           ),
@@ -220,7 +199,7 @@ class EmergencyDialogWidget extends StatelessWidget {
                           onPressed: () => _makeCall(item.phoneNumber),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: item.color,
-                            foregroundColor: Colors.white,
+                            foregroundColor: ColorConstants.surfaceWhite,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -260,12 +239,12 @@ class EmergencyDialogWidget extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    backgroundColor: const Color(0xFFF1F5F9),
+                    backgroundColor: ColorConstants.divider,
                   ),
                   child: const Text(
                     'Hủy / Đóng',
                     style: TextStyle(
-                      color: Color(0xFF475569),
+                      color: ColorConstants.textSubtle,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),

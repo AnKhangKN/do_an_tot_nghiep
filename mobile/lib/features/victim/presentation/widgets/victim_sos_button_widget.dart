@@ -46,7 +46,7 @@ class _VictimSosButtonWidgetState
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2), // Thời gian nhấn giữ 2 giây
+      duration: const Duration(seconds: 1), // Thời gian nhấn giữ 1 giây
     );
 
     _animationController.addListener(() {

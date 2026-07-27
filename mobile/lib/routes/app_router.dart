@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import 'package:mobile/core/storage/storage_service.dart';
 import 'package:mobile/features/rescuer/presentation/screens/rescuer_register_screen.dart';
 import 'package:mobile/routes/widgets/main_shell.dart';
 import '../core/constants/router_constants.dart';
@@ -9,6 +8,7 @@ import '../features/rescuer/presentation/screens/rescuer_map_screen.dart';
 import '../features/splash/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
+import '../features/auth/presentation/screens/verify_otp_screen.dart';
 import '../features/history/presentation/screens/history_screen.dart';
 import '../features/chat/presentation/screens/chat_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
@@ -36,6 +36,7 @@ class AppRouter {
       final isSplash = state.matchedLocation == RouterConstants.splash;
       final isLogin = state.matchedLocation == RouterConstants.login;
       final isRegister = state.matchedLocation == RouterConstants.register;
+      final isVerifyOtp = state.matchedLocation == RouterConstants.verifyOtp;
 
       // 1. Nếu đang ở Splash mà đã khởi tạo xong
       if (isSplash) {
@@ -46,13 +47,13 @@ class AppRouter {
         }
       }
 
-      // 2. Nếu chưa đăng nhập mà cố tình vào các màn hình bên trong -> Đá về Login (ngoại trừ Login và Register)
-      if (!isLoggedIn && !isLogin && !isRegister) {
+      // 2. Nếu chưa đăng nhập mà cố tình vào các màn hình bên trong -> Đá về Login (ngoại trừ Login, Register và VerifyOtp)
+      if (!isLoggedIn && !isLogin && !isRegister && !isVerifyOtp) {
         return RouterConstants.login;
       }
 
       // 3. Nếu đã đăng nhập rồi mà cố tình quay lại màn hình Login hoặc Register -> Đá vào Home
-      if (isLoggedIn && (isLogin || isRegister)) {
+      if (isLoggedIn && (isLogin || isRegister || isVerifyOtp)) {
         return isRescuer ? RouterConstants.rescuerMap : RouterConstants.map;
       }
 
@@ -68,6 +69,14 @@ class AppRouter {
       GoRoute(path: RouterConstants.login, builder: (context, state) => const LoginScreen()),
 
       GoRoute(path: RouterConstants.register, builder: (context, state) => const RegisterScreen()),
+
+      GoRoute(
+        path: RouterConstants.verifyOtp,
+        builder: (context, state) {
+          final email = state.extra as String? ?? '';
+          return VerifyOtpScreen(email: email);
+        },
+      ),
 
       GoRoute(path: RouterConstants.registerRescuer, builder: (context, state) => const RescuerRegisterScreen()),
 

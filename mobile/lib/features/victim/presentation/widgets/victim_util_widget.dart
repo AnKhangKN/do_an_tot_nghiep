@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/location/data/location_service.dart';
 import 'package:mobile/core/session/session_controller.dart';
@@ -49,7 +50,7 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Vui lòng bật định vị để đóng góp điểm tiện ích!'),
-            backgroundColor: Colors.orange,
+            backgroundColor: ColorConstants.orangeWarning,
             duration: Duration(seconds: 3),
           ),
         );
@@ -62,7 +63,6 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
     var position = session.state.position;
     
     if (position == null) {
-      // Try to get current position directly if session's position is null
       position = await LocationService().getCurrentPosition();
       if (position != null) {
         session.updatePosition(position);
@@ -80,7 +80,7 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Vui lòng bật định vị để báo cáo điểm nguy hiểm!'),
-            backgroundColor: Colors.orange,
+            backgroundColor: ColorConstants.orangeWarning,
             duration: Duration(seconds: 3),
           ),
         );
@@ -101,7 +101,7 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
             _UtilButton(
               tooltip: 'Mã QR Cứu Hộ',
               icon: Icons.qr_code_2_rounded,
-              color: const Color(0xFF9333EA),
+              color: ColorConstants.purpleQR,
               onPressed: () {
                 EmergencyQRDialogWidget.show(
                   context,
@@ -109,40 +109,39 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
                 );
               },
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
           ],
           _UtilButton(
             tooltip: 'Tiện ích cộng đồng',
             icon: Icons.storefront_rounded,
-            color: const Color(0xFF10B981),
+            color: ColorConstants.amenityGreen,
             onPressed: () => _handleAmenityTap(context),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           _UtilButton(
             tooltip: 'Cảnh báo',
             icon: Icons.warning_rounded,
-            color: const Color(0xFFF97316),
+            color: ColorConstants.dangerMedium,
             onPressed: () => _handleWarningTap(context),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           _UtilButton(
             tooltip: 'Khẩn cấp',
             icon: Icons.phone,
-            color: const Color(0xFFF91616),
+            color: ColorConstants.redRescue,
             onPressed: widget.onCallTap ?? () {},
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           _UtilButton(
             tooltip: 'Vị trí của tôi',
             icon: Icons.my_location,
-            color: const Color(0xFF2563EB),
+            color: ColorConstants.primary,
             onPressed: widget.onLocationTap ?? () {},
           ),
         ],
       ),
     );
   }
-
 }
 
 class _UtilButton extends StatelessWidget {
@@ -164,14 +163,14 @@ class _UtilButton extends StatelessWidget {
       height: 48,
       width: 48,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
+            color: ColorConstants.shadowDark,
             blurRadius: 18,
-            offset: const Offset(0, 8),
+            offset: Offset(0, 8),
           ),
         ],
       ),

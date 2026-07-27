@@ -13,12 +13,28 @@ class AuthService {
     return await dio.post('/api/auth/login', data: data);
   }
 
+  Future<Response> loginWithGoogle(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/google', data: data);
+  }
+
+  Future<Response> guestLogin(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/guest-login', data: data);
+  }
+
   Future<Response> getMe () async {
     return await dio.get('/api/auth/me');
   }
 
   Future<Response> register(Map<String, dynamic> data) async {
     return await dio.post('/api/auth/register', data: data);
+  }
+
+  Future<Response> verifyOtp(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/verify-otp', data: data);
+  }
+
+  Future<Response> resendOtp(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/resend-otp', data: data);
   }
 
   Future<Response> registerDeviceToken(Map<String, dynamic> data) async {

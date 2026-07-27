@@ -52,11 +52,99 @@ const validatorRegister = (req, res, next) => {
     }
 };
 
-// const validatorLogin = (req, res, next) => {
-//     const {email, password, } = req.body
-// }
+const validatorGuestLogin = (req, res, next) => {
+    try {
+        let { phone, fullName } = req.body;
+
+        if (!phone || phone.trim() === "") {
+            throwError("Số điện thoại không được để trống!", 400);
+        }
+
+        phone = phone.trim();
+
+        // Validate SĐT chuẩn Việt Nam (10 chữ số, đầu 03/05/07/08/09)
+        const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+
+        if (!phoneRegex.test(phone)) {
+            throwError("Số điện thoại không đúng định dạng! Vui lòng nhập SĐT Việt Nam 10 chữ số (ví dụ: 0912345678).", 400);
+        }
+
+        req.body.phone = phone;
+        req.body.fullName = fullName && fullName.trim() !== "" ? fullName.trim() : "Nạn nhân Khách";
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
+const validatorVerifyOtp = (req, res, next) => {
+    try {
+        let { email, otpCode } = req.body;
+
+        if (!email || email.trim() === "") {
+            throwError("Email không được để trống!", 400);
+        }
+
+        if (!otpCode || otpCode.trim() === "") {
+            throwError("Mã xác thực 6 số không được để trống!", 400);
+        }
+
+        otpCode = otpCode.trim();
+
+        if (!/^\d{6}$/.test(otpCode)) {
+            throwError("Mã xác thực OTP phải đúng 6 chữ số!", 400);
+        }
+
+        req.body.email = email.trim().toLowerCase();
+        req.body.otpCode = otpCode;
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
+const validatorResendOtp = (req, res, next) => {
+    try {
+        let { email } = req.body;
+
+        if (!email || email.trim() === "") {
+            throwError("Email không được để trống!", 400);
+        }
+
+        req.body.email = email.trim().toLowerCase();
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
+const validatorGoogleLogin = (req, res, next) => {
+    try {
+        let { email, providerId, fullName, avatarUrl, idToken } = req.body;
+
+        if ((!email || email.trim() === "") && (!idToken || idToken.trim() === "")) {
+            throwError("Thông tin xác thực Google không được để trống!", 400);
+        }
+
+        req.body.email = email ? email.trim().toLowerCase() : "";
+        req.body.providerId = providerId ? providerId.toString().trim() : "";
+        req.body.fullName = fullName ? fullName.trim() : "";
+        req.body.avatarUrl = avatarUrl ? avatarUrl.trim() : "";
+        req.body.idToken = idToken ? idToken.trim() : "";
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
 
 module.exports = {
     validatorRegister,
-    // validatorLogin
+    validatorGuestLogin,
+    validatorVerifyOtp,
+    validatorResendOtp,
+    validatorGoogleLogin,
 };

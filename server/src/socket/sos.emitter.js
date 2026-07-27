@@ -5,14 +5,17 @@
  */
 const handleSosOffer = (io, data) => {
     try {
-        const room = `rescuer:${data.rescuerId}`;
+        const rescuerId = data.rescuerId || data.rescuer_id;
+        const room = `rescuer:${rescuerId}`;
 
-        console.log("Mã phòng: ", room);
+        console.log("Mã phòng rescuer: ", room);
         
-        // Phát dữ liệu tới room tương ứng
+        // Phát dữ liệu tới room rescuer, room user và broadcast toàn bộ
         io.to(room).emit("sos:offer", data);
+        io.to(`user:${rescuerId}`).emit("sos:offer", data);
+        io.emit("sos:offer", data);
         
-        console.log(`[SOS EMITTER] Emitted 'sos:offer' to ${room}`, data);
+        console.log(`[SOS EMITTER] Emitted 'sos:offer' to ${room} & user:${rescuerId}`, data);
     } catch (err) {
         console.error(`[SOS EMITTER] Error emitting to rescuer:${data?.rescuerId}:`, err);
     }

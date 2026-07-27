@@ -5,6 +5,7 @@ class RouterConstants {
   // Xác thực (Auth)
   static const String login = '/login';
   static const String register = '/register';
+  static const String verifyOtp = '/verify-otp';
   static const String registerRescuer = '/register-rescuer';
 
   // Tính năng Nạn nhân (Victim)

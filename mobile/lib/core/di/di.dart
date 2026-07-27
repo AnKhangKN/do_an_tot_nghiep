@@ -53,13 +53,9 @@ Future<void> initDI() async {
   // 2. Khởi tạo và cấu hình cấu trúc mạng (Dio) thống nhất
   getIt.registerLazySingleton<DioClient>(() {
     final baseDio = Dio();
-
-    // SỬA TẠI ĐÂY: Thêm tên tham số cho RefreshInterceptor
-    baseDio.interceptors.addAll([RefreshInterceptor(baseDio, storageService)]);
-
-    // SỬA TẠI ĐÂY: Thêm tên tham số cho DioClient
     return DioClient(dio: baseDio, storageService: storageService);
   });
+
 
   // Đăng ký các service hệ thống còn lại
   getIt.registerLazySingleton(() => BackgroundService());

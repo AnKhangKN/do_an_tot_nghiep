@@ -23,18 +23,53 @@ class AuthRepository {
     // 1. Lấy access token hiện tại trong máy ra xem
     String? accessToken = await storage.getAccessToken();
 
-    // 2. Kiểm tra nếu không có token hoặc token đã bay màu (hết hạn)
-    if (accessToken == null || JwtDecoder.isExpired(accessToken)) {
-      debugPrint("🎯 [AuthRepository] Token hết hạn hoặc không tồn tại. Đang tự động refresh...");
+    if (accessToken == null || accessToken.isEmpty) {
+      return null;
+    }
 
-      // 3. 🌟 ĐÃ FIX: Hàm refreshToken() giờ trả về trực tiếp String?, hứng thẳng luôn
+    // In log kiểm tra thời gian còn lại của Access Token
+    try {
+      final DateTime expDate = JwtDecoder.getExpirationDate(accessToken);
+      final Duration remaining = expDate.difference(DateTime.now());
+      final Map<String, dynamic> decoded = JwtDecoder.decode(accessToken);
+      final bool isGuest = decoded['isGuest'] == true;
+      final String userType = isGuest ? "Tài khoản Khách (Guest)" : "Tài khoản thường";
+
+      if (remaining.isNegative) {
+        debugPrint("⏰ [AuthRepository] Access Token ($userType) ĐÃ HẾT HẠN từ ${(remaining.abs().inSeconds)} giây trước!");
+      } else {
+        final int mins = remaining.inMinutes;
+        final int secs = remaining.inSeconds % 60;
+        final String timeStr = "${expDate.hour.toString().padLeft(2, '0')}:${expDate.minute.toString().padLeft(2, '0')}:${expDate.second.toString().padLeft(2, '0')}";
+        debugPrint("⏱️ [AuthRepository] Access Token ($userType) còn hiệu lực: $mins phút $secs giây (Hết hạn lúc $timeStr)");
+      }
+    } catch (e) {
+      debugPrint("⚠️ [AuthRepository] Lỗi đọc thời gian Token: $e");
+    }
+
+    // 2. Kiểm tra nếu là Token Khách (Guest) và đã hết hạn -> Đăng xuất ngay lập tức
+    try {
+      final Map<String, dynamic> decoded = JwtDecoder.decode(accessToken);
+      if (decoded['isGuest'] == true) {
+        if (JwtDecoder.isExpired(accessToken)) {
+          debugPrint("🎯 [AuthRepository] Token Khách tạm thời đã hết hạn 5 phút -> Đăng xuất người dùng về LoginScreen.");
+          await storage.clearToken();
+          return null;
+        } else {
+          return accessToken;
+        }
+      }
+    } catch (e) {
+      debugPrint("⚠️ [AuthRepository] Lỗi giải mã JWT Token: $e");
+    }
+
+    // 3. Đối với tài khoản thường: Kiểm tra nếu token đã hết hạn -> Tự động gia hạn ngầm
+    if (JwtDecoder.isExpired(accessToken)) {
+      debugPrint("🎯 [AuthRepository] Token hết hạn. Đang tự động refresh token mới...");
       final newAccessToken = await refreshToken();
-
       return newAccessToken;
     }
 
-    // 4. Nếu token vẫn còn hạn sử dụng ngon lành, trả về xài tiếp, đỡ phải gọi API
-    debugPrint("🎯 [AuthRepository] Token vẫn còn hạn, sử dụng tiếp.");
     return accessToken;
   }
 
@@ -110,6 +145,53 @@ class AuthRepository {
     return auth;
   }
 
+  Future<AuthModel> loginWithGoogle({
+    required String email,
+    required String providerId,
+    String? fullName,
+    String? avatarUrl,
+    String? idToken,
+  }) async {
+    final res = await service.loginWithGoogle({
+      'email': email,
+      'providerId': providerId,
+      'fullName': fullName,
+      'avatarUrl': avatarUrl,
+      'idToken': idToken,
+    });
+
+    final data = res.data['data'];
+
+    if (data is! Map<String, dynamic>) {
+      throw Exception('Phản hồi đăng nhập Google không hợp lệ');
+    }
+
+    final auth = AuthModel.fromJson(data);
+
+    await storage.saveToken(auth.accessToken, auth.refreshToken);
+
+    return auth;
+  }
+
+  Future<AuthModel> guestLogin({required String phone, String? fullName}) async {
+    final res = await service.guestLogin({
+      'phone': phone,
+      'fullName': fullName ?? 'Nạn nhân Khách',
+    });
+
+    final data = res.data['data'];
+
+    if (data is! Map<String, dynamic>) {
+      throw Exception('Phản hồi xác thực khách không hợp lệ');
+    }
+
+    final auth = AuthModel.fromJson(data);
+
+    await storage.saveToken(auth.accessToken, auth.refreshToken);
+
+    return auth;
+  }
+
   Future<UserModel> getMe () async {
     final res = await service.getMe();
 
@@ -130,6 +212,24 @@ class AuthRepository {
     }
 
     return RegisterResponse.fromJson(data);
+  }
+
+  Future<AuthModel> verifyOtp({required String email, required String otpCode}) async {
+    final res = await service.verifyOtp({
+      'email': email,
+      'otpCode': otpCode,
+    });
+
+    final data = res.data['data'];
+    if (data is! Map<String, dynamic>) {
+      throw Exception('Phản hồi xác thực OTP không hợp lệ');
+    }
+
+    return AuthModel.fromJson(data);
+  }
+
+  Future<void> resendOtp({required String email}) async {
+    await service.resendOtp({'email': email});
   }
 
   Future<void> registerDeviceToken(String token) async {

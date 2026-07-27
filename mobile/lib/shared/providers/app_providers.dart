@@ -20,6 +20,7 @@ import '../../features/victim/presentation/providers/victim_map_provider.dart';
 import '../../features/history/presentation/providers/history_provider.dart';
 import '../../features/chat/presentation/providers/chat_provider.dart';
 import '../../features/emergency_amenities/presentation/providers/amenity_provider.dart';
+import 'map_layer_provider.dart';
 
 class AppProviders extends StatelessWidget {
   final Widget child;
@@ -53,6 +54,10 @@ class AppProviders extends StatelessWidget {
         // AmenityProvider
         ChangeNotifierProvider(
           create: (_) => getIt<AmenityProvider>(),
+        ),
+        // MapLayerProvider
+        ChangeNotifierProvider(
+          create: (_) => MapLayerProvider(),
         ),
         // VictimMapProvider
         ChangeNotifierProvider(

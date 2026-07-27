@@ -3,8 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/features/auth/data/auth_repository.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/router_constants.dart';
-import '../../../../core/session/app_session.dart';
-import '../../../../core/session/session_state.dart';
 import '../providers/splash_provider.dart';
 
 class SplashScreen extends StatefulWidget {

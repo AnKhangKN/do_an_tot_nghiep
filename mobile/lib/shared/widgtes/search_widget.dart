@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/color_constants.dart';
 import '../../core/session/session_controller.dart';
 import '../../features/emergency_amenities/data/models/emergency_amenity_model.dart';
 import '../../features/emergency_amenities/presentation/providers/amenity_provider.dart';
@@ -95,15 +96,15 @@ class _SearchWidgetState extends State<SearchWidget> {
   Color _getCategoryColor(String? categoryName) {
     final name = (categoryName ?? '').toLowerCase();
     if (name.contains('y tế') || name.contains('bệnh viện') || name.contains('cấp cứu')) {
-      return const Color(0xFFEF4444);
+      return ColorConstants.danger;
     }
     if (name.contains('trú ẩn') || name.contains('sơ tán')) {
-      return const Color(0xFF8B5CF6);
+      return ColorConstants.purpleQR;
     }
     if (name.contains('sửa') || name.contains('cứu hộ')) {
-      return const Color(0xFFF59E0B);
+      return ColorConstants.dangerMedium;
     }
-    return const Color(0xFF10B981);
+    return ColorConstants.amenityGreen;
   }
 
   @override
@@ -156,14 +157,14 @@ class _SearchWidgetState extends State<SearchWidget> {
             height: 54,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.surfaceWhite,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.10),
+                  color: ColorConstants.shadowDark,
                   blurRadius: 18,
-                  offset: const Offset(0, 8),
+                  offset: Offset(0, 8),
                 ),
               ],
             ),
@@ -173,12 +174,12 @@ class _SearchWidgetState extends State<SearchWidget> {
                   height: 34,
                   width: 34,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: ColorConstants.primaryLight,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.near_me_rounded,
-                    color: Color(0xFF2563EB),
+                    color: ColorConstants.primary,
                     size: 20,
                   ),
                 ),
@@ -188,16 +189,16 @@ class _SearchWidgetState extends State<SearchWidget> {
                     controller: _controller,
                     focusNode: _focusNode,
                     onChanged: _onSearchChanged,
-                    cursorColor: const Color(0xFF2563EB),
+                    cursorColor: ColorConstants.primary,
                     style: const TextStyle(
-                      color: Color(0xFF0F172A),
+                      color: ColorConstants.slateDark,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                     decoration: const InputDecoration(
                       hintText: 'Tìm tiện ích gần bạn nhất...',
                       hintStyle: TextStyle(
-                        color: Color(0xFF94A3B8),
+                        color: ColorConstants.borderMuted,
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
                       ),
@@ -208,7 +209,7 @@ class _SearchWidgetState extends State<SearchWidget> {
                 ),
                 if (_controller.text.isNotEmpty || _selectedCategoryFilterId != null || _showSuggestions)
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 20),
+                    icon: const Icon(Icons.close_rounded, color: ColorConstants.textMuted, size: 20),
                     onPressed: _closeSearch,
                   ),
               ],
@@ -220,14 +221,14 @@ class _SearchWidgetState extends State<SearchWidget> {
               constraints: const BoxConstraints(maxHeight: 320),
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.surfaceWhite,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
+                    color: ColorConstants.shadowDark,
                     blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    offset: Offset(0, 8),
                   ),
                 ],
               ),
@@ -239,9 +240,9 @@ class _SearchWidgetState extends State<SearchWidget> {
                   if (categories.isNotEmpty) ...[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
-                      child: Text(
+                      child: const Text(
                         'Gợi ý danh mục từ Hệ thống',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: ColorConstants.textMuted),
                       ),
                     ),
                     SizedBox(
@@ -258,9 +259,9 @@ class _SearchWidgetState extends State<SearchWidget> {
                               child: FilterChip(
                                 selected: isAllSelected,
                                 label: const Text('Tất cả', style: TextStyle(fontSize: 12)),
-                                selectedColor: const Color(0xFF2563EB),
+                                selectedColor: ColorConstants.primary,
                                 labelStyle: TextStyle(
-                                  color: isAllSelected ? Colors.white : Colors.black87,
+                                  color: isAllSelected ? ColorConstants.surfaceWhite : ColorConstants.slateDark,
                                   fontWeight: FontWeight.bold,
                                 ),
                                 onSelected: (_) {
@@ -279,9 +280,9 @@ class _SearchWidgetState extends State<SearchWidget> {
                             child: FilterChip(
                               selected: isSelected,
                               label: Text(cat.categoryName, style: const TextStyle(fontSize: 12)),
-                              selectedColor: const Color(0xFF2563EB),
+                              selectedColor: ColorConstants.primary,
                               labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : Colors.black87,
+                                color: isSelected ? ColorConstants.surfaceWhite : ColorConstants.slateDark,
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                               ),
                               onSelected: (val) {
@@ -304,11 +305,11 @@ class _SearchWidgetState extends State<SearchWidget> {
                       children: [
                         Text(
                           'Tiện ích gần nhất (${sortedList.length})',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF64748B)),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ColorConstants.textMuted),
                         ),
                         GestureDetector(
                           onTap: _closeSearch,
-                          child: const Text('Đóng', style: TextStyle(fontSize: 12, color: Color(0xFF2563EB), fontWeight: FontWeight.w600)),
+                          child: const Text('Đóng', style: TextStyle(fontSize: 12, color: ColorConstants.primary, fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
@@ -320,7 +321,7 @@ class _SearchWidgetState extends State<SearchWidget> {
                       child: Center(
                         child: Text(
                           'Không tìm thấy tiện ích khẩn cấp phù hợp',
-                          style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                          style: TextStyle(color: ColorConstants.textMuted, fontSize: 13),
                         ),
                       ),
                     )
@@ -355,7 +356,7 @@ class _SearchWidgetState extends State<SearchWidget> {
                                   child: Text(
                                     catName,
                                     style: const TextStyle(
-                                      color: Color(0xFF0F172A),
+                                      color: ColorConstants.slateDark,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),
@@ -365,13 +366,13 @@ class _SearchWidgetState extends State<SearchWidget> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFEFF6FF),
+                                      color: ColorConstants.primaryLight,
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       distText,
                                       style: const TextStyle(
-                                        color: Color(0xFF2563EB),
+                                        color: ColorConstants.primary,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 11,
                                       ),
@@ -381,11 +382,11 @@ class _SearchWidgetState extends State<SearchWidget> {
                             ),
                             subtitle: Text(
                               'Giờ mở cửa: ${item.openingHours}${item.phone != null && item.phone!.isNotEmpty ? ' • SĐT: ${item.phone}' : ''}',
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                              style: const TextStyle(fontSize: 12, color: ColorConstants.textMuted),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF94A3B8)),
+                            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: ColorConstants.borderMuted),
                             onTap: () => _selectAmenity(item),
                           );
                         },

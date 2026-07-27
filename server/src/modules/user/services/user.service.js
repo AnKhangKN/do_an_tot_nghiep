@@ -13,17 +13,30 @@ class UserService {
     return await this.userRepository.exists(client, { email });
   };
 
-  createUser = async (client, { email }) => {
+  createUser = async (client, { email, fullName, phone, avatarUrl, isVerified = false }) => {
     const userId = generateUUID();
-    const fullName = email.split("@")[0];
+    const finalFullName = fullName || email.split("@")[0];
 
     const rows = await this.userRepository.createUser(client, {
       userId,
-      fullName,
+      fullName: finalFullName,
       email,
+      phone,
+      avatarUrl,
+      isVerified,
     });
 
     return mapFields(rows, this.userModel);
+  };
+
+  updateGoogleProfile = async (client, { userId, fullName, avatarUrl, isVerified = true }) => {
+    const rows = await this.userRepository.updateGoogleProfile(client, { userId, fullName, avatarUrl, isVerified });
+    return rows ? mapFields(rows, this.userModel) : null;
+  };
+
+  findUserByPhone = async (client, { phone, excludeUserId }) => {
+    const rows = await this.userRepository.findUserByPhone(client, { phone, excludeUserId });
+    return rows ? mapFields(rows, this.userModel) : null;
   };
 
   getUserAuthInfo = async (client, { userId }) => {
@@ -90,6 +103,11 @@ class UserService {
     return mapFields(updatedUser, this.userModel);
   }
 
+
+  updateIsVerified = async (client, { email, isVerified = true }) => {
+    const updatedUser = await this.userRepository.updateIsVerified(client, { email, isVerified });
+    return updatedUser ? mapFields(updatedUser, this.userModel) : null;
+  };
 
   getUsersAdmin = async ({ page, limit }) => {
     const result = await this.userRepository.getUsersAdmin({ page, limit });

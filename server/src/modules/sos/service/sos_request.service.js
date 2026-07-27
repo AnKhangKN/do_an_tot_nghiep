@@ -248,6 +248,12 @@ class SosRequestService {
             return updated;
         });
 
+        // Xóa cứu hộ viên khỏi danh sách active_rescues để trả về trạng thái rảnh rỗi
+        if (result && result.rescuer_id) {
+            await redis.hdel("active_rescues", result.rescuer_id);
+            console.log(`[SERVICE] Đã giải phóng active_rescues cho Rescuer: ${result.rescuer_id}`);
+        }
+
         try {
             const { emitAdminDashboardEvent } = require("@/socket");
             emitAdminDashboardEvent("SOS_COMPLETED", {
@@ -305,12 +311,20 @@ class SosRequestService {
 
     cleanupSosKeys = async (sosId) => {
         try {
+            // Lấy danh sách tất cả rescuers đang giữ offer của SOS này
+            const offeredRescuers = await redis.smembers(`sos:${sosId}:offered_rescuers`);
+
             const pipeline = redis.pipeline();
+            if (offeredRescuers && offeredRescuers.length > 0) {
+                for (const rescuerId of offeredRescuers) {
+                    pipeline.del(`sos:offer:rescuer:${rescuerId}`);
+                }
+            }
             pipeline.del(`sos:${sosId}:attempt`);
             pipeline.del(`sos:${sosId}:offered_rescuers`);
             pipeline.del(`sos:${sosId}:rejected_rescuers`);
             await pipeline.exec();
-            console.log(`[SERVICE] Đã dọn dẹp Redis keys cho SOS: ${sosId}`);
+            console.log(`[SERVICE] Đã dọn dẹp toàn bộ offer & tracking keys cho SOS: ${sosId}`);
         } catch (err) {
             console.error("[SERVICE] Lỗi dọn dẹp Redis keys của SOS:", err);
         }
@@ -517,7 +531,7 @@ class SosRequestService {
                         SELECT sos_request_id, rescuer_id, user_id 
                         FROM sos_requests 
                         WHERE user_id = $1 
-                          AND status IN ('PENDING', 'SEARCHING', 'ASSIGNED') 
+                          AND status IN ('PENDING', 'SEARCHING', 'ASSIGNED', 'IN_PROGRESS') 
                         ORDER BY created_at DESC LIMIT 1
                     `;
                     const result = await pool.query(pendingQuery, [userId]);
@@ -548,12 +562,20 @@ class SosRequestService {
                 // Dọn dẹp Redis tracking keys
                 await this.cleanupSosKeys(targetSosId);
 
+                // Giải phóng lập tức cờ bận cứu hộ trên Redis cho Rescuer (nếu ca đã được nhận)
+                const rescuerIdToRelease = updated.rescuer_id || sos?.rescuer_id;
+                if (rescuerIdToRelease) {
+                    await redis.hdel("active_rescues", rescuerIdToRelease);
+                    await redis.del(`sos:offer:rescuer:${rescuerIdToRelease}`);
+                    console.log(`[SERVICE] Đã giải phóng hoàn toàn active_rescues cho Rescuer khi Nạn nhân hủy SOS: ${rescuerIdToRelease}`);
+                }
+
                 // Publish sự kiện hủy qua Redis pubsub để Socket Server emit tới các Rescuer
                 const payload = JSON.stringify({
                     sosId: targetSosId,
                     sosRequestId: targetSosId,
-                    rescuerId: sos?.rescuer_id || null,
-                    victimId: sos?.user_id || userId,
+                    rescuerId: rescuerIdToRelease || null,
+                    victimId: updated.user_id || sos?.user_id || userId,
                     message: "Người gặp nạn đã dừng yêu cầu cứu hộ."
                 });
                 await redis.publish("sos:cancelled", payload);

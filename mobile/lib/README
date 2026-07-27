@@ -1,2 +1,0 @@
-1. Từ provider -> repository -> service (gọi api bth).
-2. Từ provider -> background_service -> service_handler -> app_session -> socket

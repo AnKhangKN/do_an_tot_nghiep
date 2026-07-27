@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/constants/color_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/location/data/location_service.dart';
 import '../../../../core/location/data/location_repository.dart';
@@ -26,6 +27,8 @@ import '../../../../shared/widgtes/geofence_alert_dialog.dart';
 import '../../../emergency_amenities/presentation/providers/amenity_provider.dart';
 import '../../../emergency_amenities/presentation/widgets/amenity_category_chips.dart';
 import '../../../emergency_amenities/presentation/widgets/amenity_detail_bottom_sheet.dart';
+import '../../../../shared/providers/map_layer_provider.dart';
+import '../../../../shared/widgtes/map_layer_toggle_widget.dart';
 
 class VictimMapScreen extends StatefulWidget {
   const VictimMapScreen({super.key});
@@ -263,12 +266,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
 
   List<Marker> _buildDangerousPointMarkers(Position? currentPos) {
     final geofenceProvider = getIt<GeofenceProvider>();
-    // Chỉ lấy các điểm trong bán kính 5km xung quanh Nạn nhân để tránh nặng bản đồ
-    final points = geofenceProvider.getNearbyPoints(
-      currentPos?.latitude,
-      currentPos?.longitude,
-      maxRadiusMeters: 5000.0,
-    );
+    final points = geofenceProvider.approvedPoints;
 
     return points.map((pt) {
       final String level = pt.dangerLevel.toUpperCase();
@@ -278,16 +276,16 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
       IconData iconData;
 
       if (level == 'HIGH') {
-        bgColor = const Color(0xFFDC2626); // Đỏ nổi bật
-        shadowColor = const Color(0x66DC2626);
+        bgColor = ColorConstants.dangerHigh;
+        shadowColor = ColorConstants.shadowHigh;
         iconData = Icons.dangerous_rounded;
       } else if (level == 'MEDIUM') {
-        bgColor = const Color(0xFFF97316); // Cam
-        shadowColor = const Color(0x66F97316);
+        bgColor = ColorConstants.dangerMedium;
+        shadowColor = ColorConstants.shadowMedium;
         iconData = Icons.warning_amber_rounded;
       } else {
-        bgColor = const Color(0xFF10B981); // Xanh lá dịu
-        shadowColor = const Color(0x6610B981);
+        bgColor = ColorConstants.amenityGreen;
+        shadowColor = ColorConstants.shadowLow;
         iconData = Icons.info_outline_rounded;
       }
 
@@ -316,12 +314,12 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
             decoration: BoxDecoration(
               color: bgColor,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              border: Border.all(color: ColorConstants.surfaceWhite, width: 2),
               boxShadow: [
                 BoxShadow(color: shadowColor, blurRadius: 6, spreadRadius: 1, offset: const Offset(0, 2)),
               ],
             ),
-            child: Icon(iconData, color: Colors.white, size: 20),
+            child: Icon(iconData, color: ColorConstants.surfaceWhite, size: 20),
           ),
         ),
       );
@@ -347,12 +345,12 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
           },
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF2563EB),
+              color: ColorConstants.primary,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              border: Border.all(color: ColorConstants.surfaceWhite, width: 2),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x402563EB),
+                  color: ColorConstants.shadowPrimary,
                   blurRadius: 6,
                   spreadRadius: 1,
                   offset: Offset(0, 2),
@@ -361,7 +359,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
             ),
             child: const Icon(
               Icons.storefront_rounded,
-              color: Colors.white,
+              color: ColorConstants.surfaceWhite,
               size: 20,
             ),
           ),
@@ -379,32 +377,37 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
       body: Stack(
         children: [
           ListenableBuilder(
-            listenable: Listenable.merge([sessionController, getIt<GeofenceProvider>()]),
+            listenable: Listenable.merge([
+              sessionController,
+              getIt<GeofenceProvider>(),
+              context.watch<MapLayerProvider>(),
+            ]),
             builder: (context, _) {
               final currentPosition = sessionController.state.position;
               final currentRescuerPos = sessionController.rescuerPosition;
+              final mapLayerProvider = context.read<MapLayerProvider>();
 
               return MapWidget(
                 mapController: _mapController,
                 position: currentPosition,
                 partnerPosition: isBeingRescued ? currentRescuerPos : null,
-                partnerMarkerChild: const Icon(Icons.airport_shuttle, color: Colors.green, size: 40),
+                partnerMarkerChild: const Icon(Icons.airport_shuttle, color: ColorConstants.amenityGreen, size: 40),
                 additionalMarkers: [
-                  ..._buildDangerousPointMarkers(currentPosition),
-                  ..._buildAmenityMarkers(context),
+                  if (mapLayerProvider.showDangerousPoints) ..._buildDangerousPointMarkers(currentPosition),
+                  if (mapLayerProvider.showAmenities) ..._buildAmenityMarkers(context),
                 ],
                 polylines: [
                   if (context.watch<AmenityProvider>().isNavigating && context.watch<AmenityProvider>().routePoints.isNotEmpty)
                     Polyline(
                       points: context.watch<AmenityProvider>().routePoints,
                       strokeWidth: 5.0,
-                      color: const Color(0xFF0284C7),
+                      color: ColorConstants.secondary,
                     ),
                   if (isBeingRescued && _routePoints.isNotEmpty)
                     Polyline(
                       points: _routePoints,
                       strokeWidth: 5.0,
-                      color: Colors.blue,
+                      color: ColorConstants.primary,
                     ),
                 ],
               );
@@ -428,20 +431,20 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: ColorConstants.surfaceWhite,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
-                    border: Border.all(color: const Color(0xFF0284C7), width: 1.5),
+                    boxShadow: const [BoxShadow(color: ColorConstants.shadowDark, blurRadius: 10, offset: Offset(0, 4))],
+                    border: Border.all(color: ColorConstants.secondary, width: 1.5),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE0F2FE),
+                          color: ColorConstants.secondaryLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.directions_car_rounded, color: Color(0xFF0284C7), size: 24),
+                        child: const Icon(Icons.directions_car_rounded, color: ColorConstants.secondary, size: 24),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -451,12 +454,12 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                           children: [
                             Text(
                               target.categoryName ?? 'Tiện ích khẩn cấp',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: ColorConstants.textPrimary),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'Khoảng cách: $dist km • Tuyến đường: ~$duration phút',
-                              style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w500),
+                              style: const TextStyle(fontSize: 12, color: ColorConstants.textSecondary, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -467,21 +470,21 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade50,
+                            color: ColorConstants.dangerLight,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.red.shade200),
+                            border: Border.all(color: ColorConstants.dangerBorder),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.close_rounded, size: 16, color: Colors.red.shade700),
+                              const Icon(Icons.close_rounded, size: 16, color: ColorConstants.dangerText),
                               const SizedBox(width: 4),
-                              Text(
+                              const Text(
                                 'Tắt chỉ đường',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.red.shade700,
+                                  color: ColorConstants.dangerText,
                                 ),
                               ),
                             ],
@@ -507,12 +510,15 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                   children: [
                     const SearchWidget(),
                     const SizedBox(height: 6),
-                    const AmenityCategoryChips(),
-                    // const SizedBox(height: 6),
-                    // Align(
-                    //   alignment: Alignment.centerRight,
-                    //   child: const LayerWidget(),
-                    // ),
+                    Row(
+                      children: const [
+                        Expanded(
+                          child: AmenityCategoryChips(),
+                        ),
+                        SizedBox(width: 8),
+                        LayerWidget(),
+                      ],
+                    ),
                   ],
                 ),
               ),

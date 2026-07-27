@@ -19,7 +19,7 @@ class UserAuthService {
 
         const userAuthId = generateUUID();
 
-        const hash = await hashPassword(password)
+        const hash = password ? await hashPassword(password) : null;
 
         const rows = await this.userAuth.createUserAuth(client, {
             userAuthId,

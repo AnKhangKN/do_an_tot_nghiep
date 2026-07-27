@@ -60,10 +60,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.green,
-          content: Text("Đăng ký tài khoản thành công!"),
+          content: Text("Đã gửi mã xác thực OTP 6 số tới Email của bạn!"),
         ),
       );
-      context.pop();
+      context.go(RouterConstants.verifyOtp, extra: email);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

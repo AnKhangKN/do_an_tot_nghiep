@@ -189,12 +189,49 @@ class MatchingService {
             // Lấy kết quả từ Redis pipeline
             const isRescuing = busyResults[index * 2][1] === 1; // hexists trả về 1 nếu field tồn tại
             if (isRescuing) {
+                // Tự động kiểm tra giải phóng key rác nếu ca cũ đã kết thúc/hủy
+                redis.hget("active_rescues", r.userId).then(async (dataStr) => {
+                    if (dataStr) {
+                        try {
+                            const data = JSON.parse(dataStr);
+                            const pool = require("@config/database.config").pool;
+                            const res = await pool.query("SELECT status FROM sos_requests WHERE sos_request_id = $1", [data.sosRequestId]);
+                            const status = res.rows[0]?.status;
+                            if (!status || status === 'COMPLETED' || status === 'CANCELLED') {
+                                await redis.hdel("active_rescues", r.userId);
+                                console.log(`[MATCHING] Self-healing: Đã xóa active_rescues rác cho Rescuer: ${r.userId}`);
+                            }
+                        } catch (e) {
+                            await redis.hdel("active_rescues", r.userId);
+                        }
+                    }
+                }).catch(() => {});
+
                 console.log(`[MATCHING] loại ${r.userId} vì đang có active_rescues`);
                 return false;
             }
 
             const hasOffer = busyResults[index * 2 + 1][1] === 1; // exists trả về 1 nếu key tồn tại
             if (hasOffer) {
+                // Self-healing: Tự động kiểm tra dọn dẹp key offer rác nếu SOS đã kết thúc, bị hủy hoặc gán cho người khác
+                redis.get(`sos:offer:rescuer:${r.userId}`).then(async (offeredSosId) => {
+                    if (offeredSosId) {
+                        try {
+                            const pool = require("@config/database.config").pool;
+                            const res = await pool.query("SELECT status FROM sos_requests WHERE sos_request_id = $1", [offeredSosId]);
+                            const status = res.rows[0]?.status;
+                            if (!status || status === 'COMPLETED' || status === 'CANCELLED' || status === 'ASSIGNED' || status === 'IN_PROGRESS') {
+                                await redis.del(`sos:offer:rescuer:${r.userId}`);
+                                console.log(`[MATCHING] Self-healing: Đã xóa offer rác sos:offer:rescuer cho Rescuer: ${r.userId} (SOS: ${offeredSosId}, status: ${status})`);
+                            }
+                        } catch (e) {
+                            await redis.del(`sos:offer:rescuer:${r.userId}`);
+                        }
+                    } else {
+                        await redis.del(`sos:offer:rescuer:${r.userId}`);
+                    }
+                }).catch(() => {});
+
                 console.log(`[MATCHING] loại ${r.userId} vì đang có sos:offer:rescuer:${r.userId}`);
                 return false;
             }

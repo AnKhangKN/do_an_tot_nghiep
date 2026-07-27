@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mobile/shared/widgtes/map_widget.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/color_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/location/data/location_service.dart';
 import '../../../../core/network/direction_service.dart';
@@ -21,6 +22,11 @@ import '../../models/sos_offer_model.dart';
 import '../../../emergency_amenities/presentation/providers/amenity_provider.dart';
 import '../../../emergency_amenities/presentation/widgets/amenity_category_chips.dart';
 import '../../../emergency_amenities/presentation/widgets/amenity_detail_bottom_sheet.dart';
+import '../../../dangerous_points/presentation/providers/geofence_provider.dart';
+import '../../../../shared/widgtes/geofence_alert_dialog.dart';
+import '../../../../shared/providers/map_layer_provider.dart';
+import '../../../../shared/widgtes/map_layer_toggle_widget.dart';
+import 'package:geolocator/geolocator.dart';
 
 class RescuerMapScreen extends StatefulWidget {
   const RescuerMapScreen({super.key});
@@ -37,11 +43,20 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     super.initState();
     getIt<SessionController>().addListener(_onSessionOrProviderChanged);
     getIt<SOSProvider>().addListener(_onSessionOrProviderChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    getIt<RescuerSocket>().listenSosOffer();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
+        getIt<RescuerSocket>().listenSosOffer();
         context.read<AmenityProvider>().fetchCategories();
         context.read<AmenityProvider>().fetchAmenities();
         _onSessionOrProviderChanged();
+        final sessionController = getIt<SessionController>();
+        var pos = sessionController.state.position;
+        pos ??= await LocationService().getCurrentPosition();
+        await getIt<GeofenceProvider>().loadApprovedPoints(
+          userLat: pos?.latitude,
+          userLng: pos?.longitude,
+        );
       }
     });
   }
@@ -215,6 +230,66 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     }
   }
 
+  List<Marker> _buildDangerousPointMarkers(Position? currentPos) {
+    final points = getIt<GeofenceProvider>().approvedPoints;
+
+    return points.map((pt) {
+      final level = pt.dangerLevel;
+      Color bgColor;
+      Color shadowColor;
+      IconData iconData;
+
+      if (level == 'HIGH') {
+        bgColor = ColorConstants.dangerHigh;
+        shadowColor = ColorConstants.shadowHigh;
+        iconData = Icons.dangerous_rounded;
+      } else if (level == 'MEDIUM') {
+        bgColor = ColorConstants.dangerMedium;
+        shadowColor = ColorConstants.shadowMedium;
+        iconData = Icons.warning_amber_rounded;
+      } else {
+        bgColor = ColorConstants.amenityGreen;
+        shadowColor = ColorConstants.shadowLow;
+        iconData = Icons.info_outline_rounded;
+      }
+
+      return Marker(
+        point: LatLng(pt.latitude, pt.longitude),
+        width: 36,
+        height: 36,
+        child: GestureDetector(
+          onTap: () {
+            final dist = currentPos != null
+                ? Geolocator.distanceBetween(
+                    currentPos.latitude,
+                    currentPos.longitude,
+                    pt.latitude,
+                    pt.longitude,
+                  )
+                : 0.0;
+            GeofenceAlertDialog.show(
+              context,
+              point: pt,
+              distanceMeters: dist,
+              onDismiss: () {},
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: bgColor,
+              shape: BoxShape.circle,
+              border: Border.all(color: ColorConstants.surfaceWhite, width: 2),
+              boxShadow: [
+                BoxShadow(color: shadowColor, blurRadius: 6, spreadRadius: 1, offset: const Offset(0, 2)),
+              ],
+            ),
+            child: Icon(iconData, color: ColorConstants.surfaceWhite, size: 20),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
   List<Marker> _buildAmenityMarkers(BuildContext context) {
     final amenityProvider = context.watch<AmenityProvider>();
     final amenities = amenityProvider.amenities;
@@ -234,12 +309,12 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
           },
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF2563EB),
+              color: ColorConstants.primary,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              border: Border.all(color: ColorConstants.surfaceWhite, width: 2),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x402563EB),
+                  color: ColorConstants.shadowPrimary,
                   blurRadius: 6,
                   spreadRadius: 1,
                   offset: Offset(0, 2),
@@ -248,7 +323,7 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
             ),
             child: const Icon(
               Icons.storefront_rounded,
-              color: Colors.white,
+              color: ColorConstants.surfaceWhite,
               size: 20,
             ),
           ),
@@ -267,6 +342,7 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     final currentSOS = sosProvider.currentSOS;
     final isRescuing = sosProvider.isRescuing;
     final activeRescue = sosProvider.activeRescue;
+    final mapLayerProvider = context.watch<MapLayerProvider>();
 
     if (currentSOS != null) {
       debugPrint("Bên screen đã nhận! ${currentSOS.toString()}");
@@ -279,28 +355,36 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     return Scaffold(
       body: Stack(
         children: [
-          MapWidget(
-            mapController: _mapController,
-            position: position,
-            partnerPosition: isRescuing && activeRescue != null
-                ? LatLng(activeRescue.victimLat, activeRescue.victimLng)
-                : null,
-            partnerMarkerChild: const Icon(Icons.location_on, color: Colors.red, size: 40),
-            additionalMarkers: _buildAmenityMarkers(context),
-            polylines: [
-              if (context.watch<AmenityProvider>().isNavigating && context.watch<AmenityProvider>().routePoints.isNotEmpty)
-                Polyline(
-                  points: context.watch<AmenityProvider>().routePoints,
-                  strokeWidth: 5.0,
-                  color: const Color(0xFF0284C7),
-                ),
-              if (isRescuing && _routePoints.isNotEmpty)
-                Polyline(
-                  points: _routePoints,
-                  strokeWidth: 5.0,
-                  color: Colors.blue,
-                ),
-            ],
+          ListenableBuilder(
+            listenable: getIt<GeofenceProvider>(),
+            builder: (context, _) {
+              return MapWidget(
+                mapController: _mapController,
+                position: position,
+                partnerPosition: isRescuing && activeRescue != null
+                    ? LatLng(activeRescue.victimLat, activeRescue.victimLng)
+                    : null,
+                partnerMarkerChild: const Icon(Icons.location_on, color: ColorConstants.redRescue, size: 40),
+                additionalMarkers: [
+                  if (mapLayerProvider.showDangerousPoints) ..._buildDangerousPointMarkers(position),
+                  if (mapLayerProvider.showAmenities) ..._buildAmenityMarkers(context),
+                ],
+                polylines: [
+                  if (context.watch<AmenityProvider>().isNavigating && context.watch<AmenityProvider>().routePoints.isNotEmpty)
+                    Polyline(
+                      points: context.watch<AmenityProvider>().routePoints,
+                      strokeWidth: 5.0,
+                      color: ColorConstants.secondary,
+                    ),
+                  if (isRescuing && _routePoints.isNotEmpty)
+                    Polyline(
+                      points: _routePoints,
+                      strokeWidth: 5.0,
+                      color: ColorConstants.primary,
+                    ),
+                ],
+              );
+            },
           ),
 
           // ================= IN-APP AMENITY NAVIGATION BANNER =================
@@ -320,20 +404,20 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: ColorConstants.surfaceWhite,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
-                    border: Border.all(color: const Color(0xFF0284C7), width: 1.5),
+                    boxShadow: const [BoxShadow(color: ColorConstants.shadowDark, blurRadius: 10, offset: Offset(0, 4))],
+                    border: Border.all(color: ColorConstants.secondary, width: 1.5),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE0F2FE),
+                          color: ColorConstants.secondaryLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.directions_car_rounded, color: Color(0xFF0284C7), size: 24),
+                        child: const Icon(Icons.directions_car_rounded, color: ColorConstants.secondary, size: 24),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -343,12 +427,12 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                           children: [
                             Text(
                               target.categoryName ?? 'Tiện ích khẩn cấp',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: ColorConstants.textPrimary),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'Khoảng cách: $dist km • Tuyến đường: ~$duration phút',
-                              style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w500),
+                              style: const TextStyle(fontSize: 12, color: ColorConstants.textSecondary, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -359,21 +443,21 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade50,
+                            color: ColorConstants.dangerLight,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.red.shade200),
+                            border: Border.all(color: ColorConstants.dangerBorder),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.close_rounded, size: 16, color: Colors.red.shade700),
+                              const Icon(Icons.close_rounded, size: 16, color: ColorConstants.dangerText),
                               const SizedBox(width: 4),
-                              Text(
+                              const Text(
                                 'Tắt chỉ đường',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.red.shade700,
+                                  color: ColorConstants.dangerText,
                                 ),
                               ),
                             ],
@@ -388,23 +472,26 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
           ),
 
           // ================= TOP UI =================
-          const Positioned(
+          Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: SafeArea(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Column(
                   children: [
-                    SearchWidget(),
-                    SizedBox(height: 6),
-                    AmenityCategoryChips(),
-                    // SizedBox(height: 6),
-                    // Align(
-                    //   alignment: Alignment.centerRight,
-                    //   child: LayerWidget(),
-                    // ),
+                    const SearchWidget(),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AmenityCategoryChips(),
+                        ),
+                        SizedBox(width: 8),
+                        LayerWidget(),
+                      ],
+                    ),
                   ],
                 ),
               ),

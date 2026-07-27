@@ -11,21 +11,23 @@
 ### 1. Backend Server — Express.js + PostgreSQL + Redis + BullMQ
 
 #### Kiến trúc Layered Modular
-Có **17 module** phân tách rõ ràng theo đúng chuẩn kiến trúc:
+Có **18 module** phân tách rõ ràng theo đúng chuẩn kiến trúc:
 `routes` → `validator` → `controller` → `service` → `repository` → `model`
 
 | Module | Trạng thái |
 |---|---|
 | `auth`, `user`, `user_auth` | ✅ Hoàn chỉnh — Đăng ký, đăng nhập JWT, refresh token |
-| `sos` | ✅ Hoàn chỉnh — Tạo SOS, tra cứu lịch sử, cập nhật trạng thái |
-| `rescuer` | ✅ Hoàn chỉnh — Quản lý hồ sơ, lấy danh sách online qua Redis Geo |
+| `sos` | ✅ Hoàn chỉnh — Tạo SOS đính kèm ảnh hiện trường, tra cứu lịch sử, cập nhật trạng thái, phát socket PubSub 0ms |
+| `rescuer` | ✅ Hoàn chỉnh — Quản lý hồ sơ, lấy danh sách online qua Redis Geo, thống kê hiệu suất KPI |
 | `location` | ✅ Hoàn chỉnh — Heartbeat & GPS update qua Socket.io → Redis Geo |
 | `matching` | ✅ Hoàn chỉnh — GEOSEARCH + Pipeline TTL + Lazy Cleanup |
 | `dispatch` | ✅ Hoàn chỉnh — Broadcast SOS offer, quản lý Accept/Reject |
 | `chat` | ✅ Có cấu trúc đầy đủ (controller/service/repo/model) |
-| `notification` | ✅ Hoàn chỉnh — Gửi FCM qua firebase-admin + broadcast endpoint |
-| `dangerous_points` | ✅ Hoàn chỉnh — CRUD điểm nguy hiểm |
-| `dashboard` | ✅ Hoàn chỉnh — Thống kê SOS hôm nay, tỷ lệ ghép đôi thành công |
+| `notification` | ✅ Hoàn chỉnh — Gửi FCM bất đồng bộ (non-blocking) qua firebase-admin + broadcast endpoint |
+| `dangerous_points` | ✅ Hoàn chỉnh — CRUD điểm nguy hiểm + Tự động quét gom cụm SOS (Crowd-Sourced Clustering) |
+| `dashboard` | ✅ Hoàn chỉnh — Thống kê SOS thời gian thực, phát Socket Live Push tới Admin Dashboard |
+| `emergency_amenities` | ✅ Hoàn chỉnh — Bản đồ tiện ích khẩn cấp + Hệ thống Báo cáo Vi phạm / Phản hồi (`amenity_feedbacks`) |
+| `rating` | ✅ Hoàn chỉnh — Đánh giá 1-5 sao sau ca cứu hộ |
 | `image`, `map`, `admin`, `incident_type`, `device_token` | ✅ Có cấu trúc đầy đủ |
 
 **BullMQ Worker** (`sos.worker.js`): Xử lý ghép đôi bất đồng bộ với thuật toán mở rộng bán kính:
@@ -44,14 +46,27 @@ Có **17 module** phân tách rõ ràng theo đúng chuẩn kiến trúc:
 ### 2. Mobile App — Flutter Clean Architecture
 
 #### Cấu trúc Feature-First
-Có **10 feature** phân tầng rõ ràng: `auth`, `rescuer`, `victim`, `chat`, `history`, `notification`, `dangerous_points`, `user`, `splash`, `404`.
+Có **11 feature** phân tầng rõ ràng: `auth`, `rescuer`, `victim`, `chat`, `history`, `notification`, `dangerous_points`, `emergency_amenities`, `user`, `splash`, `404`.
 
 **Đã xác nhận từ source code:**
 
-- ✅ **Nút SOS Press-and-Hold 2 giây** (`victim_sos_button_widget.dart`):
-  - `AnimationController` duration 2 giây, `_progressValue` tăng dần theo animation
-  - Thả tay giữa chừng → animation reset về 0 (hủy bỏ)
-  - Đủ thời gian → gọi `_showSosForm()` mở Form nhập thông tin SOS
+- ✅ **Nút SOS Press-and-Hold 2 giây + Đính kèm Ảnh hiện trường** (`victim_sos_button_widget.dart`):
+  - `AnimationController` duration 2 giây, `_progressValue` tăng dần theo animation (Anti-False Alarm)
+  - Tích hợp ô chọn/chụp ảnh hiện trường khẩn cấp tùy chọn (`ImagePickerHelper` hỗ trợ chụp trực tiếp từ máy ảnh hoặc chọn từ thư viện)
+  - Gửi `FormData` đính kèm file ảnh lên Cloudinary `do_an_tot_nghiep/sos_requests`
+
+- ✅ **Tự động khôi phục kết nối Socket & Refresh JWT Token** (`core_socket.dart`):
+  - Tự động bắt lỗi `jwt expired`, gọi `getValidAccessToken()` làm mới Access Token ngầm
+  - Tự động ép buộc ngắt socket cũ và Reconnect socket mới với Token mới mà không cần người dùng thao tác
+
+- ✅ **Thanh tìm kiếm Tiện ích Khẩn cấp Smart Search & Tự động Ẩn/Hiện** (`search_widget.dart` & `amenity_category_chips.dart`):
+  - Đọc vị trí GPS hiện tại của người dùng, tính khoảng cách bằng `Geolocator.distanceBetween` và **tự động sắp xếp ưu tiên tiện ích gần nhất lên đầu tiên** (hiển thị nhãn `Cách 120 m`, `Cách 1.5 km`)
+  - Hiển thị dải danh mục gợi ý động từ CSDL (`AmenityCategoryModel`)
+  - Tự động ẩn dải danh mục `AmenityCategoryChips` khi người dùng nhập tìm kiếm và tự động hiện lại khi đóng/bấm ra ngoài màn hình (`TapRegion`)
+
+- ✅ **Giao diện Xem Ảnh Khẩn Cấp & Phản Hồi Báo Cáo Vi Phạm Tiện Ích** (`amenity_detail_bottom_sheet.dart`):
+  - Xem hình ảnh tiện ích/ảnh hiện trường với Modal phóng to full-screen (thu phóng `InteractiveViewer`)
+  - Dialog gửi báo cáo vi phạm (`CLOSED_DOWN`, `SCAM_FRAUD`, `INCORRECT_INFO`, `OTHER`) cho Admin xử lý
 
 - ✅ **GPS Passive Stream** (`location_service.dart`):
   - Dùng `Geolocator.getPositionStream` với `distanceFilter: 10m`
@@ -67,33 +82,31 @@ Có **10 feature** phân tầng rõ ràng: `auth`, `rescuer`, `victim`, `chat`, 
   - **Tối ưu thông minh:** Bỏ qua fetch lại nếu cứu hộ viên di chuyển < 15m HOẶC < 4 giây kể từ lần fetch cuối
   - **Rescuer cũng thấy Polyline + ETA:** `getRouteInfo()` trả thêm `distanceKm` & `durationSec`, hiển thị chip "450 m · ETA: 8 phút" ngay trên màn hình cứu hộ
 
-- ✅ **Màn hình Lịch sử Ca Cứu Hộ** (`history_screen.dart`) — nâng cấp toàn diện:
-  - **Minimap Preview Widget:** Tích hợp `FlutterMap` xem trực tiếp vị trí nạn nhân kèm Marker đỏ trong từng thẻ lịch sử
-  - **Bộ lọc trạng thái:** Tab "Tất cả", "Thành công", "Đang xử lý", "Thất bại / Hủy", "Từ chối / Hết giờ"
-  - **Header thống kê nhanh:** Tổng ca, thành công, đang xử lý, hủy/lỗi
+- ✅ **Màn hình Lịch sử Ca Cứu Hộ** (`history_screen.dart`):
+  - Minimap Preview Widget, Bộ lọc 5 tab trạng thái, Header thống kê nhanh
 
 - ✅ **Firebase Push Notification** (`firebase_auth`, `firebase_core`, `firebase_messaging`):
   - Đăng ký Android Notification Channel, chống trùng lặp bằng flag `_isInitialized`
-  - Màn hình thông báo hiển thị danh sách thực từ PostgreSQL, Pull-to-refresh, đánh dấu đã đọc
 
 ---
 
 ### 3. Web Admin — React 19 + Vite + TailwindCSS v4
 
-Có **10 trang** Admin:
+Có **11 trang** Admin:
 
 | Trang | Trạng thái |
 |---|---|
-| `DashboardPage` | ✅ Thống kê thời gian thực: SOS hôm nay, ca đang xử lý, ca hoàn thành, tỷ lệ ghép đôi |
+| `DashboardPage` | ✅ Thống kê thời gian thực + Live Push Toast Banner nhấp nháy: SOS mới, ca tiếp nhận, ca hoàn thành |
 | `MapPage` | ✅ Leaflet Map + 🔥 Heatmap điểm nóng tai nạn (bật/tắt toggle) |
+| `EmergencyAmenityPage` | ✅ Quản lý Tiện ích cộng đồng + Tab **"Báo Cáo Vi Phạm"** 1-click gỡ điểm vi phạm / bác bỏ |
 | `RescuerPage` | ✅ Danh sách cứu hộ viên |
+| `RescuerAnalyticsPage` | ✅ Phân tích hiệu suất Cứu hộ viên: Leaderboard (🥇 🥈 🥉), tỷ lệ nhận ca %, thời gian phản hồi TB |
 | `UserPage` | ✅ Danh sách người dùng |
-| `DangerousZonePage` | ✅ Quản lý điểm nguy hiểm |
+| `DangerousZonePage` | ✅ Quản lý điểm nguy hiểm + Nút **"⚡ Quét tự động (Crowd-Sourced)"** phát hiện cụm SOS |
 | `IncidentTypePage` | ✅ Quản lý loại sự cố |
-| `NotificationPage` | ✅ Giao diện Sleek & Minimalist — phát broadcast FCM tới toàn bộ thiết bị, xem nhật ký thông báo từ DB |
-| `FeedbackPage` | ⚠️ Cần kiểm tra |
-| `SettingPage` | ⚠️ Cần kiểm tra |
-| `ProfilePage` | ⚠️ Cần kiểm tra |
+| `NotificationPage` | ✅ Phát broadcast FCM tới toàn bộ thiết bị di động, xem nhật ký thông báo |
+| `FeedbackPage` | ✅ Đánh giá 1-5 sao và nhận xét thực từ nạn nhân |
+| `ProfilePage` | ✅ Xem thông tin cá nhân Admin |
 
 ---
 
@@ -102,92 +115,93 @@ Có **10 trang** Admin:
 #### ✅ Rescuer Navigation — Chỉ Đường OSRM + ETA cho Cứu Hộ Viên
 > **3 file thay đổi** · Hoàn thành trong 0.5 ngày
 
-- **`direction_service.dart`** — Thêm class `RouteInfo` (points + distanceKm + durationSec) và method `getRouteInfo()` khai thác 2 field `distance` & `duration` sẵn có trong OSRM API. Giữ nguyên `getRoute()` cũ để không break màn hình Victim.
-- **`rescuer_map_screen.dart`** — Thêm state `_distanceKm`, `_durationSec`; `_updateRoute()` gọi `getRouteInfo()` để lưu khoảng cách & ETA; reset về `null` khi kết thúc ca.
-- **`rescuer_rescue_info_widget.dart`** — Hiển thị chip màu vàng cam "450 m · ETA: 8 phút" ngay dưới tiêu đề "Đang đi cứu nạn...". Chip chỉ hiện khi đã có dữ liệu OSRM.
+- **`direction_service.dart`** — Class `RouteInfo` (points + distanceKm + durationSec) và method `getRouteInfo()`.
+- **`rescuer_map_screen.dart`** — State `_distanceKm`, `_durationSec`; `_updateRoute()` gọi `getRouteInfo()`.
+- **`rescuer_rescue_info_widget.dart`** — Hiển thị chip màu vàng cam "450 m · ETA: 8 phút".
 
 #### ✅ Rescue History & Statistics — Lịch Sử Ca Cứu Hộ + Thống Kê Dashboard
 > **End-to-End: Server + Web Admin + Mobile** · Hoàn thành trong 1 ngày
 
-- **Server:** `admin.repository.js` — SQL đếm `today_sos`, `matched_sos`. `admin.service.js` — tính `matchingSuccessRate`, `activeSos`, `completedSos` trả về `/api/admin/dashboard/overview`.
-- **Web Admin:** `StatisticComponent.jsx` — 4 thẻ thống kê Sleek & Minimalist: Tổng SOS hôm nay, Ca đang xử lý, Ca hoàn thành, Tỷ lệ ghép đôi thành công.
-- **Mobile:** `history_screen.dart` — Minimap Preview, bộ lọc 5 tab trạng thái, header thống kê nhanh.
+- **Server:** `admin.repository.js` — SQL đếm `today_sos`, `matched_sos`. `admin.service.js` — tính `matchingSuccessRate`.
+- **Web Admin:** `StatisticComponent.jsx` — 4 thẻ thống kê Sleek & Minimalist.
+- **Mobile:** `history_screen.dart` — Minimap Preview, bộ lọc 5 tab trạng thái, header thống kê.
 
 #### ✅ Heatmap Điểm Nóng Tai Nạn trên Web Admin
 > **End-to-End: Server + Web Admin** · Hoàn thành trong 1 ngày
 
-- **Server:** `admin.repository.js` — `getSosHeatmapPoints()` truy vấn tọa độ thực (`lat`, `lng`, `incident_type`, `status`) từ toàn bộ ca SOS. Endpoint bảo mật `GET /api/admin/sos-heatmap` (verifyToken + isAdmin).
-- **Web Admin:** `leaflet.heat` (miễn phí, không cần API Key). `MapPage.jsx` — `HeatmapLayer` gradient Xanh → Vàng → Đỏ, tích hợp `LayersControl.Overlay` "🔥 Điểm nóng tai nạn" cho phép bật/tắt trực quan.
+- **Server:** `admin.repository.js` — `getSosHeatmapPoints()`. Endpoint `GET /api/admin/sos-heatmap`.
+- **Web Admin:** `leaflet.heat` (miễn phí, không cần API Key). `MapPage.jsx` — `HeatmapLayer` gradient Xanh → Vàng → Đỏ.
 
 #### ✅ NotificationPage Web Admin — Hoàn Thiện End-to-End
 > **11 file thay đổi trên cả 3 layer** · Hoàn thành trong 0.5 ngày
 
-- **Backend:** `notification.repository.js` — lọc user theo vai trò, ghi thông báo vào PostgreSQL. `notification.service.js` — `broadcastNotification` ghi DB + phát FCM. Endpoints: `POST /api/notifications/broadcast`, `GET /api/notifications`, `PUT /api/notifications/read-all`.
-- **Web Admin:** `NotificationPage.jsx` — giao diện Sleek & Minimalist (`bg-gray-900`, `rounded-3xl`, Phosphor Icons), load nhật ký thực từ DB, phát thông báo tới thiết bị di động.
-- **Mobile:** `notification_screen.dart` — danh sách thông báo thực từ PostgreSQL, Pull-to-refresh, đánh dấu đã đọc. Fix lỗi `flutter_local_notifications ^22.0.1` named parameters API.
+- **Backend:** `notification.repository.js`, `notification.service.js`.
+- **Web Admin:** `NotificationPage.jsx` phát thông báo tới thiết bị di động.
+- **Mobile:** `notification_screen.dart` hiển thị thông báo thực từ PostgreSQL.
 
 #### ✅ Rating & Feedback System — Hệ Thống Đánh Giá Sau Ca Cứu Hộ
 > **End-to-End: Database + Server + Mobile + Web Admin** · Hoàn thành trong 1.5 ngày
 
-- **CSDL PostgreSQL:** Bảng `rescuer_ratings` (`rating_id`, `sos_request_id` UNIQUE, `victim_id`, `rescuer_id`, `rating` 1-5 sao, `comment`, `created_at`).
-- **Backend Node.js (`server/`):** Module `rating` (`rating.repository.js`, `rating.service.js`, `rating.controller.js`, `rating.route.js`) hỗ trợ gửi đánh giá, tính `avg_rating` & `total_ratings` của cứu hộ viên, ràng buộc chỉ Nạn nhân của ca SOS `DONE` mới được đánh giá 1 lần duy nhất.
-- **Mobile Flutter (`mobile/`):** `RatingDialogWidget` popup tự động khi ca cứu hộ hoàn thành, tích hợp nút "Đánh giá ca cứu hộ này" trong màn hình Lịch sử (`history_screen.dart`).
-- **Web Admin (`web/`):** Trang `FeedbackPage.jsx` kết nối API thực `RatingApi.js` hiển thị danh sách đánh giá 1-5 sao, tên nạn nhân, tên cứu hộ viên và nhận xét chi tiết.
+- **CSDL PostgreSQL:** Bảng `rescuer_ratings`.
+- **Backend Node.js (`server/`):** Module `rating` tính `avg_rating` & `total_ratings`.
+- **Mobile Flutter (`mobile/`):** `RatingDialogWidget` popup tự động khi ca cứu hộ hoàn thành.
+- **Web Admin (`web/`):** Trang `FeedbackPage.jsx` kết nối API thực `RatingApi.js`.
 
 #### ✅ Geo-Fence Dangerous Zone Alert — Cảnh Báo Vùng Nguy Hiểm Tự Động
 > **Mobile Client-Side Geofencing + Realtime Positioning** · Hoàn thành trong 1 ngày
 
-- **Mobile Flutter (`mobile/`):**
-  - **`geofence_provider.dart`**: Tải danh sách điểm nguy hiểm đã duyệt từ Backend (`GET /api/dangerous_points/approved`), tự động tính khoảng cách thực tế từ vị trí GPS Nạn nhân bằng `Geolocator.distanceBetween` hoàn toàn ở phía client.
-  - **Lọc bán kính 5km (`getNearbyPoints`)**: Tự động lọc & sắp xếp các điểm nguy hiểm trong phạm vi 5km xung quanh Nạn nhân để render trên bản đồ, tránh quá tải RAM và giúp ứng dụng hoạt động cực kỳ mượt mà.
-  - **Khởi động quét tức thì**: Tự động lấy tọa độ ban đầu và bật Popup cảnh báo ngay khi mở ứng dụng nếu Nạn nhân đang ở trong vùng nguy hiểm (< 500m), không bị trễ hay cần chuyển màn hình.
-  - **Cơ chế Cooldown 10 phút**: Quản lý Map `_alertCooldowns` ngăn ngừa lặp lại popup cảnh báo phiền phức khi Nạn nhân di chuyển trong bán kính 500m.
-  - **`geofence_alert_dialog.dart` & `geofence_provider.dart`**: Popup nổi bật phân loại mức độ nguy hiểm theo màu sắc (`HIGH` = Đỏ, `MEDIUM` = Cam, `LOW` = Xanh lá Emerald), hiển thị tên khu vực, địa chỉ, mô tả mối nguy và khoảng cách thực tế (mét). Hộp thoại pop-up chỉ hiển thị **duy nhất 1 lần khi mở app** (`_hasShownSessionAlert`), triệt tiêu hoàn toàn hiện tượng spam thông báo gây khó chịu cho người dùng.
-  - **Nút "Vị trí của tôi" 0ms Instant Feedback**: Phản hồi xoay camera & cập nhật Marker lập tức ngay lần bấm đầu tiên (0ms delay), kết hợp luồng đọc GPS phần ứng chạy ngầm và animation lướt mượt 750ms (`Curves.fastOutSlowIn`).
-  - **Bản đồ `VictimMapScreen` & `RescuerMapScreen`**: Đồng bộ Marker vị trí thời gian thực trong `ListenableBuilder`, đảm bảo vị trí và biểu tượng Marker luôn di chuyển khớp tuyệt đối với tọa độ GPS mới nhất.
+- **Mobile Flutter (`mobile/`):** `geofence_provider.dart` tính khoảng cách thực tế, lọc bán kính 5km, cơ chế Cooldown 10 phút, `geofence_alert_dialog.dart` phân cấp độ nguy hiểm (HIGH, MEDIUM, LOW).
+- **Nút "Vị trí của tôi" 0ms Instant Feedback**: Phản hồi xoay camera & cập nhật Marker lập tức.
 
 #### ✅ Crowd-Sourced Dangerous Zones — Hệ Thống Tự Phát Hiện Điểm Nguy Hiểm
 > **Backend Spatial Clustering + Web Admin Auto-Detect** · Hoàn thành trong 0.5 ngày
 
-- **PostgreSQL Database (`script-db.sql`):** Cho phép cột `reported_by` trong bảng `dangerous_points` nhận giá trị `NULL` (dành cho điểm do hệ thống tự phát hiện), bổ sung Index `idx_sos_requests_coords` trên `sos_requests(victim_lat, victim_lng)`.
-- **Backend Node.js (`server/`):**
-  - **`dangerous_point.repository.js`**: Truy vấn SQL thuần Haversine `detectSosClusters` phát hiện các cụm có ≥ 3 ca SOS trong bán kính 200m. Hàm `findNearbyDangerousPoint` kiểm tra chống trùng lặp điểm nguy hiểm trong bán kính 300m.
-  - **`dangerous_point.service.js`**: Tự động tính tọa độ trung bình $(lat_{avg}, lng_{avg})$ của cụm SOS, tự động xếp cấp độ nguy hiểm (`HIGH` nếu ≥ 5 ca, `MEDIUM` nếu 3-4 ca) và tạo bản ghi dạng `PENDING` với `reported_by = NULL`.
-  - **`admin_dangerous_point.controller.js`**: Endpoint `POST /api/dangerous_points/admin/auto-detect` hỗ trợ Admin chủ động kích hoạt quét gom cụm dữ liệu thời gian thực.
-- **Web Admin (`web/`):**
-  - **`DangerousZonePage.jsx`**: Nút **"⚡ Quét tự động (Crowd-Sourced)"** với hiệu ứng loading và thông báo phản hồi số cụm mới vừa phát hiện.
-  - **Badge hiển thị**: Điểm do hệ thống phát hiện có Badge nổi bật màu tím `Hệ thống` ở cột Người báo cáo. Admin có thể xem xét và nhấn **Duyệt** (`APPROVED`) hoặc **Từ chối** (`REJECTED`).
+- **PostgreSQL Database (`script-db.sql`):** Bảng `dangerous_points` cho `reported_by = NULL`.
+- **Backend Node.js (`server/`):** Thuật toán Haversine gom cụm ≥ 3 ca SOS trong bán kính 200m.
+- **Web Admin (`web/`):** Nút **"⚡ Quét tự động (Crowd-Sourced)"** trên `DangerousZonePage.jsx`.
 
 #### ✅ Rescuer Performance Analytics — Phân Tích Hiệu Suất Cứu Hộ Viên
 > **Backend Performance SQL Analytics + Web Admin Leaderboard** · Hoàn thành trong 0.5 ngày
 
-- **Backend Node.js (`server/`):**
-  - **`rescuer.repository.js`**: Thêm truy vấn SQL thuần kết hợp `users`, `rescuer_profiles`, `sos_requests`, `rescuer_histories`, `rescuer_ratings` để tính số ca hoàn thành, tỷ lệ nhận ca (`responseRate`), thời gian nhận ca trung bình (`avgResponseTimeSeconds`), điểm đánh giá trung bình (`avgRating`) và tổng hợp KPI toàn hệ thống.
-  - **`rescuer.controller.js` & `rescuer.route.js`**: Đăng ký API endpoint `GET /api/rescuers/admin/analytics` bảo vệ bởi Token Admin.
-- **Web Admin (`web/`):**
-  - **`RescuerAnalyticsPage.jsx`**: Trang quản trị hiệu suất cứu hộ viên với 4 thẻ KPI tổng quan (Tổng số Cứu hộ viên, Ca hoàn thành, Thời gian phản hồi TB, Đánh giá TB) và Bảng xếp hạng Leaderboard có huy hiệu xếp hạng (🥇 🥈 🥉), thanh tỷ lệ nhận ca (%), badge trạng thái online/offline.
-  - **`SidebarComponent.jsx` & `routes/index.js`**: Thêm mục điều hướng **"Hiệu suất Cứu hộ"** (`/admin/rescuer-analytics`) với icon `<PiTrophyFill />`.
+- **Backend Node.js (`server/`):** SQL kết hợp 5 bảng tính KPI, `responseRate`, `avgResponseTimeSeconds`, `avgRating`.
+- **Web Admin (`web/`):** Trang `RescuerAnalyticsPage.jsx` với Bảng xếp hạng Leaderboard (🥇 🥈 🥉).
 
 #### ✅ Live Dashboard Real-Time (Socket.io Push)
 > **Backend Socket Broadcast + Web Admin Live Push Banner & Counter** · Hoàn thành trong 0.5 ngày
 
-- **Backend Node.js (`server/`):**
-  - **`socket/index.js`**: Tự động gán kết nối Admin vào phòng Socket `admin:dashboard` và tạo hàm `emitAdminDashboardEvent(eventType, payload)`.
-  - **`sos_request.service.js`**: Phát sự kiện `dashboard:event` tới room Admin khi có SOS mới được khởi tạo (`SOS_CREATED`), Cứu hộ viên tiếp nhận ca (`SOS_ACCEPTED`), Ca cứu hộ hoàn thành (`SOS_COMPLETED`) hoặc Hủy ca (`SOS_CANCELLED`).
-- **Web Admin (`web/`):**
-  - **Kiến trúc Mô-đun Socket (`src/socket/`)**:
-    - **Token Management**: Tự động đọc `accessToken` từ Redux Store (`store.getState().auth?.accessToken`) thay vì `localStorage`.
-    - **`src/socket/core/socketCore.js`**: Cấu hình khởi tạo Socket.io core & Redux token state.
-    - **`src/socket/features/`**: Tách biệt module `connectionSocket.js` và `dashboardSocket.js` xử lý từng nhóm sự kiện.
-    - **`src/socket/index.js`**: Entrypoint tổng hợp xuất các helper function `subscribeDashboardEvents`, `subscribeConnectionStatus`.
-  - **`DashboardPage.jsx`**: Đăng ký lắng nghe sự kiện qua helper `subscribeDashboardEvents`, hiển thị Badge phát sáng nhấp nháy `LIVE PUSH ACTIVE` và Toast Banner nổi ở góc phải màn hình (`"⚡ Yêu cầu SOS mới vừa xuất hiện..."`). Cập nhật ngầm dữ liệu số liệu tổng quan thời gian thực không làm gián đoạn trải nghiệm người dùng.
+- **Backend Node.js (`server/`):** Phòng socket `admin:dashboard`, phát `SOS_CREATED`, `SOS_ACCEPTED`, `SOS_COMPLETED`.
+- **Web Admin (`web/`):** Cấu trúc Socket Web Client (`src/socket/`), Badge phát sáng nhấp nháy `LIVE PUSH ACTIVE` và Toast Banner trên `DashboardPage.jsx`.
 
-#### ✅ QR Code Emergency Fallback — Cứu Hộ Ngoài Hệ Thống (Mã QR Cấp Cứu)
-> **QR Code Generation + Camera Scan-to-Accept API** · Đã hoàn thành
+#### ✅ QR Code Emergency Fallback — Cứu Hộ Ngoài Hệ Thống
+> **QR Code Generation + Camera Scan-to-Accept API** · Hoàn thành trong 1 ngày
 
-- **Cơ chế hoạt động:**
-  - **Tạo Mã QR Khẩn Cấp (`EmergencyQRDialogWidget`)**: Khi Nạn nhân gặp tình huống không tìm thấy Cứu hộ viên online sau các lượt quét bán kính, ứng dụng cho phép tạo mã QR cấp cứu trực tiếp trên màn hình.
-  - **Quét Mã Ứng Cứu (`QRScannerScreen` + API `POST /api/sos_requests/accept-qr`)**: Bất kỳ Cứu hộ viên hoặc Người hỗ trợ nào ở gần (dù đang Offline) dùng ứng dụng quét mã QR này sẽ lập tức tiếp nhận ca SOS và hệ thống tự động chuyển cả 2 sang chế độ dẫn đường cứu hộ thời gian thực.
+- **Cơ chế hoạt động:** Tạo mã QR cấp cứu (`EmergencyQRDialogWidget`) khi không tìm thấy cứu hộ online. Cứu hộ viên quét mã QR bằng `QRScannerScreen` để nhận ca khẩn cấp 0ms.
+
+#### ✅ Community Emergency Amenities — Bản Đồ Tiện Ích Cộng Đồng & Chỉ Đường Trực Tiếp Nội Bộ
+> **Map Marker + In-App OSRM Navigation + Admin Duyệt** · Hoàn thành trong 1 ngày
+
+- Lọc tiện ích khẩn cấp (Sửa xe, Trạm xăng, Y tế, Trú ẩn). Cho phép Victim/Rescuer/Admin tạo tiện ích mới.
+- Admin quản lý tại `/admin/emergency-amenities` (1-click Duyệt/Kích hoạt/Tạm khóa + Quản lý Danh mục tiện ích).
+- **Chỉ đường Nội bộ In-App Navigation**: Vẽ Polyline OSRM xanh Sky Blue trên bản đồ ứng dụng, hiển thị Navigation Banner kèm nút **`[❌ Tắt chỉ đường]`**.
+
+#### ✅ SOS Scene Photo Attachment — Ảnh Hiện Trường Ca Cứu Hộ Khẩn Cấp
+> **Cloudinary Upload + Full-Screen Zoom Viewer + Realtime Socket Payload** · Hoàn thành trong 0.5 ngày
+
+- **Nạn nhân (Victim):** Form SOS hỗ trợ chụp ảnh trực tiếp từ Máy ảnh hoặc chọn từ Thư viện (`ImagePickerHelper`), tải lên Cloudinary `do_an_tot_nghiep/sos_requests`.
+- **Cứu hộ viên (Rescuer):** Xem ảnh hiện trường khẩn cấp ngay trên Popup nhận ca (`sos_offer_overlay_widget.dart`) và Thanh trạng thái cứu hộ (`rescuer_rescue_info_widget.dart`), bấm vào để **xem phóng to Full-Screen** (thu phóng `InteractiveViewer`).
+
+#### ✅ Amenity Violation Report & Moderation — Báo Cáo Vi Phạm & Xử Lý Điểm Tiện Ích Lừa Đảo
+> **Database Feedback Table + Mobile Report Dialog + Admin Moderation Tab** · Hoàn thành trong 0.5 ngày
+
+- **Database & Server:** Bảng `amenity_feedbacks` lưu nguyên nhân báo cáo (`CLOSED_DOWN`, `SCAM_FRAUD`, `INCORRECT_INFO`, `OTHER`).
+- **Mobile App:** Dialog gửi báo cáo vi phạm tích hợp trực tiếp trong `AmenityDetailBottomSheet`.
+- **Web Admin:** Tab **"Báo Cáo Vi Phạm"** (`EmergencyAmenityPage.jsx`) cho phép Admin 1-click **"Gỡ điểm vi phạm"** (tự động đổi trạng thái sang `REJECTED`) hoặc **"Bác bỏ"**.
+
+#### ✅ Smart Emergency Search & Auto Hide/Unhide — Thanh Tìm Kiếm Tiện Ích Khẩn Cấp Thông Minh
+> **GPS Distance Calculation + Nearest Sorting + Dynamic Category Chips + Auto Hide/Unhide** · Hoàn thành trong 0.5 ngày
+
+- **Định vị & Sắp xếp gần nhất:** Tính khoảng cách GPS thực tế bằng `Geolocator.distanceBetween`, tự động **sắp xếp ưu tiên điểm gần nhất đứng đầu tiên** kèm dán nhãn khoảng cách (`Cách 120 m`, `Cách 1.5 km`).
+- **Tự động Ẩn/Hiện thanh danh mục:** Ẩn `AmenityCategoryChips` khi mở tìm kiếm và tự động phục hồi khi đóng/bấm ra ngoài màn hình (`TapRegion`).
 
 ---
 
@@ -202,9 +216,9 @@ sequenceDiagram
     participant Worker as 📦 BullMQ Worker
     actor Rescuer as 🚑 Cứu hộ viên
 
-    Note over Victim: Giữ nút SOS 2 giây (Anti-False Alarm)
-    Victim->>Server: POST /sos/create (Tọa độ + Loại sự cố)
-    Server->>Server: INSERT sos_requests (PENDING) vào PostgreSQL
+    Note over Victim: Giữ nút SOS 2s + Chọn/Chụp ảnh hiện trường (Tùy chọn)
+    Victim->>Server: POST /sos/create (Tọa độ + Loại sự cố + Ảnh hiện trường)
+    Server->>Server: INSERT sos_requests & images (PENDING) vào PostgreSQL
     Server->>Worker: Đẩy job "process-sos" (radius=2km)
 
     loop Thử tối đa 4 vòng (2→5→10→20km)
@@ -213,14 +227,15 @@ sequenceDiagram
         Worker->>Redis: pipeline.exists(active:rescuer:{id}) — Lazy Cleanup
         alt Tìm thấy Rescuer phù hợp
             Worker->>Server: Gửi danh sách Rescuer
-            Server->>Rescuer: Socket emit "sos:offer"
+            Server->>Rescuer: Socket emit "sos:offer" (gửi kèm ảnh hiện trường)
         else Không tìm thấy
             Worker->>Worker: Re-queue sau 15s với radius lớn hơn
         end
     end
 
+    Rescuer->>Rescuer: Xem ảnh hiện trường full-screen & bấm Accept
     Rescuer->>Server: Chấp nhận SOS (Accept)
-    Server->>Victim: Socket emit "sos:matched" + thông tin Rescuer
+    Server->>Victim: Socket emit "rescue:accepted" + Thông báo đẩy FCM 0ms
 
     Note over Victim: Bản đồ hiện Polyline OSRM tới Rescuer
     loop Rescuer di chuyển tới Victim
@@ -228,96 +243,13 @@ sequenceDiagram
         Server->>Redis: GEOADD rescuer_locations
         Server->>Victim: Socket rescuer:location (vị trí mới)
         Victim->>Victim: Vẽ lại Polyline OSRM (debounce 15m/4s)
-        Note over Rescuer: Hiển thị ETA còn lại (chip vàng cam)
+        Note over Rescuer: Hiển thị ETA còn lại + Ảnh hiện trường
     end
 ```
 
 ---
 
 ## III. TỔNG HỢP VÀ ĐỀ XUẤT NÂNG CẤP DỰ ÁN
-
-> [!IMPORTANT]
-> Các đề xuất dưới đây được chọn lọc **không yêu cầu chi phí API tốn kém**, phù hợp để Demo trực tiếp trước hội đồng. Các đề xuất đã triển khai được lưu nhật ký chi tiết tại **Mục I.4**.
-
-### A. Các Đề Xuất Đã Triển Khai Hoàn Thành (🟢 Finished)
-
-#### ✅ Đề xuất 1: Hoàn thiện Màn hình Chỉ Đường cho Cứu Hộ Viên (Rescuer Navigation)
-> **Độ khó:** Dễ · **Thời gian:** 0.5 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-> *(Xem chi tiết code đã sửa tại [Mục I.4 - Rescuer Navigation](#-rescuer-navigation--chỉ-đường-osrm--eta-cho-cứu-hộ-viên))*
-
-#### ✅ Đề xuất 2: Xây Dựng Màn Hình Lịch Sử Ca Cứu Hộ (Rescue History + Statistics)
-> **Độ khó:** Dễ · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-> *(Xem chi tiết code đã sửa tại [Mục I.4 - Rescue History & Statistics](#-rescue-history--statistics--lịch-sử-ca-cứu-hộ--thống-kê-dashboard))*
-
-#### ✅ Đề xuất 3: Bản Đồ Heatmap Điểm Nóng Tai Nạn trên Web Admin
-> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-> *(Xem chi tiết code đã sửa tại [Mục I.4 - Heatmap Điểm Nóng Tai Nạn](#-heatmap-điểm-nóng-tai-nạn-trên-web-admin))*
-
-#### ✅ Đề xuất 4: Hoàn Thiện Trang Thông Báo Web Admin (NotificationPage)
-> **Độ khó:** Dễ · **Thời gian:** 0.5 ngày · **Impact:** ⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-> *(Xem chi tiết code đã sửa tại [Mục I.4 - NotificationPage Web Admin](#-notificationpage-web-admin--hoàn-thiện-end-to-end))*
-
-#### ✅ Đề xuất 5: Hệ Thống Đánh Giá Sau Ca Cứu Hộ (Rating & Feedback)
-> **Độ khó:** Trung bình · **Thời gian:** 1.5 ngày · **Impact:** ⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-> *(Xem chi tiết code đã sửa tại [Mục I.4 - Rating & Feedback System](#-rating--feedback-system--hệ-thống-đánh-giá-sau-ca-cứu-hộ))*
-
-#### ✅ Đề xuất 6: Geo-Fence Cảnh Báo Vùng Nguy Hiểm Tự Động
-> **Độ khó:** Dễ · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-> *(Xem chi tiết code đã sửa tại [Mục I.4 - Geo-Fence Dangerous Zone Alert](#-geo-fence-dangerous-zone-alert--cảnh-báo-vùng-nguy-hiểm-tự-động))*
-
-#### ✅ Đề xuất 7: Crowd-Sourced Dangerous Zones — Hệ Thống Tự Phát Hiện Điểm Nguy Hiểm
-> **Độ khó:** Dễ · **Thời gian:** 0.5 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-> *(Xem chi tiết code đã sửa tại [Mục I.4 - Crowd-Sourced Dangerous Zones](#-crowd-sourced-dangerous-zones--hệ-thống-tự-phát-hiện-điểm-nguy-hiểm))*
-
-#### ✅ Đề xuất 8: Rescuer Performance Analytics — Phân Tích Hiệu Suất Cứu Hộ Viên
-> **Độ khó:** Dễ · **Thời gian:** 0.5 ngày · **Impact:** ⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-> *(Xem chi tiết code đã sửa tại [Mục I.4 - Rescuer Performance Analytics](#-rescuer-performance-analytics--phân-tích-hiệu-suất-cứu-hộ-viên))*
-
-#### ✅ Đề xuất 9: Live Dashboard Real-Time (Socket.io Push)
-> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-> *(Xem chi tiết code đã sửa tại [Mục I.4 - Live Dashboard Real-Time](#-live-dashboard-real-time--socketio-push))*
-
-#### ✅ Đề xuất 10: QR Code Emergency Fallback — Cứu Hộ Ngoài Hệ Thống
-> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**  
-
-**Bài toán:** Khi BullMQ Worker đã thử hết 4 vòng mà **không tìm được rescuer nào online**. 
-
-**Giải pháp:** Tự động hiện tùy chọn **"Tạo mã QR cứu trợ"** chứa mã ca SOS. Bất kỳ cứu hộ viên nào (dù đang offline) quét mã sẽ thấy thông tin và có thể nhận ca ngay qua API `POST /api/sos/sos_requests/accept-qr`. Đồng bộ trạng thái cứu hộ 0ms cho cả Nạn nhân và Cứu hộ viên qua Redis PubSub và Socket Server.
-
-**Điểm nổi bật học thuật:** Giải quyết **bài toán "vùng trắng cứu hộ"** — tư duy Hybrid Online-Offline System thực tiễn.
-
----
-
-### A. Các Đề Xuất Đã Hoàn Thành (✅ Completed)
-
-### ✅ Đề xuất 11: Community Emergency Amenities — Bản Đồ Tiện Ích Cộng Đồng & Chỉ Đường Trực Tiếp Nội Bộ (Kèm Admin Phê Duyệt & Tắt Chỉ Đường)
-> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Chi phí:** $0 · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**
-
-**Ý tưởng:** Lọc nhanh các tiện ích khẩn cấp (Tiệm sửa xe, Trạm xăng, Vá lốp, Cơ sở y tế) xung quanh theo danh mục động. Tất cả các vai trò (**Victim**, **Rescuer**, **Admin**) đều có quyền đóng góp vị trí điểm tiện ích mới siêu tốc chỉ với 2-3 thao tác trên thanh công cụ tiện ích.
-- Điểm do **Victim** hoặc **Rescuer** đóng góp sẽ lưu ở trạng thái `PENDING` (chờ duyệt).
-- **Admin** có giao diện quản lý hiện đại trên Web Admin (`/admin/emergency-amenities`) với bảng dữ liệu tối giản (Minimalist Table) và Modal xem chi tiết đầy đủ thông tin (người đóng góp, tọa độ, giờ mở cửa, SĐT), cho phép **duyệt/kích hoạt trực tiếp 1-click** chuyển đổi linh hoạt các trạng thái `APPROVED` (Đã kích hoạt), `PENDING` (Chờ duyệt), `REJECTED` (Tạm khóa/Từ chối).
-- **Quản lý & Chỉnh sửa Danh mục Tiện ích**: Cho phép Admin xem danh sách danh mục, tạo danh mục mới và bấm nút **"Sửa"** để cập nhật thông tin tên danh mục (`categoryName`), tên biểu tượng (`iconName`) cũng như chuyển đổi trạng thái `ACTIVE` / `INACTIVE` thông qua Modal chỉnh sửa tiện lợi.
-- **Chỉ đường Nội bộ trực tiếp trên Bản đồ App (In-App Navigation)**:
-  - Khi nhấn **"Chỉ đường trên App"**, ứng dụng tự động vẽ tuyến đường Polyline OSRM (màu xanh Sky Blue) kết nối từ vị trí GPS hiện tại của người dùng đến tiện ích ngay trên bản đồ ứng dụng mà không cần thoát sang Google Maps.
-  - Hiển thị **Navigation Banner** ở đầu bản đồ cập nhật thời gian thực khoảng cách (km) và thời gian di chuyển ước tính (~ phút).
-  - Tích hợp nút **`[❌ Tắt chỉ đường]`** màu đỏ nổi bật giúp người dùng hủy tuyến đường nhanh chóng khi không cần nữa.
-  - Cung cấp thêm tùy chọn phụ **"Mở Google Maps ngoài"** đáp ứng đa dạng thiết bị (đã cấu hình thẻ `<queries>` tương thích Android 11+).
-
-**Điểm nổi bật:** Biến ứng dụng thành một hệ sinh thái cứu hộ giao thông toàn diện — kết nối vị trí nạn nhân/cứu hộ viên tới tiện ích gần nhất để tiến hành di chuyển, cứu hộ và sửa chữa nhanh chóng, hiệu quả nhất, đồng thời đảm bảo kiểm duyệt dữ liệu rác nghiêm ngặt từ phía Admin.
-
----
-
-### B. Các Đề Xuất Bị Loại (Không phù hợp quy mô Đồ án)
-
-| Đề xuất | Lý do loại |
-|---|---|
-| **WebRTC Video/Voice Call** | Phức tạp, cần STUN/TURN server, tốn thời gian, dễ lỗi khi demo live |
-| **SMS Fallback (Twilio)** | Chi phí per-SMS, setup phức tạp, không cần thiết khi có WiFi |
-| **AI Incident Triage** | Chi phí API, không cần thiết cho đồ án tốt nghiệp |
-
----
-
-## IV. BẢNG TỔNG HỢP ĐỀ XUẤT
 
 | STT | Đề xuất | Độ khó | Thời gian | Trạng thái |
 |---|---|---|---|---|
@@ -331,32 +263,31 @@ sequenceDiagram
 | **8** | ~~Rescuer Performance Analytics (bảng xếp hạng KPI)~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
 | **9** | ~~Live Dashboard Real-Time (Socket.io Push)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
 | **10** | ~~QR Code Emergency Fallback (cứu hộ ngoài hệ thống)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
-| **11** | ~~Community Emergency Amenities (bản đồ tiện ích + chỉ đường trực tiếp In-App + nút Tắt chỉ đường + Admin duyệt)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
+| **11** | ~~Community Emergency Amenities (bản đồ tiện ích + chỉ đường In-App + Admin duyệt)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
+| **12** | ~~SOS Scene Photo Attachment (đính kèm & xem phóng to ảnh hiện trường)~~ | Trung bình | 0.5 ngày | ✅ Hoàn thành |
+| **13** | ~~Amenity Violation Report (báo cáo vi phạm tiện ích + Admin gỡ 1-click)~~ | Trung bình | 0.5 ngày | ✅ Hoàn thành |
+| **14** | ~~Smart Emergency Search (tìm tiện ích gần nhất + dải danh mục CSDL + tự động ẩn/hiện)~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
+| **15** | ~~Auto Token Refresh & Fast Socket PubSub (kết nối socket mượt + phản hồi 0ms)~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
+| **16** | Guest Emergency SOS (Gửi yêu cầu cứu hộ khẩn cấp ngay tại Màn hình Đăng nhập không cần đăng ký tài khoản trước) | Trung bình | 1 ngày | 📋 Đang lên kế hoạch |
 
-> [!TIP]
-> **Khuyến nghị ưu tiên cao nhất:** Đề xuất **10 (QR Fallback)** và **6 (Geo-Fence)** — độc đáo nhất, giải quyết edge case thực tế, ít người làm nhất, không tốn chi phí.
+#### 📋 Guest Emergency SOS — Cứu Hộ Khẩn Cấp Cho Nạn Nhân Chưa Có Tài Khoản
+> **Chế độ Cứu hộ Khách (Guest SOS) ngay tại Màn hình Đăng nhập**
+
+- **Bối cảnh:** Nạn nhân vừa tải ứng dụng về máy và gặp tai nạn khẩn cấp ngay lập tức, chưa kịp đăng ký hoặc đăng nhập tài khoản.
+- **Giải pháp:** Tích hợp nút SOS Khẩn cấp ("Cứu hộ ngay không cần đăng nhập") tại màn hình đăng nhập (`login_screen.dart`).
+- **Luồng hoạt động:**
+  - Nhập thông tin nhanh (Số điện thoại liên hệ + Họ tên tạm thời).
+  - Lấy vị trí GPS tự động và cho phép gửi yêu cầu SOS đính kèm ảnh hiện trường.
+  - Server cấp tạm một **Guest JWT Token** và lưu trạng thái để Nạn nhân theo dõi ca cứu hộ trên bản đồ theo thời gian thực mà không làm gián đoạn trải nghiệm cứu hộ khẩn cấp.
 
 ---
 
-## V. KẾT LUẬN
+## IV. KẾT LUẬN
 
-Dự án đã có nền tảng kỹ thuật **vững chắc và đúng hướng** với các điểm mạnh nổi bật:
-- Kiến trúc Monorepo chuẩn, tách biệt rõ ràng Backend / Web / Mobile
-- Redis Geo Spatial thay thế hoàn toàn PostGIS nặng nề
-- Thuật toán Lazy Cleanup độc đáo tránh rò rỉ bộ nhớ RAM
-- Nút SOS chống chạm nhầm (Press-and-Hold 2 giây)
-- Bản đồ Polyline OSRM thời gian thực cho cả Victim và Rescuer (kèm ETA)
-- Heatmap điểm nóng tai nạn trực quan từ dữ liệu thực PostgreSQL
-- Hệ thống thông báo Push Notification FCM end-to-end (Web Admin → Mobile)
-- Màn hình lịch sử ca cứu hộ với Minimap Preview & thống kê đa chiều
-
-**Các đề xuất còn lại được xếp hạng theo mức độ ấn tượng khi báo cáo:**
-
-| Hạng | Đề xuất | Lý do nổi bật |
-|---|---|---|
-| 🥇 | QR Code Emergency Fallback (10) | Giải quyết edge case "vùng trắng cứu hộ", Hybrid Online-Offline — chưa ai làm |
-| 🥈 | Crowd-Sourced Dangerous Zones (7) | Ý tưởng data-driven độc đáo, hệ thống tự học — chưa sinh viên nào làm |
-| 🥉 | Geo-Fence Cảnh báo (6) | Geofencing offline, demo live cực kỳ ấn tượng |
-| 4 | Live Dashboard Real-Time (9) | Wow-effect trực tiếp trước hội đồng khi demo |
-| 5 | Rescuer Performance Analytics (8) | Thể hiện tư duy quản trị enterprise, chỉ cần SQL |
-| 6 | Rating & Feedback (5) | Hoàn thiện vòng lặp nghiệp vụ, có chiều sâu |
+Dự án đã đạt mức độ hoàn thiện **rất cao và toàn diện** trên cả 3 nền tảng (Backend Node.js Express, Web Admin React 19, Mobile Flutter App):
+- **18 module Backend** chuẩn Layered Modular Architecture với PostgreSQL, Redis Geo, BullMQ Queue.
+- **Bản đồ thời gian thực** hiển thị cứu hộ viên, chỉ đường OSRM kèm khoảng cách & ETA cho cả Nạn nhân và Cứu hộ viên.
+- **Tính năng cứu hộ khẩn cấp:** Nút SOS chống chạm nhầm (Press-and-Hold 2s), chọn/chụp ảnh hiện trường khẩn cấp, Mã QR Cứu hộ ngoài hệ thống (Fallback).
+- **Hệ sinh thái Tiện ích Cộng đồng:** Đóng góp điểm tiện ích, Chỉ đường trực tiếp nội bộ trên App (In-App Navigation), Báo cáo vi phạm tiện ích giả mạo/đóng cửa, Tìm kiếm tiện ích gần nhất ưu tiên khoảng cách GPS thực tế.
+- **Geofencing Cảnh báo nguy hiểm:** Tự động cảnh báo vùng nguy hiểm theo bán kính GPS ở Client, Hệ thống backend tự phát hiện cụm nguy hiểm (Crowd-Sourced Clustering).
+- **Web Admin hiện đại:** Bản đồ Heatmap điểm nóng tai nạn, Bảng xếp hạng hiệu suất cứu hộ viên (Leaderboard KPI), Live Dashboard Socket Push 0ms, Quản lý tiện ích & báo cáo vi phạm 1-click.

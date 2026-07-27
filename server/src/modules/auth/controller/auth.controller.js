@@ -23,12 +23,44 @@ class AuthController {
         }
     };
 
+    handleVerifyOtp = async (req, res, next) => {
+        try {
+            const { email, otpCode } = req.body;
+
+            const result = await authService.verifyOtp({ email, otpCode });
+
+            return res.status(200).json({
+                success: true,
+                message: "Xác thực Email thành công!",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    handleResendOtp = async (req, res, next) => {
+        try {
+            const { email } = req.body;
+
+            const result = await authService.resendOtp({ email });
+
+            return res.status(200).json({
+                success: true,
+                message: "Đã gửi lại mã OTP 6 số thành công!",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     handleRefreshToken = async (req, res, next) => {
         try {
             const { data, platform } = req.body;
 
             if (platform === "MOBILE") {
-                const refreshToken = data;
+                const refreshToken = data || req.body.refreshToken;
 
                 if (!refreshToken) {
                     return res.status(401).json({
@@ -110,6 +142,22 @@ class AuthController {
         }
     };
 
+    guestLogin = async (req, res, next) => {
+        try {
+            const { phone, fullName } = req.body;
+
+            const result = await authService.guestLogin({ phone, fullName });
+
+            return res.status(200).json({
+                success: true,
+                message: "Xác thực nạn nhân khách thành công",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     logout = async (req, res, next) => {
         try {
             res.clearCookie("refreshToken", {
@@ -149,17 +197,17 @@ class AuthController {
     // TODO: Xử lý sau
 
     loginWithGoogle = async (req, res, next) => {
-        // try {
-        //     const { email, providerId } = req.body;
-        //     const result = await this.authService.loginWithGoogle({ email, providerId });
-        //     return res.status(200).json({
-        //         success: true,
-        //         message: "Đăng nhập với Google thành công",
-        //         data: result,
-        //     });
-        // } catch (error) {
-        //     next(error);
-        // }
+        try {
+            const { email, providerId, fullName, avatarUrl, idToken } = req.body;
+            const result = await authService.loginWithGoogle({ email, providerId, fullName, avatarUrl, idToken });
+            return res.status(200).json({
+                success: true,
+                message: "Đăng nhập với Google thành công!",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
     };
 
     verifyEmail = async (req, res, next) => { };

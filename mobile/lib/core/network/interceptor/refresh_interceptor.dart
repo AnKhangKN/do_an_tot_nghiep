@@ -26,7 +26,6 @@ class RefreshInterceptor extends Interceptor {
       isRefreshing = true;
 
       try {
-
         final refreshToken = await storageService.getRefreshToken();
 
         if (refreshToken == null || refreshToken.isEmpty) {
@@ -35,7 +34,13 @@ class RefreshInterceptor extends Interceptor {
           return handler.next(err);
         }
 
-        final response = await dio.post(
+        final cleanDio = Dio(BaseOptions(
+          baseUrl: request.baseUrl,
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+        ));
+
+        final response = await cleanDio.post(
           '/api/auth/refresh-token',
           data: {"data": refreshToken, "platform": "MOBILE"},
         );
@@ -55,7 +60,7 @@ class RefreshInterceptor extends Interceptor {
 
         isRefreshing = false;
 
-        // retry request cũ
+        // retry request cũ với token mới
         final opts = request
           ..headers['Authorization'] = 'Bearer $newAccessToken';
 
@@ -64,9 +69,7 @@ class RefreshInterceptor extends Interceptor {
         return handler.resolve(retryResponse);
       } catch (e) {
         isRefreshing = false;
-
         await storageService.clearToken();
-
         return handler.next(err);
       }
     }

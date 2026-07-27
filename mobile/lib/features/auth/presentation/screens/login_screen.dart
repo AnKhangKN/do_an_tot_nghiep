@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/guest_sos_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,10 +25,26 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    final success = await context.read<AuthProvider>().login(
-      emailController.text.trim(),
-      passwordController.text.trim(),
-    );
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final authProvider = context.read<AuthProvider>();
+
+    if (email.isEmpty && password.isEmpty) {
+      authProvider.setError("Vui lòng nhập đầy đủ Email và Mật khẩu!");
+      return;
+    }
+
+    if (email.isEmpty) {
+      authProvider.setError("Vui lòng nhập địa chỉ Email!");
+      return;
+    }
+
+    if (password.isEmpty) {
+      authProvider.setError("Vui lòng nhập Mật khẩu!");
+      return;
+    }
+
+    final success = await authProvider.login(email, password);
 
     if (!success) return;
     if (!mounted) return;
@@ -35,6 +52,21 @@ class _LoginScreenState extends State<LoginScreen> {
     context.go(RouterConstants.splash);
   }
 
+
+  Future<void> _loginGoogle() async {
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.loginWithGoogle();
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Đăng nhập bằng Google thành công!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+      context.go(RouterConstants.splash);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -217,7 +249,58 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 20),
+
+                  // NÚT ĐĂNG NHẬP BẰNG GOOGLE
+                  OutlinedButton.icon(
+                    onPressed: _loginGoogle,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: ColorConstants.borderMuted),
+                      backgroundColor: ColorConstants.surfaceWhite,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.g_mobiledata_rounded,
+                      size: 32,
+                      color: Colors.redAccent,
+                    ),
+                    label: const Text(
+                      'Đăng nhập bằng Google',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: ColorConstants.textPrimary,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // NÚT CỨU HỘ KHẨN CẤP DÀNH CHO GUEST (CHƯA ĐĂNG KÝ)
+                  OutlinedButton.icon(
+                    onPressed: () => GuestSOSDialog.show(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: ColorConstants.dangerHigh, width: 2),
+                      backgroundColor: ColorConstants.dangerHighLight,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    label: const Text(
+                      'KHẨN CẤP (Chưa có tài khoản)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: ColorConstants.dangerHigh,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
 
                   // Chuyển sang Đăng ký
                   Row(

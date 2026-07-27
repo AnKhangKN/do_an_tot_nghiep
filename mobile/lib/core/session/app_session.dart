@@ -64,6 +64,7 @@ class AppSession {
   // INITIALIZE SESSION
   // =========================
   Future<void> init() async {
+    // 1. Luôn tự động kiểm tra và gia hạn Access Token mới trước khi vào app
     final token = await authRepository.getValidAccessToken();
     
     // Tải vị trí và notification dịch vụ chạy song song không nghẽn tiến trình splash
@@ -112,11 +113,52 @@ class AppSession {
         // Tự động kiểm tra và khôi phục tiến trình cứu hộ (nếu có)
         await checkAndRestoreActiveRescue();
       } catch (e, stackTrace) {
-        debugPrint("🚨 LỖI INIT SESSION: $e\n$stackTrace");
+        debugPrint("🚨 [INIT SESSION] Tải profile thất bại ($e). Đang thử gia hạn Token...");
+        final newToken = await authRepository.refreshToken();
+
+        if (newToken != null) {
+          try {
+            final profileResponse = await authRepository.getMe();
+            await socket.ensureConnected(
+              newToken,
+              profileResponse.userId,
+              profileResponse.role,
+            );
+
+            final String roleStr = profileResponse.role;
+            final UserRole userRole = roleStr == 'RESCUER'
+                ? UserRole.rescuer
+                : UserRole.victim;
+
+            _isInitialized = true;
+            controller.setRole(userRole);
+            controller.setLoggedIn(true);
+
+            if (userRole == UserRole.rescuer) {
+              heartbeatSocket.start();
+              await _startBackgroundService(newToken, profileResponse.userId, profileResponse.role);
+              rescuerSocket.listenSosOffer();
+            } else if (userRole == UserRole.victim) {
+              victimSocket.listenSosNotFound();
+            }
+
+            await checkAndRestoreActiveRescue();
+            return;
+          } catch (err) {
+            debugPrint("🚨 [INIT SESSION] Tải profile thất bại sau khi refresh: $err");
+          }
+        }
+
+        // Nếu token đã hết hạn không thể gia hạn -> Đăng xuất triệt để về Login
+        debugPrint("🚨 Token hết hạn không thể gia hạn -> Đăng xuất người dùng về LoginScreen");
+        await storageService.clearAll();
         _isInitialized = true;
+        controller.setLoggedIn(false);
         controller.reset();
       }
     } else {
+      debugPrint("🎯 Không tìm thấy Token hợp lệ -> Đăng xuất người dùng về LoginScreen");
+      await storageService.clearAll();
       _isInitialized = true;
       controller.setLoggedIn(false);
       controller.reset();

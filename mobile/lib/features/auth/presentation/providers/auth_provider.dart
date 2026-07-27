@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 
@@ -17,6 +18,62 @@ class AuthProvider extends ChangeNotifier {
 
   bool isLoading = false;
   String? error;
+
+  void setError(String? message) {
+    error = message;
+    notifyListeners();
+  }
+
+  void clearError() {
+    error = null;
+    notifyListeners();
+  }
+
+  String _parseError(dynamic e) {
+    if (e is DioException) {
+      if (e.response != null) {
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          if (data['message'] != null && data['message'].toString().isNotEmpty) {
+            return data['message'].toString();
+          }
+          if (data['error'] != null && data['error'].toString().isNotEmpty) {
+            return data['error'].toString();
+          }
+        }
+        if (e.response?.statusCode == 401) {
+          return "Email hoặc mật khẩu không chính xác!";
+        } else if (e.response?.statusCode == 400) {
+          return "Thông tin đăng nhập không hợp lệ!";
+        } else if (e.response?.statusCode == 404) {
+          return "Không tìm thấy tài khoản!";
+        } else if (e.response?.statusCode == 500) {
+          return "Lỗi hệ thống máy chủ. Vui lòng thử lại sau!";
+        }
+      }
+
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return "Kết nối máy chủ quá thời gian. Vui lòng kiểm tra lại mạng!";
+      } else if (e.type == DioExceptionType.connectionError) {
+        return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối Internet!";
+      } else if (e.type == DioExceptionType.cancel) {
+        return "Yêu cầu đã bị hủy!";
+      }
+    }
+
+    final errStr = e.toString();
+    if (errStr.contains("ApiException: 10") || errStr.contains("developer_error") || errStr.contains("sign_in_failed")) {
+      return "Lỗi Google (Code 10): Vui lòng đăng ký mã SHA-1 của máy bạn lên Firebase Console!";
+    }
+
+    if (errStr.contains("SocketException") || errStr.contains("Failed host lookup")) {
+      return "Không có kết nối Internet. Vui lòng kiểm tra mạng!";
+    }
+
+    return "Đã xảy ra lỗi. Vui lòng thử lại!";
+  }
 
   Future<bool> login(String email, String password) async {
     try {
@@ -47,7 +104,37 @@ class AuthProvider extends ChangeNotifier {
 
       return false;
     } catch (e) {
-      error = e.toString();
+      error = _parseError(e);
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> guestLogin(String phone, String fullName) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final result = await authRepository.guestLogin(
+        phone: phone,
+        fullName: fullName,
+      );
+
+      final accessToken = result.accessToken;
+      final refreshToken = result.refreshToken;
+
+      if (accessToken.isNotEmpty && refreshToken.isNotEmpty) {
+        await storageService.saveToken(accessToken, refreshToken);
+        await appSession.init();
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      error = _parseError(e);
       return false;
     } finally {
       isLoading = false;
@@ -81,11 +168,113 @@ class AuthProvider extends ChangeNotifier {
       await authRepository.register(request);
       return true;
     } catch (e) {
-      if (e is DioException) {
-        error = e.response?.data?['message'] ?? e.message ?? e.toString();
-      } else {
-        error = e.toString();
+      error = _parseError(e);
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> verifyOtp(String email, String otpCode) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final result = await authRepository.verifyOtp(
+        email: email,
+        otpCode: otpCode,
+      );
+
+      final accessToken = result.accessToken;
+      final refreshToken = result.refreshToken;
+
+      if (accessToken.isNotEmpty && refreshToken.isNotEmpty) {
+        // Tự động lưu Token và đăng nhập vào thẳng ứng dụng
+        await storageService.saveToken(accessToken, refreshToken);
+        await appSession.init();
+        return true;
       }
+
+      return false;
+    } catch (e) {
+      error = _parseError(e);
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> resendOtp(String email) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      await authRepository.resendOtp(email: email);
+      return true;
+    } catch (e) {
+      error = _parseError(e);
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> loginWithGoogle() async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: '221191601744-g2ricfelugaj1iu5calpprlm7t6frm04.apps.googleusercontent.com',
+        scopes: ['email', 'profile'],
+      );
+
+      await googleSignIn.signOut();
+
+      final GoogleSignInAccount? googleAccount = await googleSignIn.signIn();
+
+      if (googleAccount == null) {
+        isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final String email = googleAccount.email;
+      final String providerId = googleAccount.id;
+      final String? fullName = googleAccount.displayName;
+      final String? avatarUrl = googleAccount.photoUrl;
+
+      // Trích xuất ID Token đã được Google mã hóa xác thực
+      final GoogleSignInAuthentication googleAuth = await googleAccount.authentication;
+      final String? idToken = googleAuth.idToken;
+
+      final result = await authRepository.loginWithGoogle(
+        email: email,
+        providerId: providerId,
+        fullName: fullName,
+        avatarUrl: avatarUrl,
+        idToken: idToken,
+      );
+
+      final accessToken = result.accessToken;
+      final refreshToken = result.refreshToken;
+
+      if (accessToken.isNotEmpty && refreshToken.isNotEmpty) {
+        await storageService.saveToken(accessToken, refreshToken);
+        await appSession.init();
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint("🚨 [Google Sign-In Error]: $e");
+      error = _parseError(e);
       return false;
     } finally {
       isLoading = false;
