@@ -4,6 +4,7 @@ class SOSOfferModel {
   final double victimLng;
   final String? description;
   final String? incidentTypeName;
+  final String? imageUrl;
 
   SOSOfferModel({
     required this.sosId,
@@ -11,6 +12,7 @@ class SOSOfferModel {
     required this.victimLng,
     this.description,
     this.incidentTypeName,
+    this.imageUrl,
   });
 
   factory SOSOfferModel.fromJson(
@@ -26,6 +28,7 @@ class SOSOfferModel {
           json["incidentType"] ??
           json["service_type"] ??
           json["incident_type_name"],
+      imageUrl: json["imageUrl"] ?? json["image_url"],
     );
   }
-}
+}

@@ -78,6 +78,32 @@ class RescuerController {
             next(error);
         }
     }
+
+    updateAvatar = async (req, res, next) => {
+        try {
+            const userId = req.userId;
+            const avatarFile = req.file || req.files?.avatar?.[0] || req.files?.image?.[0];
+
+            if (!avatarFile || !avatarFile.path) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Vui lòng chọn hình ảnh để tải lên làm ảnh đại diện!"
+                });
+            }
+
+            const avatarUrl = avatarFile.path;
+            const result = await rescuerService.updateAvatar({ userId, avatarUrl });
+
+            return res.status(200).json({
+                success: true,
+                message: "Cập nhật ảnh đại diện người cứu hộ thành công",
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
+
 
 module.exports = new RescuerController()

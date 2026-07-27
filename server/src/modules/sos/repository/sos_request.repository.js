@@ -30,9 +30,10 @@ class SosRequestRepository {
 
     findSOSById = async (sosId) => {
         const query = `
-            SELECT s.*, it.incident_type as incident_type_name
+            SELECT s.*, it.incident_type as incident_type_name, img.url as image_url
             FROM ${this.sos_requestModel.table} s
             LEFT JOIN incident_types it ON s.${this.sos_requestModel.field.incidentTypeId} = it.incident_type_id
+            LEFT JOIN images img ON img.entity_type = 'SOS_REQUEST' AND img.entity_id = s.${this.sos_requestModel.field.sosRequestId}
             WHERE s.${this.sos_requestModel.field.sosRequestId} = $1
         `
 
@@ -75,9 +76,10 @@ class SosRequestRepository {
         let query = '';
         if (role === 'RESCUER') {
             query = `
-                SELECT s.*, it.incident_type as incident_type_name
+                SELECT s.*, it.incident_type as incident_type_name, img.url as image_url
                 FROM ${this.sos_requestModel.table} s
                 LEFT JOIN incident_types it ON s.${this.sos_requestModel.field.incidentTypeId} = it.incident_type_id
+                LEFT JOIN images img ON img.entity_type = 'SOS_REQUEST' AND img.entity_id = s.${this.sos_requestModel.field.sosRequestId}
                 WHERE s.${this.sos_requestModel.field.rescuerId} = $1
                   AND s.${this.sos_requestModel.field.status} = 'IN_PROGRESS'
                   AND s.${this.sos_requestModel.field.createdAt} > (CURRENT_TIMESTAMP - INTERVAL '24 hours')
@@ -86,9 +88,10 @@ class SosRequestRepository {
             `;
         } else {
             query = `
-                SELECT s.*, it.incident_type as incident_type_name
+                SELECT s.*, it.incident_type as incident_type_name, img.url as image_url
                 FROM ${this.sos_requestModel.table} s
                 LEFT JOIN incident_types it ON s.${this.sos_requestModel.field.incidentTypeId} = it.incident_type_id
+                LEFT JOIN images img ON img.entity_type = 'SOS_REQUEST' AND img.entity_id = s.${this.sos_requestModel.field.sosRequestId}
                 WHERE s.${this.sos_requestModel.field.userId} = $1
                   AND s.${this.sos_requestModel.field.status} IN ('PENDING', 'SEARCHING', 'ASSIGNED', 'IN_PROGRESS')
                   AND s.${this.sos_requestModel.field.createdAt} > (CURRENT_TIMESTAMP - INTERVAL '24 hours')
@@ -96,6 +99,7 @@ class SosRequestRepository {
                 LIMIT 1
             `;
         }
+
 
         const result = await pool.query(query, [userId]);
         return result.rows[0];

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/user_provider.dart';
+import '../widgets/avatar_picker_widget.dart';
+
+import '../../../../shared/widgtes/image_picker_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -27,6 +31,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  Future<void> _pickAndUploadAvatar() async {
+    final XFile? image = await ImagePickerHelper.pickImage(context);
+
+    if (image == null) return;
+    if (!mounted) return;
+
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final userProvider = context.read<UserProvider>();
+    final success = await userProvider.updateAvatar(image.path);
+
+
+    if (!mounted) return;
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Cập nhật ảnh đại diện thành công!'
+              : 'Cập nhật ảnh đại diện thất bại. Vui lòng thử lại!',
+        ),
+        backgroundColor: success ? ColorConstants.success : ColorConstants.redRescue,
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
@@ -37,7 +66,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: CustomScrollView(
         slivers: [
           // Header với hiệu ứng Sliver
-          _buildSliverHeader(user),
+          _buildSliverHeader(userProvider),
+
           
           SliverToBoxAdapter(
             child: Padding(
@@ -88,9 +118,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSliverHeader(user) {
+  Widget _buildSliverHeader(UserProvider userProvider) {
+    final user = userProvider.user;
+    final isUploading = userProvider.uploadingAvatar;
+
     return SliverAppBar(
-      expandedHeight: 220,
+      expandedHeight: 230,
       pinned: true,
       stretch: true,
       backgroundColor: ColorConstants.redRescue,
@@ -107,25 +140,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: CircleAvatar(
-                  radius: 45,
-                  backgroundColor: ColorConstants.backgroundLight,
-                  child: Text(
-                    (user?.fullName ?? "U")[0].toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 36, 
-                      fontWeight: FontWeight.w900, 
-                      color: ColorConstants.redRescue
-                    ),
-                  ),
-                ),
+              AvatarPickerWidget(
+                avatarUrl: user?.avatarUrl,
+                fullName: user?.fullName ?? "U",
+                isUploading: isUploading,
+                onTap: _pickAndUploadAvatar,
               ),
+
               const SizedBox(height: 12),
               Text(
                 user?.fullName ?? "Đang tải...",
@@ -135,6 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               Text(
                 user?.email ?? "",
                 style: const TextStyle(

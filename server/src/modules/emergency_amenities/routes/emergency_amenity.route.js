@@ -3,12 +3,14 @@ const { validatorCreateAmenity, validatorCategory } = require('../validator/emer
 const emergencyAmenityController = require('../controller/emergency_amenity.controller');
 const adminEmergencyAmenityController = require('../controller/admin_emergency_amenity.controller');
 const { verifyToken, isAdmin } = require('@/middlewares/auth.middleware');
+const { uploadAmenityImage } = require('@middlewares/uploads');
 const route = express.Router();
 
-// Public routes for Victim & Rescuer mobile/web
+// Public/User routes for Victim & Rescuer mobile/web
 route.get('/categories', emergencyAmenityController.getCategories);
 route.get('/approved', emergencyAmenityController.getApprovedAmenities);
-route.post('/', verifyToken, validatorCreateAmenity, emergencyAmenityController.createAmenity);
+route.post('/', verifyToken, uploadAmenityImage, validatorCreateAmenity, emergencyAmenityController.createAmenity);
+route.post('/:id/feedback', verifyToken, emergencyAmenityController.createFeedback);
 
 // Admin routes
 route.get('/admin/categories', verifyToken, isAdmin, adminEmergencyAmenityController.getCategoriesAdmin);
@@ -18,5 +20,9 @@ route.put('/admin/categories/:id', verifyToken, isAdmin, validatorCategory, admi
 route.get('/admin/points', verifyToken, isAdmin, adminEmergencyAmenityController.getAmenitiesAdmin);
 route.put('/admin/points/:id/status', verifyToken, isAdmin, adminEmergencyAmenityController.updateAmenityStatusAdmin);
 route.delete('/admin/points/:id', verifyToken, isAdmin, adminEmergencyAmenityController.deleteAmenityAdmin);
+
+route.get('/admin/feedbacks', verifyToken, isAdmin, emergencyAmenityController.getFeedbacksAdmin);
+route.put('/admin/feedbacks/:id/status', verifyToken, isAdmin, emergencyAmenityController.updateFeedbackStatusAdmin);
+
 
 module.exports = route;

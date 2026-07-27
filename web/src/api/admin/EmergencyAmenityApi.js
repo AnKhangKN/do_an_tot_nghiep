@@ -61,3 +61,26 @@ export const deleteAmenityAdmin = async (id) => {
         throw error;
     }
 };
+
+export const getFeedbacksAdmin = async (page = 1, limit = 10, status = '') => {
+    try {
+        const response = await axiosJWT.get('/api/emergency-amenities/admin/feedbacks', {
+            params: { page, limit, status }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Get feedbacks admin error:", error);
+        throw error;
+    }
+};
+
+export const updateFeedbackStatusAdmin = async (id, data) => {
+    try {
+        const response = await axiosJWT.put(`/api/emergency-amenities/admin/feedbacks/${id}/status`, data);
+        return response.data;
+    } catch (error) {
+        console.error("Update feedback status admin error:", error);
+        throw error;
+    }
+};
+

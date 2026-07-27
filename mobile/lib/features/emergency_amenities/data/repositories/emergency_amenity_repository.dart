@@ -39,18 +39,39 @@ class EmergencyAmenityRepository {
     required double longitude,
     String? phone,
     String? openingHours,
+    String? imagePath,
   }) async {
     try {
-      final response = await service.createAmenity({
-        'amenityCategoryId': amenityCategoryId,
-        'latitude': latitude,
-        'longitude': longitude,
-        'phone': phone,
-        'openingHours': openingHours ?? '07:00 - 21:00',
-      });
+      final response = await service.createAmenity(
+        amenityCategoryId: amenityCategoryId,
+        latitude: latitude,
+        longitude: longitude,
+        phone: phone,
+        openingHours: openingHours,
+        imagePath: imagePath,
+      );
+      return response.data != null && response.data['success'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> sendFeedback({
+    required String amenityId,
+    required String reason,
+    String? comment,
+  }) async {
+    try {
+      final response = await service.sendFeedback(
+        amenityId: amenityId,
+        reason: reason,
+        comment: comment,
+      );
       return response.data != null && response.data['success'] == true;
     } catch (e) {
       return false;
     }
   }
 }
+
+

@@ -40,6 +40,7 @@ class EmergencyAmenityController {
         try {
             const { amenityCategoryId, phone, latitude, longitude, openingHours } = req.body;
             const reportedBy = req.userId || null;
+            const imageUrl = req.file ? req.file.path : (req.body.imageUrl || null);
 
             const amenity = await emergencyAmenityService.createAmenity({
                 amenityCategoryId,
@@ -48,7 +49,8 @@ class EmergencyAmenityController {
                 longitude,
                 openingHours,
                 reportedBy,
-                userRole: req.role
+                userRole: req.role,
+                imageUrl
             });
 
             return res.status(201).json({
@@ -64,6 +66,87 @@ class EmergencyAmenityController {
             });
         }
     }
+
+    async createFeedback(req, res) {
+        try {
+            const amenityId = req.params.id;
+            const userId = req.userId;
+            const { reason, comment } = req.body;
+
+            if (!reason) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Vui lòng chọn lý do báo cáo"
+                });
+            }
+
+            const feedback = await emergencyAmenityService.createFeedback({
+                amenityId,
+                userId,
+                reason,
+                comment
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: "Gửi báo cáo phản hồi thành công. Admin sẽ kiểm tra và xử lý!",
+                data: feedback
+            });
+        } catch (error) {
+            console.error("Error in createFeedback:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi máy chủ khi gửi báo cáo phản hồi"
+            });
+        }
+    }
+
+    async getFeedbacksAdmin(req, res) {
+        try {
+            const { page, limit, status } = req.query;
+            const result = await emergencyAmenityService.getFeedbacksAdmin({ page, limit, status });
+            return res.status(200).json({
+                success: true,
+                message: "Lấy danh sách báo cáo tiện ích thành công",
+                data: result
+            });
+        } catch (error) {
+            console.error("Error in getFeedbacksAdmin:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi máy chủ khi lấy danh sách báo cáo"
+            });
+        }
+    }
+
+    async updateFeedbackStatusAdmin(req, res) {
+        try {
+            const feedbackId = req.params.id;
+            const { status, amenityId, action } = req.body;
+            const adminId = req.userId;
+
+            const updated = await emergencyAmenityService.updateFeedbackStatusAdmin({
+                feedbackId,
+                status,
+                amenityId,
+                action,
+                adminId
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Cập nhật trạng thái xử lý báo cáo thành công",
+                data: updated
+            });
+        } catch (error) {
+            console.error("Error in updateFeedbackStatusAdmin:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi máy chủ khi cập nhật báo cáo"
+            });
+        }
+    }
 }
 
 module.exports = new EmergencyAmenityController();
+

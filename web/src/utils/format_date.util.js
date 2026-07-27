@@ -1,6 +1,10 @@
 export const formatTime = (dateInput) => {
-    const now = new Date();
+    if (!dateInput) return '--';
     const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return '--';
+
+    const now = new Date();
+
 
     const diffMs = now - date;
     const diffHours = diffMs / (1000 * 60 * 60);

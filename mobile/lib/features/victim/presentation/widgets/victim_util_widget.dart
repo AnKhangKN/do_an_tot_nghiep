@@ -92,53 +92,57 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
   Widget build(BuildContext context) {
     final activeSosId = context.watch<VictimMapProvider>().activeSosRequestId;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (activeSosId != null) ...[
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (activeSosId != null) ...[
+            _UtilButton(
+              tooltip: 'Mã QR Cứu Hộ',
+              icon: Icons.qr_code_2_rounded,
+              color: const Color(0xFF9333EA),
+              onPressed: () {
+                EmergencyQRDialogWidget.show(
+                  context,
+                  sosRequestId: activeSosId,
+                );
+              },
+            ),
+            const SizedBox(height: 4),
+          ],
           _UtilButton(
-            tooltip: 'Mã QR Cứu Hộ',
-            icon: Icons.qr_code_2_rounded,
-            color: const Color(0xFF9333EA),
-            onPressed: () {
-              EmergencyQRDialogWidget.show(
-                context,
-                sosRequestId: activeSosId,
-              );
-            },
+            tooltip: 'Tiện ích cộng đồng',
+            icon: Icons.storefront_rounded,
+            color: const Color(0xFF10B981),
+            onPressed: () => _handleAmenityTap(context),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
+          _UtilButton(
+            tooltip: 'Cảnh báo',
+            icon: Icons.warning_rounded,
+            color: const Color(0xFFF97316),
+            onPressed: () => _handleWarningTap(context),
+          ),
+          const SizedBox(height: 4),
+          _UtilButton(
+            tooltip: 'Khẩn cấp',
+            icon: Icons.phone,
+            color: const Color(0xFFF91616),
+            onPressed: widget.onCallTap ?? () {},
+          ),
+          const SizedBox(height: 4),
+          _UtilButton(
+            tooltip: 'Vị trí của tôi',
+            icon: Icons.my_location,
+            color: const Color(0xFF2563EB),
+            onPressed: widget.onLocationTap ?? () {},
+          ),
         ],
-        _UtilButton(
-          tooltip: 'Tiện ích cộng đồng',
-          icon: Icons.storefront_rounded,
-          color: const Color(0xFF10B981),
-          onPressed: () => _handleAmenityTap(context),
-        ),
-        const SizedBox(height: 6),
-        _UtilButton(
-          tooltip: 'Cảnh báo',
-          icon: Icons.warning_rounded,
-          color: const Color(0xFFF97316),
-          onPressed: () => _handleWarningTap(context),
-        ),
-        const SizedBox(height: 6),
-        _UtilButton(
-          tooltip: 'Khẩn cấp',
-          icon: Icons.phone,
-          color: const Color(0xFFF91616),
-          onPressed: widget.onCallTap ?? () {},
-        ),
-        const SizedBox(height: 6),
-        _UtilButton(
-          tooltip: 'Vị trí của tôi',
-          icon: Icons.my_location,
-          color: const Color(0xFF2563EB),
-          onPressed: widget.onLocationTap ?? () {},
-        ),
-      ],
+      ),
     );
   }
+
 }
 
 class _UtilButton extends StatelessWidget {

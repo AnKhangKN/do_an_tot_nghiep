@@ -1,6 +1,9 @@
 const { v4: uuidv4 } = require("uuid");
 const amenityCategoryRepository = require("../repository/amenity_category.repository");
 const emergencyAmenityRepository = require("../repository/emergency_amenity.repository");
+const amenityFeedbackRepository = require("../repository/amenity_feedback.repository");
+const imageService = require("@modules/image/service/image.service");
+
 
 class EmergencyAmenityService {
     async getActiveCategories() {
@@ -11,7 +14,7 @@ class EmergencyAmenityService {
         return await emergencyAmenityRepository.getApprovedAmenities({ amenityCategoryId });
     }
 
-    async createAmenity({ amenityCategoryId, phone, latitude, longitude, openingHours, reportedBy, userRole }) {
+    async createAmenity({ amenityCategoryId, phone, latitude, longitude, openingHours, reportedBy, userRole, imageUrl }) {
         const amenityId = uuidv4();
         const isAdmin = userRole === 'ADMIN';
         const status = isAdmin ? 'APPROVED' : 'PENDING';
@@ -27,8 +30,22 @@ class EmergencyAmenityService {
             approvedBy: isAdmin ? reportedBy : null
         };
 
-        return await emergencyAmenityRepository.createAmenity(amenityData);
+        const amenity = await emergencyAmenityRepository.createAmenity(amenityData);
+
+        if (imageUrl) {
+            await imageService.createImage(null, {
+                url: imageUrl,
+                entityType: 'EMERGENCY_AMENITY',
+                entityId: amenityId
+            });
+        }
+
+        return {
+            ...amenity,
+            imageUrl: imageUrl || null
+        };
     }
+
 
     // Admin methods
     async getAllCategoriesAdmin() {
@@ -73,6 +90,45 @@ class EmergencyAmenityService {
     async deleteAmenityAdmin(amenityId) {
         return await emergencyAmenityRepository.deleteAmenity(amenityId);
     }
+
+    // Feedback & Report methods
+    async createFeedback({ amenityId, userId, reason, comment }) {
+        const feedbackId = uuidv4();
+        return await amenityFeedbackRepository.createFeedback({
+            feedbackId,
+            amenityId,
+            userId,
+            reason,
+            comment
+        });
+    }
+
+    async getFeedbacksAdmin({ page, limit, status }) {
+        return await amenityFeedbackRepository.getFeedbacksAdmin({
+            page: parseInt(page, 10) || 1,
+            limit: parseInt(limit, 10) || 10,
+            status
+        });
+    }
+
+    async updateFeedbackStatusAdmin({ feedbackId, status, amenityId, action, adminId }) {
+        const updatedFeedback = await amenityFeedbackRepository.updateFeedbackStatus({
+            feedbackId,
+            status
+        });
+
+        // Nếu Admin chọn gỡ/từ chối điểm tiện ích khi xử lý báo cáo
+        if (action === 'REJECT_AMENITY' && amenityId) {
+            await emergencyAmenityRepository.updateStatus({
+                amenityId,
+                status: 'REJECTED',
+                approvedBy: adminId
+            });
+        }
+
+        return updatedFeedback;
+    }
 }
 
 module.exports = new EmergencyAmenityService();
+

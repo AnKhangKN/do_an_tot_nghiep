@@ -133,6 +133,21 @@ class UserRepository {
         return result.rows[0];
     }
 
+    updateAvatar = async (client, { userId, avatarUrl }) => {
+        const db = client || pool;
+        const query = `
+        UPDATE ${this.user.table}
+        SET ${this.user.field.avatarUrl} = $2,
+            ${this.user.field.updatedAt} = CURRENT_TIMESTAMP
+        WHERE ${this.user.field.userId} = $1
+        RETURNING *
+        `;
+
+        const result = await db.query(query, [userId, avatarUrl]);
+        return result.rows[0];
+    }
+
+
     getUsersAdmin = async ({ page, limit }) => {
         const offset = (page - 1) * limit;
 

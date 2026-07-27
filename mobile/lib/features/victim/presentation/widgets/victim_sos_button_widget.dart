@@ -1,12 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/storage/storage_service.dart';
+import '../../../../shared/widgtes/image_picker_helper.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../providers/victim_map_provider.dart';
 import 'victim_searching_widget.dart';
+
 
 class VictimSosButtonWidget extends StatefulWidget {
   final double? victimLat;
@@ -97,6 +100,8 @@ class _VictimSosButtonWidgetState
   }
 
   void _showSosForm() {
+    String? selectedSosImagePath;
+
     // Nếu danh sách loại sự cố chưa load thì mới fetch
     final provider = context.read<VictimMapProvider>();
     if (provider.incidentTypes.isEmpty) {
@@ -218,7 +223,7 @@ class _VictimSosButtonWidgetState
 
                         TextField(
                           controller: descriptionController,
-                          maxLines: 4,
+                          maxLines: 3,
                           decoration: InputDecoration(
                             labelText: "Mô tả chi tiết",
                             border: OutlineInputBorder(
@@ -228,7 +233,68 @@ class _VictimSosButtonWidgetState
                           ),
                         ),
 
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 16),
+
+                        const Text(
+                          "Ảnh hiện trường (Không bắt buộc)",
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87),
+                        ),
+                        const SizedBox(height: 8),
+
+                        if (selectedSosImagePath == null)
+                          OutlinedButton.icon(
+                            onPressed: () async {
+                              final xfile = await ImagePickerHelper.pickImage(context);
+                              if (xfile != null) {
+                                setBottomSheetState(() {
+                                  selectedSosImagePath = xfile.path;
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.add_a_photo_outlined, color: Colors.redAccent),
+                            label: const Text('Chụp / Chọn ảnh hiện trường', style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.w600)),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.red.shade200),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          )
+                        else
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  File(selectedSosImagePath!),
+                                  height: 140,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setBottomSheetState(() {
+                                      selectedSosImagePath = null;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+
+                        const SizedBox(height: 24),
 
                         Consumer<VictimMapProvider>(
                           builder: (context, provider, child) {
@@ -290,7 +356,9 @@ class _VictimSosButtonWidgetState
                                         .trim(),
                                     widget.victimLat!,
                                     widget.victimLng!,
+                                    imagePath: selectedSosImagePath,
                                   );
+
 
                                   if (!mounted) return;
 

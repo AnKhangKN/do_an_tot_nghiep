@@ -9,10 +9,15 @@ class AmenityCategoryChips extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AmenityProvider>(
       builder: (context, provider, child) {
+        if (provider.isSearching) {
+          return const SizedBox.shrink();
+        }
+
         final categories = provider.categories;
         if (categories.isEmpty && !provider.isLoadingCategories) {
           return const SizedBox.shrink();
         }
+
 
         return Container(
           height: 38,

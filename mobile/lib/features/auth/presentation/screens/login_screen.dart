@@ -30,9 +30,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (!success) return;
+    if (!mounted) return;
 
     context.go(RouterConstants.splash);
   }
+
 
   @override
   Widget build(BuildContext context) {

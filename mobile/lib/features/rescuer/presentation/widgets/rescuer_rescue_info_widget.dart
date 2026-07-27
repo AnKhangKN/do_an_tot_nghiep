@@ -210,7 +210,66 @@ class RescuerRescueInfoWidget extends StatelessWidget {
               ),
             ),
           ],
+          if ((activeVictim?['imageUrl'] ?? activeVictim?['image_url']) != null &&
+              (activeVictim?['imageUrl'] ?? activeVictim?['image_url']).toString().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () {
+                final url = (activeVictim?['imageUrl'] ?? activeVictim?['image_url']).toString();
+                showDialog(
+                  context: context,
+                  builder: (ctx) => Dialog.fullscreen(
+                    backgroundColor: Colors.black,
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: InteractiveViewer(
+                            child: Image.network(url, fit: BoxFit.contain),
+                          ),
+                        ),
+                        Positioned(
+                          top: MediaQuery.of(ctx).padding.top + 12,
+                          right: 16,
+                          child: IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                            onPressed: () => Navigator.pop(ctx),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
+                  children: [
+                    Image.network(
+                      (activeVictim?['imageUrl'] ?? activeVictim?['image_url']).toString(),
+                      height: 100,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, e, s) => const SizedBox.shrink(),
+                    ),
+                    Positioned(
+                      bottom: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text('Xem ảnh hiện trường ↗', style: TextStyle(color: Colors.white, fontSize: 10)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
+
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,

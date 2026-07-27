@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../../../shared/widgtes/image_picker_helper.dart';
 import '../providers/amenity_provider.dart';
+
 
 class AddAmenityBottomSheet extends StatefulWidget {
   final double currentLat;
@@ -21,6 +25,7 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
   String? _selectedCategoryId;
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _hoursController = TextEditingController(text: '07:00 - 21:00');
+  XFile? _selectedImage;
 
   @override
   void initState() {
@@ -40,6 +45,17 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+
+    final image = await ImagePickerHelper.pickImage(context);
+    if (image != null) {
+      setState(() {
+        _selectedImage = image;
+      });
+    }
+  }
+
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
@@ -56,6 +72,7 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
       longitude: widget.currentLng,
       phone: _phoneController.text.trim(),
       openingHours: _hoursController.text.trim(),
+      imagePath: _selectedImage?.path,
     );
 
     if (mounted) {
@@ -79,28 +96,109 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
     }
   }
 
+  Widget _buildImagePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Hình ảnh minh họa (Không bắt buộc)',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 6),
+        if (_selectedImage == null)
+          GestureDetector(
+            onTap: _pickImage,
+            child: Container(
+              height: 80,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_a_photo_outlined, color: Colors.grey[600], size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Chọn ảnh tiện ích (mục phụ)',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(
+                  File(_selectedImage!.path),
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedImage = null;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Consumer<AmenityProvider>(
-        builder: (context, provider, child) {
-          return Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+      child: Container(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Consumer<AmenityProvider>(
+          builder: (context, provider, child) {
+            return Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
                   Center(
                     child: Container(
                       width: 40,
@@ -201,6 +299,11 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 14),
+
+                  // Ảnh minh họa (Không bắt buộc)
+                  _buildImagePicker(),
+
                   const SizedBox(height: 24),
 
                   // Button Gửi
@@ -233,6 +336,10 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
           );
         },
       ),
-    );
-  }
+    ),
+  );
 }
+
+}
+
+

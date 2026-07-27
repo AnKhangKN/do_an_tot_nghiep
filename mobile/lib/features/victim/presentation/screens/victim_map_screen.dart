@@ -508,11 +508,11 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                     const SearchWidget(),
                     const SizedBox(height: 6),
                     const AmenityCategoryChips(),
-                    const SizedBox(height: 6),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: const LayerWidget(),
-                    ),
+                    // const SizedBox(height: 6),
+                    // Align(
+                    //   alignment: Alignment.centerRight,
+                    //   child: const LayerWidget(),
+                    // ),
                   ],
                 ),
               ),
@@ -528,8 +528,9 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: SizedBox(
-                  height: 240,
+                  height: 280,
                   child: Stack(
+
                     children: [
                       // Lắng nghe SessionController để hiển thị SnackBar khi không tìm được rescuer
                       ListenableBuilder(

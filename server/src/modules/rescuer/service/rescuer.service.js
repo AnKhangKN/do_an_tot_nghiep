@@ -184,6 +184,10 @@ class RescuerService {
         return await this.rescuerRepository.getRescuerPerformanceAnalytics({ page, limit, search });
     }
 
+    updateAvatar = async ({ userId, avatarUrl }) => {
+        return await this.userService.updateAvatar(null, { userId, avatarUrl });
+    }
 }
+
 
 module.exports = new RescuerService();

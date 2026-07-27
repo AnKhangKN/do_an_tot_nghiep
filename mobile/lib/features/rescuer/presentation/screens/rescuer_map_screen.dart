@@ -400,11 +400,11 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                     SearchWidget(),
                     SizedBox(height: 6),
                     AmenityCategoryChips(),
-                    SizedBox(height: 6),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: LayerWidget(),
-                    ),
+                    // SizedBox(height: 6),
+                    // Align(
+                    //   alignment: Alignment.centerRight,
+                    //   child: LayerWidget(),
+                    // ),
                   ],
                 ),
               ),

@@ -31,7 +31,18 @@ class AmenityProvider with ChangeNotifier {
   bool _isSubmitting = false;
   bool get isSubmitting => _isSubmitting;
 
+  bool _isSearching = false;
+  bool get isSearching => _isSearching;
+
+  void setIsSearching(bool searching) {
+    if (_isSearching != searching) {
+      _isSearching = searching;
+      notifyListeners();
+    }
+  }
+
   // In-app navigation state
+
   EmergencyAmenityModel? _activeNavigationAmenity;
   List<LatLng> _routePoints = [];
   double? _routeDistanceKm;
@@ -124,6 +135,7 @@ class AmenityProvider with ChangeNotifier {
     required double longitude,
     String? phone,
     String? openingHours,
+    String? imagePath,
   }) async {
     _isSubmitting = true;
     notifyListeners();
@@ -135,6 +147,7 @@ class AmenityProvider with ChangeNotifier {
         longitude: longitude,
         phone: phone,
         openingHours: openingHours,
+        imagePath: imagePath,
       );
 
       if (success) {
@@ -148,4 +161,22 @@ class AmenityProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> sendFeedback({
+    required String amenityId,
+    required String reason,
+    String? comment,
+  }) async {
+    try {
+      return await repository.sendFeedback(
+        amenityId: amenityId,
+        reason: reason,
+        comment: comment,
+      );
+    } catch (e) {
+      return false;
+    }
+  }
 }
+
+

@@ -73,6 +73,24 @@ class UserService {
     return await this.userRepository.updateRole(client, { userId, role });
   }
 
+  updateAvatar = async (client, { userId, avatarUrl }) => {
+    if (!avatarUrl) {
+      const err = new Error("URL hình ảnh đại diện không được để trống!");
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const updatedUser = await this.userRepository.updateAvatar(client, { userId, avatarUrl });
+    if (!updatedUser) {
+      const err = new Error("Không tìm thấy thông tin người dùng!");
+      err.statusCode = 404;
+      throw err;
+    }
+
+    return mapFields(updatedUser, this.userModel);
+  }
+
+
   getUsersAdmin = async ({ page, limit }) => {
     const result = await this.userRepository.getUsersAdmin({ page, limit });
     return {

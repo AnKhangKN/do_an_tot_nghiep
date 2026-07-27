@@ -11,4 +11,10 @@ class UserRepository {
 
     return UserModel.fromJson(res.data['data']);
   }
-}
+
+  Future<UserModel> uploadAvatar(String imagePath) async {
+    final res = await userService.uploadAvatar(imagePath);
+
+    return UserModel.fromJson(res.data['data']);
+  }
+}

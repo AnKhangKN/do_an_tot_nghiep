@@ -49,8 +49,9 @@ class VictimMapProvider extends ChangeNotifier {
     String incidentTypeId,
     String? description,
     double victimLat,
-    double victimLng,
-  ) async {
+    double victimLng, {
+    String? imagePath,
+  }) async {
     _loading = true;
     _errorMessage = null;
     notifyListeners();
@@ -62,7 +63,9 @@ class VictimMapProvider extends ChangeNotifier {
         description: description,
         victimLat: victimLat,
         victimLng: victimLng,
+        imagePath: imagePath,
       );
+
 
       debugPrint(request.toJson().toString());
 

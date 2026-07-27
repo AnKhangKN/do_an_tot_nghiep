@@ -5,9 +5,19 @@ class VictimService {
 
   VictimService(this.dio);
 
-  Future<Response> sendSos(Map<String, dynamic> data) async {
+  Future<Response> sendSos(Map<String, dynamic> data, {String? imagePath}) async {
+    if (imagePath != null && imagePath.isNotEmpty) {
+      final fileName = imagePath.split('/').last;
+      data['image'] = await MultipartFile.fromFile(
+        imagePath,
+        filename: fileName,
+      );
+      final formData = FormData.fromMap(data);
+      return dio.post('/api/sos/sos_requests', data: formData);
+    }
     return dio.post('/api/sos/sos_requests', data: data);
   }
+
 
   Future<Response> cancelSos({String? sosRequestId, String? cancelReason}) async {
     return dio.post('/api/sos/sos_requests/cancel', data: {

@@ -156,8 +156,29 @@ const TableComponent = ({
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto space-y-5">
+              {/* Load & Hiển thị ảnh nếu dòng đó có chứa hình ảnh */}
+              {(() => {
+                const img = selectedRow.imageUrl || selectedRow.image_url || selectedRow.avatarUrl || selectedRow.avatar_url;
+                if (!img) return null;
+                return (
+                  <div className="flex flex-col gap-1.5 border-b border-gray-100 pb-3.5">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Hình ảnh đính kèm
+                    </span>
+                    <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 flex items-center justify-center max-h-56">
+                      <img
+                        src={img}
+                        alt="Hình ảnh đính kèm"
+                        className="w-full h-auto max-h-56 object-cover rounded-2xl"
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+
               {columns
                 .filter((col) => col.key !== "index" && col.key !== "action")
+
                 .map((col) => {
                   const val = col.render
                     ? col.render(selectedRow, selectedRowIndex)

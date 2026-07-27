@@ -4,6 +4,7 @@ class SosRequest {
   final String? description;
   final double victimLat;
   final double victimLng;
+  final String? imagePath;
 
   SosRequest({
     required this.phone,
@@ -11,6 +12,7 @@ class SosRequest {
     this.description,
     required this.victimLat,
     required this.victimLng,
+    this.imagePath,
   });
 
   Map<String, dynamic> toJson() {
@@ -19,7 +21,8 @@ class SosRequest {
       'incidentTypeId': incidentTypeId,
       'description': description,
       'victimLat': victimLat,
-      'victimLng': victimLng
+      'victimLng': victimLng,
     };
   }
 }
+

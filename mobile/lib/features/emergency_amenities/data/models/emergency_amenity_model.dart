@@ -9,6 +9,7 @@ class EmergencyAmenityModel {
   final String openingHours;
   final String status;
   final String? reporterName;
+  final String? imageUrl;
 
   EmergencyAmenityModel({
     required this.amenityId,
@@ -21,6 +22,7 @@ class EmergencyAmenityModel {
     required this.openingHours,
     required this.status,
     this.reporterName,
+    this.imageUrl,
   });
 
   factory EmergencyAmenityModel.fromJson(Map<String, dynamic> json) {
@@ -35,8 +37,10 @@ class EmergencyAmenityModel {
       openingHours: json['openingHours'] ?? json['opening_hours'] ?? '07:00 - 21:00',
       status: json['status'] ?? 'APPROVED',
       reporterName: json['reporterName'] ?? json['reporter_name'],
+      imageUrl: json['imageUrl'] ?? json['image_url'],
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {

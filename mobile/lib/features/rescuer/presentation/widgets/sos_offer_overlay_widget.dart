@@ -225,7 +225,71 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (widget.sos.imageUrl != null && widget.sos.imageUrl!.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => Dialog.fullscreen(
+                            backgroundColor: Colors.black,
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: InteractiveViewer(
+                                    child: Image.network(widget.sos.imageUrl!, fit: BoxFit.contain),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: MediaQuery.of(ctx).padding.top + 12,
+                                  right: 16,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                                    onPressed: () => Navigator.pop(ctx),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Stack(
+                          children: [
+                            Image.network(
+                              widget.sos.imageUrl!,
+                              height: 130,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, e, s) => const SizedBox.shrink(),
+                            ),
+                            Positioned(
+                              bottom: 6,
+                              right: 6,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.zoom_in, color: Colors.white, size: 12),
+                                    SizedBox(width: 4),
+                                    Text('Xem ảnh hiện trường', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
+
 
                   // --- NÚT HÀNH ĐỘNG ---
                   Row(

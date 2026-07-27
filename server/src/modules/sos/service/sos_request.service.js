@@ -7,6 +7,7 @@ const redis = require("../../../config/redis.config");
 const dispatchService = require("@modules/dispatch/service/dispatcher.service");
 const notificationService = require("@modules/notification/service/notification.service");
 const rescuerHistoryRepository = require("../repository/rescuer_history.repository");
+const imageService = require("@modules/image/service/image.service");
 
 class SosRequestService {
     constructor() {
@@ -21,6 +22,7 @@ class SosRequestService {
         description,
         victimLat,
         victimLng,
+        imageUrl,
     }) => {
         const sos = await transaction(async (client) => {
             const sosRequestId = uuidUtil.generateUUID();
@@ -41,7 +43,18 @@ class SosRequestService {
                 });
             }
 
-            return sos;
+            if (imageUrl) {
+                await imageService.createImage(client, {
+                    url: imageUrl,
+                    entityType: 'SOS_REQUEST',
+                    entityId: sosRequestId,
+                });
+            }
+
+            return {
+                ...sos,
+                image_url: imageUrl || null
+            };
         });
 
         await sosQueue.add(
@@ -73,6 +86,7 @@ class SosRequestService {
                 victimLat,
                 victimLng,
                 incidentTypeId,
+                imageUrl: sos.image_url,
                 createdAt: sos.created_at
             });
         } catch (e) {
@@ -81,6 +95,7 @@ class SosRequestService {
 
         return sos;
     };
+
 
     findSOSById = async (sosId) => {
         const sos = await this.sos_requestRepository.findSOSById(sosId);
@@ -125,6 +140,71 @@ class SosRequestService {
         // Dọn dẹp tracking keys trên Redis
         await this.cleanupSosKeys(sosRequestId);
 
+        // Lưu liên kết cứu hộ vào Redis Hash active_rescues
+        await redis.hset("active_rescues", rescuerId, JSON.stringify({
+            sosRequestId,
+            victimId: updatedSos.user_id
+        }));
+
+        // Giải phóng trạng thái bận xem xét offer
+        await redis.del(`sos:offer:rescuer:${rescuerId}`);
+
+        // Đọc thông tin song song (Parallel) để phản hồi lập tức 0ms
+        const [rescuerInfo, victimInfo, pos] = await Promise.all([
+            userService.getUserInfoById({ userId: rescuerId }).catch(() => null),
+            userService.getUserInfoById({ userId: updatedSos.user_id }).catch(() => null),
+            redis.geopos("rescuer_locations", rescuerId).catch(() => null)
+        ]);
+
+        let rescuerLat = null;
+        let rescuerLng = null;
+        if (pos && pos[0]) {
+            rescuerLng = parseFloat(pos[0][0]);
+            rescuerLat = parseFloat(pos[0][1]);
+        }
+
+        // Phát sự kiện Redis PubSub TỨC THÌ cho Socket Server đồng bộ Victim & Rescuer
+        const pubsubPayload = JSON.stringify({
+            sosRequestId,
+            sosId: sosRequestId,
+            victimId: updatedSos.user_id,
+            rescuerId,
+            status: 'IN_PROGRESS',
+            rescuer: {
+                userId: rescuerId,
+                fullName: rescuerInfo?.full_name || 'Người cứu hộ',
+                phone: rescuerInfo?.phone || '',
+                avatarUrl: rescuerInfo?.avatar_url || null,
+                lat: rescuerLat,
+                lng: rescuerLng
+            },
+            victim: {
+                userId: updatedSos.user_id,
+                fullName: victimInfo?.full_name || 'Người gặp nạn',
+                phone: victimInfo?.phone || '',
+                avatarUrl: victimInfo?.avatar_url || null,
+                imageUrl: updatedSos.image_url || null,
+                lat: updatedSos.victim_lat,
+                lng: updatedSos.victim_lng,
+                description: updatedSos.description,
+                incidentTypeName: updatedSos.incident_type_name
+            },
+            via: 'OFFER_ACCEPT',
+        });
+        await redis.publish("sos:accepted", pubsubPayload);
+
+        // Gửi Push Notification Firebase KHÔNG CHỜ (non-blocking async)
+        notificationService.sendPushNotification(updatedSos.user_id, {
+            title: "Yêu cầu cứu hộ đã được tiếp nhận!",
+            body: `${rescuerInfo?.full_name || 'Người cứu hộ'} đang trên đường di chuyển đến hỗ trợ bạn.`,
+            data: {
+                type: "RESCUE_ACCEPTED",
+                sosRequestId,
+                rescuerId
+            }
+        }).catch(err => console.error("[SERVICE] Lỗi gửi push notification cho victim:", err));
+
+
         try {
             const { emitAdminDashboardEvent } = require("@/socket");
             emitAdminDashboardEvent("SOS_ACCEPTED", {
@@ -137,6 +217,7 @@ class SosRequestService {
 
         return updatedSos;
     };
+
 
 
 
@@ -605,11 +686,13 @@ class SosRequestService {
                 fullName: victimInfo?.full_name || 'Người gặp nạn',
                 phone: victimInfo?.phone || '',
                 avatarUrl: victimInfo?.avatar_url || null,
+                imageUrl: sos.image_url || null,
                 lat: sos.victim_lat,
                 lng: sos.victim_lng,
                 description: sos.description,
                 incidentTypeName: sos.incident_type_name
             },
+
             via: 'QR_CODE',
         });
         await redis.publish("sos:accepted", pubsubPayload);
