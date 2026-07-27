@@ -16,7 +16,7 @@ Có **18 module** phân tách rõ ràng theo đúng chuẩn kiến trúc:
 
 | Module | Trạng thái |
 |---|---|
-| `auth`, `user`, `user_auth` | ✅ Hoàn chỉnh — Đăng ký, đăng nhập JWT, refresh token |
+| `auth`, `user`, `user_auth` | ✅ Hoàn chỉnh — Đăng ký, đăng nhập JWT, refresh token, **Xác thực Email bằng OTP 6 chữ số (Nodemailer + Redis)** & **Đăng nhập Google Sign-In (Xác thực ID Token qua google-auth-library + Tự động Đăng ký & lưu Avatar/Fullname)** |
 | `sos` | ✅ Hoàn chỉnh — Tạo SOS đính kèm ảnh hiện trường, tra cứu lịch sử, cập nhật trạng thái, phát socket PubSub 0ms |
 | `rescuer` | ✅ Hoàn chỉnh — Quản lý hồ sơ, lấy danh sách online qua Redis Geo, thống kê hiệu suất KPI |
 | `location` | ✅ Hoàn chỉnh — Heartbeat & GPS update qua Socket.io → Redis Geo |
