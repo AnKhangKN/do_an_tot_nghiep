@@ -175,8 +175,10 @@ class ServiceHandler {
 
       // 2. Yêu cầu vị trí mới với timeout dài hơn (12 giây) để GPS kịp bắt sóng dưới nền
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 12),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 12),
+        ),
       );
       return {
         "lat": position.latitude,

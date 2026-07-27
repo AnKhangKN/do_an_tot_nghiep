@@ -4,7 +4,7 @@ import { formatTime } from '@/utils/format_date.util';
 import ButtonComponent from '@/components/shared/ButtonComponent/ButtonComponent';
 import { getAllRatingsAdmin } from '@/api/admin/RatingApi';
 
-const ratingColumns = ({ expandedRows, onToggleExpand }) => [
+const ratingColumns = () => [
   {
     key: 'index',
     title: 'STT',

@@ -18,6 +18,9 @@ import '../../../../shared/widgtes/search_widget.dart';
 import '../../../../shared/widgtes/emergency_dialog_widget.dart';
 import '../widgets/sos_offer_overlay_widget.dart';
 import '../../models/sos_offer_model.dart';
+import '../../../emergency_amenities/presentation/providers/amenity_provider.dart';
+import '../../../emergency_amenities/presentation/widgets/amenity_category_chips.dart';
+import '../../../emergency_amenities/presentation/widgets/amenity_detail_bottom_sheet.dart';
 
 class RescuerMapScreen extends StatefulWidget {
   const RescuerMapScreen({super.key});
@@ -34,7 +37,13 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     super.initState();
     getIt<SessionController>().addListener(_onSessionOrProviderChanged);
     getIt<SOSProvider>().addListener(_onSessionOrProviderChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onSessionOrProviderChanged());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AmenityProvider>().fetchCategories();
+        context.read<AmenityProvider>().fetchAmenities();
+        _onSessionOrProviderChanged();
+      }
+    });
   }
 
   @override
@@ -206,6 +215,48 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     }
   }
 
+  List<Marker> _buildAmenityMarkers(BuildContext context) {
+    final amenityProvider = context.watch<AmenityProvider>();
+    final amenities = amenityProvider.amenities;
+
+    return amenities.map((item) {
+      return Marker(
+        point: LatLng(item.latitude, item.longitude),
+        width: 38,
+        height: 38,
+        child: GestureDetector(
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              builder: (_) => AmenityDetailBottomSheet(amenity: item),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x402563EB),
+                  blurRadius: 6,
+                  spreadRadius: 1,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.storefront_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Lắng nghe position từ session
@@ -235,15 +286,105 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                 ? LatLng(activeRescue.victimLat, activeRescue.victimLng)
                 : null,
             partnerMarkerChild: const Icon(Icons.location_on, color: Colors.red, size: 40),
-            polylines: isRescuing && _routePoints.isNotEmpty
-                ? [
-                    Polyline(
-                      points: _routePoints,
-                      strokeWidth: 5.0,
-                      color: Colors.blue,
-                    )
-                  ]
-                : null,
+            additionalMarkers: _buildAmenityMarkers(context),
+            polylines: [
+              if (context.watch<AmenityProvider>().isNavigating && context.watch<AmenityProvider>().routePoints.isNotEmpty)
+                Polyline(
+                  points: context.watch<AmenityProvider>().routePoints,
+                  strokeWidth: 5.0,
+                  color: const Color(0xFF0284C7),
+                ),
+              if (isRescuing && _routePoints.isNotEmpty)
+                Polyline(
+                  points: _routePoints,
+                  strokeWidth: 5.0,
+                  color: Colors.blue,
+                ),
+            ],
+          ),
+
+          // ================= IN-APP AMENITY NAVIGATION BANNER =================
+          Consumer<AmenityProvider>(
+            builder: (context, amenityProv, _) {
+              if (!amenityProv.isNavigating || amenityProv.activeNavigationAmenity == null) {
+                return const SizedBox.shrink();
+              }
+              final target = amenityProv.activeNavigationAmenity!;
+              final dist = amenityProv.routeDistanceKm?.toStringAsFixed(1) ?? '--';
+              final duration = amenityProv.routeDurationSec != null ? (amenityProv.routeDurationSec! / 60).ceil() : '--';
+
+              return Positioned(
+                top: 155,
+                left: 16,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+                    border: Border.all(color: const Color(0xFF0284C7), width: 1.5),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE0F2FE),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.directions_car_rounded, color: Color(0xFF0284C7), size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              target.categoryName ?? 'Tiện ích khẩn cấp',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Khoảng cách: $dist km • Tuyến đường: ~$duration phút',
+                              style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => context.read<AmenityProvider>().stopInAppNavigation(),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.close_rounded, size: 16, color: Colors.red.shade700),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Tắt chỉ đường',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
 
           // ================= TOP UI =================
@@ -257,7 +398,9 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                 child: Column(
                   children: [
                     SearchWidget(),
-                    SizedBox(height: 12),
+                    SizedBox(height: 6),
+                    AmenityCategoryChips(),
+                    SizedBox(height: 6),
                     Align(
                       alignment: Alignment.centerRight,
                       child: LayerWidget(),

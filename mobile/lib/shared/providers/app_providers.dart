@@ -19,6 +19,7 @@ import '../../features/user/presentation/providers/user_provider.dart';
 import '../../features/victim/presentation/providers/victim_map_provider.dart';
 import '../../features/history/presentation/providers/history_provider.dart';
 import '../../features/chat/presentation/providers/chat_provider.dart';
+import '../../features/emergency_amenities/presentation/providers/amenity_provider.dart';
 
 class AppProviders extends StatelessWidget {
   final Widget child;
@@ -48,6 +49,10 @@ class AppProviders extends StatelessWidget {
         // HistoryProvider
         ChangeNotifierProvider(
           create: (_) => HistoryProvider(),
+        ),
+        // AmenityProvider
+        ChangeNotifierProvider(
+          create: (_) => getIt<AmenityProvider>(),
         ),
         // VictimMapProvider
         ChangeNotifierProvider(

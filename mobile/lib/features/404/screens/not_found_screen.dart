@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/router_constants.dart';
 
 class NotFoundScreen extends StatelessWidget {
   const NotFoundScreen({super.key});
@@ -11,13 +12,13 @@ class NotFoundScreen extends StatelessWidget {
         child: Center(
           child: Column(
             children: [
-              Text("404"),
+              const Text("404"),
 
               ElevatedButton(
                 onPressed: () {
-                  context.go('/map');
+                  context.go(RouterConstants.map);
                 },
-                child: Text("Trở về"),
+                child: const Text("Trở về"),
               ),
             ],
           ),

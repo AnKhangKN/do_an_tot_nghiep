@@ -1,22 +1,23 @@
 class RouterConstants {
-  static const splash = '/splash';
+  // Khởi chạy & Core
+  static const String splash = '/splash';
 
-  // auth
-  static const login = '/login';
-  static const register = '/register';
-  static const registerRescuer = '/register-rescuer';
+  // Xác thực (Auth)
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String registerRescuer = '/register-rescuer';
 
-  // victim
-  static const map = '/map';
-  static const history = '/history';
-  static const chat = '/chat';
-  static const notification = '/notifications';
-  static const profile = '/profile';
+  // Tính năng Nạn nhân (Victim)
+  static const String map = '/map';
+  static const String history = '/history';
+  static const String chat = '/chat';
+  static const String notification = '/notifications';
+  static const String profile = '/profile';
 
-  // rescuer
-  static const rescuerMap = '/rescuer-map';
+  // Tính năng Cứu hộ (Rescuer)
+  static const String rescuerMap = '/rescuer-map';
 
-  // profile link
-  static const setting = '/setting';
-  static const appInfo = '/app-info';
+  // Cài đặt & Thông tin (Settings)
+  static const String setting = '/setting';
+  static const String appInfo = '/app-info';
 }

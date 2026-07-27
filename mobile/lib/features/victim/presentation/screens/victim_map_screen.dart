@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/shared/widgtes/phone_call_widget.dart';
 
 import '../../../../core/di/di.dart';
 import '../../../../core/location/data/location_service.dart';
@@ -24,6 +23,9 @@ import '../../../../shared/widgtes/emergency_dialog_widget.dart';
 import '../../../../shared/widgtes/rating_dialog_widget.dart';
 import '../../../dangerous_points/presentation/providers/geofence_provider.dart';
 import '../../../../shared/widgtes/geofence_alert_dialog.dart';
+import '../../../emergency_amenities/presentation/providers/amenity_provider.dart';
+import '../../../emergency_amenities/presentation/widgets/amenity_category_chips.dart';
+import '../../../emergency_amenities/presentation/widgets/amenity_detail_bottom_sheet.dart';
 
 class VictimMapScreen extends StatefulWidget {
   const VictimMapScreen({super.key});
@@ -137,6 +139,8 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
       if (!mounted) return;
       _onSessionChanged();
       context.read<VictimMapProvider>().loadIncidentTypes();
+      context.read<AmenityProvider>().fetchCategories();
+      context.read<AmenityProvider>().fetchAmenities();
 
       // Lấy vị trí khởi tạo ban đầu lập tức
       final sessionController = getIt<SessionController>();
@@ -324,10 +328,51 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     }).toList();
   }
 
+  List<Marker> _buildAmenityMarkers(BuildContext context) {
+    final amenityProvider = context.watch<AmenityProvider>();
+    final amenities = amenityProvider.amenities;
+
+    return amenities.map((item) {
+      return Marker(
+        point: LatLng(item.latitude, item.longitude),
+        width: 38,
+        height: 38,
+        child: GestureDetector(
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              builder: (_) => AmenityDetailBottomSheet(amenity: item),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x402563EB),
+                  blurRadius: 6,
+                  spreadRadius: 1,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.storefront_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final sessionController = getIt<SessionController>();
-    final position = sessionController.state.position;
     final isBeingRescued = sessionController.isBeingRescued;
 
     return Scaffold(
@@ -344,35 +389,129 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                 position: currentPosition,
                 partnerPosition: isBeingRescued ? currentRescuerPos : null,
                 partnerMarkerChild: const Icon(Icons.airport_shuttle, color: Colors.green, size: 40),
-                additionalMarkers: _buildDangerousPointMarkers(currentPosition),
-                polylines: isBeingRescued && _routePoints.isNotEmpty
-                    ? [
-                        Polyline(
-                          points: _routePoints,
-                          strokeWidth: 5.0,
-                          color: Colors.blue,
-                        )
-                      ]
-                    : null,
+                additionalMarkers: [
+                  ..._buildDangerousPointMarkers(currentPosition),
+                  ..._buildAmenityMarkers(context),
+                ],
+                polylines: [
+                  if (context.watch<AmenityProvider>().isNavigating && context.watch<AmenityProvider>().routePoints.isNotEmpty)
+                    Polyline(
+                      points: context.watch<AmenityProvider>().routePoints,
+                      strokeWidth: 5.0,
+                      color: const Color(0xFF0284C7),
+                    ),
+                  if (isBeingRescued && _routePoints.isNotEmpty)
+                    Polyline(
+                      points: _routePoints,
+                      strokeWidth: 5.0,
+                      color: Colors.blue,
+                    ),
+                ],
+              );
+            },
+          ),
+
+          // ================= IN-APP AMENITY NAVIGATION BANNER =================
+          Consumer<AmenityProvider>(
+            builder: (context, amenityProv, _) {
+              if (!amenityProv.isNavigating || amenityProv.activeNavigationAmenity == null) {
+                return const SizedBox.shrink();
+              }
+              final target = amenityProv.activeNavigationAmenity!;
+              final dist = amenityProv.routeDistanceKm?.toStringAsFixed(1) ?? '--';
+              final duration = amenityProv.routeDurationSec != null ? (amenityProv.routeDurationSec! / 60).ceil() : '--';
+
+              return Positioned(
+                top: 155,
+                left: 16,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+                    border: Border.all(color: const Color(0xFF0284C7), width: 1.5),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE0F2FE),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.directions_car_rounded, color: Color(0xFF0284C7), size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              target.categoryName ?? 'Tiện ích khẩn cấp',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Khoảng cách: $dist km • Tuyến đường: ~$duration phút',
+                              style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => context.read<AmenityProvider>().stopInAppNavigation(),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.close_rounded, size: 16, color: Colors.red.shade700),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Tắt chỉ đường',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           ),
 
           // ================= TOP UI =================
-          const Positioned(
+          Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: SafeArea(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Column(
                   children: [
-                    SearchWidget(),
-                    SizedBox(height: 12),
+                    const SearchWidget(),
+                    const SizedBox(height: 6),
+                    const AmenityCategoryChips(),
+                    const SizedBox(height: 6),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: LayerWidget(),
+                      child: const LayerWidget(),
                     ),
                   ],
                 ),
@@ -445,7 +584,6 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                       ListenableBuilder(
                         listenable: sessionController,
                         builder: (context, _) {
-                          final isSearching = sessionController.isSearchingRescuer;
                           final isBeingRescued = sessionController.isBeingRescued;
 
                           if (isBeingRescued) {

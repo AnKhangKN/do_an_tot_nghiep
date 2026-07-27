@@ -4,6 +4,7 @@ import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/location/data/location_service.dart';
 import 'package:mobile/core/session/session_controller.dart';
 import 'package:mobile/features/dangerous_points/presentation/widgets/add_dangerous_point_dialog.dart';
+import 'package:mobile/features/emergency_amenities/presentation/widgets/add_amenity_bottom_sheet.dart';
 import '../providers/victim_map_provider.dart';
 import 'emergency_qr_dialog_widget.dart';
 
@@ -22,6 +23,40 @@ class VictimUtilWidget extends StatefulWidget {
 }
 
 class _VictimUtilWidgetState extends State<VictimUtilWidget> {
+  Future<void> _handleAmenityTap(BuildContext context) async {
+    final session = getIt<SessionController>();
+    var position = session.state.position;
+    
+    if (position == null) {
+      position = await LocationService().getCurrentPosition();
+      if (position != null) {
+        session.updatePosition(position);
+      }
+    }
+    
+    if (position != null && context.mounted) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => AddAmenityBottomSheet(
+          currentLat: position!.latitude,
+          currentLng: position.longitude,
+        ),
+      );
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng bật định vị để đóng góp điểm tiện ích!'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _handleWarningTap(BuildContext context) async {
     final session = getIt<SessionController>();
     var position = session.state.position;
@@ -74,6 +109,13 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
           ),
           const SizedBox(height: 6),
         ],
+        _UtilButton(
+          tooltip: 'Tiện ích cộng đồng',
+          icon: Icons.storefront_rounded,
+          color: const Color(0xFF10B981),
+          onPressed: () => _handleAmenityTap(context),
+        ),
+        const SizedBox(height: 6),
         _UtilButton(
           tooltip: 'Cảnh báo',
           icon: Icons.warning_rounded,

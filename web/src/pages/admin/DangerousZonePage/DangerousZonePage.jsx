@@ -4,7 +4,7 @@ import { formatTime } from '@/utils/format_date.util';
 import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones } from '@/api/admin/DangerousZoneApi';
 import { PiLightningFill } from 'react-icons/pi';
 
-const columns = ({ onApprove, onReject, expandedRows, onToggleExpand, loading }) => [
+const columns = ({ onApprove, onReject, loading }) => [
   {
     key: 'index',
     title: 'STT',

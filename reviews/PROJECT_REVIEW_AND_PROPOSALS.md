@@ -288,18 +288,26 @@ sequenceDiagram
 
 ---
 
-### B. Các Đề Xuất Nâng Cấp Tiếp Theo (🔵 Pending)
+### A. Các Đề Xuất Đã Hoàn Thành (✅ Completed)
 
-### ⬜ Đề xuất 11: Community Emergency Amenities — Bản Đồ Tiện Ích Cộng Đồng
-> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Chi phí:** $0 · **Impact:** ⭐⭐⭐⭐⭐
+### ✅ Đề xuất 11: Community Emergency Amenities — Bản Đồ Tiện Ích Cộng Đồng & Chỉ Đường Trực Tiếp Nội Bộ (Kèm Admin Phê Duyệt & Tắt Chỉ Đường)
+> **Độ khó:** Trung bình · **Thời gian:** 1 ngày · **Chi phí:** $0 · **Impact:** ⭐⭐⭐⭐⭐ · **🟢 ĐÃ HOÀN THÀNH**
 
-**Ý tưởng:** Lọc nhanh các tiện ích (Tiệm sửa xe, Trạm xăng, Y tế) xung quanh. Người dùng có thể đóng góp điểm mới lên hệ thống.
+**Ý tưởng:** Lọc nhanh các tiện ích khẩn cấp (Tiệm sửa xe, Trạm xăng, Vá lốp, Cơ sở y tế) xung quanh theo danh mục động. Tất cả các vai trò (**Victim**, **Rescuer**, **Admin**) đều có quyền đóng góp vị trí điểm tiện ích mới siêu tốc chỉ với 2-3 thao tác trên thanh công cụ tiện ích.
+- Điểm do **Victim** hoặc **Rescuer** đóng góp sẽ lưu ở trạng thái `PENDING` (chờ duyệt).
+- **Admin** có giao diện quản lý hiện đại trên Web Admin (`/admin/emergency-amenities`) với bảng dữ liệu tối giản (Minimalist Table) và Modal xem chi tiết đầy đủ thông tin (người đóng góp, tọa độ, giờ mở cửa, SĐT), cho phép **duyệt/kích hoạt trực tiếp 1-click** chuyển đổi linh hoạt các trạng thái `APPROVED` (Đã kích hoạt), `PENDING` (Chờ duyệt), `REJECTED` (Tạm khóa/Từ chối).
+- **Quản lý & Chỉnh sửa Danh mục Tiện ích**: Cho phép Admin xem danh sách danh mục, tạo danh mục mới và bấm nút **"Sửa"** để cập nhật thông tin tên danh mục (`categoryName`), tên biểu tượng (`iconName`) cũng như chuyển đổi trạng thái `ACTIVE` / `INACTIVE` thông qua Modal chỉnh sửa tiện lợi.
+- **Chỉ đường Nội bộ trực tiếp trên Bản đồ App (In-App Navigation)**:
+  - Khi nhấn **"Chỉ đường trên App"**, ứng dụng tự động vẽ tuyến đường Polyline OSRM (màu xanh Sky Blue) kết nối từ vị trí GPS hiện tại của người dùng đến tiện ích ngay trên bản đồ ứng dụng mà không cần thoát sang Google Maps.
+  - Hiển thị **Navigation Banner** ở đầu bản đồ cập nhật thời gian thực khoảng cách (km) và thời gian di chuyển ước tính (~ phút).
+  - Tích hợp nút **`[❌ Tắt chỉ đường]`** màu đỏ nổi bật giúp người dùng hủy tuyến đường nhanh chóng khi không cần nữa.
+  - Cung cấp thêm tùy chọn phụ **"Mở Google Maps ngoài"** đáp ứng đa dạng thiết bị (đã cấu hình thẻ `<queries>` tương thích Android 11+).
 
-**Điểm nổi bật:** Biến ứng dụng thành một hệ sinh thái cứu hộ giao thông toàn diện, hỗ trợ người đi đường trong mọi tình huống.
+**Điểm nổi bật:** Biến ứng dụng thành một hệ sinh thái cứu hộ giao thông toàn diện — kết nối vị trí nạn nhân/cứu hộ viên tới tiện ích gần nhất để tiến hành di chuyển, cứu hộ và sửa chữa nhanh chóng, hiệu quả nhất, đồng thời đảm bảo kiểm duyệt dữ liệu rác nghiêm ngặt từ phía Admin.
 
 ---
 
-### ❌ ĐỀ XUẤT BỊ LOẠI (Không phù hợp quy mô Đồ án)
+### B. Các Đề Xuất Bị Loại (Không phù hợp quy mô Đồ án)
 
 | Đề xuất | Lý do loại |
 |---|---|
@@ -323,7 +331,7 @@ sequenceDiagram
 | **8** | ~~Rescuer Performance Analytics (bảng xếp hạng KPI)~~ | Dễ | 0.5 ngày | ✅ Hoàn thành |
 | **9** | ~~Live Dashboard Real-Time (Socket.io Push)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
 | **10** | ~~QR Code Emergency Fallback (cứu hộ ngoài hệ thống)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
-| **11** | Community Emergency Amenities (tiệm sửa xe, trạm xăng, y tế) | Trung bình | 1 ngày | 🔵 Chưa làm |
+| **11** | ~~Community Emergency Amenities (bản đồ tiện ích + chỉ đường trực tiếp In-App + nút Tắt chỉ đường + Admin duyệt)~~ | Trung bình | 1 ngày | ✅ Hoàn thành |
 
 > [!TIP]
 > **Khuyến nghị ưu tiên cao nhất:** Đề xuất **10 (QR Fallback)** và **6 (Geo-Fence)** — độc đáo nhất, giải quyết edge case thực tế, ít người làm nhất, không tốn chi phí.

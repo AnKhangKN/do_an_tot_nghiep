@@ -10,6 +10,7 @@ import {
   PiGearFill,
   PiLifebuoyFill,
   PiTrophyFill,
+  PiStorefrontFill,
   PiCaretLeftBold,
 } from "react-icons/pi";
 import { NavLink } from "react-router-dom";
@@ -42,6 +43,11 @@ const SidebarComponent = () => {
       name: "Khu vực nguy hiểm",
       path: "/admin/dangerous-zone",
       icon: <PiWarningFill />,
+    },
+    {
+      name: "Tiện ích cộng đồng",
+      path: "/admin/emergency-amenities",
+      icon: <PiStorefrontFill />,
     },
     {
       name: "Loại sự cố",

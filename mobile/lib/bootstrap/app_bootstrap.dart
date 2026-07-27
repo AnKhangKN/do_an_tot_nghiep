@@ -1,4 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/storage/offline_queue_service.dart';
@@ -7,30 +9,70 @@ import '../firebase_options.dart';
 
 class AppBootstrap {
   static Future<void> init() async {
-    // load env
-    await dotenv.load(fileName: ".env.development");
+    // 1. Cấu hình Bắt lỗi toàn cục (Flutter Framework & Async Exceptions)
+    _setupGlobalErrorHandling();
 
-    // Khởi tạo Database local Hive cho offline queue
-    await OfflineQueueService().init();
+    // 2. Load biến môi trường .env (.env.development kèm fallback .env)
+    try {
+      await dotenv.load(fileName: ".env.development");
+    } catch (e) {
+      debugPrint("⚠️ [Bootstrap] Không thể tải .env.development: $e");
+      try {
+        await dotenv.load(fileName: ".env");
+      } catch (err) {
+        debugPrint("⚠️ [Bootstrap] Không tìm thấy file .env: $err");
+      }
+    }
 
-    // Khởi tạo firebase
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    // 3. Khởi tạo Database local Hive cho offline queue
+    try {
+      await OfflineQueueService().init();
+    } catch (e) {
+      debugPrint("⚠️ [Bootstrap] Lỗi khởi tạo OfflineQueueService (Hive): $e");
+    }
 
-    // init DI
-    await initDI();
+    // 4. Khởi tạo Firebase
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } catch (e) {
+      debugPrint("⚠️ [Bootstrap] Lỗi khởi tạo Firebase: $e");
+    }
 
-    // Xin quyền và khởi tạo cấu hình local notification/background service khi vào app
+    // 5. Khởi tạo Dependency Injection (getIt)
+    try {
+      await initDI();
+    } catch (e) {
+      debugPrint("🚨 [Bootstrap] Lỗi khởi tạo Dependency Injection (initDI): $e");
+    }
+
+    // 6. Xin quyền và khởi tạo cấu hình local notification / background service
     try {
       final backgroundService = getIt<BackgroundService>();
       await backgroundService.requestNotificationPermission();
       await backgroundService.initialize();
     } catch (e) {
-      // Bắt lỗi đề phòng lỗi DI hoặc FlutterLocalNotificationsPlugin chưa sẵn sàng
-      print("⚠️ Lỗi khởi tạo background service: $e");
+      debugPrint("⚠️ [Bootstrap] Lỗi khởi tạo background service: $e");
     }
+  }
 
-    // Bật map catching
+  /// Cấu hình theo dõi và ghi log lỗi toàn cục cho ứng dụng
+  static void _setupGlobalErrorHandling() {
+    // Bắt lỗi hệ thống UI rendering từ Flutter Framework
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      debugPrint("🚨 [Flutter Framework Error]: ${details.exceptionAsString()}");
+      if (details.stack != null) {
+        debugPrint(details.stack.toString());
+      }
+    };
+
+    // Bắt các lỗi bất đồng bộ (Async Root Zone) chưa được xử lý
+    PlatformDispatcher.instance.onError = (error, stack) {
+      debugPrint("🚨 [Uncaught Async Error]: $error");
+      debugPrint(stack.toString());
+      return true; // Ngăn ứng dụng bị văng/crash bất ngờ
+    };
   }
 }

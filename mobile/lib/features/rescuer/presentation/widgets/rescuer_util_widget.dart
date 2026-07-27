@@ -6,6 +6,8 @@ import 'package:mobile/core/session/session_controller.dart';
 import 'package:mobile/features/dangerous_points/presentation/widgets/add_dangerous_point_dialog.dart';
 import '../screens/qr_scanner_screen.dart';
 
+import 'package:mobile/features/emergency_amenities/presentation/widgets/add_amenity_bottom_sheet.dart';
+
 class RescuerUtilWidget extends StatelessWidget {
   final VoidCallback? onIncidentTypeTap;
   final VoidCallback? onLocationTap;
@@ -17,6 +19,40 @@ class RescuerUtilWidget extends StatelessWidget {
     this.onLocationTap,
     this.onEmergencyTap,
   });
+
+  Future<void> _handleAmenityTap(BuildContext context) async {
+    final session = getIt<SessionController>();
+    var position = session.state.position;
+    
+    if (position == null) {
+      position = await LocationService().getCurrentPosition();
+      if (position != null) {
+        session.updatePosition(position);
+      }
+    }
+    
+    if (position != null && context.mounted) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => AddAmenityBottomSheet(
+          currentLat: position!.latitude,
+          currentLng: position.longitude,
+        ),
+      );
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng bật định vị để đóng góp điểm tiện ích!'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> _handleWarningTap(BuildContext context) async {
     final session = getIt<SessionController>();
@@ -83,6 +119,11 @@ class RescuerUtilWidget extends StatelessWidget {
                   getIt<SessionController>().notifyListeners();
                 }
               },
+            ),
+            _UtilButton(
+              icon: Icons.storefront_rounded,
+              label: "Tiện ích",
+              onTap: () => _handleAmenityTap(context),
             ),
             _UtilButton(
               icon: Icons.my_location,

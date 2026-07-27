@@ -38,6 +38,9 @@ import '../dangerous_points/data/dangerous_point_repository.dart';
 import '../../features/rating/data/rating_service.dart';
 import '../../features/rating/data/rating_repository.dart';
 import '../../features/dangerous_points/presentation/providers/geofence_provider.dart';
+import '../../features/emergency_amenities/data/services/emergency_amenity_service.dart';
+import '../../features/emergency_amenities/data/repositories/emergency_amenity_repository.dart';
+import '../../features/emergency_amenities/presentation/providers/amenity_provider.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -98,8 +101,10 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(() => ChatService(getIt<DioClient>().dio));
   getIt.registerLazySingleton(() => MobileNotificationService(getIt<DioClient>().dio));
   getIt.registerLazySingleton(() => RatingService(getIt<DioClient>().dio));
+  getIt.registerLazySingleton(() => EmergencyAmenityService(getIt<DioClient>().dio));
   getIt.registerLazySingleton(() => NotificationProvider());
   getIt.registerLazySingleton(() => GeofenceProvider());
+  getIt.registerLazySingleton(() => AmenityProvider(repository: getIt<EmergencyAmenityRepository>()));
 
   // Đăng ký các Repository
   getIt.registerLazySingleton<AuthRepository>(
@@ -119,6 +124,7 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(
     () => DangerousPointRepository(getIt<DangerousPointService>()),
   );
+  getIt.registerLazySingleton(() => EmergencyAmenityRepository(getIt<EmergencyAmenityService>()));
   getIt.registerLazySingleton(() => VictimRepository(getIt<VictimService>()));
   getIt.registerLazySingleton(() => ChatRepository(getIt<ChatService>()));
   getIt.registerLazySingleton(() => RatingRepository(getIt<RatingService>()));

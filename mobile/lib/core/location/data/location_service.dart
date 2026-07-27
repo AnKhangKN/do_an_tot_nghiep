@@ -48,8 +48,10 @@ class LocationService {
 
       // 2. Nếu chưa có, lấy vị trí hiện tại với timeLimit 4 giây tránh treo app
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 4),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 4),
+        ),
       );
     } catch (e) {
       debugPrint('Get current position error: $e');
@@ -64,8 +66,10 @@ class LocationService {
       if (!granted) return null;
 
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 5),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 5),
+        ),
       );
     } catch (e) {
       debugPrint('Get fresh position error: $e');
