@@ -18,6 +18,8 @@ class AuthProvider extends ChangeNotifier {
 
   bool isLoading = false;
   String? error;
+  bool requireOtp = false;
+  String? unverifiedEmail;
 
   void setError(String? message) {
     error = message;
@@ -26,6 +28,8 @@ class AuthProvider extends ChangeNotifier {
 
   void clearError() {
     error = null;
+    requireOtp = false;
+    unverifiedEmail = null;
     notifyListeners();
   }
 
@@ -79,6 +83,8 @@ class AuthProvider extends ChangeNotifier {
     try {
       isLoading = true;
       error = null;
+      requireOtp = false;
+      unverifiedEmail = null;
       notifyListeners();
 
       final result = await authRepository.login(
@@ -104,6 +110,15 @@ class AuthProvider extends ChangeNotifier {
 
       return false;
     } catch (e) {
+      if (e is DioException && e.response?.data != null) {
+        final resData = e.response!.data;
+        if (resData is Map<String, dynamic> && resData['requireOtp'] == true) {
+          requireOtp = true;
+          unverifiedEmail = resData['email']?.toString() ?? email;
+          error = resData['message']?.toString() ?? "Tài khoản chưa xác thực Email. Vui lòng nhập mã OTP!";
+          return false;
+        }
+      }
       error = _parseError(e);
       return false;
     } finally {

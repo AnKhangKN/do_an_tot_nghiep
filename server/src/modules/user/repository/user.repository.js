@@ -82,9 +82,10 @@ class UserRepository {
         const query = `
         SELECT 
             ${this.user.field.userId},
-            ${this.user.field.role}
+            ${this.user.field.role},
+            ${this.user.field.isVerified}
         FROM ${this.user.table}
-        WHERE ${this.user.field.email} = $1
+        WHERE LOWER(${this.user.field.email}) = LOWER($1)
         `;
 
         const result = await client.query(query, [email]);

@@ -150,7 +150,7 @@ class AuthService {
         return await transaction(async (client) => {
             let user = await this.userService.getUserIdByEmail(client, { email: verifiedEmail });
 
-            if (!user) {
+            if (!user || !user.userId) {
                 // Tự động tạo tài khoản mới nếu chưa tồn tại với is_verified = true
                 user = await this.userService.createUser(client, {
                     email: verifiedEmail,
@@ -167,12 +167,15 @@ class AuthService {
                 });
             } else {
                 // Tài khoản đã có sẵn -> Cập nhật thông tin Google Profile & is_verified = true
-                user = await this.userService.updateGoogleProfile(client, {
+                const updatedUser = await this.userService.updateGoogleProfile(client, {
                     userId: user.userId,
                     fullName: verifiedFullName || user.fullName,
                     avatarUrl: verifiedAvatarUrl || user.avatarUrl,
                     isVerified: true
                 });
+                if (updatedUser) {
+                    user = { ...user, ...updatedUser };
+                }
             }
 
             // Tự động sinh Access Token + Refresh Token
@@ -236,8 +239,8 @@ class AuthService {
             return await transaction(async (client) => {
                 const user = await this.userService.getUserAuthInfo(client, { userId: userAuth.userId });
 
-                if (!user) {
-                    throwError("Không tìm thấy người dùng!", 404);
+                if (!user || !user.userId) {
+                    throwError("Tài khoản không tồn tại hoặc đã bị xóa. Vui lòng đăng nhập lại!", 401);
                 }
 
                 if (user.email && user.email.endsWith('@sos.guest')) {
@@ -252,52 +255,68 @@ class AuthService {
                 return { accessToken: newAccessToken };
             });
         } catch (error) {
-            throwError(error.message || "Làm mới token thất bại!", error.statusCode || 400);
+            throwError(error.message || "Làm mới token thất bại!", error.statusCode || 401);
         }
     }
 
     loginNormal = async ({ email, password }) => {
         return await transaction(async (client) => {
+            const cleanEmail = email ? email.trim().toLowerCase() : "";
+            const user = await this.userService.getUserIdByEmail(client, { email: cleanEmail });
 
-            const user = await this.userService.getUserIdByEmail(client, { email });
-
-            if (!user.userId) {
-                throwError("Không tồn tại user id!", 400);
+            if (!user || !user.userId) {
+                throwError("Email hoặc mật khẩu không chính xác!", 400);
             }
 
             const storedPassword = await this.user_authService.getPasswordByUserId(client, { userId: user.userId });
 
-            if (!storedPassword.password) {
-                throwError("Không lấy được mật khẩu!", 400);
+            if (!storedPassword || !storedPassword.password) {
+                throwError("Email hoặc mật khẩu không chính xác!", 400);
             }
 
             // So sánh mật khẩu đã hash với mật khẩu người dùng nhập vào
             const isPasswordValid = await comparePassword(password, storedPassword.password);
 
             if (!isPasswordValid) {
-                throwError("Xác thực mật khẩu thất bại!", 400);
+                throwError("Email hoặc mật khẩu không chính xác!", 400);
+            }
+
+            // Kiểm tra trạng thái xác thực Email (trừ tài khoản khách guest)
+            if (!user.isVerified && !cleanEmail.endsWith('@sos.guest')) {
+                // Tự động sinh mã OTP 6 số mới và gửi về Email cho người dùng
+                const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+                const redis = require("@config/redis.config");
+                await redis.set(`otp:verify:${cleanEmail}`, otpCode, "EX", 600);
+
+                const { sendOtpEmail } = require("@utils/mail.service");
+                await sendOtpEmail({ toEmail: cleanEmail, otpCode });
+
+                const err = new Error("Tài khoản chưa xác thực Email. Đã gửi mã OTP xác thực mới tới Email của bạn!");
+                err.statusCode = 403;
+                err.requireOtp = true;
+                err.email = cleanEmail;
+                throw err;
             }
 
             const accessToken = await generateAccessToken({
                 userId: user.userId,
-                role: user.role
+                role: user.role || "VICTIM"
             });
 
             const refreshToken = await generateRefreshToken({
                 userId: user.userId,
-                role: user.role
+                role: user.role || "VICTIM"
             });
 
-            return { accessToken, refreshToken };
-        })
-
-    }
+            return { accessToken, refreshToken, user };
+        });
+    };
 
     getMe = async ({ userId }) => {
         return await transaction(async (client) => {
             const user = await this.userService.getUserAuthInfo(client, { userId });
 
-            if (!user) {
+            if (!user || !user.userId) {
                 throwError("Không tìm thấy người dùng!", 404);
             }
 

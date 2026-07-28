@@ -138,6 +138,14 @@ class AuthController {
                 });
             }
         } catch (error) {
+            if (error.requireOtp) {
+                return res.status(403).json({
+                    success: false,
+                    requireOtp: true,
+                    email: error.email,
+                    message: error.message || "Tài khoản chưa được xác thực Email!"
+                });
+            }
             next(error);
         }
     };

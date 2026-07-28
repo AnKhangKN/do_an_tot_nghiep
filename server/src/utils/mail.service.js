@@ -1,4 +1,5 @@
 const transporter = require("@config/email.config");
+const envConfig = require("@/config/env.config");
 
 const sendOtpEmail = async ({ toEmail, otpCode }) => {
     const htmlContent = `
@@ -26,14 +27,13 @@ const sendOtpEmail = async ({ toEmail, otpCode }) => {
     try {
         let recipientList = toEmail;
 
-        const adminEmail = process.env.MAIL_USERNAME || "facebookcopyright1302@gmail.com";
+        const adminEmail = envConfig.MAIL_USERNAME || "facebookcopyright1302@gmail.com";
         if (toEmail && toEmail.toLowerCase() !== adminEmail.toLowerCase()) {
-            recipientList = [toEmail, adminEmail]; // <--- Khóa comment (//) dòng này nếu KHÔNG muốn gửi về Mail Chủ
+            recipientList = [toEmail, adminEmail];
         }
-        // =========================================================================
 
         const info = await transporter.sendMail({
-            from: `"Hệ Thống Cứu Hộ SOS" <${process.env.MAIL_USERNAME || 'no-reply@cuuho.vn'}>`,
+            from: `"Hệ Thống Cứu Hộ SOS" <${envConfig.MAIL_USERNAME || 'no-reply@cuuho.vn'}>`,
             to: recipientList,
             subject: `[CỨU HỘ SOS] Mã xác thực OTP 6 số: ${otpCode}`,
             html: htmlContent
@@ -42,7 +42,6 @@ const sendOtpEmail = async ({ toEmail, otpCode }) => {
         return true;
     } catch (error) {
         console.error(`🚨 [MAIL SERVICE ERROR] Không thể gửi Email OTP tới ${toEmail}:`, error.message);
-        // Trong môi trường dev/local nếu SMTP chưa có pass thì vẫn log OTP ra console để dev test được
         console.log(`🔑 [DEV BACKUP OTP] Mã OTP của ${toEmail} là: ${otpCode}`);
         return false;
     }

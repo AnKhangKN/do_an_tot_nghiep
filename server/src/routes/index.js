@@ -11,6 +11,7 @@ const chatRoutes = require("@/modules/chat/routes/chat.route")
 const dangerousPointRoutes = require("@/modules/dangerous_points/routes/dangerous_point.route")
 const ratingRoutes = require("@/modules/rating/routes/rating.route")
 const emergencyAmenityRoutes = require("@/modules/emergency_amenities/routes/emergency_amenity.route")
+const aiModerationRoutes = require("@/modules/ai_moderation/routes/ai_moderation.routes")
 
 const adminRoutes = require("@/modules/admin/routes/admin.route")
 
@@ -37,5 +38,7 @@ route.use("/dangerous_points", dangerousPointRoutes)
 route.use("/ratings", ratingRoutes)
 
 route.use("/emergency-amenities", emergencyAmenityRoutes)
+
+route.use("/ai-moderation", aiModerationRoutes)
 
 module.exports = route;

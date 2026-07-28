@@ -46,7 +46,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final success = await authProvider.login(email, password);
 
-    if (!success) return;
+    if (!success) {
+      if (authProvider.requireOtp && authProvider.unverifiedEmail != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? "Tài khoản chưa xác thực Email. Mã OTP mới đã được gửi!"),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        context.go(RouterConstants.verifyOtp, extra: authProvider.unverifiedEmail);
+      }
+      return;
+    }
     if (!mounted) return;
 
     context.go(RouterConstants.splash);

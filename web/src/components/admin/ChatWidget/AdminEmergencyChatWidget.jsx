@@ -10,7 +10,7 @@ import {
   PiChatCircleDotsBold,
   PiDotsThreeVerticalBold,
 } from "react-icons/pi";
-import { getConversationsAdmin, getMessagesAdmin, sendMessageAdmin } from "@/api/admin/ChatApi";
+import { getConversationsAdmin, getMessagesAdmin } from "@/api/admin/ChatApi";
 import { subscribeChatEvents, sendChatMessage } from "@/socket";
 
 const AdminEmergencyChatWidget = () => {

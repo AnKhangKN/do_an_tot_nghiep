@@ -46,6 +46,12 @@ export const routes = [
         isAdmin: true
     },
     {
+        path: '/admin/ai-moderation',
+        name: 'AI Moderation',
+        component: React.lazy(() => import('../pages/admin/AIModerationPage/AIModerationPage')),
+        isAdmin: true
+    },
+    {
         path: '/admin/dangerous-zone',
         name: 'Dangerous Zone',
         component: React.lazy(() => import('../pages/admin/DangerousZonePage/DangerousZonePage')),

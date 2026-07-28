@@ -8,6 +8,7 @@ const dispatchService = require("@modules/dispatch/service/dispatcher.service");
 const notificationService = require("@modules/notification/service/notification.service");
 const rescuerHistoryRepository = require("../repository/rescuer_history.repository");
 const imageService = require("@modules/image/service/image.service");
+const aiModerationService = require("@modules/ai_moderation/service/ai_moderation.service");
 
 class SosRequestService {
     constructor() {
@@ -91,6 +92,11 @@ class SosRequestService {
             });
         } catch (e) {
             console.error("[SERVICE] Lỗi phát event socket admin dashboard:", e);
+        }
+
+        // Kích hoạt tiến trình phân loại & kiểm duyệt AI bất đồng bộ
+        if (description) {
+            aiModerationService.processModerationAsync("SOS_REQUEST", sos.sos_request_id, description);
         }
 
         return sos;
