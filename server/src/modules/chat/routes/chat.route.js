@@ -6,6 +6,7 @@ const { verifyToken } = require('@/middlewares/auth.middleware');
 router.use(verifyToken);
 
 router.post('/conversations', chatController.getOrCreateConversation);
+router.post('/conversations/admin-support', chatController.getOrCreateAdminSupportConversation);
 router.get('/conversations', chatController.getUserConversations);
 router.get('/conversations/:conversationId/messages', chatController.getMessages);
 

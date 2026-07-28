@@ -276,4 +276,32 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
     return newConv;
   }
+
+  Future<ConversationModel> getOrCreateAdminSupportConversation() async {
+    if (chatRepository != null) {
+      final remoteConv = await chatRepository!.getOrCreateAdminSupportConversation();
+      if (remoteConv != null) {
+        final existingIdx = _conversations.indexWhere((c) => c.id == remoteConv.id || c.isEmergency);
+        if (existingIdx != -1) {
+          _conversations[existingIdx] = remoteConv;
+        } else {
+          _conversations.insert(0, remoteConv);
+        }
+        notifyListeners();
+        return remoteConv;
+      }
+    }
+
+    final existingIdx = _conversations.indexWhere((c) => c.isEmergency || c.name.contains('Admin') || c.name.contains('Tổng đài'));
+    if (existingIdx != -1) {
+      return _conversations[existingIdx];
+    }
+
+    return await getOrCreateConversation(
+      id: 'admin_support_channel',
+      name: 'Tổng đài Admin Hỗ trợ 24/7',
+      isEmergency: true,
+      partnerId: 'admin',
+    );
+  }
 }

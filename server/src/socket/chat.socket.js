@@ -69,8 +69,8 @@ module.exports = (socket, io) => {
                 conversation,
             };
 
-            // Broadcast sự kiện real-time tới các room phòng chat & phòng người nhận (chuỗi room để Socket.IO tự khử trùng lặp)
-            let broadcast = io.to(`conversation:${resolvedConversationId}`);
+            // Broadcast sự kiện real-time tới các room phòng chat, phòng người nhận & admin_room (chuỗi room để Socket.IO tự khử trùng lặp)
+            let broadcast = io.to(`conversation:${resolvedConversationId}`).to("admin_room");
             if (recipientId) {
                 broadcast = broadcast.to(`user:${recipientId}`).to(`rescuer:${recipientId}`).to(`victim:${recipientId}`);
             }

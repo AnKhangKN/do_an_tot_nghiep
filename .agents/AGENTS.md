@@ -84,4 +84,10 @@ Dưới đây là các quy tắc nghiêm ngặt mà AI phải tuân thủ khi l�
 * **Cấm can thiệp trực tiếp vào DB**:
   - Tuyệt đối **KHÔNG** chạy trực tiếp các câu lệnh query (INSERT, UPDATE, DELETE) thủ công trên database để thay đổi dữ liệu, nhằm ngăn ngừa nguy cơ sai lệch dữ liệu và mất tính nhất quán.
   - Tuyệt đối **KHÔNG** chạy các câu lệnh phá hủy (DROP TABLE, ALTER, DROP COLUMN,...) trực tiếp trên database thực tế làm hỏng cấu trúc hệ thống.
+* **Quy định chuẩn mã nguồn Repository & Database Client**:
+  - Tuyệt đối **KHÔNG** tự ý sinh code gượng ép kiểu `const db = client || pool` hay `const executor = client || pool` trong Repository.
+  - Bám sát 100% phong cách code ban đầu của dự án:
+    - Phương thức nhận tham số `client` (dùng cho transaction) bắt buộc sử dụng `await client.query(...)`.
+    - Phương thức không nhận tham số `client` sử dụng trực tiếp `await pool.query(...)` xuất từ `@config/database.config`.
+  - Giữ nguyên chữ ký hàm (method signature) chuẩn và không tự ý sáng tác các pattern gán biến phá vỡ tính đồng nhất của mã nguồn.
 

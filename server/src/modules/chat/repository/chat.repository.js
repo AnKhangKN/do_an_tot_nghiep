@@ -83,7 +83,21 @@ class ChatRepository {
         return result.rows[0];
     }
 
-    getUserConversations = async (userId) => {
+    getUserConversations = async (userId, isAdmin = false) => {
+        let whereClause = `
+            WHERE c.${this.conversationModel.field.user1Id} = $1 
+               OR c.${this.conversationModel.field.user2Id} = $1
+        `;
+        if (isAdmin) {
+            whereClause = `
+                WHERE c.${this.conversationModel.field.user1Id} = $1 
+                   OR c.${this.conversationModel.field.user2Id} = $1
+                   OR u1.role = 'ADMIN' 
+                   OR u2.role = 'ADMIN' 
+                   OR c.sos_request_id IS NOT NULL
+            `;
+        }
+
         const query = `
             SELECT c.*,
                    CASE 
@@ -102,6 +116,10 @@ class ChatRepository {
                        WHEN c.${this.conversationModel.field.user1Id} = $1 THEN u2.phone
                        ELSE u1.phone
                    END as partner_phone,
+                   CASE 
+                       WHEN c.${this.conversationModel.field.user1Id} = $1 THEN u2.role
+                       ELSE u1.role
+                   END as partner_role,
                    (SELECT COUNT(*) FROM messages m 
                     WHERE m.conversation_id = c.conversation_id 
                       AND m.sender_id != $1 
@@ -109,8 +127,7 @@ class ChatRepository {
             FROM ${this.conversationModel.table} c
             JOIN users u1 ON c.${this.conversationModel.field.user1Id} = u1.user_id
             JOIN users u2 ON c.${this.conversationModel.field.user2Id} = u2.user_id
-            WHERE c.${this.conversationModel.field.user1Id} = $1 
-               OR c.${this.conversationModel.field.user2Id} = $1
+            ${whereClause}
             ORDER BY c.last_message_at DESC
         `;
         const result = await pool.query(query, [userId]);

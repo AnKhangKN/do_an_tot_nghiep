@@ -12,6 +12,10 @@ class ChatService {
     });
   }
 
+  Future<Response> getOrCreateAdminSupportConversation() async {
+    return await dio.post('/api/chat/conversations/admin-support');
+  }
+
   Future<Response> getUserConversations() async {
     return await dio.get('/api/chat/conversations');
   }

@@ -20,6 +20,19 @@ class ChatRepository {
     return null;
   }
 
+  Future<ConversationModel?> getOrCreateAdminSupportConversation() async {
+    try {
+      final response = await service.getOrCreateAdminSupportConversation();
+      final data = response.data['data'];
+      if (data != null) {
+        return _mapConversation(data);
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return null;
+  }
+
   Future<List<ConversationModel>> getUserConversations() async {
     try {
       final response = await service.getUserConversations();

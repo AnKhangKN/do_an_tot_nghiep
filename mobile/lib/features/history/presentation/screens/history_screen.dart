@@ -9,6 +9,7 @@ import '../../../../core/session/session_controller.dart';
 import '../../../../core/session/session_state.dart';
 import '../../../../shared/widgtes/phone_call_widget.dart';
 import '../../../../shared/widgtes/rating_dialog_widget.dart';
+import '../../../rating/data/rating_repository.dart';
 import '../providers/history_provider.dart';
 import '../../models/history_model.dart';
 import '../../../../core/utils/formatters.dart';
@@ -486,25 +487,60 @@ class _HistoryCard extends StatelessWidget {
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    RatingDialogWidget.show(
-                      context,
-                      sosRequestId: item.id,
-                      rescuerName: item.partnerName,
+                child: FutureBuilder<dynamic>(
+                  future: getIt<RatingRepository>().getRatingBySosId(item.id),
+                  builder: (context, snapshot) {
+                    final ratingData = snapshot.data;
+                    final ratingValue = _extractRatingValue(ratingData);
+                    final hasRated = ratingValue != null;
+
+                    return OutlinedButton.icon(
+                      onPressed: snapshot.connectionState == ConnectionState.waiting
+                          ? null
+                          : () {
+                              if (hasRated) {
+                                RatingDialogWidget.show(
+                                  context,
+                                  sosRequestId: item.id,
+                                  rescuerName: item.partnerName,
+                                  existingRating: ratingData is Map<String, dynamic>
+                                      ? ratingData
+                                      : ratingData is Map
+                                          ? Map<String, dynamic>.from(ratingData)
+                                          : null,
+                                  readOnly: true,
+                                );
+                              } else {
+                                RatingDialogWidget.show(
+                                  context,
+                                  sosRequestId: item.id,
+                                  rescuerName: item.partnerName,
+                                );
+                              }
+                            },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: hasRated ? Colors.grey.shade600 : Colors.amber.shade800,
+                        side: BorderSide(
+                          color: hasRated ? Colors.grey.shade400 : Colors.amber.shade700,
+                          width: 1.5,
+                        ),
+                        backgroundColor: hasRated ? Colors.grey.shade100 : Colors.transparent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      icon: Icon(
+                        hasRated ? Icons.star_rate_rounded : Icons.star_rounded,
+                        color: hasRated ? Colors.grey.shade600 : Colors.amber,
+                        size: 20,
+                      ),
+                      label: Text(
+                        hasRated
+                            ? 'Đã đánh giá ${_buildStarText(ratingValue!)}'
+                            : 'Đánh giá ca cứu hộ này',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
                     );
                   },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.amber.shade800,
-                    side: BorderSide(color: Colors.amber.shade700, width: 1.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                  ),
-                  icon: const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
-                  label: const Text(
-                    "Đánh giá ca cứu hộ này",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
                 ),
               ),
             ],
@@ -512,6 +548,25 @@ class _HistoryCard extends StatelessWidget {
         ),
       ),
     );
+  }
+  int? _extractRatingValue(dynamic ratingData) {
+    if (ratingData == null) return null;
+    if (ratingData is Map<String, dynamic>) {
+      final value = ratingData['rating'] ?? ratingData['score'] ?? ratingData['stars'];
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '');
+    }
+    if (ratingData is Map) {
+      final map = Map<String, dynamic>.from(ratingData);
+      final value = map['rating'] ?? map['score'] ?? map['stars'];
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '');
+    }
+    return null;
+  }
+
+  String _buildStarText(int rating) {
+    return '${'★' * rating}${'☆' * (5 - rating)}';
   }
 }
 

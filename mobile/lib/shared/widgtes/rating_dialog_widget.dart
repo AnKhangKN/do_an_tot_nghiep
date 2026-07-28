@@ -7,12 +7,16 @@ class RatingDialogWidget extends StatefulWidget {
   final String sosRequestId;
   final String? rescuerName;
   final VoidCallback? onSubmitted;
+  final Map<String, dynamic>? existingRating;
+  final bool readOnly;
 
   const RatingDialogWidget({
     super.key,
     required this.sosRequestId,
     this.rescuerName,
     this.onSubmitted,
+    this.existingRating,
+    this.readOnly = false,
   });
 
   static Future<void> show(
@@ -20,6 +24,8 @@ class RatingDialogWidget extends StatefulWidget {
     required String sosRequestId,
     String? rescuerName,
     VoidCallback? onSubmitted,
+    Map<String, dynamic>? existingRating,
+    bool readOnly = false,
   }) {
     return showDialog(
       context: context,
@@ -28,6 +34,8 @@ class RatingDialogWidget extends StatefulWidget {
         sosRequestId: sosRequestId,
         rescuerName: rescuerName,
         onSubmitted: onSubmitted,
+        existingRating: existingRating,
+        readOnly: readOnly,
       ),
     );
   }
@@ -41,6 +49,28 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
   final TextEditingController _commentController = TextEditingController();
   bool _isSubmitting = false;
   String? _errorMessage;
+
+  bool get _isReadOnly => widget.readOnly || widget.existingRating != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final ratingValue = widget.existingRating?['rating'] ?? widget.existingRating?['score'];
+    final commentValue = widget.existingRating?['comment'] ?? widget.existingRating?['review_comment'];
+
+    if (ratingValue is num) {
+      _selectedRating = ratingValue.toInt().clamp(1, 5);
+    } else if (ratingValue is String) {
+      final parsed = int.tryParse(ratingValue);
+      if (parsed != null) {
+        _selectedRating = parsed.clamp(1, 5);
+      }
+    }
+
+    if (commentValue != null) {
+      _commentController.text = commentValue.toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -112,20 +142,26 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.amber.shade100,
+              color: _isReadOnly ? Colors.grey.shade200 : Colors.amber.shade100,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.star_rounded, color: Colors.amber, size: 36),
+            child: Icon(
+              _isReadOnly ? Icons.star_rate_rounded : Icons.star_rounded,
+              color: _isReadOnly ? Colors.grey.shade600 : Colors.amber,
+              size: 36,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
-            'Đánh giá chất lượng cứu hộ',
+            _isReadOnly ? 'Chi tiết đánh giá cứu hộ' : 'Đánh giá chất lượng cứu hộ',
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
-            'Hãy để lại trải nghiệm của bạn $rescuerText',
+            _isReadOnly
+                ? 'Bạn đã gửi đánh giá cho ca cứu hộ này'
+                : 'Hãy để lại trải nghiệm của bạn $rescuerText',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
@@ -135,13 +171,13 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Row các ngôi sao
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(5, (index) {
                 final starValue = index + 1;
+                final isSelected = starValue <= _selectedRating;
                 return IconButton(
-                  onPressed: _isSubmitting
+                  onPressed: _isSubmitting || _isReadOnly
                       ? null
                       : () {
                           setState(() {
@@ -149,8 +185,10 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
                           });
                         },
                   icon: Icon(
-                    starValue <= _selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
-                    color: starValue <= _selectedRating ? Colors.amber : Colors.grey.shade400,
+                    isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
+                    color: isSelected
+                        ? (_isReadOnly ? Colors.grey.shade600 : Colors.amber)
+                        : Colors.grey.shade400,
                     size: 38,
                   ),
                 );
@@ -161,21 +199,21 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
               _getRatingLabel(_selectedRating),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.amber.shade800,
+                color: _isReadOnly ? Colors.grey.shade700 : Colors.amber.shade800,
                 fontSize: 15,
               ),
             ),
             const SizedBox(height: 16),
-            // Ô nhập comment
             TextField(
               controller: _commentController,
-              enabled: !_isSubmitting,
+              enabled: !_isSubmitting && !_isReadOnly,
               maxLines: 3,
+              readOnly: _isReadOnly,
               decoration: InputDecoration(
                 hintText: 'Nhận xét về thái độ, thời gian có mặt... (không bắt buộc)',
                 hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: _isReadOnly ? Colors.grey.shade100 : Colors.grey.shade100,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -197,24 +235,25 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
       actions: [
         TextButton(
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('Để sau', style: TextStyle(color: Colors.grey)),
+          child: Text(_isReadOnly ? 'Đóng' : 'Để sau', style: const TextStyle(color: Colors.grey)),
         ),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _submitRating,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.amber.shade700,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        if (!_isReadOnly)
+          ElevatedButton(
+            onPressed: _isSubmitting ? null : _submitRating,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber.shade700,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            child: _isSubmitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Text('Gửi đánh giá', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                )
-              : const Text('Gửi đánh giá', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
       ],
     );
   }

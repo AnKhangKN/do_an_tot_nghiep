@@ -1,28 +1,38 @@
 const { generateUUID } = require('@/utils/uuid.util');
 const chatRepository = require('../repository/chat.repository');
+const userService = require('../../user/services/user.service');
 const { transaction } = require('@/config/database.config');
 
 class ChatService {
     constructor() {
         this.chatRepository = chatRepository;
+        this.userService = userService;
     }
 
     getOrCreateConversation = async ({ userId, partnerId, sosRequestId }) => {
         let conversation = null;
+        let realPartnerId = partnerId;
+
+        if (realPartnerId && !this.isUuidLike(realPartnerId)) {
+            const adminUser = await this.userService.findActiveAdminUser();
+            if (adminUser) {
+                realPartnerId = adminUser.userId || adminUser.user_id;
+            }
+        }
 
         if (sosRequestId) {
             conversation = await this.chatRepository.findConversationBySosRequestId(sosRequestId);
-        } else if (userId && partnerId) {
-            conversation = await this.chatRepository.findConversationByUsers(userId, partnerId, null);
+        } else if (userId && realPartnerId && this.isUuidLike(realPartnerId)) {
+            conversation = await this.chatRepository.findConversationByUsers(userId, realPartnerId, null);
         }
 
-        if (!conversation && userId && partnerId) {
+        if (!conversation && userId && realPartnerId && this.isUuidLike(realPartnerId)) {
             const conversationId = generateUUID();
             await transaction(async (client) => {
                 await this.chatRepository.createConversation(client, {
                     conversationId,
                     user1Id: userId,
-                    user2Id: partnerId,
+                    user2Id: realPartnerId,
                     sosRequestId: sosRequestId || null,
                 });
             });
@@ -41,10 +51,39 @@ class ChatService {
     }
 
     getUserConversations = async (userId) => {
-        return await this.chatRepository.getUserConversations(userId);
+        const userInfo = await this.userService.getUserInfoById({ userId });
+        const isAdmin = userInfo?.role === 'ADMIN';
+        return await this.chatRepository.getUserConversations(userId, isAdmin);
+    }
+
+    getOrCreateAdminSupportConversation = async (userId) => {
+        console.log(`[CHAT DIAGNOSTIC] Running getOrCreateAdminSupportConversation for userId: ${userId}`);
+        const userConversations = await this.chatRepository.getUserConversations(userId);
+        const existingAdminConv = userConversations.find(c => c.partner_role === 'ADMIN');
+
+        if (existingAdminConv) {
+            console.log(`[CHAT DIAGNOSTIC] Existing admin conversation found: ${existingAdminConv.conversation_id} (partner: ${existingAdminConv.partner_id})`);
+            return await this.getOrCreateConversation({ userId, partnerId: existingAdminConv.partner_id });
+        }
+
+        const adminUser = await this.userService.findActiveAdminUser();
+
+        let adminId = adminUser ? (adminUser.userId || adminUser.user_id) : null;
+        if (!adminId) {
+            const anyUsers = await this.userService.getUsersAdmin({ page: 1, limit: 1 });
+            if (anyUsers && anyUsers.data && anyUsers.data.length > 0) {
+                adminId = anyUsers.data[0].userId || anyUsers.data[0].user_id;
+            } else {
+                adminId = '00000000-0000-0000-0000-000000000000';
+            }
+        }
+
+        console.log(`[CHAT DIAGNOSTIC] Active Admin User ID resolved: ${adminId}`);
+        return await this.getOrCreateConversation({ userId, partnerId: adminId });
     }
 
     getMessages = async ({ conversationId, userId, limit = 50, offset = 0 }) => {
+        console.log(`[CHAT DIAGNOSTIC] getMessages called with conversationId: "${conversationId}", userId: "${userId}"`);
         const targetId = this.resolveConversationOrPartnerId(conversationId);
         let resolvedConversationId = targetId;
 
@@ -57,7 +96,11 @@ class ChatService {
             if (cleanId && this.isUuidLike(cleanId)) {
                 const conv = await this.getOrCreateConversation({ userId, partnerId: cleanId });
                 resolvedConversationId = conv.conversation_id;
+            } else if (cleanId && (cleanId.includes('admin') || cleanId.includes('support'))) {
+                const conv = await this.getOrCreateAdminSupportConversation(userId);
+                resolvedConversationId = conv.conversation_id;
             } else {
+                console.error(`[CHAT DIAGNOSTIC ERROR] TargetId "${targetId}" is not a valid UUID or admin keyword.`);
                 throw new Error('Mã cuộc hội thoại không hợp lệ');
             }
         }
@@ -67,7 +110,11 @@ class ChatService {
             const cleanId = this.stripRolePrefix(targetId);
             if (cleanId) {
                 try {
-                    conversation = await this.getOrCreateConversation({ userId, partnerId: cleanId });
+                    if (cleanId.includes('admin') || cleanId.includes('support')) {
+                        conversation = await this.getOrCreateAdminSupportConversation(userId);
+                    } else {
+                        conversation = await this.getOrCreateConversation({ userId, partnerId: cleanId });
+                    }
                     if (conversation) {
                         resolvedConversationId = conversation.conversation_id;
                     }
@@ -78,7 +125,13 @@ class ChatService {
         if (!conversation) {
             throw new Error('Cuộc hội thoại không tồn tại');
         }
-        if (conversation.user1_id !== userId && conversation.user2_id !== userId) {
+
+        resolvedConversationId = conversation.conversation_id;
+
+        const userInfo = await this.userService.getUserInfoById({ userId });
+        const isUserAdmin = userInfo?.role === 'ADMIN';
+
+        if (!isUserAdmin && conversation.user1_id !== userId && conversation.user2_id !== userId) {
             throw new Error('Bạn không có quyền xem cuộc hội thoại này');
         }
 
@@ -99,19 +152,39 @@ class ChatService {
             conversation = await this.chatRepository.findConversationById(targetId);
         }
 
+        // Nếu targetId là từ khóa admin/support
+        if (!conversation && targetId && (targetId.includes('admin') || targetId.includes('support'))) {
+            conversation = await this.getOrCreateAdminSupportConversation(senderId);
+            if (conversation) {
+                targetId = conversation.conversation_id;
+            }
+        }
+
         // Nếu conversationId không hợp lệ hoặc không tồn tại, thử resolve theo partnerId.
         if (!conversation && directPartnerId) {
             const candidatePartnerId = this.stripRolePrefix(directPartnerId) || fallbackPartnerId;
             if (candidatePartnerId && this.isUuidLike(candidatePartnerId)) {
                 conversation = await this.getOrCreateConversation({ userId: senderId, partnerId: candidatePartnerId });
                 targetId = conversation.conversation_id;
+            } else if (candidatePartnerId && (candidatePartnerId.includes('admin') || candidatePartnerId.includes('support'))) {
+                conversation = await this.getOrCreateAdminSupportConversation(senderId);
+                if (conversation) {
+                    targetId = conversation.conversation_id;
+                }
             }
         }
 
         if (!conversation) {
             throw new Error('Cuộc hội thoại không tồn tại');
         }
-        if (conversation.user1_id !== senderId && conversation.user2_id !== senderId) {
+
+        // Đảm bảo mã cuộc hội thoại là UUID conversation_id chuẩn
+        targetId = conversation.conversation_id;
+
+        const userInfo = await this.userService.getUserInfoById({ userId: senderId });
+        const isUserAdmin = userInfo?.role === 'ADMIN';
+
+        if (!isUserAdmin && conversation.user1_id !== senderId && conversation.user2_id !== senderId) {
             throw new Error('Bạn không có quyền gửi tin nhắn trong cuộc hội thoại này');
         }
 

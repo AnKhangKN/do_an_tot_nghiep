@@ -110,7 +110,6 @@ class UserRepository {
     }
 
     findUserByPhone = async (client, { phone, excludeUserId }) => {
-        const db = client || pool;
         let query = `
             SELECT 
                 ${this.user.field.userId},  
@@ -126,7 +125,7 @@ class UserRepository {
         }
         query += ` LIMIT 1`;
 
-        const result = await db.query(query, params);
+        const result = await client.query(query, params);
         return result.rows[0] ? result.rows[0] : null;
     }
 
@@ -155,7 +154,6 @@ class UserRepository {
     }
 
     updateAvatar = async (client, { userId, avatarUrl }) => {
-        const db = client || pool;
         const query = `
         UPDATE ${this.user.table}
         SET ${this.user.field.avatarUrl} = $2,
@@ -164,7 +162,7 @@ class UserRepository {
         RETURNING *
         `;
 
-        const result = await db.query(query, [userId, avatarUrl]);
+        const result = await client.query(query, [userId, avatarUrl]);
         return result.rows[0];
     }
 
@@ -216,9 +214,25 @@ class UserRepository {
             WHERE ${this.user.field.email} = $2
             RETURNING *
         `;
-        const executor = client || pool;
-        const result = await executor.query(query, [isVerified, email]);
+        const result = await client.query(query, [isVerified, email]);
         return result.rows[0];
+    }
+
+    findActiveAdminUser = async () => {
+        const query = `
+            SELECT 
+                ${this.user.field.userId},
+                ${this.user.field.fullName},
+                ${this.user.field.phone},
+                ${this.user.field.avatarUrl},
+                ${this.user.field.role}
+            FROM ${this.user.table}
+            WHERE ${this.user.field.role} = 'ADMIN' AND ${this.user.field.status} = 'ACTIVE'
+            ORDER BY ${this.user.field.createdAt} ASC
+            LIMIT 1
+        `;
+        const result = await pool.query(query);
+        return result.rows[0] ? result.rows[0] : null;
     }
 }
 

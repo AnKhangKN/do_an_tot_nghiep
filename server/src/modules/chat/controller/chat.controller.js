@@ -37,6 +37,16 @@ class ChatController {
             next(error);
         }
     }
+
+    getOrCreateAdminSupportConversation = async (req, res, next) => {
+        try {
+            const userId = req.userId || req.user?.userId;
+            const conversation = await chatService.getOrCreateAdminSupportConversation(userId);
+            return res.status(200).json({ status: 'success', data: conversation });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new ChatController();

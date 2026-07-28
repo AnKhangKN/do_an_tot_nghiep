@@ -118,6 +118,11 @@ class UserService {
       totalPages: result.totalPages
     };
   }
+
+  findActiveAdminUser = async () => {
+    const row = await this.userRepository.findActiveAdminUser();
+    return row ? mapFields(row, this.userModel) : null;
+  }
 }
 
 module.exports = new UserService();
