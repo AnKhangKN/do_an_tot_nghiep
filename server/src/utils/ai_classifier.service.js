@@ -48,13 +48,13 @@ class AiClassifierService {
         const modelName = GROQ_MODEL || "llama-3.3-70b-versatile";
 
         const systemPrompt = `
-Bạn là Trợ lý AI Phân loại & Kiểm duyệt Nội dung cho Hệ thống Cứu hộ SOS Khẩn cấp tại Việt Nam.
+Bạn là Trợ lý AI Phân tích & Kiểm duyệt Nội dung cho Hệ thống Cứu hộ SOS Khẩn cấp tại Việt Nam.
 Nhiệm vụ: Phân tích đoạn văn bản từ người dùng và trả về ĐÚNG 1 JSON OBJECT không kèm markdown fence với cấu trúc:
 {
-  "category": "Y TẾ | TAI NẠN GIAO THÔNG | HỎNG XE | NGẬP LỤT/CỨU HỘ | THÔNG TIN SAI | SPAM/LỪA ĐẢO | KHÁC",
   "confidence": 0.0 - 1.0,
-  "is_flagged": true/false (true nếu là spam, lừa đảo, chửi thề, nội dung quảng cáo hoặc báo cáo giả mạo),
+  "is_flagged": true/false (true nếu là chửi tục, phân biệt chủng tộc, ngôn từ thù hận, spam, lừa đảo, nội dung nhạy cảm hoặc báo cáo giả mạo),
   "flag_reason": "Lý do cắm cờ ngắn gọn bằng tiếng Việt (hoặc null nếu an toàn)",
+  "violating_phrases": ["Trích xuất ĐÚNG từ/cụm từ/câu vi phạm không phù hợp trong đoạn văn bản (mảng rỗng [] nếu an toàn)"],
   "urgency": "HIGH | MEDIUM | LOW"
 }
         `;
@@ -89,10 +89,10 @@ Nhiệm vụ: Phân tích đoạn văn bản từ người dùng và trả về 
 
         const parsed = JSON.parse(contentStr);
         return {
-            suggestedCategory: parsed.category || "KHÁC",
             aiScore: typeof parsed.confidence === "number" ? parsed.confidence : 0.85,
             isFlagged: Boolean(parsed.is_flagged),
             flagReason: parsed.flag_reason || null,
+            violatingPhrases: Array.isArray(parsed.violating_phrases) ? parsed.violating_phrases : [],
             actionTaken: parsed.is_flagged ? "REQUIRES_ADMIN_REVIEW" : "NONE"
         };
     }

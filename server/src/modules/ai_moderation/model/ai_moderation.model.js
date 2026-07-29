@@ -8,9 +8,9 @@ const aiModerationModel = {
         aiScore: "ai_score",
         isFlagged: "is_flagged",
         flagReason: "flag_reason",
-        suggestedCategory: "suggested_category",
         actionTaken: "action_taken",
         reviewedBy: "reviewed_by",
+        violatingPhrases: "violating_phrases",
         textContent: "text_content",
         createdAt: "created_at"
     }

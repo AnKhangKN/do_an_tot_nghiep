@@ -2,6 +2,8 @@ const { pool } = require("@/config/database.config");
 const aiModerationModel = require("../model/ai_moderation.model");
 const { mapFields } = require("@utils/mapper.util");
 
+const { generateUUID } = require("@utils/uuid.util");
+
 class AiModerationRepository {
     constructor() {
         this.aiModerationModel = aiModerationModel;
@@ -12,14 +14,58 @@ class AiModerationRepository {
         try {
             await pool.query(`
                 ALTER TABLE ${this.aiModerationModel.table} 
-                ADD COLUMN IF NOT EXISTS ${this.aiModerationModel.field.textContent} TEXT;
+                ADD COLUMN IF NOT EXISTS ${this.aiModerationModel.field.textContent} TEXT,
+                ADD COLUMN IF NOT EXISTS ${this.aiModerationModel.field.violatingPhrases} TEXT;
+            `);
+
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS blacklisted_phrases (
+                    phrase_id UUID PRIMARY KEY,
+                    phrase TEXT NOT NULL UNIQUE,
+                    source VARCHAR(50) DEFAULT 'AI_EXTRACTED',
+                    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_blacklisted_phrases_phrase ON blacklisted_phrases(phrase);
             `);
         } catch (error) {
             console.error("[AiModerationRepository] Ensure table structure error:", error.message);
         }
     }
 
-    // Tạo bản ghi log phân loại AI (dùng transaction client nếu có)
+    // Lấy tất cả từ/cụm từ vi phạm nhạy cảm từ bảng blacklisted_phrases
+    async getAllBlacklistedPhrases() {
+        try {
+            const result = await pool.query("SELECT phrase FROM blacklisted_phrases ORDER BY created_at DESC;");
+            return result.rows || [];
+        } catch (error) {
+            console.error("[AiModerationRepository] getAllBlacklistedPhrases error:", error.message);
+            return [];
+        }
+    }
+
+    // Tự động lưu các cụm từ vi phạm mới được AI trích xuất vào từ điển blacklisted_phrases
+    async addBlacklistedPhrases(phrases, source = "AI_EXTRACTED") {
+        if (!Array.isArray(phrases) || phrases.length === 0) return;
+
+        for (const rawPhrase of phrases) {
+            if (!rawPhrase || typeof rawPhrase !== "string") continue;
+            const normalized = rawPhrase.trim().toLowerCase();
+            if (normalized.length < 2) continue;
+
+            try {
+                await pool.query(
+                    `INSERT INTO blacklisted_phrases (phrase_id, phrase, source)
+                     VALUES ($1, $2, $3)
+                     ON CONFLICT (phrase) DO NOTHING;`,
+                    [generateUUID(), normalized, source]
+                );
+            } catch (err) {
+                // Thấu hiểu lỗi trùng lặp on conflict
+            }
+        }
+    }
+
+    // Tạo bản ghi log phân loại AI (chỉ gọi khi isFlagged = true để tiết kiệm DB)
     async createModerationLog(client, data) {
         const query = `
             INSERT INTO ${this.aiModerationModel.table} (
@@ -29,8 +75,8 @@ class AiModerationRepository {
                 ${this.aiModerationModel.field.aiScore},
                 ${this.aiModerationModel.field.isFlagged},
                 ${this.aiModerationModel.field.flagReason},
-                ${this.aiModerationModel.field.suggestedCategory},
                 ${this.aiModerationModel.field.actionTaken},
+                ${this.aiModerationModel.field.violatingPhrases},
                 ${this.aiModerationModel.field.textContent}
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -44,8 +90,8 @@ class AiModerationRepository {
             data.aiScore || 0.0,
             data.isFlagged || false,
             data.flagReason || null,
-            data.suggestedCategory || "KHÁC",
             data.actionTaken || "NONE",
+            Array.isArray(data.violatingPhrases) ? JSON.stringify(data.violatingPhrases) : (data.violatingPhrases || null),
             data.textContent || null
         ];
 
@@ -68,6 +114,22 @@ class AiModerationRepository {
         `;
         const result = await pool.query(query, [entityType, entityId]);
         return result.rows[0] ? mapFields(result.rows[0], this.aiModerationModel) : null;
+    }
+
+    // Lấy tất cả các log vi phạm (is_flagged = true hoặc action_taken IN ('APPROVED', 'AUTO_BLOCKED'))
+    async getAllFlaggedLogs() {
+        try {
+            const query = `
+                SELECT * FROM ${this.aiModerationModel.table}
+                WHERE ${this.aiModerationModel.field.isFlagged} = true
+                   OR ${this.aiModerationModel.field.actionTaken} IN ('APPROVED', 'AUTO_BLOCKED');
+            `;
+            const result = await pool.query(query);
+            return result.rows.map(row => mapFields(row, this.aiModerationModel));
+        } catch (error) {
+            console.error("[AiModerationRepository] getAllFlaggedLogs error:", error.message);
+            return [];
+        }
     }
 
     // Tìm log kiểm duyệt gần nhất có cùng loại thực thể và cùng nội dung văn bản

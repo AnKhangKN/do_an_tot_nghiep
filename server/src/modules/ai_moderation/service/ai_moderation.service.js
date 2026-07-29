@@ -4,24 +4,59 @@ const aiClassifierService = require("@utils/ai_classifier.service");
 
 class AiModerationService {
     /**
-     * Kiểm tra nhanh xem đoạn văn bản này đã từng bị Cắm cờ / Duyệt vi phạm chưa
-     * Dùng để CHẶN NGAY TỪ ĐẦU (Early Block) khi tạo SOS hoặc Phản hồi, tránh làm phiền AI & tốn Token
+     * Kiểm tra nhanh từ khóa/cụm từ nhạy cảm từ từ điển nội bộ (Blacklist) & Log lịch sử
+     * Dùng để CHẶN NGAY TỪ ĐẦU (Early Block) khi tạo SOS hoặc Phản hồi, tiết kiệm 100% Token AI
      */
     async checkKnownSpamText(textContent) {
         if (!textContent || !textContent.trim()) return { isBlocked: false };
 
-        const existing = await aiModerationRepository.findLogByTextContent(textContent);
-        if (existing) {
-            // Nếu Admin đã xác nhận Bác bỏ cờ (DISMISSED) -> Minh oan cho nội dung này -> KHÔNG CHẶN
-            if (existing.actionTaken === "DISMISSED") {
-                return { isBlocked: false };
-            }
+        const lowerText = textContent.toLowerCase().trim();
 
-            // Nếu từng bị cắm cờ và CHƯA được Admin gỡ cờ (hoặc đã duyệt vi phạm APPROVED / AUTO_BLOCKED)
-            if (existing.isFlagged || existing.actionTaken === "APPROVED" || existing.actionTaken === "AUTO_BLOCKED") {
+        // 1. Quét nhanh từ điển từ khóa/cụm từ vi phạm nhạy cảm nội bộ (0 Token AI)
+        const blacklisted = await aiModerationRepository.getAllBlacklistedPhrases();
+        for (const item of blacklisted) {
+            if (item.phrase && lowerText.includes(item.phrase.toLowerCase().trim())) {
                 return {
                     isBlocked: true,
-                    reason: existing.flagReason || "Nội dung văn bản này đã bị cắm cờ vi phạm tiêu chuẩn cộng đồng trước đó."
+                    reason: `Phát hiện cụm từ vi phạm tiêu chuẩn cộng đồng ("${item.phrase}")`
+                };
+            }
+        }
+
+        // 2. Tra cứu danh sách các log vi phạm (is_flagged = true HOẶC action_taken IN ('APPROVED', 'AUTO_BLOCKED'))
+        const flaggedLogs = await aiModerationRepository.getAllFlaggedLogs();
+        for (const log of flaggedLogs) {
+            if (log.actionTaken === "DISMISSED") continue;
+
+            // Quét danh sách cụm từ vi phạm đã trích xuất
+            let phrases = [];
+            if (log.violatingPhrases) {
+                if (Array.isArray(log.violatingPhrases)) {
+                    phrases = log.violatingPhrases;
+                } else {
+                    try {
+                        phrases = JSON.parse(log.violatingPhrases);
+                    } catch (e) {
+                        phrases = [log.violatingPhrases];
+                    }
+                }
+            }
+            if (!Array.isArray(phrases)) phrases = [];
+
+            for (const p of phrases) {
+                if (p && typeof p === "string" && lowerText.includes(p.toLowerCase().trim())) {
+                    return {
+                        isBlocked: true,
+                        reason: log.flagReason || `Chứa từ ngữ vi phạm tiêu chuẩn cộng đồng ("${p}")`
+                    };
+                }
+            }
+
+            // Quét trùng văn bản gốc
+            if (log.textContent && lowerText.includes(log.textContent.toLowerCase().trim())) {
+                return {
+                    isBlocked: true,
+                    reason: log.flagReason || "Nội dung văn bản này đã bị đánh dấu vi phạm tiêu chuẩn cộng đồng trước đó."
                 };
             }
         }
@@ -31,41 +66,49 @@ class AiModerationService {
 
     /**
      * Tiến trình Phân loại & Kiểm duyệt AI chạy bất đồng bộ (Non-blocking)
-     * Thường được gọi sau khi tạo SOS Request, Báo cáo tiện ích, v.v.
+     * TỐI ƯU TOKEN & DB:
+     * - Quét từ điển Blacklisted trước (0 Token AI)
+     * - Chỉ gửi Groq AI khi chưa có trong từ điển
+     * - Chỉ LƯU CSDL khi nội dung VI PHẠM (isFlagged = true) để tiết kiệm 99% DB
+     * - Tự động trích xuất & nạp từ vi phạm mới vào từ điển nhạy cảm nội bộ
      */
     async processModerationAsync(entityType, entityId, textContent) {
         setImmediate(async () => {
             try {
-                // 1. Kiểm tra xem đã có log phân loại cho entityId này chưa
+                if (!textContent || !textContent.trim()) return;
+
+                // 1. Kiểm tra xem đã có log cho entityId này chưa
                 const existing = await aiModerationRepository.findLogByEntity(entityType, entityId);
                 if (existing) return;
 
+                const lowerText = textContent.toLowerCase();
+
+                // 2. Quét nhanh từ điển nhạy cảm local trước (0 Token AI)
+                const blacklisted = await aiModerationRepository.getAllBlacklistedPhrases();
+                const matchedPhrase = blacklisted.find(item => item.phrase && lowerText.includes(item.phrase.toLowerCase()));
+
                 let classification = null;
 
-                // 2. TỐI ƯU TOKEN & BỎ QUA GỬI AI NẾU ĐÃ AN TOÀN:
-                // Tra cứu lịch sử kiểm duyệt của loại thực thể trùng nội dung
-                const previousLog = await aiModerationRepository.findLogByTextContent(textContent, entityType);
-
-                if (previousLog) {
-                    // Nếu nội dung trùng lặp này đã từng được xác nhận AN TOÀN (!isFlagged hoặc actionTaken === 'DISMISSED')
-                    if (!previousLog.isFlagged || previousLog.actionTaken === "DISMISSED") {
-                        console.log(`[AI Moderation Safe Pass] ${entityType} ${entityId} có nội dung trùng lặp đã xác nhận AN TOÀN. Cho qua hoàn toàn, không gọi AI API và không lưu log trùng lặp vào bảng Admin!`);
-                        return; // Cho qua ngay, không lưu log rác trùng lặp vào bảng Kiểm duyệt Admin
-                    }
-
-                    // Nếu là nội dung cũ trùng lặp nhưng từng có cờ
+                if (matchedPhrase) {
                     classification = {
-                        aiScore: previousLog.aiScore,
-                        isFlagged: previousLog.isFlagged,
-                        flagReason: previousLog.flagReason,
-                        suggestedCategory: previousLog.suggestedCategory,
-                        actionTaken: previousLog.actionTaken
+                        aiScore: 0.99,
+                        isFlagged: true,
+                        flagReason: `Chứa từ/cụm từ vi phạm nhạy cảm: "${matchedPhrase.phrase}"`,
+                        violatingPhrases: [matchedPhrase.phrase],
+                        actionTaken: "REQUIRES_ADMIN_REVIEW"
                     };
                 } else {
-                    // Nếu là nội dung mới hoàn toàn -> Mới gửi lên AI (Groq API / NLP Fallback)
+                    // 3. Nếu chưa trùng từ điển local -> Mới gửi lên AI phân tích (Groq API)
                     classification = await aiClassifierService.classify(textContent, entityType);
                 }
 
+                // 4. TỐI ƯU CSDL: Nếu AI xác nhận AN TOÀN (!isFlagged) -> KHÔNG LƯU DB LOG!
+                if (!classification || !classification.isFlagged) {
+                    console.log(`[AI Moderation Clean Pass] ${entityType} ${entityId} có nội dung an toàn. Cho qua hoàn toàn và KHÔNG lưu log rác vào DB!`);
+                    return;
+                }
+
+                // 5. Nếu VI PHẠM (isFlagged = true) -> Mới lưu log vào DB cho Admin kiểm duyệt
                 const logData = {
                     logId: generateUUID(),
                     entityType,
@@ -74,15 +117,25 @@ class AiModerationService {
                     aiScore: classification.aiScore,
                     isFlagged: classification.isFlagged,
                     flagReason: classification.flagReason,
-                    suggestedCategory: classification.suggestedCategory,
+                    violatingPhrases: classification.violatingPhrases || [],
                     actionTaken: classification.actionTaken
                 };
 
                 const savedLog = await aiModerationRepository.createModerationLog(null, logData);
 
-                if (savedLog.isFlagged) {
-                    console.warn(`[AI Moderation Alert] ${entityType} ${entityId} flagged for review: ${savedLog.flagReason}`);
+                // 6. TỰ ĐỘNG HỌC: Bổ sung các cụm từ vi phạm mới hoặc văn bản gốc vào Từ điển Local
+                let phrasesToBlacklist = [];
+                if (Array.isArray(classification.violatingPhrases) && classification.violatingPhrases.length > 0) {
+                    phrasesToBlacklist = classification.violatingPhrases;
+                } else if (textContent && textContent.trim()) {
+                    phrasesToBlacklist = [textContent.trim()];
                 }
+
+                if (phrasesToBlacklist.length > 0) {
+                    await aiModerationRepository.addBlacklistedPhrases(phrasesToBlacklist, "AI_EXTRACTED");
+                }
+
+                console.warn(`[AI Moderation Alert] ${entityType} ${entityId} flagged: ${savedLog.flagReason}`);
             } catch (error) {
                 console.error("[AI Moderation Error] Failed async moderation processing:", error.message);
             }
@@ -119,9 +172,34 @@ class AiModerationService {
             throw new Error("Không tìm thấy bản ghi kiểm duyệt AI để cập nhật.");
         }
 
-        // Nếu Admin xác nhận vi phạm (APPROVED), kích hoạt xử lý tự động trên thực thể gốc
-        if (actionTaken === "APPROVED") {
+        // Nếu Admin xác nhận vi phạm (APPROVED / AUTO_BLOCKED):
+        // 1. Tự động nạp cụm từ vi phạm / nội dung vào bảng từ điển blacklisted_phrases
+        // 2. Kích hoạt xử lý tự động trên thực thể gốc
+        if (actionTaken === "APPROVED" || actionTaken === "AUTO_BLOCKED") {
             try {
+                let phrasesToBlacklist = [];
+                if (updated.violatingPhrases) {
+                    if (Array.isArray(updated.violatingPhrases)) {
+                        phrasesToBlacklist = updated.violatingPhrases;
+                    } else {
+                        try {
+                            phrasesToBlacklist = JSON.parse(updated.violatingPhrases);
+                        } catch (e) {
+                            phrasesToBlacklist = [updated.violatingPhrases];
+                        }
+                    }
+                }
+
+                if (!phrasesToBlacklist || phrasesToBlacklist.length === 0) {
+                    if (updated.textContent && updated.textContent.trim()) {
+                        phrasesToBlacklist = [updated.textContent.trim()];
+                    }
+                }
+
+                if (phrasesToBlacklist && phrasesToBlacklist.length > 0) {
+                    await aiModerationRepository.addBlacklistedPhrases(phrasesToBlacklist, "ADMIN_APPROVED");
+                }
+
                 await this.handleAutomaticActionOnEntity(updated);
             } catch (autoErr) {
                 console.error("[AI Moderation Auto-Action Error] Lỗi xử lý tự động thực thể gốc:", autoErr.message);

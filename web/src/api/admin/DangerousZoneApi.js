@@ -41,3 +41,25 @@ export const autoDetectDangerousZones = async () => {
         throw error;
     }
 };
+
+export const getDangerousZoneFeedbacks = async (page = 1, limit = 20) => {
+    try {
+        const response = await axiosJWT.get(`/api/dangerous_points/admin/feedbacks`, {
+            params: { page, limit }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Get dangerous zone feedbacks error:", error);
+        throw error;
+    }
+};
+
+export const getPointFeedbacks = async (dangerousPointId) => {
+    try {
+        const response = await axiosJWT.get(`/api/dangerous_points/${dangerousPointId}/feedbacks`);
+        return response.data;
+    } catch (error) {
+        console.error("Get point feedbacks error:", error);
+        throw error;
+    }
+};

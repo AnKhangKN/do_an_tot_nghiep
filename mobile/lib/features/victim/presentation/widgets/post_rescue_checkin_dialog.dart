@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
@@ -68,11 +69,22 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
       }
     } catch (e) {
       debugPrint('Lỗi gửi post-rescue checkin: $e');
+      String errorMsg = 'Đánh giá bị từ chối do có lỗi xảy ra.';
+      if (e is DioException && e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMsg = data['message'].toString();
+        }
+      } else {
+        errorMsg = e.toString();
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Không thể gửi xác nhận: ${e.toString()}'),
+            content: Text(errorMsg),
             backgroundColor: ColorConstants.danger,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

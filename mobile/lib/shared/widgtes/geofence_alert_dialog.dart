@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/dangerous_points/models/dangerous_point_model.dart';
+import '../../features/dangerous_points/presentation/widgets/hazard_feedback_dialog.dart';
 
 class GeofenceAlertDialog extends StatelessWidget {
   final DangerousPointModel point;
@@ -201,21 +202,44 @@ class GeofenceAlertDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onDismiss,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: dangerColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(vertical: 12),
+        Column(
+          children: [
+            OutlinedButton.icon(
+              onPressed: () {
+                onDismiss();
+                HazardFeedbackDialog.show(
+                  context,
+                  dangerousPointId: point.dangerousPointId,
+                  zoneName: point.zoneName,
+                );
+              },
+              icon: const Icon(Icons.rate_review_rounded, size: 16),
+              label: const Text('Xác minh & Phản hồi thực tế'),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: dangerColor),
+                foregroundColor: dangerColor,
+                minimumSize: const Size.fromHeight(40),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
-            child: const Text(
-              'Tôi đã hiểu & Chú ý quan sát',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onDismiss,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: dangerColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: const Text(
+                  'Tôi đã hiểu & Chú ý quan sát',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );

@@ -5,6 +5,7 @@ import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
 import 'package:mobile/features/chat/presentation/screens/messenger_screen.dart';
 import 'package:mobile/shared/widgtes/messenger_widget.dart';
 import 'package:mobile/shared/widgtes/phone_call_widget.dart';
+import 'package:mobile/shared/widgtes/rescue_completion_dialog_widget.dart';
 
 class RescuerRescueInfoWidget extends StatelessWidget {
   final Map<String, dynamic>? activeVictim;
@@ -268,7 +269,15 @@ class RescuerRescueInfoWidget extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            onPressed: onComplete,
+            onPressed: () async {
+              final confirm = await RescueCompletionDialogWidget.show(
+                context,
+                victimName: victimName != 'Không rõ' ? victimName : null,
+              );
+              if (confirm == true) {
+                onComplete();
+              }
+            },
             child: const Text(
               "Hoàn thành cứu hộ",
               style: TextStyle(

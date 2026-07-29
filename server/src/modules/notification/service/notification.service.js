@@ -21,9 +21,17 @@ class NotificationService {
 
     sendPushNotification = async (userId, { title, body, data }) => {
         try {
+            // 1. Tự động lưu vết thông báo vào CSDL PostgreSQL để người dùng xem lại trong tab Thông báo
+            await this.saveNotification({
+                userId,
+                title,
+                content: body || title,
+                type: data?.type || 'SOS_ALERT'
+            }).catch(err => console.error(`[NOTIFICATION DB Error] Lỗi lưu DB cho user ${userId}:`, err.message));
+
             const tokens = await deviceTokenService.getTokensByUser({ userId });
             if (!tokens || tokens.length === 0) {
-                console.log(`[FCM] Không tìm thấy device token cho user ${userId}`);
+                console.log(`[FCM] Không tìm thấy device token cho user ${userId} (đã lưu lịch sử vào CSDL)`);
                 return;
             }
 

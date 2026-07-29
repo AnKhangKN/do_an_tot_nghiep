@@ -189,6 +189,110 @@ class DangerousPointRepository {
 
         return result.rows[0];
     }
+
+    /// Tạo bản ghi phản hồi xác minh cho điểm nguy hiểm
+    async createFeedback(client, { feedbackId, dangerousPointId, userId, feedbackType, comment }) {
+        const query = `
+            INSERT INTO dangerous_point_feedbacks (
+                feedback_id, dangerous_point_id, user_id, feedback_type, comment
+            )
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *;
+        `;
+        const executor = client || pool;
+        const { rows } = await executor.query(query, [
+            feedbackId,
+            dangerousPointId,
+            userId,
+            feedbackType,
+            comment || null
+        ]);
+        return rows[0];
+    }
+
+    /// Lấy thống kê số lượt xác minh theo từng loại cho điểm nguy hiểm
+    async getFeedbackStatsByPointId(dangerousPointId) {
+        const query = `
+            SELECT 
+                COUNT(*) FILTER (WHERE feedback_type = 'VERIFY_REAL') AS verify_count,
+                COUNT(*) FILTER (WHERE feedback_type = 'REPORT_FAKE') AS fake_count,
+                COUNT(*) FILTER (WHERE feedback_type = 'MARKED_RESOLVED') AS resolved_count,
+                COUNT(*) FILTER (WHERE feedback_type = 'STILL_DANGEROUS') AS still_dangerous_count,
+                COUNT(*) AS total_count
+            FROM dangerous_point_feedbacks
+            WHERE dangerous_point_id = $1;
+        `;
+        const { rows } = await pool.query(query, [dangerousPointId]);
+        const r = rows[0] || {};
+        return {
+            verifyCount: parseInt(r.verify_count || 0, 10),
+            fakeCount: parseInt(r.fake_count || 0, 10),
+            resolvedCount: parseInt(r.resolved_count || 0, 10),
+            stillDangerousCount: parseInt(r.still_dangerous_count || 0, 10),
+            totalCount: parseInt(r.total_count || 0, 10)
+        };
+    }
+
+    /// Lấy danh sách phản hồi chi tiết của một điểm nguy hiểm
+    async getFeedbacksByPointId(dangerousPointId, { page = 1, limit = 10 } = {}) {
+        const offset = (page - 1) * limit;
+        const query = `
+            SELECT f.*, u.full_name AS user_name, u.role AS user_role, u.avatar_url
+            FROM dangerous_point_feedbacks f
+            LEFT JOIN users u ON f.user_id = u.user_id
+            WHERE f.dangerous_point_id = $1
+            ORDER BY f.created_at DESC
+            LIMIT $2 OFFSET $3;
+        `;
+        const { rows } = await pool.query(query, [dangerousPointId, limit, offset]);
+        return rows.map(r => ({
+            feedbackId: r.feedback_id,
+            dangerousPointId: r.dangerous_point_id,
+            userId: r.user_id,
+            userName: r.user_name || 'Người dùng',
+            userRole: r.user_role || 'VICTIM',
+            avatarUrl: r.avatar_url || null,
+            feedbackType: r.feedback_type,
+            comment: r.comment,
+            createdAt: r.created_at
+        }));
+    }
+
+    /// Lấy danh sách phản hồi điểm nguy hiểm cho Admin
+    async getFeedbacksAdmin({ page = 1, limit = 20 } = {}) {
+        const offset = (page - 1) * limit;
+        const query = `
+            SELECT f.*, dp.zone_name, dp.address, u.full_name AS user_name, u.role AS user_role
+            FROM dangerous_point_feedbacks f
+            JOIN dangerous_points dp ON f.dangerous_point_id = dp.dangerous_point_id
+            LEFT JOIN users u ON f.user_id = u.user_id
+            ORDER BY f.created_at DESC
+            LIMIT $1 OFFSET $2;
+        `;
+        const countQuery = `SELECT COUNT(*) FROM dangerous_point_feedbacks;`;
+        const [dataRes, countRes] = await Promise.all([
+            pool.query(query, [limit, offset]),
+            pool.query(countQuery)
+        ]);
+        const total = parseInt(countRes.rows[0].count, 10);
+        return {
+            data: dataRes.rows.map(r => ({
+                feedbackId: r.feedback_id,
+                dangerousPointId: r.dangerous_point_id,
+                zoneName: r.zone_name,
+                address: r.address,
+                userId: r.user_id,
+                userName: r.user_name || 'Người dùng',
+                userRole: r.user_role || 'VICTIM',
+                feedbackType: r.feedback_type,
+                comment: r.comment,
+                createdAt: r.created_at
+            })),
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        };
+    }
 }
 
 module.exports = new DangerousPointRepository()

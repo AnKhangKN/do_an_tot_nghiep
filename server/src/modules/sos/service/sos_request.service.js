@@ -766,6 +766,17 @@ class SosRequestService {
             throw new Error("Không tìm thấy ca SOS yêu cầu.");
         }
 
+        const userNotes = (checkinNotes && checkinNotes.trim()) || (comment && comment.trim());
+
+        // KIỂM TRA TỪ VI PHẠM TỪ ĐẦU: Nếu có ghi chú/nhận xét, kiểm tra ngay với AI Moderation / Blacklist
+        if (userNotes) {
+            const aiModerationService = require("@modules/ai_moderation/service/ai_moderation.service");
+            const spamCheck = await aiModerationService.checkKnownSpamText(userNotes);
+            if (spamCheck.isBlocked) {
+                throw new Error(`Đánh giá bị từ chối: ${spamCheck.reason || "Nội dung nhận xét chứa từ ngữ vi phạm tiêu chuẩn cộng đồng."}`);
+            }
+        }
+
         const healthStatusTextMap = {
             SAFE: "Đã an toàn",
             NEEDS_MEDICAL_CHECK: "Cần kiểm tra y tế",
@@ -776,7 +787,6 @@ class SosRequestService {
 
         // Tự động ghép tình trạng sức khỏe vào comment/notes để lưu đầy đủ thông tin vào CSDL
         let formattedComment = `[Tình trạng sức khỏe: ${healthLabel}]`;
-        const userNotes = (checkinNotes && checkinNotes.trim()) || (comment && comment.trim());
         if (userNotes) {
             formattedComment += ` - ${userNotes}`;
         }
@@ -789,17 +799,14 @@ class SosRequestService {
 
         let ratingResult = null;
         if (rating && rating > 0) {
-            try {
-                const ratingService = require("@modules/rating/service/rating.service");
-                ratingResult = await ratingService.submitRating({
-                    sosRequestId,
-                    victimId: userId,
-                    rating,
-                    comment: formattedComment
-                });
-            } catch (err) {
-                console.warn("[SERVICE] Lỗi gửi rating trong post-rescue-checkin:", err.message);
-            }
+            const ratingService = require("@modules/rating/service/rating.service");
+            // Không nuốt lỗi để ném lỗi vi phạm tiêu chuẩn cộng đồng trực tiếp về Mobile App
+            ratingResult = await ratingService.submitRating({
+                sosRequestId,
+                victimId: userId,
+                rating,
+                comment: formattedComment
+            });
         }
 
         return {
