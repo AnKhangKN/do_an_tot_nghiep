@@ -46,9 +46,24 @@ class GeofenceProvider with ChangeNotifier {
     }
   }
 
-  /// Kiểm tra bán kính 500m với vị trí hiện tại của Nạn nhân (Chỉ bật 1 lần khi mở app)
+  // Thời điểm phát cảnh báo gần nhất để xử lý Cooldown tránh spam
+  DateTime? _lastAlertTime;
+  DateTime? get lastAlertTime => _lastAlertTime;
+
+  // Thời gian Cooldown giữa các lần cảnh báo (mặc định 10 phút)
+  static const Duration alertCooldownDuration = Duration(minutes: 10);
+
+  /// Kiểm tra vị trí hiện tại với danh sách vùng nguy hiểm (Bán kính động & Cooldown 10 phút)
   void checkGeofence(double userLat, double userLng) {
-    if (_approvedPoints.isEmpty || _hasShownSessionAlert) return;
+    if (_approvedPoints.isEmpty) return;
+
+    // Kiểm tra Cooldown: Nếu vừa cảnh báo trong vòng 10 phút -> Bỏ qua tránh spam
+    if (_lastAlertTime != null) {
+      final elapsed = DateTime.now().difference(_lastAlertTime!);
+      if (elapsed < alertCooldownDuration) {
+        return;
+      }
+    }
 
     for (final point in _approvedPoints) {
       final distanceInMeters = Geolocator.distanceBetween(
@@ -58,16 +73,28 @@ class GeofenceProvider with ChangeNotifier {
         point.longitude,
       );
 
-      // Nếu trong bán kính 500m
-      if (distanceInMeters <= 500.0) {
-        _hasShownSessionAlert = true; // Khóa lại, không bao giờ bật lại dialog trong phiên làm việc này
+      // Bán kính cảnh báo linh hoạt theo cấp độ nguy hiểm
+      double triggerRadiusMeters = 500.0;
+      final level = point.dangerLevel.toUpperCase();
+      if (level == 'HIGH') {
+        triggerRadiusMeters = 500.0;
+      } else if (level == 'MEDIUM') {
+        triggerRadiusMeters = 350.0;
+      } else if (level == 'LOW') {
+        triggerRadiusMeters = 200.0;
+      }
+
+      // Nếu đi vào trong bán kính cảnh báo của điểm nguy hiểm
+      if (distanceInMeters <= triggerRadiusMeters) {
+        _lastAlertTime = DateTime.now(); // Ghi nhận thời điểm phát cảnh báo (bắt đầu cooldown 10 phút)
+        _hasShownSessionAlert = true;
         _activeAlertPoint = point;
         _activeAlertDistanceMeters = distanceInMeters;
         debugPrint(
-          '🚨 [GEOFENCE ALERT] Phát hiện điểm nguy hiểm lần đầu khi mở app: ${point.zoneName} (${distanceInMeters.toStringAsFixed(0)}m)',
+          '🚨 [GEOFENCE ALERT] Phát hiện điểm nguy hiểm ${point.zoneName} (${distanceInMeters.toStringAsFixed(0)}m / bán kính ${triggerRadiusMeters.toStringAsFixed(0)}m)',
         );
         notifyListeners();
-        break; // Chỉ hiển thị 1 cảnh báo duy nhất
+        break; // Chỉ bật cảnh báo cho điểm gần nhất
       }
     }
   }
@@ -79,9 +106,10 @@ class GeofenceProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Reset lại cờ nếu ứng dụng cần khoá/mở lại phiên (Optional)
+  /// Reset lại cờ phiên nếu cần
   void resetSessionAlert() {
     _hasShownSessionAlert = false;
+    _lastAlertTime = null;
     _activeAlertPoint = null;
     _activeAlertDistanceMeters = null;
     notifyListeners();

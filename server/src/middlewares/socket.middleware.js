@@ -31,7 +31,7 @@ const socketAuth = async (socket, next) => {
         next();
     } catch (error) {
         if (error.name === "TokenExpiredError") {
-            console.warn("⚠️ [SOCKET AUTH] JWT Token đã hết hạn (jwt expired)");
+            console.warn("⚠️ [SOCKET AUTH] Access Token đã hết hạn (jwt expired), gửi tín hiệu yêu cầu Client refresh token mới.");
             return next(new Error("jwt expired"));
         }
 

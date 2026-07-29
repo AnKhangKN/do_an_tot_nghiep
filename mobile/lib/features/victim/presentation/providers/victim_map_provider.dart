@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -44,6 +45,24 @@ class VictimMapProvider extends ChangeNotifier {
   String? _activeSosRequestId;
   String? get activeSosRequestId => _activeSosRequestId;
 
+  Timer? _searchTimeoutTimer;
+
+  void _startSearchTimeoutTimer() {
+    _searchTimeoutTimer?.cancel();
+    _searchTimeoutTimer = Timer(const Duration(seconds: 45), () {
+      final session = getIt<SessionController>();
+      if (session.isSearchingRescuer && !session.isBeingRescued) {
+        debugPrint("🔴 [PROVIDER] Hết 45s không có người cứu hộ nhận ➔ Tự động dừng tìm kiếm.");
+        session.setSearchingRescuer(false);
+      }
+    });
+  }
+
+  void _cancelSearchTimeoutTimer() {
+    _searchTimeoutTimer?.cancel();
+    _searchTimeoutTimer = null;
+  }
+
   Future<bool> sendSos(
     String phone,
     String incidentTypeId,
@@ -66,7 +85,6 @@ class VictimMapProvider extends ChangeNotifier {
         imagePath: imagePath,
       );
 
-
       debugPrint(request.toJson().toString());
 
       final resData = await victimRepository.sendSos(request);
@@ -75,8 +93,9 @@ class VictimMapProvider extends ChangeNotifier {
         debugPrint("🟢 [PROVIDER] Lưu activeSosRequestId: $_activeSosRequestId");
       }
 
-      // Cập nhật trạng thái đang tìm cứu hộ viên vào SessionController (state tập trung)
+      // Cập nhật trạng thái đang tìm cứu hộ viên vào SessionController và bật Timer đếm ngược 45s
       getIt<SessionController>().setSearchingRescuer(true);
+      _startSearchTimeoutTimer();
 
       return true;
     } catch (err) {
@@ -102,6 +121,7 @@ class VictimMapProvider extends ChangeNotifier {
     _loading = true;
     notifyListeners();
 
+    _cancelSearchTimeoutTimer();
     final targetSosId = sosRequestId ?? _activeSosRequestId;
 
     try {

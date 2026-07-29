@@ -266,6 +266,25 @@ const SearchBox = ({ setLocation }) => {
   );
 };
 
+// ================= AUTO FIT HEATMAP BOUNDS =================
+const AutoFitHeatmap = ({ points }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map || !points || points.length === 0) return;
+    const validPoints = points
+      .filter((p) => p.lat && p.lng && !isNaN(p.lat) && !isNaN(p.lng))
+      .map((p) => [p.lat, p.lng]);
+
+    if (validPoints.length > 0) {
+      const bounds = L.latLngBounds(validPoints);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    }
+  }, [map, points]);
+
+  return null;
+};
+
 // ================= FLY =================
 const FlyToLocation = ({ location }) => {
   const map = useMap();
@@ -306,6 +325,10 @@ const MapPage = () => {
     fetchHeatmapData();
   }, []);
 
+  const activeHotspotCount = heatmapPoints.filter((p) =>
+    ["PENDING", "SEARCHING", "ASSIGNED", "IN_PROGRESS"].includes(p.status)
+  ).length;
+
   return (
     <div className="w-full h-146 relative">
       <SearchBox setLocation={setLocation} />
@@ -314,6 +337,7 @@ const MapPage = () => {
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
         <FlyToLocation location={location} />
+        <AutoFitHeatmap points={heatmapPoints} />
 
         <LayersControl position="topright">
           <LayersControl.Overlay checked name="🔥 Điểm nóng tai nạn (Heatmap)">
@@ -341,6 +365,20 @@ const MapPage = () => {
           </LayersControl.Overlay>
         </LayersControl>
       </MapContainer>
+
+      {/* Thẻ thống kê điểm nóng trực quan */}
+      <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm rounded-2xl p-3 flex items-center gap-4 text-xs font-medium text-gray-700">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+          <span>
+            Tổng số điểm SOS: <b className="text-gray-900">{heatmapPoints.length}</b>
+          </span>
+        </div>
+        <div className="h-4 w-px bg-gray-200" />
+        <div>
+          Đang xử lý: <b className="text-amber-600">{activeHotspotCount}</b>
+        </div>
+      </div>
     </div>
   );
 };

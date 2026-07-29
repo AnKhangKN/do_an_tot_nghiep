@@ -1,6 +1,6 @@
 import HeaderComponent from "@/components/admin/HeaderComponent/HeaderComponent";
 import SidebarComponent from "@/components/admin/SidebarComponent/SidebarComponent";
-import AdminEmergencyChatWidget from "@/components/admin/ChatWidget/AdminEmergencyChatWidget";
+import AdminEmergencyChatComponent from "@/components/admin/ChatComponent/AdminEmergencyChatComponent";
 import React from "react";
 
 const AdminLayout = ({ children }) => {
@@ -17,7 +17,7 @@ const AdminLayout = ({ children }) => {
       </div>
 
       {/* Bong bóng chat Hỗ trợ Khẩn cấp dành cho Admin */}
-      <AdminEmergencyChatWidget />
+      <AdminEmergencyChatComponent />
     </div>
   );
 };

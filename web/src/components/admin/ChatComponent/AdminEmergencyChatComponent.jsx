@@ -9,11 +9,12 @@ import {
   PiShieldWarningBold,
   PiChatCircleDotsBold,
   PiDotsThreeVerticalBold,
+  PiWarningFill,
 } from "react-icons/pi";
 import { getConversationsAdmin, getMessagesAdmin } from "@/api/admin/ChatApi";
-import { subscribeChatEvents, sendChatMessage } from "@/socket";
+import { subscribeChatEvents, subscribeChatErrors, sendChatMessage } from "@/socket";
 
-const AdminEmergencyChatWidget = () => {
+const AdminEmergencyChatComponent = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -23,6 +24,7 @@ const AdminEmergencyChatWidget = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasUnreadDot, setHasUnreadDot] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorModalReason, setErrorModalReason] = useState(null);
 
   const messagesEndRef = useRef(null);
 
@@ -109,6 +111,29 @@ const AdminEmergencyChatWidget = () => {
     };
   }, [selectedConversation]);
 
+  // Lắng nghe lỗi gửi tin nhắn qua Socket (ví dụ từ AI Moderation)
+  useEffect(() => {
+    const unsubError = subscribeChatErrors((payload) => {
+      const { message: errorMsg, content, tempId } = payload || {};
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.message_id === tempId || (msg.is_me && msg.content === content && !msg.is_failed)) {
+            return {
+              ...msg,
+              is_failed: true,
+              error_message: errorMsg || "Nội dung tin nhắn không hợp lệ hoặc bị hệ thống từ chối.",
+            };
+          }
+          return msg;
+        })
+      );
+    });
+
+    return () => {
+      if (typeof unsubError === "function") unsubError();
+    };
+  }, []);
+
   // Cuộn xuống tin nhắn mới nhất
   useEffect(() => {
     if (selectedConversation && messagesEndRef.current) {
@@ -147,12 +172,24 @@ const AdminEmergencyChatWidget = () => {
 
     const conversationId = selectedConversation.conversation_id;
     const partnerId = selectedConversation.partner_id;
+    const tempId = "temp_" + Date.now();
 
-    // Gửi qua Socket. Server sẽ ghi dữ liệu vào CSDL PostgreSQL và broadcast lại bản ghi thực tế từ CSDL
+    const tempMsg = {
+      message_id: tempId,
+      conversation_id: conversationId,
+      content,
+      sender_id: "me",
+      is_me: true,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, tempMsg]);
+
     sendChatMessage({
       conversationId,
       partnerId,
       content,
+      tempId,
     });
   };
 
@@ -317,21 +354,48 @@ const AdminEmergencyChatWidget = () => {
                 ) : (
                   messages.map((msg, idx) => {
                     const isMe = msg.is_me || msg.sender_id === "me" || (selectedConversation && msg.sender_id !== selectedConversation.partner_id);
+                    const isFailed = msg.is_failed;
+
                     return (
                       <div
                         key={msg.message_id || idx}
                         className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
                       >
-                        <div
-                          className={`max-w-[82%] px-4 py-2.5 rounded-2xl text-xs shadow-sm leading-relaxed ${
-                            isMe
-                              ? "bg-slate-900 text-white rounded-tr-none"
-                              : "bg-white text-gray-800 border border-gray-100 rounded-tl-none"
-                          }`}
-                        >
-                          {msg.content}
+                        <div className="flex items-center gap-1.5 max-w-[85%]">
+                          {isMe && isFailed && (
+                            <button
+                              type="button"
+                              onClick={() => setErrorModalReason(msg.error_message || "Nội dung tin nhắn bị từ chối do vi phạm tiêu chuẩn cộng đồng.")}
+                              className="p-1 rounded-full bg-red-100 hover:bg-red-200 transition-colors text-red-600 flex-shrink-0 cursor-pointer"
+                              title="Nhấn để xem lý do từ chối"
+                            >
+                              <PiWarningFill className="text-base" />
+                            </button>
+                          )}
+                          <div
+                            className={`px-4 py-2.5 rounded-2xl text-xs shadow-sm leading-relaxed ${
+                              isFailed
+                                ? "bg-red-50 text-red-900 border border-red-200 line-through"
+                                : isMe
+                                ? "bg-slate-900 text-white rounded-tr-none"
+                                : "bg-white text-gray-800 border border-gray-100 rounded-tl-none"
+                            }`}
+                          >
+                            {msg.content}
+                          </div>
+                          {!isMe && isFailed && (
+                            <button
+                              type="button"
+                              onClick={() => setErrorModalReason(msg.error_message || "Nội dung tin nhắn bị từ chối do vi phạm tiêu chuẩn cộng đồng.")}
+                              className="p-1 rounded-full bg-red-100 hover:bg-red-200 transition-colors text-red-600 flex-shrink-0 cursor-pointer"
+                              title="Nhấn để xem lý do từ chối"
+                            >
+                              <PiWarningFill className="text-base" />
+                            </button>
+                          )}
                         </div>
-                        <span className="text-[10px] text-gray-400 mt-1 px-1">
+                        <span className="text-[10px] text-gray-400 mt-1 px-1 flex items-center gap-1">
+                          {isFailed && <span className="text-red-500 font-semibold">Gửi thất bại</span>}
                           {msg.created_at
                             ? new Date(msg.created_at).toLocaleTimeString([], {
                                 hour: "2-digit",
@@ -367,8 +431,30 @@ const AdminEmergencyChatWidget = () => {
           )}
         </div>
       )}
+
+      {/* POPUP HIỂN THỊ LÝ DO TIN NHẮN TỪ CHỐI / THẤT BẠI */}
+      {errorModalReason && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-red-100 flex flex-col items-center text-center animate-in fade-in zoom-in duration-200">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-3">
+              <PiWarningFill className="text-2xl" />
+            </div>
+            <h3 className="text-base font-bold text-gray-900 mb-2">Tin nhắn bị từ chối</h3>
+            <p className="text-xs text-gray-600 leading-relaxed mb-6 bg-gray-50 p-3 rounded-2xl border border-gray-100 w-full">
+              {errorModalReason}
+            </p>
+            <button
+              type="button"
+              onClick={() => setErrorModalReason(null)}
+              className="w-full py-2.5 rounded-2xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
-export default AdminEmergencyChatWidget;
+export default AdminEmergencyChatComponent;

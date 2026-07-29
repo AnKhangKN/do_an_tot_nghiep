@@ -106,6 +106,8 @@ class SessionController with ChangeNotifier {
     _activeRescuer = null;
     _rescuerPosition = null;
     _showSuccessRescueAlert = false;
+    _completedSosRequestId = null;
+    _completedRescuerName = null;
     notifyListeners();
   }
 }

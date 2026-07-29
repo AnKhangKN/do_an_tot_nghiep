@@ -2,7 +2,17 @@ import React, { useEffect, useState, useCallback } from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import { formatTime } from '@/utils/format_date.util';
 import { getAiModerationLogs, reviewAiModerationLog } from '@/api/admin/AiModerationApi';
-import { PiRobotFill, PiWarningFill, PiCheckCircleFill, PiFunnelFill, PiArrowsClockwiseFill } from 'react-icons/pi';
+import {
+  PiRobotFill,
+  PiWarningFill,
+  PiCheckCircleFill,
+  PiFunnelFill,
+  PiArrowsClockwiseFill,
+  PiEyeFill,
+  PiXFill,
+  PiUserFill,
+  PiArticleFill
+} from 'react-icons/pi';
 
 const categoryBadgeStyles = {
   'Y TẾ': 'bg-rose-50 text-rose-700 border-rose-200',
@@ -37,6 +47,7 @@ const AIModerationPage = () => {
   const [actionTaken, setActionTaken] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
   const [updatingId, setUpdatingId] = useState(null);
+  const [selectedLog, setSelectedLog] = useState(null);
 
   const fetchLogs = useCallback(async (page = 1) => {
     setLoading(true);
@@ -67,13 +78,20 @@ const AIModerationPage = () => {
   }, [fetchLogs]);
 
   const handleReview = async (logId, action) => {
+    if (!logId) {
+      console.error('Missing logId for review');
+      return;
+    }
     setUpdatingId(logId);
     try {
       const res = await reviewAiModerationLog(logId, action);
-      if (res?.success) {
+      if (res?.success && res.data) {
         setLogs((prev) =>
-          prev.map((item) => (item.logId === logId ? { ...item, actionTaken: action } : item))
+          prev.map((item) => ((item.logId || item.log_id) === logId ? { ...item, ...res.data } : item))
         );
+        if (selectedLog && (selectedLog.logId || selectedLog.log_id) === logId) {
+          setSelectedLog((prev) => prev ? { ...prev, ...res.data } : null);
+        }
       }
     } catch (error) {
       console.error('Review log error:', error);
@@ -107,6 +125,18 @@ const AIModerationPage = () => {
       )
     },
     {
+      key: 'textContent',
+      dataIndex: 'textContent',
+      title: 'Nội dung phân tích',
+      render: (row) => (
+        <div className="max-w-[240px]">
+          <p className="text-xs text-gray-800 font-medium line-clamp-2 leading-relaxed">
+            {row.textContent || <span className="text-gray-400 italic">Không có mô tả văn bản</span>}
+          </p>
+        </div>
+      )
+    },
+    {
       key: 'suggestedCategory',
       title: 'Phân loại AI',
       render: (row) => {
@@ -131,7 +161,7 @@ const AIModerationPage = () => {
           {row.isFlagged ? (
             <div className="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-3 py-1 rounded-xl border border-rose-200">
               <PiWarningFill size={16} />
-              <span className="text-xs font-semibold">Bị cắm cờ Spam / Bất thường</span>
+              <span className="text-xs font-semibold">Spam - Bất thường</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200">
@@ -140,7 +170,7 @@ const AIModerationPage = () => {
             </div>
           )}
           {row.flagReason && (
-            <p className="text-[11px] text-rose-500 mt-1 italic leading-tight max-w-[220px]">
+            <p className="text-[11px] text-rose-500 mt-1 italic leading-tight max-w-[200px]">
               "{row.flagReason}"
             </p>
           )}
@@ -153,9 +183,17 @@ const AIModerationPage = () => {
       render: (row) => {
         const style = actionBadgeStyles[row.actionTaken] || actionBadgeStyles.NONE;
         return (
-          <span className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-medium ${style}`}>
-            {actionLabels[row.actionTaken] || row.actionTaken}
-          </span>
+          <div className="flex flex-col gap-1 items-start">
+            <span className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-medium ${style}`}>
+              {actionLabels[row.actionTaken] || row.actionTaken}
+            </span>
+            {row.reviewerName && (
+              <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
+                <PiUserFill size={12} className="text-gray-400" />
+                {row.reviewerName}
+              </span>
+            )}
+          </div>
         );
       }
     },
@@ -169,24 +207,38 @@ const AIModerationPage = () => {
     {
       key: 'actions',
       title: 'Thao tác',
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleReview(row.logId, 'APPROVED')}
-            disabled={updatingId === row.logId || row.actionTaken === 'APPROVED'}
-            className="px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium transition-all disabled:opacity-40 cursor-pointer active:scale-95"
-          >
-            Duyệt
-          </button>
-          <button
-            onClick={() => handleReview(row.logId, 'DISMISSED')}
-            disabled={updatingId === row.logId || row.actionTaken === 'DISMISSED'}
-            className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium transition-all disabled:opacity-40 cursor-pointer active:scale-95 border border-gray-200"
-          >
-            Bác bỏ
-          </button>
-        </div>
-      )
+      render: (row) => {
+        const currentLogId = row.logId || row.log_id;
+        const isUpdating = Boolean(updatingId && currentLogId && updatingId === currentLogId);
+
+        return (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedLog(row)}
+              className="p-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer border border-gray-200 active:scale-95"
+              title="Xem chi tiết"
+            >
+              <PiEyeFill size={16} />
+            </button>
+            <button
+              onClick={() => handleReview(currentLogId, 'APPROVED')}
+              disabled={isUpdating || row.actionTaken === 'APPROVED'}
+              className="px-3 py-1.5 rounded-xl bg-rose-900 hover:bg-rose-800 text-white text-xs font-medium transition-all disabled:opacity-40 cursor-pointer active:scale-95 shadow-xs"
+              title="Xác nhận nội dung vi phạm/spam"
+            >
+              Vi phạm
+            </button>
+            <button
+              onClick={() => handleReview(currentLogId, 'DISMISSED')}
+              disabled={isUpdating || row.actionTaken === 'DISMISSED'}
+              className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-medium transition-all disabled:opacity-40 cursor-pointer active:scale-95 border border-emerald-200"
+              title="Xác nhận nội dung an toàn/hợp lệ"
+            >
+              An toàn
+            </button>
+          </div>
+        );
+      }
     }
   ];
 
@@ -285,6 +337,140 @@ const AIModerationPage = () => {
           }}
         />
       </div>
+
+      {/* MODAL CHI TIẾT KIỂM DUYỆT AI */}
+      {selectedLog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-xl border border-gray-200 animate-in fade-in zoom-in duration-150">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gray-900 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <PiRobotFill size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Chi tiết Phân tích & Kiểm duyệt AI</h3>
+                  <p className="text-xs text-gray-400 font-mono mt-0.5">
+                    Log ID: {selectedLog.logId}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedLog(null)}
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
+              >
+                <PiXFill size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="space-y-4 text-xs">
+              {/* Thực thể & Thời gian */}
+              <div className="grid grid-cols-2 gap-3 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
+                <div>
+                  <span className="text-gray-400 block mb-1 font-medium">Loại thực thể</span>
+                  <span className="font-semibold text-gray-900 bg-white px-2.5 py-1 rounded-lg border border-gray-200 inline-block">
+                    {selectedLog.entityType}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-400 block mb-1 font-medium">Entity ID</span>
+                  <span className="font-mono text-gray-700 bg-white px-2.5 py-1 rounded-lg border border-gray-200 inline-block truncate max-w-full">
+                    {selectedLog.entityId || '--'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Văn bản phân tích gốc */}
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 text-gray-700 font-semibold">
+                  <PiArticleFill size={16} className="text-gray-500" />
+                  <span>Nội dung văn bản được phân tích:</span>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-800 font-medium leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
+                  {selectedLog.textContent || <span className="text-gray-400 italic">Không có văn bản mô tả</span>}
+                </div>
+              </div>
+
+              {/* Phân loại AI & Đánh giá */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-100 space-y-1">
+                  <span className="text-gray-400 font-medium block">Chủ đề AI gợi ý</span>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${categoryBadgeStyles[selectedLog.suggestedCategory] || categoryBadgeStyles['KHÁC']}`}>
+                    {selectedLog.suggestedCategory || 'KHÁC'}
+                  </span>
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    Độ tin cậy: <span className="font-bold text-gray-800">{Math.round((selectedLog.aiScore || 0) * 100)}%</span>
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-100 space-y-1">
+                  <span className="text-gray-400 font-medium block">Cắm cờ bất thường</span>
+                  {selectedLog.isFlagged ? (
+                    <div className="text-rose-600 font-semibold flex items-center gap-1">
+                      <PiWarningFill size={16} />
+                      <span>Bị cắm cờ (Spam/Phá hoại)</span>
+                    </div>
+                  ) : (
+                    <div className="text-emerald-600 font-medium flex items-center gap-1">
+                      <PiCheckCircleFill size={16} />
+                      <span>Nội dung an toàn</span>
+                    </div>
+                  )}
+                  {selectedLog.flagReason && (
+                    <p className="text-[11px] text-rose-500 italic mt-1 leading-tight">
+                      Lý do: "{selectedLog.flagReason}"
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Trạng thái Admin duyệt */}
+              <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-100 flex items-center justify-between">
+                <div>
+                  <span className="text-gray-400 font-medium block mb-1">Xử lý của Quản trị viên</span>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-medium ${actionBadgeStyles[selectedLog.actionTaken] || actionBadgeStyles.NONE}`}>
+                    {actionLabels[selectedLog.actionTaken] || selectedLog.actionTaken}
+                  </span>
+                </div>
+                {selectedLog.reviewerName && (
+                  <div className="text-right">
+                    <span className="text-gray-400 font-medium block mb-1">Người duyệt</span>
+                    <span className="font-semibold text-gray-800 flex items-center gap-1 justify-end">
+                      <PiUserFill size={14} className="text-gray-500" />
+                      {selectedLog.reviewerName}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-4">
+              <button
+                onClick={() => setSelectedLog(null)}
+                className="px-4 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition-all border border-gray-200 cursor-pointer"
+              >
+                Đóng
+              </button>
+              <button
+                onClick={() => handleReview(selectedLog.logId, 'DISMISSED')}
+                disabled={updatingId === selectedLog.logId || selectedLog.actionTaken === 'DISMISSED'}
+                className="px-4 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-all border border-emerald-200 disabled:opacity-40 cursor-pointer"
+              >
+                An toàn
+              </button>
+              <button
+                onClick={() => handleReview(selectedLog.logId, 'APPROVED')}
+                disabled={updatingId === selectedLog.logId || selectedLog.actionTaken === 'APPROVED'}
+                className="px-4 py-2 rounded-2xl bg-rose-900 hover:bg-rose-800 text-white text-xs font-semibold transition-all disabled:opacity-40 cursor-pointer shadow-sm"
+              >
+                Vi phạm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

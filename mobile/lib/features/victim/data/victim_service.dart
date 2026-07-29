@@ -25,4 +25,20 @@ class VictimService {
       'cancelReason': cancelReason ?? 'Nạn nhân chủ động hủy yêu cầu',
     });
   }
+
+  Future<Response> submitPostRescueCheckin({
+    required String sosRequestId,
+    required String healthStatus,
+    String? checkinNotes,
+    int? rating,
+    String? comment,
+  }) async {
+    return dio.post('/api/sos/sos_requests/post-rescue-checkin', data: {
+      'sosRequestId': sosRequestId,
+      'healthStatus': healthStatus,
+      'checkinNotes': checkinNotes,
+      'rating': rating,
+      'comment': comment,
+    });
+  }
 }

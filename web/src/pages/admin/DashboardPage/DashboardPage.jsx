@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import StatisticComponent from "./components/StatisticComponent";
 import ChartMapComponent from "./components/ChartMapComponent";
 import TimeComponent from "./components/TimeComponent";
-import { getDashboardOverview } from "@/api/admin/DashboardApi";
+import { getDashboardOverview, getAiDashboardSummary, exportAdminReportApi } from "@/api/admin/DashboardApi";
 import { subscribeConnectionStatus, subscribeDashboardEvents } from "@/socket";
-import { PiArrowsClockwiseBold, PiWarningBold, PiLightningFill, PiBellRingingFill } from "react-icons/pi";
+import { PiArrowsClockwiseBold, PiWarningBold, PiLightningFill, PiBellRingingFill, PiSparkleBold, PiCheckCircleFill, PiLightbulbFill, PiBrainFill, PiFileCsvBold, PiDownloadSimpleBold } from "react-icons/pi";
 
 const DashboardPage = () => {
   const [days, setDays] = useState(7);
@@ -13,6 +13,24 @@ const DashboardPage = () => {
   const [error, setError] = useState(null);
   const [liveBanner, setLiveBanner] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+
+  // AI Summary State
+  const [aiSummary, setAiSummary] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // Export State
+  const [exportLoading, setExportLoading] = useState(false);
+
+  const handleExportReport = async () => {
+    try {
+      setExportLoading(true);
+      await exportAdminReportApi(days);
+    } catch (err) {
+      console.error("Lỗi khi xuất báo cáo:", err);
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   const fetchOverview = useCallback(async (selectedDays = days, showLoading = true) => {
     try {
@@ -31,6 +49,20 @@ const DashboardPage = () => {
       if (showLoading) setLoading(false);
     }
   }, [days]);
+
+  const fetchAiSummary = async () => {
+    try {
+      setAiLoading(true);
+      const res = await getAiDashboardSummary(days);
+      if (res && res.data) {
+        setAiSummary(res.data);
+      }
+    } catch (err) {
+      console.error("Lỗi khi tạo tóm tắt AI:", err);
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchOverview(days, true);
@@ -121,6 +153,28 @@ const DashboardPage = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Export Report Button */}
+          <button
+            onClick={handleExportReport}
+            disabled={exportLoading}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-emerald-700 text-white hover:bg-emerald-800 transition duration-150 text-xs font-bold shadow-md cursor-pointer disabled:opacity-50"
+            title="Xuất báo cáo dữ liệu CSV/Excel"
+          >
+            <PiFileCsvBold className="text-base text-emerald-200" />
+            {exportLoading ? "Đang xuất..." : "Xuất Báo Cáo CSV"}
+          </button>
+
+          {/* AI Summary Generate Button */}
+          <button
+            onClick={fetchAiSummary}
+            disabled={aiLoading}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 transition duration-150 text-xs font-bold shadow-md cursor-pointer disabled:opacity-50"
+            title="AI Tóm tắt hoạt động"
+          >
+            <PiSparkleBold className={`text-sm text-purple-400 ${aiLoading ? "animate-spin" : ""}`} />
+            {aiLoading ? "Đang tạo AI..." : "Tạo Tóm Tắt AI"}
+          </button>
+
           {/* Refresh button */}
           <button
             onClick={() => fetchOverview(days, true)}
@@ -135,6 +189,62 @@ const DashboardPage = () => {
           <TimeComponent selectedDays={days} onSelectDays={handleSelectDays} />
         </div>
       </div>
+
+      {/* CARD AI TÓM TẮT VẬN HÀNH HỆ THỐNG (AI OPERATIONAL ACTIVITY SUMMARY) */}
+      {aiSummary && (
+        <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-xl border border-slate-800 relative overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-top-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                <PiBrainFill className="text-xl" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  AI Tóm Tắt Lịch Sử Vận Hành ({days} ngày qua)
+                  <span className="px-2 py-0.5 text-[10px] font-mono bg-purple-500/20 text-purple-300 rounded-full border border-purple-500/30">
+                    Groq Llama 3.3 / 70b
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-400">Báo cáo điều hành cứu hộ tự động phân tích bởi AI</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setAiSummary(null)}
+              className="text-gray-400 hover:text-white text-xs font-bold p-1 rounded-full hover:bg-slate-800 transition"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {/* Văn bản Tóm tắt Tổng quan */}
+            <p className="text-xs sm:text-sm text-gray-200 leading-relaxed bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+              {aiSummary.summaryText}
+            </p>
+
+            {/* Các điểm nổi bật chính */}
+            {aiSummary.highlights && aiSummary.highlights.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {aiSummary.highlights.map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
+                    <PiCheckCircleFill className="text-emerald-400 text-base shrink-0 mt-0.5" />
+                    <span className="text-xs text-gray-300 leading-tight font-medium">{item}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Khuyến nghị điều phối cho Admin */}
+            {aiSummary.recommendation && (
+              <div className="flex items-center gap-3 p-3.5 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-300 text-xs">
+                <PiLightbulbFill className="text-amber-400 text-lg shrink-0" />
+                <span><strong className="text-amber-200">Khuyến nghị Điều phối:</strong> {aiSummary.recommendation}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Error state */}
       {error && (

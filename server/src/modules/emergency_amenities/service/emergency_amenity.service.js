@@ -3,6 +3,7 @@ const amenityCategoryRepository = require("../repository/amenity_category.reposi
 const emergencyAmenityRepository = require("../repository/emergency_amenity.repository");
 const amenityFeedbackRepository = require("../repository/amenity_feedback.repository");
 const imageService = require("@modules/image/service/image.service");
+const aiModerationService = require("@modules/ai_moderation/service/ai_moderation.service");
 
 
 class EmergencyAmenityService {
@@ -93,14 +94,28 @@ class EmergencyAmenityService {
 
     // Feedback & Report methods
     async createFeedback({ amenityId, userId, reason, comment }) {
+        const textContent = [reason, comment].filter(Boolean).join(" - ");
+        if (textContent) {
+            const spamCheck = await aiModerationService.checkKnownSpamText(textContent);
+            if (spamCheck.isBlocked) {
+                throw new Error(`Báo cáo bị từ chối: ${spamCheck.reason || "Nội dung báo cáo đã bị đánh dấu vi phạm tiêu chuẩn cộng đồng."}`);
+            }
+        }
+
         const feedbackId = uuidv4();
-        return await amenityFeedbackRepository.createFeedback({
+        const feedback = await amenityFeedbackRepository.createFeedback({
             feedbackId,
             amenityId,
             userId,
             reason,
             comment
         });
+
+        if (textContent) {
+            aiModerationService.processModerationAsync("AMENITY_FEEDBACK", feedbackId, textContent);
+        }
+
+        return feedback;
     }
 
     async getFeedbacksAdmin({ page, limit, status }) {
@@ -127,6 +142,18 @@ class EmergencyAmenityService {
         }
 
         return updatedFeedback;
+    }
+
+    // Duplicate Detection & Merge methods
+    async getDuplicateAmenitiesAdmin() {
+        return await emergencyAmenityRepository.findDuplicatePairs(200);
+    }
+
+    async mergeAmenitiesAdmin({ primaryAmenityId, duplicateAmenityId }) {
+        const { transaction } = require("@/config/database.config");
+        return await transaction(async (client) => {
+            return await emergencyAmenityRepository.mergeAmenities(client, primaryAmenityId, duplicateAmenityId);
+        });
     }
 }
 

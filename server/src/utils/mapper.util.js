@@ -1,10 +1,11 @@
 const mapFields = (row, model) => {
     if (!row) return null;
 
+    const fields = model.field || model;
     const result = {};
 
-    for (const key in model.field) {
-        const dbField = model.field[key];
+    for (const key in fields) {
+        const dbField = fields[key];
 
         if (Object.prototype.hasOwnProperty.call(row, dbField)) {
             result[key] = row[dbField];

@@ -106,6 +106,31 @@ class AdminRepository {
     const result = await pool.query(query);
     return result.rows;
   };
+
+  getExportSosData = async (days = 30) => {
+    const query = `
+      SELECT 
+        s.sos_request_id,
+        u_victim.full_name AS victim_name,
+        u_victim.phone AS victim_phone,
+        it.incident_type,
+        s.status,
+        u_rescuer.full_name AS rescuer_name,
+        u_rescuer.phone AS rescuer_phone,
+        s.victim_lat AS lat,
+        s.victim_lng AS lng,
+        s.created_at,
+        s.updated_at
+      FROM sos_requests s
+      LEFT JOIN users u_victim ON s.user_id = u_victim.user_id
+      LEFT JOIN users u_rescuer ON s.rescuer_id = u_rescuer.user_id
+      LEFT JOIN incident_types it ON s.incident_type_id = it.incident_type_id
+      WHERE s.created_at >= CURRENT_DATE - (INTERVAL '1 day' * $1)
+      ORDER BY s.created_at DESC
+    `;
+    const result = await pool.query(query, [days]);
+    return result.rows;
+  };
 }
 
 module.exports = new AdminRepository();

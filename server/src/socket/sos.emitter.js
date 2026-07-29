@@ -28,11 +28,18 @@ const handleSosOffer = (io, data) => {
  */
 const handleSosNotFound = (io, data) => {
     try {
-        const room = `victim:${data.victimId}`;
-        io.to(room).emit("sos:not_found", { sosId: data.sosId });
-        console.log(`[SOS EMITTER] Emitted 'sos:not_found' to ${room}`);
+        const victimId = data.victimId || data.userId || data.user_id;
+        const sosId = data.sosId || data.sosRequestId || data.sos_request_id;
+
+        if (victimId) {
+            io.to(`victim:${victimId}`).emit("sos:not_found", { sosId, victimId });
+            io.to(`user:${victimId}`).emit("sos:not_found", { sosId, victimId });
+        }
+        io.emit("sos:not_found", { sosId, victimId });
+
+        console.log(`[SOS EMITTER] Emitted 'sos:not_found' for SOS: ${sosId} (Victim: ${victimId})`);
     } catch (err) {
-        console.error(`[SOS EMITTER] Error emitting sos:not_found to victim:${data?.victimId}:`, err);
+        console.error(`[SOS EMITTER] Error emitting sos:not_found:`, err);
     }
 };
 

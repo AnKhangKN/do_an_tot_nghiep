@@ -68,8 +68,8 @@ class RatingController {
 
     async getAllRatingsAdmin(req, res, next) {
         try {
-            const { page, limit } = req.query;
-            const result = await ratingService.getAllRatingsAdmin({ page, limit });
+            const { page, limit, ratingFilter } = req.query;
+            const result = await ratingService.getAllRatingsAdmin({ page, limit, ratingFilter });
             return res.status(200).json({
                 success: true,
                 message: "Lấy toàn bộ danh sách đánh giá thành công!",

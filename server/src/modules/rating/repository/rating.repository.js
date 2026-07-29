@@ -71,9 +71,24 @@ class RatingRepository {
         return result.rows;
     }
 
-    async getAllRatingsAdmin({ page = 1, limit = 20 } = {}) {
+    async getAllRatingsAdmin({ page = 1, limit = 20, ratingFilter = null } = {}) {
         const offset = (page - 1) * limit;
-        const countQuery = `SELECT COUNT(*)::int as total FROM rescuer_ratings`;
+        let whereClause = "";
+        const queryParams = [limit, offset];
+
+        if (ratingFilter && Number(ratingFilter) >= 1 && Number(ratingFilter) <= 5) {
+            whereClause = "WHERE r.rating = $3";
+            queryParams.push(Number(ratingFilter));
+        }
+
+        const countQuery = `
+            SELECT 
+                COUNT(*)::int as total,
+                COALESCE(ROUND(AVG(rating)::numeric, 1), 0.0) as avg_rating,
+                COUNT(CASE WHEN rating = 5 THEN 1 END)::int as five_star_count
+            FROM rescuer_ratings r
+            ${whereClause}
+        `;
         const dataQuery = `
             SELECT 
                 r.*, 
@@ -82,17 +97,22 @@ class RatingRepository {
             FROM rescuer_ratings r
             LEFT JOIN users v ON r.victim_id = v.user_id
             LEFT JOIN users res ON r.rescuer_id = res.user_id
+            ${whereClause}
             ORDER BY r.created_at DESC
             LIMIT $1 OFFSET $2
         `;
 
         const [countResult, dataResult] = await Promise.all([
-            pool.query(countQuery),
-            pool.query(dataQuery, [limit, offset])
+            pool.query(countQuery, ratingFilter ? [Number(ratingFilter)] : []),
+            pool.query(dataQuery, queryParams)
         ]);
 
+        const statsRow = countResult.rows[0];
+
         return {
-            total: countResult.rows[0]?.total || 0,
+            total: statsRow?.total || 0,
+            avgRating: parseFloat(statsRow?.avg_rating || 0.0),
+            fiveStarCount: statsRow?.five_star_count || 0,
             page: Number(page),
             limit: Number(limit),
             ratings: dataResult.rows

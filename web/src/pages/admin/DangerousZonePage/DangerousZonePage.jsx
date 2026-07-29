@@ -227,12 +227,17 @@ const DangerousZonePage = () => {
     }
   };
 
+  const systemDetectedCount = dangerousZones.filter(
+    (item) => item.reporterName === 'Hệ thống' || !item.reportedBy
+  ).length;
+  const pendingCount = dangerousZones.filter((item) => item.status === 'PENDING').length;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Quản lý điểm nguy hiểm</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Duyệt các vị trí rủi ro báo cáo bởi người dùng hoặc hệ thống tự phát hiện</p>
+          <p className="text-sm text-gray-500 mt-0.5">Duyệt các vị trí rủi ro báo cáo bởi người dùng hoặc hệ thống tự phát hiện (Crowd-Sourced)</p>
         </div>
 
         <button
@@ -240,8 +245,42 @@ const DangerousZonePage = () => {
           disabled={autoDetecting}
           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl font-medium shadow-sm transition-all disabled:opacity-50 text-sm cursor-pointer"
         >
-          {autoDetecting ? "Đang phân tích gom cụm..." : "Quét tự động"}
+          <PiLightningFill className="text-amber-400 text-base" />
+          {autoDetecting ? "Đang phân tích gom cụm..." : "Quét cụm SOS tự động"}
         </button>
+      </div>
+
+      {/* Thẻ thống kê tổng quan */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-lg">
+            ⏳
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 font-medium">Chờ kiểm duyệt</p>
+            <p className="text-xl font-bold text-gray-900">{pendingCount} điểm</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 font-bold text-lg">
+            ⚡
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 font-medium">Hệ thống tự gom cụm SOS</p>
+            <p className="text-xl font-bold text-gray-900">{systemDetectedCount} điểm</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-lg">
+            🛡️
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 font-medium">Tổng điểm vùng nguy hiểm</p>
+            <p className="text-xl font-bold text-gray-900">{dangerousZones.length} điểm</p>
+          </div>
+        </div>
       </div>
 
       {detectMsg && (

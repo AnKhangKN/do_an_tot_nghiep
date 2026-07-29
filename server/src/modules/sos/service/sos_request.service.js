@@ -25,6 +25,14 @@ class SosRequestService {
         victimLng,
         imageUrl,
     }) => {
+        // CHẶN NGAY TỪ ĐẦU (Early Block): Nếu mô tả SOS thuộc danh sách đã từng bị Cắm cờ/Duyệt vi phạm trước đó
+        if (description) {
+            const spamCheck = await aiModerationService.checkKnownSpamText(description);
+            if (spamCheck.isBlocked) {
+                throw new Error(`Yêu cầu SOS bị từ chối: ${spamCheck.reason || "Nội dung lời nhắn đã từng bị đánh dấu vi phạm tiêu chuẩn cộng đồng."}`);
+            }
+        }
+
         const sos = await transaction(async (client) => {
             const sosRequestId = uuidUtil.generateUUID();
 
@@ -287,7 +295,7 @@ class SosRequestService {
             };
         } else if (activeSos.rescuer_id) {
             const rescuerInfo = await userService.getUserInfoById({ userId: activeSos.rescuer_id });
-            
+
             let rescuerLat = null;
             let rescuerLng = null;
             try {
@@ -749,6 +757,57 @@ class SosRequestService {
                 description: sos.description,
                 incidentTypeName: sos.incident_type_name
             }
+        };
+    };
+
+    submitPostRescueCheckin = async ({ sosRequestId, userId, healthStatus, checkinNotes, rating, comment }) => {
+        const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+        if (!sos) {
+            throw new Error("Không tìm thấy ca SOS yêu cầu.");
+        }
+
+        const healthStatusTextMap = {
+            SAFE: "Đã an toàn",
+            NEEDS_MEDICAL_CHECK: "Cần kiểm tra y tế",
+            RECOVERING: "Đang hồi phục",
+            OTHER: "Khác / Ý kiến riêng"
+        };
+        const healthLabel = healthStatusTextMap[healthStatus] || healthStatus || "Đã an toàn";
+
+        // Tự động ghép tình trạng sức khỏe vào comment/notes để lưu đầy đủ thông tin vào CSDL
+        let formattedComment = `[Tình trạng sức khỏe: ${healthLabel}]`;
+        const userNotes = (checkinNotes && checkinNotes.trim()) || (comment && comment.trim());
+        if (userNotes) {
+            formattedComment += ` - ${userNotes}`;
+        }
+
+        const updated = await this.sos_requestRepository.updatePostRescueCheckin({
+            sosRequestId,
+            healthStatus,
+            checkinNotes: formattedComment
+        });
+
+        let ratingResult = null;
+        if (rating && rating > 0) {
+            try {
+                const ratingService = require("@modules/rating/service/rating.service");
+                ratingResult = await ratingService.submitRating({
+                    sosRequestId,
+                    victimId: userId,
+                    rating,
+                    comment: formattedComment
+                });
+            } catch (err) {
+                console.warn("[SERVICE] Lỗi gửi rating trong post-rescue-checkin:", err.message);
+            }
+        }
+
+        return {
+            sos: updated,
+            rating: ratingResult,
+            healthStatus: healthStatus || 'SAFE',
+            formattedComment,
+            message: "Đã xác nhận trạng thái an toàn và phản hồi sau cứu hộ thành công!"
         };
     };
 }

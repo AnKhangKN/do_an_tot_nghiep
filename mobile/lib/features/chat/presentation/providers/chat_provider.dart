@@ -116,6 +116,32 @@ class ChatProvider extends ChangeNotifier {
         }
       }
     });
+
+    chatSocket?.listenChatError((payload) {
+      final conversationId = payload['conversationId']?.toString();
+      final tempId = payload['tempId']?.toString();
+      final errorMsg = payload['message']?.toString() ?? 'Gửi tin nhắn thất bại';
+
+      void markFailedInList(List<ChatMessageModel> list) {
+        final idx = list.indexWhere((m) => m.id == tempId || (m.isMe && m.text == payload['content'] && !m.isFailed));
+        if (idx != -1) {
+          list[idx] = list[idx].copyWith(
+            isFailed: true,
+            errorMessage: errorMsg,
+          );
+        }
+      }
+
+      if (conversationId != null && _messagesMap.containsKey(conversationId)) {
+        markFailedInList(_messagesMap[conversationId]!);
+        notifyListeners();
+      } else {
+        for (var entry in _messagesMap.entries) {
+          markFailedInList(entry.value);
+        }
+        notifyListeners();
+      }
+    });
   }
 
   Future<void> fetchUserConversations() async {
@@ -212,7 +238,7 @@ class ChatProvider extends ChangeNotifier {
     // Gửi tin nhắn qua Socket.IO thuần túy (Socket sẽ gọi ChatService lưu DB và broadcast)
     final convIndex = _conversations.indexWhere((c) => c.id == conversationId);
     final resolvedPartnerId = partnerId ?? (convIndex != -1 ? _conversations[convIndex].partnerId : null);
-    chatSocket?.sendSocketMessage(conversationId, cleanText, partnerId: resolvedPartnerId);
+    chatSocket?.sendSocketMessage(conversationId, cleanText, partnerId: resolvedPartnerId, tempId: tempMsgId);
   }
 
   void markAsRead(String conversationId) {

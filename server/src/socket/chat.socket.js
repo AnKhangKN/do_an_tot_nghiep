@@ -84,6 +84,13 @@ module.exports = (socket, io) => {
             if (typeof ackCallback === "function") {
                 ackCallback({ status: "error", message: error.message });
             }
+            socket.emit("chat:error", {
+                status: "error",
+                message: error.message,
+                content: data?.content,
+                conversationId: data?.conversationId,
+                tempId: data?.tempId || data?.id
+            });
         }
     });
 };

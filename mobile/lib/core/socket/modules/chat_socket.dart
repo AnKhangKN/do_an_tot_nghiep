@@ -19,17 +19,27 @@ class ChatSocket {
     });
   }
 
-  void sendSocketMessage(String conversationId, String content, {String? partnerId}) {
+  void listenChatError(Function(Map<String, dynamic> payload) onError) {
+    coreSocket.on('chat:error', (data) {
+      if (data != null && data is Map) {
+        onError(Map<String, dynamic>.from(data));
+      }
+    });
+  }
+
+  void sendSocketMessage(String conversationId, String content, {String? partnerId, String? tempId}) {
     if (conversationId.isNotEmpty || (partnerId != null && partnerId.isNotEmpty)) {
       coreSocket.emit('chat:send_message', {
         'conversationId': conversationId,
         'partnerId': partnerId,
         'content': content,
+        'tempId': tempId,
       });
     }
   }
 
   void dispose() {
     coreSocket.off('chat:new_message');
+    coreSocket.off('chat:error');
   }
 }

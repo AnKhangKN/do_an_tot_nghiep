@@ -132,6 +132,15 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     }
   }
 
+  List<LatLng> _routePoints = [];
+  LatLng? _lastStart;
+  LatLng? _lastEnd;
+  double? _distanceKm;    // Khoảng cách còn lại đến nạn nhân (km)
+  int? _durationSec;      // Thời gian di chuyển ước tính (giây)
+  bool _hasFittedCamera = false; // Đã fit camera cho ca cứu hộ này chưa
+
+  DateTime? _lastRouteFetchTime;
+
   void _onSessionOrProviderChanged() {
     if (!mounted) return;
     final session = getIt<SessionController>();
@@ -168,6 +177,7 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
         _lastEnd = null;
         _distanceKm = null;
         _durationSec = null;
+        _hasFittedCamera = false;
       });
     }
   }
@@ -183,14 +193,6 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     debugPrint("❌ [TEST UI] Đã BỎ QUA cuốc ID: ${sos.sosId}");
     sosProvider.clearSOS(); // Tắt bảng thông báo
   }
-
-  List<LatLng> _routePoints = [];
-  LatLng? _lastStart;
-  LatLng? _lastEnd;
-  double? _distanceKm;    // Khoảng cách còn lại đến nạn nhân (km)
-  int? _durationSec;      // Thời gian di chuyển ước tính (giây)
-
-  DateTime? _lastRouteFetchTime;
 
   Future<void> _updateRoute(LatLng start, LatLng end) async {
     if (_lastStart?.latitude == start.latitude &&
@@ -224,6 +226,21 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
           _distanceKm = info.distanceKm;
           _durationSec = info.durationSec;
         });
+
+        // Fit camera bao phủ cả cứu hộ viên và nạn nhân trong lần tải đường đầu tiên
+        if (!_hasFittedCamera) {
+          _hasFittedCamera = true;
+          try {
+            _mapController.fitCamera(
+              CameraFit.bounds(
+                bounds: LatLngBounds.fromPoints([start, end]),
+                padding: const EdgeInsets.fromLTRB(60, 180, 60, 240),
+              ),
+            );
+          } catch (e) {
+            debugPrint("⚠️ Lỗi fit camera: $e");
+          }
+        }
       }
     } catch (e) {
       debugPrint("⚠️ [RescuerMap] Lỗi lấy tuyến đường: $e");

@@ -9,7 +9,9 @@ import {
   updateAmenityStatusAdmin,
   deleteAmenityAdmin,
   getFeedbacksAdmin,
-  updateFeedbackStatusAdmin
+  updateFeedbackStatusAdmin,
+  getDuplicateAmenitiesAdmin,
+  mergeAmenitiesAdmin
 } from '@/api/admin/EmergencyAmenityApi';
 import {
   PiPlusBold,
@@ -26,12 +28,15 @@ import {
   PiPencilBold,
   PiImageBold,
   PiFlagBold,
-  PiWarningBold
+  PiWarningBold,
+  PiCopyBold,
+  PiGitMergeBold,
+  PiLightningFill
 } from 'react-icons/pi';
 
 
 export default function EmergencyAmenityPage() {
-  const [activeTab, setActiveTab] = useState('points'); // 'points' | 'categories' | 'feedbacks'
+  const [activeTab, setActiveTab] = useState('points'); // 'points' | 'categories' | 'feedbacks' | 'duplicates'
 
   // Points State
   const [points, setPoints] = useState([]);
@@ -47,6 +52,11 @@ export default function EmergencyAmenityPage() {
   const [feedbacksPage, setFeedbacksPage] = useState(1);
   const [feedbacksTotalPages, setFeedbacksTotalPages] = useState(1);
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState('');
+
+  // Duplicates State
+  const [duplicates, setDuplicates] = useState([]);
+  const [duplicatesLoading, setDuplicatesLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
 
   // Categories State
@@ -110,6 +120,35 @@ export default function EmergencyAmenityPage() {
     }
   };
 
+  // Load Duplicates
+  const fetchDuplicates = async () => {
+    setDuplicatesLoading(true);
+    try {
+      const res = await getDuplicateAmenitiesAdmin();
+      if (res.success) {
+        setDuplicates(res.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching duplicate amenities:', err);
+    } finally {
+      setDuplicatesLoading(false);
+    }
+  };
+
+  const handleMerge = async (primaryAmenityId, duplicateAmenityId) => {
+    try {
+      setActionLoading(true);
+      const res = await mergeAmenitiesAdmin(primaryAmenityId, duplicateAmenityId);
+      if (res.success) {
+        fetchDuplicates();
+      }
+    } catch (err) {
+      console.error('Error merging amenities:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'points') {
       fetchPoints(pointsPage, statusFilter);
@@ -117,6 +156,8 @@ export default function EmergencyAmenityPage() {
       fetchCategories();
     } else if (activeTab === 'feedbacks') {
       fetchFeedbacks(feedbacksPage, feedbackStatusFilter);
+    } else if (activeTab === 'duplicates') {
+      fetchDuplicates();
     }
   }, [activeTab, pointsPage, statusFilter, feedbacksPage, feedbackStatusFilter]);
 
@@ -565,6 +606,22 @@ export default function EmergencyAmenityPage() {
             <PiFlagBold className="w-4 h-4" />
             Báo Cáo Vi Phạm
           </button>
+          <button
+            onClick={() => setActiveTab('duplicates')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${
+              activeTab === 'duplicates'
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <PiCopyBold className="w-4 h-4" />
+            Nghi Ngờ Trùng Lặp
+            {duplicates.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 text-xs bg-white text-amber-700 font-bold rounded-full">
+                {duplicates.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {activeTab === 'points' && (
@@ -606,7 +663,7 @@ export default function EmergencyAmenityPage() {
         )}
       </div>
 
-      {/* Content Table */}
+      {/* Content Table / Cards */}
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-4">
         {activeTab === 'points' ? (
           <TableComponent
@@ -624,7 +681,7 @@ export default function EmergencyAmenityPage() {
             data={categories}
             loading={categoriesLoading}
           />
-        ) : (
+        ) : activeTab === 'feedbacks' ? (
           <TableComponent
             columns={feedbackColumns}
             data={feedbacks}
@@ -633,6 +690,128 @@ export default function EmergencyAmenityPage() {
             totalPages={feedbacksTotalPages}
             onPageChange={(p) => setFeedbacksPage(p)}
           />
+        ) : (
+          /* TAB NGHI NGỜ TRÙNG LẶP (DUPLICATES DETECTED) */
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <div>
+                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <PiCopyBold className="text-amber-600 text-lg" />
+                  Danh sách Cụm Tiện ích Nghi ngờ Trùng lặp ({duplicates.length})
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Tự động phân tích theo khoảng cách GPS và trùng khớp số điện thoại / danh mục
+                </p>
+              </div>
+
+              <button
+                onClick={fetchDuplicates}
+                disabled={duplicatesLoading}
+                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-xl transition cursor-pointer"
+              >
+                {duplicatesLoading ? 'Đang quét...' : 'Quét lại trùng lặp'}
+              </button>
+            </div>
+
+            {duplicatesLoading ? (
+              <div className="py-12 text-center text-xs text-gray-500 font-medium">
+                Đang phân tích không gian & quét dữ liệu trùng lặp...
+              </div>
+            ) : duplicates.length === 0 ? (
+              <div className="py-12 text-center text-gray-400 space-y-2">
+                <PiCheckBold className="w-10 h-10 text-emerald-500 mx-auto" />
+                <p className="text-sm font-semibold text-gray-800">Không phát hiện tiện ích nào nghi ngờ trùng lặp!</p>
+                <p className="text-xs text-gray-500">Toàn bộ dữ liệu bản đồ tiện ích khẩn cấp hiện tại đều duy nhất và sạch vẽ.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {duplicates.map((pair, index) => (
+                  <div
+                    key={index}
+                    className="p-4 bg-gray-50/80 rounded-2xl border border-gray-200 shadow-xs space-y-4"
+                  >
+                    {/* Header Thẻ Trùng */}
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200">
+                        <PiWarningBold className="text-amber-600" />
+                        {pair.matchReason}
+                      </span>
+                      <span className="text-xs font-mono text-gray-500">
+                        Khoảng cách: {pair.distanceMeters} m
+                      </span>
+                    </div>
+
+                    {/* So sánh Side-by-Side 2 Cột */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Bản ghi chính A */}
+                      <div className="bg-white p-3.5 rounded-xl border border-emerald-200/80 space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                            Bản ghi A (Gốc)
+                          </span>
+                          <span className="text-[11px] text-gray-400">
+                            SĐT: {pair.primary.phone || 'Không có'}
+                          </span>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900">{pair.primary.categoryName}</p>
+                        <p className="text-xs text-gray-600 font-mono">
+                          GPS: {pair.primary.latitude.toFixed(4)}, {pair.primary.longitude.toFixed(4)}
+                        </p>
+                        <p className="text-xs text-gray-500">Giờ: {pair.primary.openingHours}</p>
+                        {pair.primary.imageUrl && (
+                          <img
+                            src={pair.primary.imageUrl}
+                            alt="Ảnh A"
+                            className="h-20 w-full object-cover rounded-lg border border-gray-200"
+                          />
+                        )}
+                        <button
+                          onClick={() => handleMerge(pair.primary.amenityId, pair.duplicate.amenityId)}
+                          disabled={actionLoading}
+                          className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-2xs transition active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                        >
+                          <PiGitMergeBold className="text-sm" />
+                          Giữ A & Gộp B vào A
+                        </button>
+                      </div>
+
+                      {/* Bản ghi nghi trùng B */}
+                      <div className="bg-white p-3.5 rounded-xl border border-rose-200/80 space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-200">
+                            Bản ghi B (Nghi trùng)
+                          </span>
+                          <span className="text-[11px] text-gray-400">
+                            SĐT: {pair.duplicate.phone || 'Không có'}
+                          </span>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900">{pair.duplicate.categoryName}</p>
+                        <p className="text-xs text-gray-600 font-mono">
+                          GPS: {pair.duplicate.latitude.toFixed(4)}, {pair.duplicate.longitude.toFixed(4)}
+                        </p>
+                        <p className="text-xs text-gray-500">Giờ: {pair.duplicate.openingHours}</p>
+                        {pair.duplicate.imageUrl && (
+                          <img
+                            src={pair.duplicate.imageUrl}
+                            alt="Ảnh B"
+                            className="h-20 w-full object-cover rounded-lg border border-gray-200"
+                          />
+                        )}
+                        <button
+                          onClick={() => handleMerge(pair.duplicate.amenityId, pair.primary.amenityId)}
+                          disabled={actionLoading}
+                          className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-2xs transition active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                        >
+                          <PiGitMergeBold className="text-sm" />
+                          Giữ B & Gộp A vào B
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
 

@@ -24,5 +24,7 @@ route.delete('/admin/points/:id', verifyToken, isAdmin, adminEmergencyAmenityCon
 route.get('/admin/feedbacks', verifyToken, isAdmin, emergencyAmenityController.getFeedbacksAdmin);
 route.put('/admin/feedbacks/:id/status', verifyToken, isAdmin, emergencyAmenityController.updateFeedbackStatusAdmin);
 
+route.get('/admin/duplicates', verifyToken, isAdmin, adminEmergencyAmenityController.getDuplicateAmenitiesAdmin);
+route.post('/admin/merge', verifyToken, isAdmin, adminEmergencyAmenityController.mergeAmenitiesAdmin);
 
 module.exports = route;

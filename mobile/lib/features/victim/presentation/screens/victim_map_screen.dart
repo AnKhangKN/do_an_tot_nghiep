@@ -28,6 +28,7 @@ import '../../../emergency_amenities/presentation/providers/amenity_provider.dar
 import '../../../emergency_amenities/presentation/widgets/amenity_category_chips.dart';
 import '../../../emergency_amenities/presentation/widgets/amenity_detail_bottom_sheet.dart';
 import '../../../../shared/providers/map_layer_provider.dart';
+import '../widgets/post_rescue_checkin_dialog.dart';
 import '../../../../shared/widgtes/map_layer_toggle_widget.dart';
 
 class VictimMapScreen extends StatefulWidget {
@@ -538,7 +539,28 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                   child: Stack(
 
                     children: [
-                      // Lắng nghe SessionController để hiển thị SnackBar khi không tìm được rescuer
+                      // 1. UTIL WIDGET (Hiển thị phía dưới/sau)
+                      ListenableBuilder(
+                        listenable: sessionController,
+                        builder: (context, _) {
+                          final isBeingRescued = sessionController.isBeingRescued;
+                          final isSearching = sessionController.isSearchingRescuer;
+
+                          if (isBeingRescued || isSearching) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Align(
+                            alignment: Alignment.bottomRight,
+                            child: VictimUtilWidget(
+                              onLocationTap: _moveToCurrentLocation,
+                              onCallTap: () => EmergencyDialogWidget.show(context),
+                            ),
+                          );
+                        },
+                      ),
+
+                      // 2. BOX KẾT NỐI CỨU HỘ / NÚT SOS / RESCUE INFO (Hiển thị LÊN TRÊN các nút util)
                       ListenableBuilder(
                         listenable: sessionController,
                         builder: (context, _) {
@@ -588,24 +610,6 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                           );
                         },
                       ),
-                      ListenableBuilder(
-                        listenable: sessionController,
-                        builder: (context, _) {
-                          final isBeingRescued = sessionController.isBeingRescued;
-
-                          if (isBeingRescued) {
-                            return const SizedBox.shrink();
-                          }
-
-                          return Align(
-                            alignment: Alignment.bottomRight,
-                            child: VictimUtilWidget(
-                              onLocationTap: _moveToCurrentLocation,
-                              onCallTap: () => EmergencyDialogWidget.show(context),
-                            ),
-                          );
-                        },
-                      ),
                     ],
                   ),
                 ),
@@ -650,7 +654,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                         ElevatedButton.icon(
                           onPressed: () {
                             sessionController.dismissSuccessAlert();
-                            RatingDialogWidget.show(
+                            PostRescueCheckinDialog.show(
                               context,
                               sosRequestId: sosId,
                               rescuerName: rName,

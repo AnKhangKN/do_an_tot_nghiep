@@ -158,9 +158,38 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await authRepository.logout();
-    await appSession.logout();
-    notifyListeners();
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      // 1. Gọi API logout trên server
+      try {
+        await authRepository.logout();
+      } catch (e) {
+        debugPrint("⚠️ Lỗi gọi API logout server: $e");
+      }
+
+      // 2. Đăng xuất Google SDK (nếu có)
+      try {
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        if (await googleSignIn.isSignedIn()) {
+          await googleSignIn.signOut();
+        }
+      } catch (e) {
+        debugPrint("⚠️ Lỗi signOut Google SDK: $e");
+      }
+
+      // 3. Xóa toàn bộ Token (Access & Refresh), hủy định vị GPS, ngắt Socket và reset Session
+      await appSession.logout();
+
+      // 4. Clear hết biến lỗi và OTP state trong AuthProvider
+      clearError();
+    } catch (e) {
+      debugPrint("🚨 Lỗi trong quá trình đăng xuất: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> register(

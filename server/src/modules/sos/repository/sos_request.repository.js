@@ -151,6 +151,18 @@ class SosRequestRepository {
         const result = await pool.query(query, [status, cancelReason, sosRequestId]);
         return result.rows[0];
     }
+
+    updatePostRescueCheckin = async ({ sosRequestId, healthStatus, checkinNotes }) => {
+        const query = `
+            UPDATE ${this.sos_requestModel.table}
+            SET 
+                ${this.sos_requestModel.field.updatedAt} = CURRENT_TIMESTAMP
+            WHERE ${this.sos_requestModel.field.sosRequestId} = $1
+            RETURNING *
+        `;
+        const result = await pool.query(query, [sosRequestId]);
+        return result.rows[0];
+    }
 }
 
 module.exports = new SosRequestRepository()

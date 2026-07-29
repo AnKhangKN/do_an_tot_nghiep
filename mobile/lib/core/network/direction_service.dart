@@ -16,9 +16,14 @@ class RouteInfo {
 }
 
 class DirectionService {
-  final Dio _dio = Dio();
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 5),
+    ),
+  );
 
-  /// Lấy tuyến đường, khoảng cách và ETA từ OSRM
+  /// Lấy tuyến đường, khoảng cách và ETA từ OSRM (Có fallback đường chim bay nếu OSRM lỗi)
   Future<RouteInfo?> getRouteInfo(LatLng start, LatLng end) async {
     try {
       final url = 'https://router.project-osrm.org/route/v1/driving/'
@@ -52,14 +57,50 @@ class DirectionService {
         }
       }
     } catch (e) {
-      debugPrint("🚨 Lỗi lấy tuyến đường OSRM: $e");
+      debugPrint("🚨 Lỗi lấy tuyến đường OSRM (Sử dụng fallback): $e");
     }
-    return null;
+
+    // Fallback: Tính khoảng cách đường chim bay khi không gọi được OSRM
+    return _getFallbackRoute(start, end);
+  }
+
+  /// Tính tuyến đường dự phòng (đường chim bay) khi mất mạng/OSRM server quá tải
+  RouteInfo _getFallbackRoute(LatLng start, LatLng end) {
+    const distanceCalculator = Distance();
+    final distanceM = distanceCalculator.as(LengthUnit.Meter, start, end);
+    final distanceKm = distanceM / 1000.0;
+    // Ước tính vận tốc trung bình di chuyển cứu hộ ~ 30 km/h (8.33 m/s)
+    final durationSec = (distanceM / 8.33).round();
+
+    return RouteInfo(
+      points: [start, end],
+      distanceKm: distanceKm,
+      durationSec: durationSec > 0 ? durationSec : 30,
+    );
   }
 
   /// Giữ lại method cũ để không break các màn hình đang dùng
   Future<List<LatLng>> getRoute(LatLng start, LatLng end) async {
     final info = await getRouteInfo(start, end);
     return info?.points ?? [];
+  }
+
+  /// Format khoảng cách hiển thị (VD: "450 m" hoặc "2.3 km")
+  static String formatDistance(double distanceKm) {
+    if (distanceKm < 1.0) {
+      final meters = (distanceKm * 1000).round();
+      return meters < 10 ? "< 10 m" : "$meters m";
+    }
+    return "${distanceKm.toStringAsFixed(1)} km";
+  }
+
+  /// Format thời gian di chuyển (ETA) hiển thị
+  static String formatDuration(int seconds) {
+    if (seconds < 60) return "< 1 phút";
+    final minutes = seconds ~/ 60;
+    if (minutes < 60) return "$minutes phút";
+    final hours = minutes ~/ 60;
+    final remainMins = minutes % 60;
+    return remainMins > 0 ? "$hours giờ $remainMins ph" : "$hours giờ";
   }
 }

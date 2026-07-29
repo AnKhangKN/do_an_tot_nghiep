@@ -14,12 +14,29 @@ export const listenChatEvents = (socket, onNewMessage) => {
   };
 };
 
-export const sendSocketChatMessage = (socket, { conversationId, partnerId, content, messageType = "TEXT" }) => {
+export const listenChatError = (socket, onError) => {
+  if (!socket) return () => {};
+
+  const handleError = (payload) => {
+    if (typeof onError === "function") {
+      onError(payload);
+    }
+  };
+
+  socket.on("chat:error", handleError);
+
+  return () => {
+    socket.off("chat:error", handleError);
+  };
+};
+
+export const sendSocketChatMessage = (socket, { conversationId, partnerId, content, messageType = "TEXT", tempId }) => {
   if (!socket) return;
   socket.emit("chat:send_message", {
     conversationId,
     partnerId,
     content,
     messageType,
+    tempId,
   });
 };

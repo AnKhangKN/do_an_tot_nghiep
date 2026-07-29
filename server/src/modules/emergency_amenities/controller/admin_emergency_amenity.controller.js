@@ -142,6 +142,47 @@ class AdminEmergencyAmenityController {
             });
         }
     }
+
+    async getDuplicateAmenitiesAdmin(req, res) {
+        try {
+            const duplicates = await emergencyAmenityService.getDuplicateAmenitiesAdmin();
+            return res.status(200).json({
+                success: true,
+                message: "Lấy danh sách tiện ích nghi ngờ trùng lặp thành công",
+                data: duplicates
+            });
+        } catch (error) {
+            console.error("Error in getDuplicateAmenitiesAdmin:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi máy chủ khi quét tiện ích trùng lặp"
+            });
+        }
+    }
+
+    async mergeAmenitiesAdmin(req, res) {
+        try {
+            const { primaryAmenityId, duplicateAmenityId } = req.body;
+            if (!primaryAmenityId || !duplicateAmenityId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Thiếu mã tiện ích chính hoặc mã tiện ích bị trùng"
+                });
+            }
+
+            await emergencyAmenityService.mergeAmenitiesAdmin({ primaryAmenityId, duplicateAmenityId });
+            return res.status(200).json({
+                success: true,
+                message: "Gộp tiện ích trùng lặp thành công!"
+            });
+        } catch (error) {
+            console.error("Error in mergeAmenitiesAdmin:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi máy chủ khi gộp tiện ích trùng lặp"
+            });
+        }
+    }
 }
 
 module.exports = new AdminEmergencyAmenityController();

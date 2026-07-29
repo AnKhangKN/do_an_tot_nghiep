@@ -1,7 +1,7 @@
 import { getSocketInstance, disconnectSocket } from "./core/socketCore";
 import { initConnectionListeners } from "./features/connection/connectionSocket";
 import { listenDashboardEvents } from "./features/dashboard/dashboardSocket";
-import { listenChatEvents, sendSocketChatMessage } from "./features/chat/chatSocket";
+import { listenChatEvents, listenChatError, sendSocketChatMessage } from "./features/chat/chatSocket";
 
 export const getAdminSocket = () => {
   return getSocketInstance();
@@ -26,9 +26,14 @@ export const subscribeChatEvents = (onNewMessage) => {
   return listenChatEvents(socket, onNewMessage);
 };
 
-export const sendChatMessage = ({ conversationId, partnerId, content, messageType }) => {
+export const subscribeChatErrors = (onError) => {
   const socket = getSocketInstance();
-  sendSocketChatMessage(socket, { conversationId, partnerId, content, messageType });
+  return listenChatError(socket, onError);
+};
+
+export const sendChatMessage = ({ conversationId, partnerId, content, messageType, tempId }) => {
+  const socket = getSocketInstance();
+  sendSocketChatMessage(socket, { conversationId, partnerId, content, messageType, tempId });
 };
 
 export default {
@@ -37,5 +42,6 @@ export default {
   subscribeConnectionStatus,
   subscribeDashboardEvents,
   subscribeChatEvents,
+  subscribeChatErrors,
   sendChatMessage,
 };

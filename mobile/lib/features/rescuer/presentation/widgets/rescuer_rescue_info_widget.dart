@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile/core/network/direction_service.dart';
 import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
 import 'package:mobile/features/chat/presentation/screens/messenger_screen.dart';
 import 'package:mobile/shared/widgtes/messenger_widget.dart';
@@ -24,16 +25,6 @@ class RescuerRescueInfoWidget extends StatelessWidget {
     this.durationSec,
     required this.onComplete,
   });
-
-  /// Chuyển số giây thành chuỗi hiển thị phù hợp (ví dụ: "3 phút", "1 giờ 10 phút")
-  String _formatDuration(int seconds) {
-    if (seconds < 60) return "< 1 phút";
-    final minutes = seconds ~/ 60;
-    if (minutes < 60) return "$minutes phút";
-    final hours = minutes ~/ 60;
-    final remainMins = minutes % 60;
-    return remainMins > 0 ? "$hours giờ $remainMins ph" : "$hours giờ";
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,9 +84,7 @@ class RescuerRescueInfoWidget extends StatelessWidget {
                     const Icon(Icons.route, size: 15, color: Color(0xFFD97706)),
                     const SizedBox(width: 4),
                     Text(
-                      distanceKm! < 1
-                          ? "${(distanceKm! * 1000).toStringAsFixed(0)} m"
-                          : "${distanceKm!.toStringAsFixed(1)} km",
+                      DirectionService.formatDistance(distanceKm!),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -112,7 +101,7 @@ class RescuerRescueInfoWidget extends StatelessWidget {
                     const Icon(Icons.access_time, size: 15, color: Color(0xFFD97706)),
                     const SizedBox(width: 4),
                     Text(
-                      "ETA: ${_formatDuration(durationSec!)}",
+                      "ETA: ${DirectionService.formatDuration(durationSec!)}",
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,

@@ -172,6 +172,87 @@ Nhiệm vụ: Phân tích đoạn văn bản từ người dùng và trả về 
             actionTaken: "NONE"
         };
     }
+
+    /**
+     * AI Tóm tắt Lịch sử & Hiệu suất Vận hành (Operational Activity Executive Summary)
+     * @param {Object} params { timeframeDays, stats }
+     */
+    async summarizeActivityLogs({ timeframeDays = 7, stats = {} }) {
+        const { totalSos = 0, completedSos = 0, cancelledSos = 0, activeRescuers = 0, topIncidentCategory = 'Y TẾ' } = stats;
+        const successRate = totalSos > 0 ? ((completedSos / totalSos) * 100).toFixed(1) : "100.0";
+
+        if (GROQ_API_KEY) {
+            try {
+                const apiKey = GROQ_API_KEY;
+                const apiUrl = GROQ_API_URL || "https://api.groq.com/openai/v1/chat/completions";
+                const modelName = GROQ_MODEL || "llama-3.3-70b-versatile";
+
+                const systemPrompt = `
+Bạn là Giám đốc Điều hành Cứu hộ AI (AI Emergency Operations Director) của hệ thống Cứu hộ Khẩn cấp Việt Nam.
+Hãy phân tích các số liệu vận hành và tạo ra một báo cáo tóm tắt điều hành (Executive Summary) ngắn gọn, chuyên nghiệp, súc tích bằng tiếng Việt.
+Trả về ĐÚNG 1 JSON Object không có markdown fence:
+{
+  "summary": "Đoạn văn tóm tắt tổng quan từ 2-3 câu thể hiện tình hình đáp ứng cứu hộ.",
+  "highlights": [
+    "Điểm nổi bật 1 (ví dụ: Tỷ lệ tiếp nhận và xử lý ca SOS đạt...)",
+    "Điểm nổi bật 2 (ví dụ: Sự cố phổ biến nhất là...)",
+    "Điểm nổi bật 3 (ví dụ: Phân bổ lực lượng cứu hộ...)"
+  ],
+  "recommendation": "Khuyến nghị điều phối ngắn gọn cho Admin (1 câu)"
+}
+                `;
+
+                const userPrompt = `Số liệu vận hành trong ${timeframeDays} ngày qua:\n- Tổng ca SOS: ${totalSos}\n- Ca hoàn thành: ${completedSos}\n- Ca bị hủy: ${cancelledSos}\n- Tỷ lệ thành công: ${successRate}%\n- Lực lượng cứu hộ hoạt động: ${activeRescuers}\n- Nhóm sự cố nổi bật: ${topIncidentCategory}`;
+
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: modelName,
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: userPrompt }
+                        ],
+                        temperature: 0.3,
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const contentStr = data.choices?.[0]?.message?.content;
+                    if (contentStr) {
+                        const parsed = JSON.parse(contentStr);
+                        return {
+                            success: true,
+                            source: "GROQ_AI",
+                            summaryText: parsed.summary,
+                            highlights: parsed.highlights || [],
+                            recommendation: parsed.recommendation
+                        };
+                    }
+                }
+            } catch (err) {
+                console.warn("[AI Summary] Groq API error, fallback to local NLP summary generator:", err.message);
+            }
+        }
+
+        // Local NLP Fallback Summary Generator
+        return {
+            success: true,
+            source: "LOCAL_NLP",
+            summaryText: `Trong ${timeframeDays} ngày qua, hệ thống đã tiếp nhận tổng cộng ${totalSos} yêu cầu khẩn cấp SOS. Lực lượng cứu hộ (${activeRescuers} cứu hộ viên hoạt động) đã hỗ trợ xử lý thành công ${completedSos} ca, đạt tỷ lệ hoàn thành ${successRate}%.`,
+            highlights: [
+                `Tỷ lệ giải cứu thành công đạt ${successRate}% với ${completedSos}/${totalSos} ca SOS.`,
+                `Nhóm sự cố xuất hiện phổ biến nhất là ${topIncidentCategory}.`,
+                `Đội ngũ cứu hộ duy trì ${activeRescuers} nhân sự sẵn sàng đáp ứng thời gian thực.`
+            ],
+            recommendation: `Khuyến nghị duy trì mật độ cứu hộ viên trực ban tại các vùng có nguy cơ cao để giữ thời gian phản hồi dưới 5 phút.`
+        };
+    }
 }
 
 module.exports = new AiClassifierService();

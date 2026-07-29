@@ -1,9 +1,9 @@
 import { axiosJWT } from "../shared/AuthApi";
 
-export const getAllRatingsAdmin = async (page = 1, limit = 20) => {
+export const getAllRatingsAdmin = async (page = 1, limit = 20, ratingFilter = "") => {
   try {
     const response = await axiosJWT.get("/api/ratings/admin", {
-      params: { page, limit },
+      params: { page, limit, ratingFilter },
     });
     return response.data;
   } catch (error) {

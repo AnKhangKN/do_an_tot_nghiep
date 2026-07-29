@@ -192,20 +192,33 @@ class AppSession {
 
     // 2. Báo offline cho server nếu đang online
     if (isOnline && socket.isConnected) {
-      socket.emit(SocketEvents.goOffline);
+      try {
+        socket.emit(SocketEvents.goOffline);
+      } catch (_) {}
     }
 
-    // 3. Dừng các service
-    heartbeatSocket.stop(); // (Nên có hàm stop cho heartbeat)
-    socket.disconnect();
-    await background.stop();
+    // 3. Dừng các service & ngắt kết nối Socket hoàn toàn
+    try {
+      heartbeatSocket.stop();
+    } catch (_) {}
 
+    try {
+      socket.disconnect();
+    } catch (_) {}
+
+    try {
+      await background.stop();
+    } catch (_) {}
+
+    // 4. Reset trạng thái SessionController & cờ khởi tạo
+    _isInitialized = false;
     controller.reset();
   }
 
   Future<void> logout() async {
     await stopSession();
     await storageService.clearAll();
+    await storageService.clearToken();
   }
 
   // =========================

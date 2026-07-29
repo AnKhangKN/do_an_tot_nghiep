@@ -109,6 +109,30 @@ class SosRequestController {
             next(error);
         }
     }
+
+    postRescueCheckin = async (req, res, next) => {
+        try {
+            const { sosRequestId, healthStatus, checkinNotes, rating, comment } = req.body;
+            const userId = req.userId;
+
+            const result = await sos_requestService.submitPostRescueCheckin({
+                sosRequestId,
+                userId,
+                healthStatus,
+                checkinNotes,
+                rating,
+                comment
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Xác nhận trạng thái an toàn sau cứu hộ thành công!",
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new SosRequestController()

@@ -11,6 +11,7 @@ const aiModerationModel = {
         suggestedCategory: "suggested_category",
         actionTaken: "action_taken",
         reviewedBy: "reviewed_by",
+        textContent: "text_content",
         createdAt: "created_at"
     }
 };

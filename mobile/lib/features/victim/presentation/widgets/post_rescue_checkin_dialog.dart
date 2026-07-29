@@ -1,0 +1,298 @@
+import 'package:flutter/material.dart';
+import 'package:mobile/core/constants/color_constants.dart';
+import 'package:mobile/core/di/di.dart';
+import 'package:mobile/features/victim/data/victim_service.dart';
+
+class PostRescueCheckinDialog extends StatefulWidget {
+  final String sosRequestId;
+  final String? rescuerName;
+
+  const PostRescueCheckinDialog({
+    super.key,
+    required this.sosRequestId,
+    this.rescuerName,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    required String sosRequestId,
+    String? rescuerName,
+  }) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => PostRescueCheckinDialog(
+        sosRequestId: sosRequestId,
+        rescuerName: rescuerName,
+      ),
+    );
+  }
+
+  @override
+  State<PostRescueCheckinDialog> createState() => _PostRescueCheckinDialogState();
+}
+
+class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
+  String _selectedHealthStatus = 'SAFE'; // 'SAFE', 'NEEDS_MEDICAL_CHECK', 'RECOVERING'
+  int _selectedRating = 5;
+  final TextEditingController _notesController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit() async {
+    setState(() => _isSubmitting = true);
+    try {
+      final victimService = getIt<VictimService>();
+      await victimService.submitPostRescueCheckin(
+        sosRequestId: widget.sosRequestId,
+        healthStatus: _selectedHealthStatus,
+        checkinNotes: _notesController.text.trim(),
+        rating: _selectedRating,
+        comment: _notesController.text.trim(),
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cảm ơn bạn! Đã ghi nhận xác nhận an toàn sau cứu hộ.'),
+            backgroundColor: ColorConstants.amenityGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Lỗi gửi post-rescue checkin: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể gửi xác nhận: ${e.toString()}'),
+            backgroundColor: ColorConstants.danger,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      padding: EdgeInsets.only(bottom: bottomPadding),
+      decoration: const BoxDecoration(
+        color: ColorConstants.surfaceWhite,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: ColorConstants.amenityGreen.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.health_and_safety_rounded,
+                      color: ColorConstants.amenityGreen,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Theo Dõi Sau Cứu Hộ',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: ColorConstants.slateDark,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.rescuerName != null
+                              ? 'Ca hỗ trợ của ${widget.rescuerName} đã hoàn thành'
+                              : 'Ca cứu hộ của bạn đã hoàn thành',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: ColorConstants.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close, color: ColorConstants.textMuted),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Trạng thái Sức khỏe (Health Status Selection)
+              const Text(
+                'Tình trạng sức khỏe hiện tại của bạn:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: ColorConstants.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildHealthChip(
+                    label: '✅ Tôi Đã An Toàn',
+                    value: 'SAFE',
+                    color: ColorConstants.amenityGreen,
+                  ),
+                  _buildHealthChip(
+                    label: '🏥 Cần Kiểm Tra Y Tế',
+                    value: 'NEEDS_MEDICAL_CHECK',
+                    color: ColorConstants.dangerHigh,
+                  ),
+                  _buildHealthChip(
+                    label: '🩹 Đang Hồi Phục',
+                    value: 'RECOVERING',
+                    color: ColorConstants.dangerMedium,
+                  ),
+                  _buildHealthChip(
+                    label: '💬 Khác / Ý Kiến Khác',
+                    value: 'OTHER',
+                    color: ColorConstants.purpleQR,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Đánh giá Cứu hộ viên (Rating 1-5 stars)
+              const Text(
+                'Đánh giá chất lượng hỗ trợ:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: ColorConstants.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  final starIndex = index + 1;
+                  return IconButton(
+                    onPressed: () => setState(() => _selectedRating = starIndex),
+                    icon: Icon(
+                      starIndex <= _selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
+                      color: Colors.amber.shade600,
+                      size: 36,
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 16),
+
+              // Ô nhập Ghi chú / Phản hồi
+              TextField(
+                controller: _notesController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Nhập phản hồi hoặc ghi chú sức khỏe bổ sung...',
+                  hintStyle: const TextStyle(fontSize: 12, color: ColorConstants.textMuted),
+                  filled: true,
+                  fillColor: ColorConstants.bgCanvas,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: ColorConstants.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: ColorConstants.border),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Submit Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: _isSubmitting ? null : _handleSubmit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorConstants.amenityGreen,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 2,
+                  ),
+                  icon: _isSubmitting
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.check_circle_rounded),
+                  label: Text(
+                    _isSubmitting ? 'Đang gửi...' : 'Gửi Xác Nhận An Toàn',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHealthChip({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    final isSelected = _selectedHealthStatus == value;
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : ColorConstants.textPrimary,
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      selected: isSelected,
+      selectedColor: color,
+      backgroundColor: ColorConstants.bgCanvas,
+      side: BorderSide(color: isSelected ? color : ColorConstants.border),
+      onSelected: (selected) {
+        if (selected) {
+          setState(() => _selectedHealthStatus = value);
+        }
+      },
+    );
+  }
+}

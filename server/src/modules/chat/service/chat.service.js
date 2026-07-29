@@ -2,6 +2,7 @@ const { generateUUID } = require('@/utils/uuid.util');
 const chatRepository = require('../repository/chat.repository');
 const userService = require('../../user/services/user.service');
 const { transaction } = require('@/config/database.config');
+const aiModerationService = require('@modules/ai_moderation/service/ai_moderation.service');
 
 class ChatService {
     constructor() {
@@ -188,6 +189,13 @@ class ChatService {
             throw new Error('Bạn không có quyền gửi tin nhắn trong cuộc hội thoại này');
         }
 
+        if (messageType === 'TEXT' && content) {
+            const spamCheck = await aiModerationService.checkKnownSpamText(content);
+            if (spamCheck.isBlocked) {
+                throw new Error(`Tin nhắn bị từ chối: ${spamCheck.reason || 'Nội dung tin nhắn đã bị đánh dấu vi phạm tiêu chuẩn cộng đồng.'}`);
+            }
+        }
+
         const messageId = generateUUID();
         const now = new Date();
 
@@ -207,6 +215,10 @@ class ChatService {
                 lastMessageAt: now,
             });
         });
+
+        if (messageType === 'TEXT' && content) {
+            aiModerationService.processModerationAsync("CHAT_MESSAGE", messageId, content);
+        }
 
         const recipientId = conversation.user1_id === senderId ? conversation.user2_id : conversation.user1_id;
 

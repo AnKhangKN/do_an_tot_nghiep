@@ -84,3 +84,26 @@ export const updateFeedbackStatusAdmin = async (id, data) => {
     }
 };
 
+export const getDuplicateAmenitiesAdmin = async () => {
+    try {
+        const response = await axiosJWT.get('/api/emergency-amenities/admin/duplicates');
+        return response.data;
+    } catch (error) {
+        console.error("Get duplicate amenities admin error:", error);
+        throw error;
+    }
+};
+
+export const mergeAmenitiesAdmin = async (primaryAmenityId, duplicateAmenityId) => {
+    try {
+        const response = await axiosJWT.post('/api/emergency-amenities/admin/merge', {
+            primaryAmenityId,
+            duplicateAmenityId
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Merge amenities admin error:", error);
+        throw error;
+    }
+};
+
