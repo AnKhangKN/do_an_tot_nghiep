@@ -232,6 +232,24 @@ class AuthRepository {
     await service.resendOtp({'email': email});
   }
 
+  Future<void> forgotPassword({required String email}) async {
+    await service.forgotPassword({'email': email});
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String otpCode,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    await service.resetPassword({
+      'email': email,
+      'otpCode': otpCode,
+      'newPassword': newPassword,
+      'confirmPassword': confirmPassword,
+    });
+  }
+
   Future<void> registerDeviceToken(String token) async {
     try {
       final validToken = await getValidAccessToken();
@@ -261,6 +279,19 @@ class AuthRepository {
       }
     } catch (e) {
       debugPrint("🚨 [AuthRepository] Lỗi đăng ký thiết bị: $e");
+    }
+  }
+
+  Future<void> appealBan({String? email, required String reason}) async {
+    try {
+      if (email != null && email.isNotEmpty) {
+        await service.appealBanPublic({'email': email, 'reason': reason});
+      } else {
+        await service.appealBan({'reason': reason});
+      }
+    } catch (e) {
+      debugPrint("🚨 [AuthRepository] Lỗi gửi kháng cáo: $e");
+      rethrow;
     }
   }
 

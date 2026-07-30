@@ -112,11 +112,18 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       if (e is DioException && e.response?.data != null) {
         final resData = e.response!.data;
-        if (resData is Map<String, dynamic> && resData['requireOtp'] == true) {
-          requireOtp = true;
-          unverifiedEmail = resData['email']?.toString() ?? email;
-          error = resData['message']?.toString() ?? "Tài khoản chưa xác thực Email. Vui lòng nhập mã OTP!";
-          return false;
+        if (resData is Map<String, dynamic>) {
+          if (resData['requireOtp'] == true) {
+            requireOtp = true;
+            unverifiedEmail = resData['email']?.toString() ?? email;
+            error = resData['message']?.toString() ?? "Tài khoản chưa xác thực Email. Vui lòng nhập mã OTP!";
+            return false;
+          }
+          if (resData['isBanned'] == true) {
+            final reason = resData['banReason']?.toString() ?? 'Không có lý do';
+            error = 'Tài khoản của bạn đã bị khóa!\nLý do: $reason';
+            return false;
+          }
         }
       }
       error = _parseError(e);
@@ -251,6 +258,50 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> forgotPassword(String email) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      await authRepository.forgotPassword(email: email);
+      return true;
+    } catch (e) {
+      error = _parseError(e);
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String email,
+    required String otpCode,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      await authRepository.resetPassword(
+        email: email,
+        otpCode: otpCode,
+        newPassword: newPassword,
+        confirmPassword: confirmPassword,
+      );
+      return true;
+    } catch (e) {
+      error = _parseError(e);
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> resendOtp(String email) async {
     try {
       isLoading = true;
@@ -318,6 +369,14 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       debugPrint("🚨 [Google Sign-In Error]: $e");
+      if (e is DioException && e.response?.data != null) {
+        final resData = e.response!.data;
+        if (resData is Map<String, dynamic> && resData['isBanned'] == true) {
+          final reason = resData['banReason']?.toString() ?? 'Không có lý do';
+          error = 'Tài khoản của bạn đã bị khóa!\nLý do: $reason';
+          return false;
+        }
+      }
       error = _parseError(e);
       return false;
     } finally {

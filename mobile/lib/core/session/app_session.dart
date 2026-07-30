@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile/core/background/background_config.dart';
 import 'package:mobile/core/firebase/notification_service.dart';
+import 'package:mobile/core/socket/modules/ban_socket.dart';
 import 'package:mobile/core/socket/modules/heartbeat_socket.dart';
 import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/socket/modules/rescuer_socket.dart';
@@ -33,6 +34,7 @@ class AppSession {
   final LocationRepository locationRepository;
   final RescuerSocket rescuerSocket;
   final VictimSocket victimSocket;
+  final BanSocket banSocket;
   final NotificationService notificationService;
 
   AppSession({
@@ -46,6 +48,7 @@ class AppSession {
     required this.locationRepository,
     required this.rescuerSocket,
     required this.victimSocket,
+    required this.banSocket,
     required this.notificationService
   });
 
@@ -64,6 +67,15 @@ class AppSession {
   // INITIALIZE SESSION
   // =========================
   Future<void> init() async {
+    // 0. Kiểm tra trạng thái khóa tài khoản đã lưu ở lần trước
+    final wasBanned = await storageService.getIsBanned();
+    if (wasBanned) {
+      final banReason = await storageService.getBanReason();
+      _isInitialized = true;
+      controller.setBanned(reason: banReason);
+      return;
+    }
+
     // 1. Luôn tự động kiểm tra và gia hạn Access Token mới trước khi vào app
     final token = await authRepository.getValidAccessToken();
     
@@ -85,6 +97,12 @@ class AppSession {
     if (token != null) {
       try {
         final profileResponse = await authRepository.getMe();
+
+        if (profileResponse.status == 'BANNED') {
+          _isInitialized = true;
+          controller.setBanned(reason: profileResponse.banReason);
+          return;
+        }
 
         await socket.ensureConnected(
           token,
@@ -110,6 +128,9 @@ class AppSession {
           victimSocket.listenSosNotFound();
         }
 
+        // Lắng nghe sự kiện khóa tài khoản
+        banSocket.listenUserBanned();
+
         // Tự động kiểm tra và khôi phục tiến trình cứu hộ (nếu có)
         await checkAndRestoreActiveRescue();
       } catch (e, stackTrace) {
@@ -119,6 +140,13 @@ class AppSession {
         if (newToken != null) {
           try {
             final profileResponse = await authRepository.getMe();
+
+            if (profileResponse.status == 'BANNED') {
+              _isInitialized = true;
+              controller.setBanned(reason: profileResponse.banReason);
+              return;
+            }
+
             await socket.ensureConnected(
               newToken,
               profileResponse.userId,
@@ -142,6 +170,7 @@ class AppSession {
               victimSocket.listenSosNotFound();
             }
 
+            banSocket.listenUserBanned();
             await checkAndRestoreActiveRescue();
             return;
           } catch (err) {
@@ -210,6 +239,10 @@ class AppSession {
       await background.stop();
     } catch (_) {}
 
+    try {
+      banSocket.stopListening();
+    } catch (_) {}
+
     // 4. Reset trạng thái SessionController & cờ khởi tạo
     _isInitialized = false;
     controller.reset();
@@ -275,9 +308,34 @@ class AppSession {
         controller.updatePosition(position);
       });
 
+      // Đăng ký lắng nghe response trước khi emit
+      final completer = Completer<void>();
+
+      void handler(dynamic data) {
+        if (data is Map && data['success'] == true) {
+          completer.complete();
+        } else {
+          final msg = data is Map ? (data['message'] ?? 'Không thể online!') : 'Không thể online!';
+          completer.completeError(Exception(msg));
+        }
+      }
+
+      socket.on('rescuer:online:response', handler);
+
       // Bắn event lên Server
       socket.emit(SocketEvents.goOnline);
-      controller.setOnline(true);
+
+      try {
+        // Timeout sau 10s nếu server không phản hồi
+        await completer.future.timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => throw Exception('Server không phản hồi, vui lòng thử lại!'),
+        );
+
+        controller.setOnline(true);
+      } finally {
+        socket.off('rescuer:online:response');
+      }
 
       await background.updateNotification(
         title: BackgroundConfig.notificationTitle,
@@ -286,9 +344,6 @@ class AppSession {
 
       await Future.delayed(const Duration(seconds: 2));
       return true;
-    } catch (e) {
-      debugPrint("🚨 Go online failed: $e");
-      return false;
     } finally {
       // Đảm bảo luôn mở khóa nút bấm
       controller.setProcessing(false);

@@ -555,6 +555,17 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                                         await provider.goOffline();
                                       } else {
                                         await provider.goOnline();
+                                        if (provider.error != null) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                backgroundColor: Colors.red,
+                                                content: Text(provider.error!),
+                                              ),
+                                            );
+                                            provider.clearError();
+                                          }
+                                        }
                                       }
                                     },
                                   ),

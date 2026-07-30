@@ -1,5 +1,6 @@
 const { ACCESS_TOKEN } = require("@/config/env.config");
 const jwt = require("jsonwebtoken");
+const userRepository = require("@/modules/user/repository/user.repository");
 
 const extractToken = (req) => {
     const authHeader = req.headers["authorization"];
@@ -40,8 +41,21 @@ const isRescuer = (req, res, next) => {
     next();
 };
 
+const isNotBanned = async (req, res, next) => {
+    try {
+        const user = await userRepository.getUserStatus(req.userId);
+        if (!user || user.status === "BANNED") {
+            return res.status(403).json({ message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin!" });
+        }
+        next();
+    } catch (error) {
+        return res.status(500).json({ message: "Lỗi kiểm tra trạng thái tài khoản" });
+    }
+};
+
 module.exports = {
     verifyToken,
     isAdmin,
-    isRescuer
+    isRescuer,
+    isNotBanned
 }

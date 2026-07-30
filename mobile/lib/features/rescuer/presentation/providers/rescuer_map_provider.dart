@@ -10,22 +10,27 @@ class RescuerMapProvider extends ChangeNotifier {
   RescuerMapProvider(this._appSession, this.locationRepository);
 
   bool _loading = false;
+  String? _error;
 
   bool get loading => _loading;
+  String? get error => _error;
 
-  // Future<void> init() async {
-  //   // Load danh sách nạn nhân gần đó
-  //
-  // }
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
 
   Future<void> goOnline() async {
     _setLoading(true);
+    _error = null;
 
     try {
       await _appSession.goOnline();
 
       notifyListeners();
     } catch (e) {
+      _error = e.toString().replaceFirst("Exception: ", "");
+      notifyListeners();
       debugPrint("goOnline error: $e");
     } finally {
       _setLoading(false);

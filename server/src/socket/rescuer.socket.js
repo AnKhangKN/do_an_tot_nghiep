@@ -23,8 +23,15 @@ module.exports = (socket, io) => {
             console.log("User going online:", userId);
 
             await rescuerService.goOnline({ userId });
+
+            socket.emit("rescuer:online:response", { success: true });
         } catch (error) {
             console.error("Go online error:", error);
+
+            socket.emit("rescuer:online:response", {
+                success: false,
+                message: error.message || "Không thể bật trạng thái online!"
+            });
         }
     });
 

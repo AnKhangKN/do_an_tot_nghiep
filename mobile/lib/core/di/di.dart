@@ -8,6 +8,7 @@ import 'package:mobile/core/location/data/location_service.dart';
 import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/session/session_controller.dart';
 import 'package:mobile/core/socket/core_socket.dart';
+import 'package:mobile/core/socket/modules/ban_socket.dart';
 import 'package:mobile/core/socket/modules/heartbeat_socket.dart';
 import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/socket/modules/rescuer_socket.dart';
@@ -80,6 +81,9 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(
     () => VictimSocket(getIt<CoreSocket>(), getIt<SessionController>()),
   );
+  getIt.registerLazySingleton(
+    () => BanSocket(getIt<CoreSocket>(), getIt<SessionController>()),
+  );
   getIt.registerLazySingleton(() => NotificationService());
 
   // Các Service lấy trực tiếp .dio đã được cấu hình chuẩn chỉ
@@ -137,6 +141,7 @@ Future<void> initDI() async {
       locationRepository: getIt<LocationRepository>(),
       rescuerSocket: getIt<RescuerSocket>(),
       victimSocket: getIt<VictimSocket>(),
+      banSocket: getIt<BanSocket>(),
       notificationService: getIt<NotificationService>()
     ),
   );

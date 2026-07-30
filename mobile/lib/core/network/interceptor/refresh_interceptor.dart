@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../session/session_controller.dart';
 import '../../storage/storage_service.dart';
 
 class RefreshInterceptor extends Interceptor {
@@ -16,6 +18,19 @@ class RefreshInterceptor extends Interceptor {
     // tránh loop refresh
     if (request.path.contains('/api/auth/refresh-token')) {
       return handler.next(err);
+    }
+
+    if (err.response?.statusCode == 403) {
+      final msg = err.response?.data is Map
+          ? (err.response?.data as Map)['message']?.toString() ?? ''
+          : '';
+      if (msg.contains('đã bị khóa')) {
+        final banReason = err.response?.data is Map
+            ? (err.response?.data as Map)['banReason']?.toString()
+            : null;
+        GetIt.instance<SessionController>().setBanned(reason: banReason);
+        return handler.next(err);
+      }
     }
 
     if (err.response?.statusCode == 401) {

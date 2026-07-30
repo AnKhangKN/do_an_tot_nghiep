@@ -1,5 +1,6 @@
 import { store } from "@/store";
 import { setCredentials } from "@/store/accessToken/accessTokenSlice";
+import { setBanned } from "@/store/ban/banSlice";
 import axios from "axios";
 
 export const axiosJWT = axios.create({
@@ -23,6 +24,16 @@ axiosJWT.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+
+        if (error.response?.status === 403) {
+            const msg = error.response?.data?.message || '';
+            if (msg.includes('đã bị khóa')) {
+                store.dispatch(setBanned({
+                    reason: error.response?.data?.data?.ban_reason || msg,
+                }));
+                return Promise.reject(error);
+            }
+        }
 
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
@@ -77,5 +88,59 @@ export const logout = async () => {
     );
 
     return response.data;
+};
+
+export const forgotPassword = async (email) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/api/auth/forgot-password`,
+            { email },
+            { withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        throw error;
+    }
+};
+
+export const resetPassword = async (email, otpCode, newPassword, confirmPassword) => {
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/api/auth/reset-password`,
+            { email, otpCode, newPassword, confirmPassword },
+            { withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Reset password error:", error);
+        throw error;
+    }
+};
+
+export const appealBan = async (reason) => {
+    try {
+        const response = await axiosJWT.post(
+            `${import.meta.env.VITE_BACKEND_URL}/api/auth/appeal-ban`,
+            { reason }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Appeal ban error:", error);
+        throw error;
+    }
+};
+
+export const appealBanPublic = async (email, reason) => {
+    try {
+        const response = await axiosJWT.post(
+            `${import.meta.env.VITE_BACKEND_URL}/api/auth/appeal`,
+            { email, reason }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Appeal ban public error:", error);
+        throw error;
+    }
 };
 

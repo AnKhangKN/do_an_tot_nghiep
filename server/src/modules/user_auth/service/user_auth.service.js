@@ -37,6 +37,12 @@ class UserAuthService {
         const rows = await this.userAuth.getPasswordByUserId(client, { userId });
         return mapFields(rows, this.user_authModel);
     }
+
+    updatePassword = async (client, { userId, password }) => {
+        const hash = await hashPassword(password);
+        const rows = await this.userAuth.updatePasswordByUserId(client, { userId, password: hash });
+        return rows ? mapFields(rows, this.user_authModel) : null;
+    }
 }
 
 module.exports = new UserAuthService();

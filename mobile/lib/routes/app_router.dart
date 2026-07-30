@@ -9,6 +9,7 @@ import '../features/splash/presentation/screens/splash_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/verify_otp_screen.dart';
+import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/history/presentation/screens/history_screen.dart';
 import '../features/chat/presentation/screens/chat_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
@@ -37,6 +38,7 @@ class AppRouter {
       final isLogin = state.matchedLocation == RouterConstants.login;
       final isRegister = state.matchedLocation == RouterConstants.register;
       final isVerifyOtp = state.matchedLocation == RouterConstants.verifyOtp;
+      final isForgotPassword = state.matchedLocation == RouterConstants.forgotPassword;
 
       // 1. Nếu đang ở Splash mà đã khởi tạo xong
       if (isSplash) {
@@ -47,8 +49,8 @@ class AppRouter {
         }
       }
 
-      // 2. Nếu chưa đăng nhập mà cố tình vào các màn hình bên trong -> Đá về Login (ngoại trừ Login, Register và VerifyOtp)
-      if (!isLoggedIn && !isLogin && !isRegister && !isVerifyOtp) {
+      // 2. Nếu chưa đăng nhập mà cố tình vào các màn hình bên trong -> Đá về Login (ngoại trừ Login, Register, VerifyOtp và ForgotPassword)
+      if (!isLoggedIn && !isLogin && !isRegister && !isVerifyOtp && !isForgotPassword) {
         return RouterConstants.login;
       }
 
@@ -67,6 +69,8 @@ class AppRouter {
       ),
 
       GoRoute(path: RouterConstants.login, builder: (context, state) => const LoginScreen()),
+
+      GoRoute(path: RouterConstants.forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
 
       GoRoute(path: RouterConstants.register, builder: (context, state) => const RegisterScreen()),
 

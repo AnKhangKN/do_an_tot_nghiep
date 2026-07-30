@@ -125,6 +125,7 @@ class CoreSocket {
     _socket?.emit(event, data);
   }
 
+
   // SỬA: Thêm cơ chế tự động kết nối nếu quên gọi connect trước đó
   void on(String event, void Function(dynamic) handler) {
     if (_socket == null) {

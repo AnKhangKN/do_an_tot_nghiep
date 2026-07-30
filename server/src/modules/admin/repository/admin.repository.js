@@ -107,6 +107,152 @@ class AdminRepository {
     return result.rows;
   };
 
+  banUser = async (client, { userId, reason, bannedBy }) => {
+    const query = `
+      UPDATE users
+      SET status = 'BANNED',
+          ban_reason = $2,
+          banned_at = CURRENT_TIMESTAMP,
+          banned_by = $3,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $1
+      RETURNING user_id, status, ban_reason, banned_at, banned_by
+    `;
+    const result = await client.query(query, [userId, reason, bannedBy]);
+    return result.rows[0];
+  };
+
+  unbanUser = async (client, { userId }) => {
+    const query = `
+      UPDATE users
+      SET status = 'ACTIVE',
+          ban_reason = NULL,
+          banned_at = NULL,
+          banned_by = NULL,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $1
+      RETURNING user_id, status
+    `;
+    const result = await client.query(query, [userId]);
+    return result.rows[0];
+  };
+
+  getBannedUsers = async ({ page, limit }) => {
+    const offset = (page - 1) * limit;
+
+    const query = `
+      SELECT
+        u.user_id,
+        u.full_name,
+        u.email,
+        u.phone,
+        u.role,
+        u.avatar_url,
+        u.ban_reason,
+        u.banned_at,
+        u.banned_by,
+        u.created_at,
+        u.updated_at,
+        b.full_name AS banned_by_name
+      FROM users u
+      LEFT JOIN users b ON u.banned_by = b.user_id
+      WHERE u.status = 'BANNED'
+      ORDER BY u.banned_at DESC
+      LIMIT $1 OFFSET $2
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM users
+      WHERE status = 'BANNED'
+    `;
+
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(query, [limit, offset]),
+      pool.query(countQuery)
+    ]);
+
+    const total = parseInt(countResult.rows[0].total, 10);
+
+    return {
+      data: dataResult.rows,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
+  };
+
+  getAppeals = async ({ page, limit, status }) => {
+    const offset = (page - 1) * limit;
+    let whereClause = '';
+    let countWhereClause = '';
+    const params = [limit, offset];
+    if (status) {
+      whereClause = 'WHERE ba.status = $3';
+      countWhereClause = 'WHERE status = $1';
+      params.push(status);
+    }
+
+    const query = `
+      SELECT
+        ba.appeal_id AS id,
+        ba.user_id,
+        ba.reason,
+        ba.status,
+        ba.created_at,
+        ba.updated_at AS handled_at,
+        ba.reviewed_by,
+        rb.full_name AS handled_by_name,
+        ba.admin_note,
+        u.full_name AS user_name,
+        u.email AS user_email,
+        u.ban_reason
+      FROM ban_appeals ba
+      LEFT JOIN users u ON ba.user_id = u.user_id
+      LEFT JOIN users rb ON ba.reviewed_by = rb.user_id
+      ${whereClause}
+      ORDER BY ba.created_at DESC
+      LIMIT $1 OFFSET $2
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*) AS total FROM ban_appeals ${countWhereClause}
+    `;
+
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(query, params),
+      status ? pool.query(countQuery, [status]) : pool.query(countQuery)
+    ]);
+
+    return {
+      data: dataResult.rows,
+      total: parseInt(countResult.rows[0].total, 10),
+      page,
+      totalPages: Math.ceil(parseInt(countResult.rows[0].total, 10) / limit)
+    };
+  };
+
+  getAppealById = async (appealId) => {
+    const query = `SELECT * FROM ban_appeals WHERE appeal_id = $1`;
+    try {
+      const result = await pool.query(query, [appealId]);
+      return result.rows[0] || null;
+    } catch {
+      return null;
+    }
+  };
+
+  updateAppealStatus = async (client, appealId, status, reviewedBy, adminNote = null) => {
+    const query = `
+      UPDATE ban_appeals
+      SET status = $2, reviewed_by = $3, admin_note = $4, updated_at = CURRENT_TIMESTAMP
+      WHERE appeal_id = $1
+      RETURNING *
+    `;
+    const result = await client.query(query, [appealId, status, reviewedBy, adminNote]);
+    return result.rows[0];
+  };
+
   getExportSosData = async (days = 30) => {
     const query = `
       SELECT 

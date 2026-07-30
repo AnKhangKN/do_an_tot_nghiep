@@ -18,6 +18,9 @@ class RouterConstants {
   // Tính năng Cứu hộ (Rescuer)
   static const String rescuerMap = '/rescuer-map';
 
+  // Quên mật khẩu
+  static const String forgotPassword = '/forgot-password';
+
   // Cài đặt & Thông tin (Settings)
   static const String setting = '/setting';
   static const String appInfo = '/app-info';

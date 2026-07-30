@@ -44,4 +44,20 @@ class AuthService {
   Future<Response> getActiveSOS() async {
     return await dio.get('/api/sos/sos_requests/active');
   }
+
+  Future<Response> forgotPassword(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/forgot-password', data: data);
+  }
+
+  Future<Response> resetPassword(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/reset-password', data: data);
+  }
+
+  Future<Response> appealBan(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/appeal-ban', data: data);
+  }
+
+  Future<Response> appealBanPublic(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/appeal', data: data);
+  }
 }

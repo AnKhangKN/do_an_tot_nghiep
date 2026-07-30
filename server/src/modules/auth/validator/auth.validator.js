@@ -141,10 +141,85 @@ const validatorGoogleLogin = (req, res, next) => {
     }
 };
 
+const validatorForgotPassword = (req, res, next) => {
+    try {
+        let { email } = req.body;
+
+        if (!email || email.trim() === "") {
+            throwError("Email không được để trống!", 400);
+        }
+
+        email = email.trim();
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throwError("Email không hợp lệ!", 400);
+        }
+
+        req.body.email = email.toLowerCase();
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
+const validatorResetPassword = (req, res, next) => {
+    try {
+        let { email, otpCode, newPassword, confirmPassword } = req.body;
+
+        if (!email || email.trim() === "") {
+            throwError("Email không được để trống!", 400);
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throwError("Email không hợp lệ!", 400);
+        }
+
+        req.body.email = email.trim().toLowerCase();
+
+        if (!otpCode || otpCode.trim() === "") {
+            throwError("Mã OTP không được để trống!", 400);
+        }
+
+        otpCode = otpCode.trim();
+        if (!/^\d{6}$/.test(otpCode)) {
+            throwError("Mã OTP phải đúng 6 chữ số!", 400);
+        }
+
+        req.body.otpCode = otpCode;
+
+        if (!newPassword) {
+            throwError("Mật khẩu mới không được để trống!", 400);
+        }
+
+        if (newPassword.length < 6) {
+            throwError("Mật khẩu mới phải ít nhất 6 ký tự!", 400);
+        }
+
+        if (!confirmPassword) {
+            throwError("Xác nhận mật khẩu không được để trống!", 400);
+        }
+
+        if (newPassword !== confirmPassword) {
+            throwError("Mật khẩu mới và xác nhận mật khẩu không khớp!", 400);
+        }
+
+        req.body.newPassword = newPassword;
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     validatorRegister,
     validatorGuestLogin,
     validatorVerifyOtp,
     validatorResendOtp,
     validatorGoogleLogin,
+    validatorForgotPassword,
+    validatorResetPassword,
 };

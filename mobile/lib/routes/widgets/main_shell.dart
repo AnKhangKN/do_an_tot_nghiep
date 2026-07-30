@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/shared/widgtes/banned_dialog_widget.dart';
 import 'package:mobile/shared/widgtes/bottom_nav_bar_widget.dart';
 
 import '../../core/di/di.dart';
 import '../../core/session/app_session.dart';
+import '../../core/session/session_controller.dart';
 
 class MainShell extends StatefulWidget {
   final Widget child;
@@ -25,6 +27,36 @@ class _MainShellState extends State<MainShell> {
     '/notifications',
     '/profile',
   ];
+
+  bool _banDialogShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final sessionController = getIt<SessionController>();
+    sessionController.addListener(_onSessionChanged);
+  }
+
+  @override
+  void dispose() {
+    getIt<SessionController>().removeListener(_onSessionChanged);
+    super.dispose();
+  }
+
+  void _onSessionChanged() {
+    final controller = getIt<SessionController>();
+    if (controller.isBanned && !_banDialogShown && mounted) {
+      _banDialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        BannedDialogWidget.show(
+          context,
+          reason: controller.banReason,
+        );
+      });
+    } else if (!controller.isBanned) {
+      _banDialogShown = false;
+    }
+  }
 
   int _calculateCurrentIndex(String location) {
     if (location == '/rescuer-map' || location == '/map') {

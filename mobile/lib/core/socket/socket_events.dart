@@ -33,4 +33,9 @@ class SocketEvents {
   // HEARTBEAT
   // =========================
   static const heartbeat = "rescuer:heartbeat";
+
+  // =========================
+  // BAN
+  // =========================
+  static const userBanned = "user:banned";
 }

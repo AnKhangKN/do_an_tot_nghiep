@@ -218,11 +218,68 @@ class AuthController {
         }
     };
 
+    appealBan = async (req, res, next) => {
+        try {
+            const { reason } = req.body;
+            const result = await authService.appealBan({ userId: req.userId, reason });
+            return res.status(200).json({
+                success: true,
+                message: "Yêu cầu kháng cáo đã được gửi. Admin sẽ xem xét và phản hồi sớm nhất!",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    appealBanPublic = async (req, res, next) => {
+        try {
+            const { email, reason } = req.body;
+            if (!email || !email.trim()) {
+                return res.status(400).json({ success: false, message: "Vui lòng nhập email!" });
+            }
+            const result = await authService.appealBanByEmail({ email: email.trim().toLowerCase(), reason });
+            return res.status(200).json({
+                success: true,
+                message: "Yêu cầu kháng cáo đã được gửi. Admin sẽ xem xét và phản hồi sớm nhất!",
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     verifyEmail = async (req, res, next) => { };
 
-    forgotPassword = async (req, res, next) => { };
+    forgotPassword = async (req, res, next) => {
+        try {
+            const { email } = req.body;
 
-    resetPassword = async (req, res, next) => { };
+            const result = await authService.forgotPassword({ email });
+
+            return res.status(200).json({
+                success: true,
+                message: result.message,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    resetPassword = async (req, res, next) => {
+        try {
+            const { email, otpCode, newPassword } = req.body;
+
+            const result = await authService.resetPassword({ email, otpCode, newPassword });
+
+            return res.status(200).json({
+                success: true,
+                message: result.message,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
 }
 
 module.exports = new AuthController();

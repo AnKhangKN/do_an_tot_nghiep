@@ -33,6 +33,35 @@ class StorageService {
     await _storage.deleteAll();
   }
 
+  static const String _isBannedKey = 'is_banned';
+  static const String _banReasonKey = 'ban_reason';
+
+  Future<void> saveBanState({required bool isBanned, String? reason}) async {
+    if (isBanned) {
+      await _storage.write(key: _isBannedKey, value: 'true');
+      if (reason != null) {
+        await _storage.write(key: _banReasonKey, value: reason);
+      }
+    } else {
+      await _storage.delete(key: _isBannedKey);
+      await _storage.delete(key: _banReasonKey);
+    }
+  }
+
+  Future<bool> getIsBanned() async {
+    final val = await _storage.read(key: _isBannedKey);
+    return val == 'true';
+  }
+
+  Future<String?> getBanReason() async {
+    return _storage.read(key: _banReasonKey);
+  }
+
+  Future<void> clearBanState() async {
+    await _storage.delete(key: _isBannedKey);
+    await _storage.delete(key: _banReasonKey);
+  }
+
   static const String _savedPhoneKey = 'saved_sos_phone';
 
   Future<void> saveSavedPhone(String phone) async {

@@ -13,6 +13,7 @@ import {
   PiStorefrontFill,
   PiCaretLeftBold,
   PiRobotFill,
+  PiHandsPrayingFill,
 } from "react-icons/pi";
 import { NavLink } from "react-router-dom";
 
@@ -34,6 +35,11 @@ const SidebarComponent = () => {
       name: "Người cứu hộ",
       path: "/admin/rescuer",
       icon: <PiShieldFill />,
+    },
+    {
+      name: "Đơn kháng cáo",
+      path: "/admin/appeal",
+      icon: <PiHandsPrayingFill />,
     },
     {
       name: "Hiệu suất Cứu hộ",

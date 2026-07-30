@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get_it/get_it.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mobile/core/session/session_state.dart';
+import 'package:mobile/core/storage/storage_service.dart';
 
 import 'app_session.dart';
 
@@ -66,6 +67,26 @@ class SessionController with ChangeNotifier {
   String? get completedSosRequestId => _completedSosRequestId;
   String? get completedRescuerName => _completedRescuerName;
 
+  bool _isBanned = false;
+  String? _banReason;
+
+  bool get isBanned => _isBanned;
+  String? get banReason => _banReason;
+
+  void setBanned({String? reason}) {
+    _isBanned = true;
+    _banReason = reason;
+    GetIt.instance<StorageService>().saveBanState(isBanned: true, reason: reason);
+    notifyListeners();
+  }
+
+  void dismissBan() {
+    _isBanned = false;
+    _banReason = null;
+    GetIt.instance<StorageService>().clearBanState();
+    notifyListeners();
+  }
+
   void triggerSuccessAlert({String? sosRequestId, String? rescuerName}) {
     _showSuccessRescueAlert = true;
     _completedSosRequestId = sosRequestId ?? _activeRescuer?['sosRequestId'] ?? _activeRescuer?['sos_request_id'];
@@ -108,6 +129,9 @@ class SessionController with ChangeNotifier {
     _showSuccessRescueAlert = false;
     _completedSosRequestId = null;
     _completedRescuerName = null;
+    _isBanned = false;
+    _banReason = null;
+    GetIt.instance<StorageService>().clearBanState();
     notifyListeners();
   }
 }

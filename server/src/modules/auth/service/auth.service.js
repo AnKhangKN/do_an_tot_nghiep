@@ -1,12 +1,13 @@
 const jwt = require("jsonwebtoken");
 const throwError = require("@utils/throw_error.util");
-const { transaction } = require("@/config/database.config");
+const { pool, transaction } = require("@/config/database.config");
 const userService = require("../../user/services/user.service");
 const user_authService = require("../../user_auth/service/user_auth.service");
 const { REFRESH_TOKEN } = require("@/config/env.config");
 const { generateAccessToken, generateRefreshToken } = require("@/utils/jwt.util");
 const { comparePassword } = require("@/utils/password.util");
 const rescuerService = require("@modules/rescuer/service/rescuer.service");
+const { generateUUID } = require("@/utils/uuid.util");
 
 class AuthService {
     constructor() {
@@ -150,6 +151,15 @@ class AuthService {
         return await transaction(async (client) => {
             let user = await this.userService.getUserIdByEmail(client, { email: verifiedEmail });
 
+            if (user && user.status === "BANNED") {
+                const err = new Error("Tài khoản của bạn đã bị khóa!");
+                err.statusCode = 403;
+                err.isBanned = true;
+                err.banReason = user.banReason || "Không có lý do";
+                err.bannedAt = user.bannedAt;
+                throw err;
+            }
+
             if (!user || !user.userId) {
                 // Tự động tạo tài khoản mới nếu chưa tồn tại với is_verified = true
                 user = await this.userService.createUser(client, {
@@ -268,6 +278,15 @@ class AuthService {
                 throwError("Email hoặc mật khẩu không chính xác!", 400);
             }
 
+            if (user.status === "BANNED") {
+                const err = new Error("Tài khoản của bạn đã bị khóa!");
+                err.statusCode = 403;
+                err.isBanned = true;
+                err.banReason = user.ban_reason || "Không có lý do";
+                err.bannedAt = user.banned_at;
+                throw err;
+            }
+
             const storedPassword = await this.user_authService.getPasswordByUserId(client, { userId: user.userId });
 
             if (!storedPassword || !storedPassword.password) {
@@ -310,6 +329,107 @@ class AuthService {
 
             return { accessToken, refreshToken, user };
         });
+    };
+
+    forgotPassword = async ({ email }) => {
+        const cleanEmail = email.trim().toLowerCase();
+
+        const user = await this.userService.getUserIdByEmail(null, { email: cleanEmail });
+
+        if (!user || !user.userId) {
+            return { message: "Nếu email tồn tại trong hệ thống, mã OTP đặt lại mật khẩu sẽ được gửi đến email của bạn." };
+        }
+
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const redis = require("@config/redis.config");
+        await redis.set(`otp:forgot:${cleanEmail}`, otpCode, "EX", 600);
+
+        const { sendOtpEmail } = require("@utils/mail.service");
+        await sendOtpEmail({ toEmail: cleanEmail, otpCode, purpose: "forgotPassword" });
+
+        return { message: "Nếu email tồn tại trong hệ thống, mã OTP đặt lại mật khẩu sẽ được gửi đến email của bạn." };
+    };
+
+    resetPassword = async ({ email, otpCode, newPassword }) => {
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanOtp = otpCode.trim();
+
+        const redis = require("@config/redis.config");
+        const savedOtp = await redis.get(`otp:forgot:${cleanEmail}`);
+
+        if (!savedOtp) {
+            throwError("Mã OTP đặt lại mật khẩu đã hết hạn (quá 10 phút) hoặc không tồn tại. Vui lòng yêu cầu mã mới!", 400);
+        }
+
+        if (savedOtp !== cleanOtp) {
+            throwError("Mã OTP 6 số không chính xác!", 400);
+        }
+
+        return await transaction(async (client) => {
+            const user = await this.userService.getUserIdByEmail(client, { email: cleanEmail });
+
+            if (!user || !user.userId) {
+                throwError("Không tìm thấy tài khoản người dùng!", 404);
+            }
+
+            // Cập nhật mật khẩu mới đã hash
+            await this.user_authService.updatePassword(client, { userId: user.userId, password: newPassword });
+
+            // Xóa key OTP trên Redis sau khi đặt lại thành công
+            await redis.del(`otp:forgot:${cleanEmail}`);
+
+            return { message: "Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại bằng mật khẩu mới." };
+        });
+    };
+
+    appealBan = async ({ userId, reason }) => {
+        const user = await userService.getUserInfoById({ userId });
+        if (!user) {
+            throwError("Người dùng không tồn tại!", 404);
+        }
+        if (user.status !== "BANNED") {
+            throwError("Tài khoản của bạn hiện không bị khóa!", 400);
+        }
+
+        const countQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1`;
+        const countResult = await pool.query(countQuery, [userId]);
+        if (countResult.rows[0].count >= 3) {
+            throwError("Bạn đã gửi quá số lần kháng cáo cho phép (tối đa 3 lần)!", 400);
+        }
+
+        const appealId = generateUUID();
+        const query = `
+            INSERT INTO ban_appeals (appeal_id, user_id, reason, status)
+            VALUES ($1, $2, $3, 'PENDING')
+            RETURNING appeal_id, status, created_at
+        `;
+        const result = await pool.query(query, [appealId, userId, reason]);
+        return result.rows[0];
+    };
+
+    appealBanByEmail = async ({ email, reason }) => {
+        const user = await userService.getUserIdByEmail(null, { email });
+        if (!user) {
+            throwError("Email không tồn tại trong hệ thống!", 404);
+        }
+        if (user.status !== "BANNED") {
+            throwError("Tài khoản này không bị khóa!", 400);
+        }
+
+        const countQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1`;
+        const countResult = await pool.query(countQuery, [user.userId]);
+        if (countResult.rows[0].count >= 3) {
+            throwError("Tài khoản này đã gửi quá số lần kháng cáo cho phép (tối đa 3 lần)!", 400);
+        }
+
+        const appealId = generateUUID();
+        const query = `
+            INSERT INTO ban_appeals (appeal_id, user_id, reason, status)
+            VALUES ($1, $2, $3, 'PENDING')
+            RETURNING appeal_id, status, created_at
+        `;
+        const result = await pool.query(query, [appealId, user.userId, reason]);
+        return result.rows[0];
     };
 
     getMe = async ({ userId }) => {

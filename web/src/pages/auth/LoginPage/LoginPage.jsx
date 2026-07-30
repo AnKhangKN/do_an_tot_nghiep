@@ -50,7 +50,12 @@ const LoginPage = () => {
       navigate("/admin/dashboard");
     } catch (error) {
       console.log(error);
-      setErrorMessage("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
+      const data = error?.response?.data;
+      if (data?.isBanned) {
+        setErrorMessage(`Tài khoản của bạn đã bị khóa! Lý do: ${data.banReason || 'Không có lý do'}`);
+      } else {
+        setErrorMessage(data?.message || "Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
+      }
     } finally {
       setIsSubmitting(false);
     }

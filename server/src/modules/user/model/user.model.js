@@ -10,6 +10,9 @@ const userModel = {
         isVerified: "is_verified", // Xác thực tài khoản
 
         status: "status",
+        banReason: "ban_reason",
+        bannedAt: "banned_at",
+        bannedBy: "banned_by",
         avatarUrl: "avatar_url",
         createdAt: "created_at",
         updatedAt: "updated_at"

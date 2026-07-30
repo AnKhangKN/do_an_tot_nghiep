@@ -12,7 +12,8 @@ class AuthInterceptor extends Interceptor {
     // 1. Bỏ qua các endpoint không cần token
     if (options.path.contains('/api/auth/refresh-token') ||
         options.path.contains('/api/auth/login') ||
-        options.path.contains('/api/auth/register')) {
+        options.path.contains('/api/auth/register') ||
+        options.path.contains('/api/auth/appeal')) {
       return handler.next(options);
     }
 

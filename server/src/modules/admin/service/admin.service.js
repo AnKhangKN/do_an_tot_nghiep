@@ -1,4 +1,9 @@
 const adminRepository = require("../repository/admin.repository");
+const userRepository = require("@/modules/user/repository/user.repository");
+const { transaction } = require("@/config/database.config");
+const { getIO } = require("@/socket");
+const transporter = require("@/config/email.config");
+const envConfig = require("@/config/env.config");
 
 class AdminService {
   getDashboardOverview = async (days = 7) => {
@@ -81,6 +86,125 @@ class AdminService {
         topIncidentCategory: topCategory
       }
     });
+  };
+
+  banUser = async (userId, { reason, bannedBy }) => {
+    const user = await userRepository.getUserInfoById({ userId });
+    if (!user) {
+      throw { status: 404, message: "Người dùng không tồn tại!" };
+    }
+    if (user.role === "ADMIN") {
+      throw { status: 400, message: "Không thể khóa tài khoản Admin!" };
+    }
+    if (user.status === "BANNED") {
+      throw { status: 400, message: "Người dùng này đã bị khóa trước đó!" };
+    }
+
+    const result = await transaction(async (client) => {
+      return await adminRepository.banUser(client, { userId, reason, bannedBy });
+    });
+
+    const io = getIO();
+    if (io) {
+      io.to(`user:${userId}`).emit("user:banned", {
+        reason,
+        bannedAt: new Date().toISOString(),
+      });
+    }
+
+    return result;
+  };
+
+  unbanUser = async (userId) => {
+    const user = await userRepository.getUserInfoById({ userId });
+    if (!user) {
+      throw { status: 404, message: "Người dùng không tồn tại!" };
+    }
+    if (user.status !== "BANNED") {
+      throw { status: 400, message: "Người dùng này hiện không bị khóa!" };
+    }
+
+    return await transaction(async (client) => {
+      return await adminRepository.unbanUser(client, { userId });
+    });
+  };
+
+  getBannedUsers = async ({ page, limit }) => {
+    return await adminRepository.getBannedUsers({ page, limit });
+  };
+
+  getAppeals = async ({ page, limit, status }) => {
+    return await adminRepository.getAppeals({ page, limit, status });
+  };
+
+  approveAppeal = async (appealId, reviewerId) => {
+    const appeal = await adminRepository.getAppealById(appealId);
+    if (!appeal) {
+      throw { status: 404, message: "Không tìm thấy yêu cầu kháng cáo!" };
+    }
+    if (appeal.status !== 'PENDING') {
+      throw { status: 400, message: "Yêu cầu kháng cáo này đã được xử lý trước đó!" };
+    }
+
+    const result = await transaction(async (client) => {
+      await adminRepository.unbanUser(client, { userId: appeal.user_id });
+      return await adminRepository.updateAppealStatus(client, appealId, 'APPROVED', reviewerId);
+    });
+
+    const user = await userRepository.getUserInfoById({ userId: appeal.user_id });
+
+    const { sendOtpEmail } = require("@utils/mail.service");
+    const emailContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #d9534f; margin: 0; font-size: 26px;">HỆ THỐNG CỨU HỘ SOS</h1>
+          <p style="color: #666666; font-size: 14px; margin-top: 5px;">Kháng cáo tài khoản</p>
+        </div>
+        <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 10px;">&#10004;</div>
+          <h2 style="color: #16a34a; margin: 0 0 10px 0;">Yêu cầu kháng cáo đã được chấp thuận!</h2>
+          <p style="font-size: 15px; color: #333333; margin: 0;">
+            Tài khoản <strong>${user.full_name || user.email}</strong> của bạn đã được mở khóa.
+          </p>
+          <p style="font-size: 14px; color: #666666; margin-top: 10px;">
+            Bạn có thể đăng nhập lại và sử dụng ứng dụng bình thường.
+          </p>
+        </div>
+        <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #eeeeee; text-align: center; color: #999999; font-size: 12px;">
+          <p>Nếu bạn không thực hiện yêu cầu này, vui lòng liên hệ quản trị viên.</p>
+          <p>© 2026 Hệ Thống Cứu Hộ SOS Khẩn Cấp. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      await transporter.sendMail({
+        from: `"Hệ Thống Cứu Hộ SOS" <${envConfig.MAIL_USERNAME || 'no-reply@cuuho.vn'}>`,
+        to: user.email,
+        subject: "[CỨU HỘ SOS] Yêu cầu kháng cáo của bạn đã được chấp thuận!",
+        html: emailContent
+      });
+    } catch (e) {
+      console.error("Không thể gửi email thông báo mở khóa:", e.message);
+    }
+
+    return result;
+  };
+
+  rejectAppeal = async (appealId, reviewerId, rejectReason) => {
+    const appeal = await adminRepository.getAppealById(appealId);
+    if (!appeal) {
+      throw { status: 404, message: "Không tìm thấy yêu cầu kháng cáo!" };
+    }
+    if (appeal.status !== 'PENDING') {
+      throw { status: 400, message: "Yêu cầu kháng cáo này đã được xử lý trước đó!" };
+    }
+
+    const result = await transaction(async (client) => {
+      return await adminRepository.updateAppealStatus(client, appealId, 'REJECTED', reviewerId, rejectReason);
+    });
+
+    return result;
   };
 
   exportOperationalReportCsv = async (days = 30) => {

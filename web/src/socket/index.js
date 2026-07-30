@@ -2,6 +2,7 @@ import { getSocketInstance, disconnectSocket } from "./core/socketCore";
 import { initConnectionListeners } from "./features/connection/connectionSocket";
 import { listenDashboardEvents } from "./features/dashboard/dashboardSocket";
 import { listenChatEvents, listenChatError, sendSocketChatMessage } from "./features/chat/chatSocket";
+import { listenBanEvent } from "./features/ban/banSocket";
 
 export const getAdminSocket = () => {
   return getSocketInstance();
@@ -36,6 +37,11 @@ export const sendChatMessage = ({ conversationId, partnerId, content, messageTyp
   sendSocketChatMessage(socket, { conversationId, partnerId, content, messageType, tempId });
 };
 
+export const subscribeBanEvent = (onBanned) => {
+  const socket = getSocketInstance();
+  return listenBanEvent(socket, onBanned);
+};
+
 export default {
   getAdminSocket,
   disconnectAdminSocket,
@@ -44,4 +50,5 @@ export default {
   subscribeChatEvents,
   subscribeChatErrors,
   sendChatMessage,
+  subscribeBanEvent,
 };
