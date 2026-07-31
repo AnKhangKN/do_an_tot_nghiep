@@ -30,7 +30,7 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: Colors.transparent,
       builder: (modalContext) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: ColorConstants.surfaceWhite,
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(28),
@@ -65,7 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     "Vui lòng chọn hình thức hỗ trợ phù hợp",
                     style: TextStyle(
                       fontSize: 13,
@@ -150,7 +150,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                       color: ColorConstants.textPrimary,
@@ -159,7 +159,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       color: ColorConstants.textSecondary,
                     ),
@@ -167,7 +167,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: ColorConstants.textSecondary,
             ),

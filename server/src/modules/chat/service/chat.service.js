@@ -189,6 +189,10 @@ class ChatService {
             throw new Error('Bạn không có quyền gửi tin nhắn trong cuộc hội thoại này');
         }
 
+        if (!isUserAdmin && conversation.is_closed) {
+            throw new Error('Ca cứu hộ đã hoàn thành hoặc bị hủy. Luồng trò chuyện này đã bị khóa.');
+        }
+
         if (messageType === 'TEXT' && content) {
             const spamCheck = await aiModerationService.checkKnownSpamText(content);
             if (spamCheck.isBlocked) {
@@ -228,6 +232,11 @@ class ChatService {
             conversation,
             conversationId: targetId,
         };
+    }
+
+    closeConversationBySosRequestId = async (sosRequestId, client = null) => {
+        if (!sosRequestId) return null;
+        return await this.chatRepository.closeConversationBySosRequestId(client, sosRequestId);
     }
 
     stripRolePrefix = (value) => {

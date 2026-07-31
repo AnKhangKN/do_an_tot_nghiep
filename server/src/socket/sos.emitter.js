@@ -106,9 +106,42 @@ const handleSosAccepted = (io, data) => {
     }
 };
 
+/**
+ * Emit sự kiện chat:conversation_closed khi kênh chat ca cứu hộ bị đóng
+ * @param {Object} io - Socket.IO Server
+ * @param {Object} data - Dữ liệu parse từ Redis PubSub
+ */
+const handleChatConversationClosed = (io, data) => {
+    try {
+        const { conversationId, sosRequestId, message } = data;
+        const payload = {
+            conversationId,
+            sosRequestId,
+            isClosed: true,
+            message: message || "Cuộc trò chuyện này đã tự động đóng do ca cứu hộ đã hoàn thành hoặc bị hủy.",
+        };
+        if (conversationId) {
+            io.to(`conversation:${conversationId}`).emit("chat:conversation_closed", payload);
+        }
+        if (data.victimId) {
+            io.to(`user:${data.victimId}`).emit("chat:conversation_closed", payload);
+            io.to(`victim:${data.victimId}`).emit("chat:conversation_closed", payload);
+        }
+        if (data.rescuerId) {
+            io.to(`user:${data.rescuerId}`).emit("chat:conversation_closed", payload);
+            io.to(`rescuer:${data.rescuerId}`).emit("chat:conversation_closed", payload);
+        }
+        io.to("admin_room").emit("chat:conversation_closed", payload);
+        console.log(`[SOS EMITTER] Emitted 'chat:conversation_closed' for conversation: ${conversationId}`);
+    } catch (err) {
+        console.error(`[SOS EMITTER] Error emitting chat:conversation_closed:`, err);
+    }
+};
+
 module.exports = {
     handleSosOffer,
     handleSosNotFound,
     handleSosCancelled,
     handleSosAccepted,
+    handleChatConversationClosed,
 };

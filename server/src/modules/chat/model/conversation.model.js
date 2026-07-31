@@ -7,6 +7,7 @@ const conversationModel = {
         user2Id: "user2_id",
         lastMessage: "last_message",
         lastMessageAt: "last_message_at",
+        isClosed: "is_closed",
         createdAt: "created_at",
         updatedAt: "updated_at"
     }

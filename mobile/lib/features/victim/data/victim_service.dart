@@ -31,6 +31,9 @@ class VictimService {
     required String healthStatus,
     String? checkinNotes,
     int? rating,
+    int? responseSpeed,
+    int? attitude,
+    int? supportLevel,
     String? comment,
   }) async {
     return dio.post('/api/sos/sos_requests/post-rescue-checkin', data: {
@@ -38,6 +41,9 @@ class VictimService {
       'healthStatus': healthStatus,
       'checkinNotes': checkinNotes,
       'rating': rating,
+      if (responseSpeed != null) 'responseSpeed': responseSpeed,
+      if (attitude != null) 'attitude': attitude,
+      if (supportLevel != null) 'supportLevel': supportLevel,
       'comment': comment,
     });
   }

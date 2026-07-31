@@ -28,5 +28,6 @@ route.post("/reset-password", validatorResetPassword, authController.resetPasswo
 
 route.post("/appeal-ban", verifyToken, authController.appealBan);
 route.post("/appeal", authController.appealBanPublic);
+route.post("/appeal-status", authController.checkAppealStatus);
 
 module.exports = route

@@ -25,8 +25,44 @@ class AppealRepository {
             WHERE ${this.appealModel.field.userId} = $1
             AND ${this.appealModel.field.status} = 'PENDING'
         `;
-        const result = await client.query(query, [userId]);
+        const executor = client || pool;
+        const result = await executor.query(query, [userId]);
         return result.rows[0] || null;
+    };
+
+    countPendingByUserId = async (client, { userId }) => {
+        const query = `
+            SELECT COUNT(*)::int AS count FROM ${this.appealModel.table}
+            WHERE ${this.appealModel.field.userId} = $1
+            AND ${this.appealModel.field.status} = 'PENDING'
+        `;
+        const executor = client || pool;
+        const result = await executor.query(query, [userId]);
+        return parseInt(result.rows[0].count, 10);
+    };
+
+    countRejectedByUserId = async (client, { userId }) => {
+        const query = `
+            SELECT COUNT(*)::int AS count FROM ${this.appealModel.table}
+            WHERE ${this.appealModel.field.userId} = $1
+            AND ${this.appealModel.field.status} = 'REJECTED'
+        `;
+        const executor = client || pool;
+        const result = await executor.query(query, [userId]);
+        return parseInt(result.rows[0].count, 10);
+    };
+
+    updateUserPermanentBanReason = async (client, { userId, banReason }) => {
+        const query = `
+            UPDATE users
+            SET ban_reason = $2,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = $1
+            RETURNING *
+        `;
+        const executor = client || pool;
+        const result = await executor.query(query, [userId, banReason]);
+        return result.rows[0];
     };
 
     findAll = async ({ page, limit, status }) => {

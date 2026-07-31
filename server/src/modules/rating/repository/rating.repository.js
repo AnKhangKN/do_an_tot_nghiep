@@ -7,6 +7,12 @@ const ratingModel = {
         victimId: "victim_id",
         rescuerId: "rescuer_id",
         rating: "rating",
+        responseSpeed: "response_speed",
+        attitude: "attitude",
+        supportLevel: "support_level",
+        sentiment: "sentiment",
+        sentimentConfidence: "sentiment_confidence",
+        isFlagged: "is_flagged",
         comment: "comment",
         createdAt: "created_at"
     }
@@ -17,10 +23,10 @@ class RatingRepository {
         this.ratingModel = ratingModel;
     }
 
-    async createRating({ ratingId, sosRequestId, victimId, rescuerId, rating, comment }) {
+    async createRating({ ratingId, sosRequestId, victimId, rescuerId, rating, responseSpeed, attitude, supportLevel, comment }) {
         const query = `
-            INSERT INTO rescuer_ratings (rating_id, sos_request_id, victim_id, rescuer_id, rating, comment)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO rescuer_ratings (rating_id, sos_request_id, victim_id, rescuer_id, rating, response_speed, attitude, support_level, comment)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING *
         `;
         const result = await pool.query(query, [
@@ -29,6 +35,9 @@ class RatingRepository {
             victimId,
             rescuerId,
             rating,
+            responseSpeed || null,
+            attitude || null,
+            supportLevel || null,
             comment || null
         ]);
         return result.rows[0];
@@ -49,7 +58,10 @@ class RatingRepository {
         const query = `
             SELECT 
                 COALESCE(ROUND(AVG(rating)::numeric, 1), 0.0) as avg_rating,
-                COUNT(*)::int as total_ratings
+                COUNT(*)::int as total_ratings,
+                COALESCE(ROUND(AVG(response_speed)::numeric, 1), 0.0) as avg_response_speed,
+                COALESCE(ROUND(AVG(attitude)::numeric, 1), 0.0) as avg_attitude,
+                COALESCE(ROUND(AVG(support_level)::numeric, 1), 0.0) as avg_support_level
             FROM rescuer_ratings
             WHERE rescuer_id = $1
         `;
@@ -71,23 +83,45 @@ class RatingRepository {
         return result.rows;
     }
 
-    async getAllRatingsAdmin({ page = 1, limit = 20, ratingFilter = null } = {}) {
+    async getAllRatingsAdmin({ page = 1, limit = 20, ratingFilter = null, sentimentFilter = null } = {}) {
         const offset = (page - 1) * limit;
-        let whereClause = "";
-        const queryParams = [limit, offset];
 
-        if (ratingFilter && Number(ratingFilter) >= 1 && Number(ratingFilter) <= 5) {
-            whereClause = "WHERE r.rating = $3";
-            queryParams.push(Number(ratingFilter));
-        }
+        const buildWhere = (startIndex) => {
+            const clauses = [];
+            const params = [];
+            let idx = startIndex;
+
+            if (ratingFilter && Number(ratingFilter) >= 1 && Number(ratingFilter) <= 5) {
+                clauses.push(`r.rating = $${idx}`);
+                params.push(Number(ratingFilter));
+                idx += 1;
+            }
+
+            if (sentimentFilter && ["POSITIVE", "NEUTRAL", "NEGATIVE"].includes(sentimentFilter)) {
+                clauses.push(`r.sentiment = $${idx}`);
+                params.push(sentimentFilter);
+                idx += 1;
+            }
+
+            return {
+                clause: clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "",
+                params
+            };
+        };
+
+        const countWhere = buildWhere(1);
+        const dataWhere = buildWhere(3);
 
         const countQuery = `
             SELECT 
                 COUNT(*)::int as total,
                 COALESCE(ROUND(AVG(rating)::numeric, 1), 0.0) as avg_rating,
-                COUNT(CASE WHEN rating = 5 THEN 1 END)::int as five_star_count
+                COUNT(CASE WHEN rating = 5 THEN 1 END)::int as five_star_count,
+                COALESCE(ROUND(AVG(response_speed)::numeric, 1), 0.0) as avg_response_speed,
+                COALESCE(ROUND(AVG(attitude)::numeric, 1), 0.0) as avg_attitude,
+                COALESCE(ROUND(AVG(support_level)::numeric, 1), 0.0) as avg_support_level
             FROM rescuer_ratings r
-            ${whereClause}
+            ${countWhere.clause}
         `;
         const dataQuery = `
             SELECT 
@@ -97,14 +131,14 @@ class RatingRepository {
             FROM rescuer_ratings r
             LEFT JOIN users v ON r.victim_id = v.user_id
             LEFT JOIN users res ON r.rescuer_id = res.user_id
-            ${whereClause}
+            ${dataWhere.clause}
             ORDER BY r.created_at DESC
             LIMIT $1 OFFSET $2
         `;
 
         const [countResult, dataResult] = await Promise.all([
-            pool.query(countQuery, ratingFilter ? [Number(ratingFilter)] : []),
-            pool.query(dataQuery, queryParams)
+            pool.query(countQuery, countWhere.params),
+            pool.query(dataQuery, [limit, offset, ...dataWhere.params])
         ]);
 
         const statsRow = countResult.rows[0];
@@ -113,10 +147,65 @@ class RatingRepository {
             total: statsRow?.total || 0,
             avgRating: parseFloat(statsRow?.avg_rating || 0.0),
             fiveStarCount: statsRow?.five_star_count || 0,
+            aspectStats: {
+                responseSpeed: parseFloat(statsRow?.avg_response_speed || 0.0),
+                attitude: parseFloat(statsRow?.avg_attitude || 0.0),
+                supportLevel: parseFloat(statsRow?.avg_support_level || 0.0)
+            },
             page: Number(page),
             limit: Number(limit),
             ratings: dataResult.rows
         };
+    }
+
+    async getRatingTrends({ days = 7 } = {}) {
+        const query = `
+            WITH days AS (
+                SELECT generate_series(
+                    CURRENT_DATE - ($1::int - 1),
+                    CURRENT_DATE,
+                    '1 day'::interval
+                )::date AS day
+            )
+            SELECT
+                d.day AS date,
+                COUNT(r.rating_id)::int AS total,
+                COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0.0) AS avg_rating,
+                COALESCE(ROUND(AVG(r.response_speed)::numeric, 1), 0.0) AS avg_response_speed,
+                COALESCE(ROUND(AVG(r.attitude)::numeric, 1), 0.0) AS avg_attitude,
+                COALESCE(ROUND(AVG(r.support_level)::numeric, 1), 0.0) AS avg_support_level,
+                COUNT(CASE WHEN r.sentiment = 'POSITIVE' THEN 1 END)::int AS positive_count,
+                COUNT(CASE WHEN r.sentiment = 'NEUTRAL' THEN 1 END)::int AS neutral_count,
+                COUNT(CASE WHEN r.sentiment = 'NEGATIVE' THEN 1 END)::int AS negative_count
+            FROM days d
+            LEFT JOIN rescuer_ratings r ON r.created_at::date = d.day
+            GROUP BY d.day
+            ORDER BY d.day ASC
+        `;
+        const result = await pool.query(query, [Number(days)]);
+        return result.rows;
+    }
+
+    async updateRatingSentiment({ ratingId, sentiment, confidence }) {
+        const query = `
+            UPDATE rescuer_ratings
+            SET sentiment = $2, sentiment_confidence = $3
+            WHERE rating_id = $1
+            RETURNING *
+        `;
+        const result = await pool.query(query, [ratingId, sentiment, confidence]);
+        return result.rows[0] || null;
+    }
+
+    async flagRating(ratingId) {
+        const query = `
+            UPDATE rescuer_ratings
+            SET is_flagged = TRUE
+            WHERE rating_id = $1
+            RETURNING *
+        `;
+        const result = await pool.query(query, [ratingId]);
+        return result.rows[0] || null;
     }
 }
 

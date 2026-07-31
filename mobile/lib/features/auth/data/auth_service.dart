@@ -60,4 +60,8 @@ class AuthService {
   Future<Response> appealBanPublic(Map<String, dynamic> data) async {
     return await dio.post('/api/auth/appeal', data: data);
   }
+
+  Future<Response> checkAppealStatus(Map<String, dynamic> data) async {
+    return await dio.post('/api/auth/appeal-status', data: data);
+  }
 }

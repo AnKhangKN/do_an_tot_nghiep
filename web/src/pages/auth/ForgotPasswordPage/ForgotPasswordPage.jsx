@@ -77,8 +77,8 @@ const ForgotPasswordPage = () => {
           <div
             className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
               step >= s
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-400"
+                ? "bg-gray-900 text-white dark:bg-gray-200 dark:text-white"
+                : "bg-gray-100 text-gray-400 dark:bg-gray-300 dark:text-gray-500"
             }`}
           >
             {s}
@@ -86,7 +86,7 @@ const ForgotPasswordPage = () => {
           {s < STEP_RESET && (
             <div
               className={`h-0.5 w-10 transition-colors ${
-                step > s ? "bg-gray-900" : "bg-gray-200"
+                step > s ? "bg-gray-900 dark:bg-gray-200" : "bg-gray-200 dark:bg-gray-500"
               }`}
             />
           )}
@@ -116,7 +116,7 @@ const ForgotPasswordPage = () => {
             }}
             placeholder="admin@example.com"
             autoComplete="email"
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white focus:ring-4 focus:ring-gray-900/10"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white dark:focus:bg-gray-100 focus:ring-4 focus:ring-gray-900/10"
             required
           />
         </div>
@@ -131,7 +131,7 @@ const ForgotPasswordPage = () => {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+        className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-400"
       >
         {isSubmitting ? "Đang gửi..." : "Gửi mã OTP"}
       </button>
@@ -158,7 +158,7 @@ const ForgotPasswordPage = () => {
           }}
           placeholder="Nhập 6 chữ số"
           autoComplete="one-time-code"
-          className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-2xl font-bold tracking-[8px] text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white focus:ring-4 focus:ring-gray-900/10"
+          className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-2xl font-bold tracking-[8px] text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white dark:focus:bg-gray-100 focus:ring-4 focus:ring-gray-900/10"
           inputMode="numeric"
           maxLength={6}
           required
@@ -173,7 +173,7 @@ const ForgotPasswordPage = () => {
 
       <button
         type="submit"
-        className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
+        className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300"
       >
         Xác thực OTP
       </button>
@@ -213,7 +213,7 @@ const ForgotPasswordPage = () => {
             }}
             placeholder="Ít nhất 6 ký tự"
             autoComplete="new-password"
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-12 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white focus:ring-4 focus:ring-gray-900/10"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-12 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white dark:focus:bg-gray-100 focus:ring-4 focus:ring-gray-900/10"
             required
           />
           <button
@@ -245,7 +245,7 @@ const ForgotPasswordPage = () => {
             }}
             placeholder="Nhập lại mật khẩu mới"
             autoComplete="new-password"
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-12 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white focus:ring-4 focus:ring-gray-900/10"
+            className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-12 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white dark:focus:bg-gray-100 focus:ring-4 focus:ring-gray-900/10"
             required
           />
           <button
@@ -267,7 +267,7 @@ const ForgotPasswordPage = () => {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+        className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-400"
       >
         {isSubmitting ? "Đang xử lý..." : "Đặt lại mật khẩu"}
       </button>
@@ -284,7 +284,7 @@ const ForgotPasswordPage = () => {
 
       <button
         onClick={() => navigate("/login")}
-        className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
+        className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300"
       >
         Đăng nhập ngay
       </button>
@@ -294,9 +294,9 @@ const ForgotPasswordPage = () => {
   return (
     <AuthLayout>
       <div className="w-full max-w-md">
-        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm sm:p-8">
           <div className="mb-8">
-            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-md">
+            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white shadow-md">
               <PiLockKeyFill size={28} />
             </div>
 
@@ -329,7 +329,7 @@ const ForgotPasswordPage = () => {
           {step !== STEP_DONE && (
             <Link
               to="/login"
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-800 transition hover:bg-gray-100"
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white dark:bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 transition hover:bg-gray-100"
             >
               <PiArrowLeft size={18} />
               Quay lại đăng nhập

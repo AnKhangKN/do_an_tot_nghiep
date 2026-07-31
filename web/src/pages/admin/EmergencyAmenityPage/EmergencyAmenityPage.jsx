@@ -562,7 +562,7 @@ export default function EmergencyAmenityPage() {
         {activeTab === 'categories' && (
           <button
             onClick={() => setShowAddCategoryModal(true)}
-            className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm transition"
+            className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm transition"
           >
             <PiPlusBold className="w-4 h-4" />
             Thêm Danh Mục Mới
@@ -577,7 +577,7 @@ export default function EmergencyAmenityPage() {
             onClick={() => setActiveTab('points')}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${
               activeTab === 'points'
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white dark:bg-gray-100 text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -588,7 +588,7 @@ export default function EmergencyAmenityPage() {
             onClick={() => setActiveTab('categories')}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${
               activeTab === 'categories'
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white dark:bg-gray-100 text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -617,7 +617,7 @@ export default function EmergencyAmenityPage() {
             <PiCopyBold className="w-4 h-4" />
             Nghi Ngờ Trùng Lặp
             {duplicates.length > 0 && (
-              <span className="ml-1 px-2 py-0.5 text-xs bg-white text-amber-700 font-bold rounded-full">
+              <span className="ml-1 px-2 py-0.5 text-xs bg-white dark:bg-gray-100 text-amber-700 font-bold rounded-full">
                 {duplicates.length}
               </span>
             )}
@@ -664,7 +664,7 @@ export default function EmergencyAmenityPage() {
       </div>
 
       {/* Content Table / Cards */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-4">
+      <div className="bg-white dark:bg-gray-100 rounded-3xl border border-gray-200 shadow-sm p-4">
         {activeTab === 'points' ? (
           <TableComponent
             columns={pointColumns}
@@ -744,7 +744,7 @@ export default function EmergencyAmenityPage() {
                     {/* So sánh Side-by-Side 2 Cột */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Bản ghi chính A */}
-                      <div className="bg-white p-3.5 rounded-xl border border-emerald-200/80 space-y-2 shadow-2xs">
+                      <div className="bg-white dark:bg-gray-100 p-3.5 rounded-xl border border-emerald-200/80 space-y-2 shadow-2xs">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
                             Bản ghi A (Gốc)
@@ -776,7 +776,7 @@ export default function EmergencyAmenityPage() {
                       </div>
 
                       {/* Bản ghi nghi trùng B */}
-                      <div className="bg-white p-3.5 rounded-xl border border-rose-200/80 space-y-2 shadow-2xs">
+                      <div className="bg-white dark:bg-gray-100 p-3.5 rounded-xl border border-rose-200/80 space-y-2 shadow-2xs">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-200">
                             Bản ghi B (Nghi trùng)
@@ -819,7 +819,7 @@ export default function EmergencyAmenityPage() {
       {/* Detail Point Modal */}
       {selectedPoint && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-6">
+          <div className="bg-white dark:bg-gray-100 rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-6">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <div className="flex items-center gap-3">
@@ -861,14 +861,14 @@ export default function EmergencyAmenityPage() {
                         href={selectedPoint.imageUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="absolute bottom-3 right-3 px-3 py-1.5 bg-gray-900/80 hover:bg-gray-900 text-white text-xs font-semibold rounded-xl backdrop-blur-xs transition shadow-sm"
+                        className="absolute bottom-3 right-3 px-3 py-1.5 bg-gray-900/80 hover:bg-gray-900 dark:bg-black/70 dark:hover:bg-black/80 text-white text-xs font-semibold rounded-xl backdrop-blur-xs transition shadow-sm"
                       >
                         Phóng to ↗
                       </a>
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center p-6 text-center text-gray-400 space-y-2">
-                      <PiImageBold className="w-10 h-10 text-gray-300" />
+                      <PiImageBold className="w-10 h-10 text-gray-300 dark:text-gray-600" />
                       <p className="text-xs italic">Không có hình ảnh đính kèm cho tiện ích này</p>
                     </div>
                   )}
@@ -1012,7 +1012,7 @@ export default function EmergencyAmenityPage() {
       {/* Add Category Modal */}
       {showAddCategoryModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl space-y-4">
+          <div className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full p-6 shadow-xl space-y-4">
             <h3 className="text-lg font-bold text-gray-900">Thêm Danh Mục Tiện Ích Mới</h3>
 
             <form onSubmit={handleCreateCategory} className="space-y-4">
@@ -1049,7 +1049,7 @@ export default function EmergencyAmenityPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl text-xs font-semibold shadow-sm transition"
+                  className="px-5 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white rounded-2xl text-xs font-semibold shadow-sm transition"
                 >
                   Tạo danh mục
                 </button>
@@ -1062,7 +1062,7 @@ export default function EmergencyAmenityPage() {
       {/* Edit Category Modal */}
       {showEditCategoryModal && editingCategory && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl space-y-4">
+          <div className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900">Cập Nhật Danh Mục Tiện Ích</h3>
               <button
@@ -1119,7 +1119,7 @@ export default function EmergencyAmenityPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl text-xs font-semibold shadow-sm transition"
+                  className="px-5 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white rounded-2xl text-xs font-semibold shadow-sm transition"
                 >
                   Lưu thay đổi
                 </button>

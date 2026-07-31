@@ -50,6 +50,10 @@ Monorepo gồm:
 
 - Mọi bug fix nên có test nếu package đó đã có test
 - Chạy test của package liên quan trước khi xong task
+- File test dùng để kiểm tra/verify: **sau khi chạy xong (PASS hay FAIL) phải XÓA NGAY file test đó** (kể cả file test tạm ở ngoài repo), tránh tạo quá nhiều file rác làm nặng máy và nặng dự án
+- Quy tắc này áp dụng cho MỌI file tạo ra để test, kể cả khi truy cập hệ thống (DB, server, script chạy test...): tạo file test xong → chạy → xóa ngay, không để lại file/dữ liệu test trong hệ thống
+- Tên dữ liệu test (category, user, amenity...) phải là tên thuần (vd: "Test Category") KHÔNG được gắn thêm id/UUID vào tên; nếu cần phân biệt thì dùng dấu hiệu khác, và test xong phải dọn sạch khỏi DB
+- Chỉ giữ lại test trong repo nếu dự án đã có framework/chuẩn test chính thức (Jest/Vitest/...)
 
 ## Security
 

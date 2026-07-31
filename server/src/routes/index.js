@@ -15,10 +15,13 @@ const aiModerationRoutes = require("@/modules/ai_moderation/routes/ai_moderation
 const appealRoutes = require("@/modules/appeal/routes/appeal.route")
 
 const adminRoutes = require("@/modules/admin/routes/admin.route")
+const settingsRoutes = require("@/modules/settings/routes/settings.route")
 
 route.use("/auth", authRoutes)
 
 route.use("/admin", adminRoutes)
+
+route.use("/admin/settings", settingsRoutes)
 
 route.use("/users", userRoutes)
 

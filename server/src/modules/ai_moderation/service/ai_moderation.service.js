@@ -292,6 +292,12 @@ class AiModerationService {
                 if (amenityFeedbackRepository && amenityFeedbackRepository.updateFeedbackStatus) {
                     await amenityFeedbackRepository.updateFeedbackStatus(entityId, "REJECTED");
                 }
+            } else if (entityType === "RESCUER_RATING") {
+                const ratingRepository = require("@modules/rating/repository/rating.repository");
+                if (ratingRepository && ratingRepository.flagRating) {
+                    await ratingRepository.flagRating(entityId);
+                    console.log(`[AI Moderation Auto-Action] Rating ${entityId} đã bị gắn cờ vi phạm tiêu chuẩn cộng đồng.`);
+                }
             }
         } catch (error) {
             console.error(`[AI Moderation Auto-Action Error] Lỗi tự động xử lý ${entityType} ${entityId}:`, error.message);

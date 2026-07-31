@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
-import 'package:mobile/features/victim/data/victim_service.dart';
+import 'package:mobile/features/victim/data/victim_repository.dart';
 
 class PostRescueCheckinDialog extends StatefulWidget {
   final String sosRequestId;
@@ -37,6 +37,9 @@ class PostRescueCheckinDialog extends StatefulWidget {
 class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
   String _selectedHealthStatus = 'SAFE'; // 'SAFE', 'NEEDS_MEDICAL_CHECK', 'RECOVERING'
   int _selectedRating = 5;
+  int _responseSpeed = 5;
+  int _attitude = 5;
+  int _supportLevel = 5;
   final TextEditingController _notesController = TextEditingController();
   bool _isSubmitting = false;
 
@@ -49,12 +52,15 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
   Future<void> _handleSubmit() async {
     setState(() => _isSubmitting = true);
     try {
-      final victimService = getIt<VictimService>();
-      await victimService.submitPostRescueCheckin(
+      final victimRepository = getIt<VictimRepository>();
+      await victimRepository.submitPostRescueCheckin(
         sosRequestId: widget.sosRequestId,
         healthStatus: _selectedHealthStatus,
         checkinNotes: _notesController.text.trim(),
         rating: _selectedRating,
+        responseSpeed: _responseSpeed,
+        attitude: _attitude,
+        supportLevel: _supportLevel,
         comment: _notesController.text.trim(),
       );
 
@@ -101,7 +107,7 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
 
     return Container(
       padding: EdgeInsets.only(bottom: bottomPadding),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(28),
@@ -135,7 +141,7 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Theo Dõi Sau Cứu Hộ',
                           style: TextStyle(
                             fontSize: 18,
@@ -148,7 +154,7 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
                           widget.rescuerName != null
                               ? 'Ca hỗ trợ của ${widget.rescuerName} đã hoàn thành'
                               : 'Ca cứu hộ của bạn đã hoàn thành',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             color: ColorConstants.textMuted,
                           ),
@@ -158,14 +164,14 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: ColorConstants.textMuted),
+                    icon: Icon(Icons.close, color: ColorConstants.textMuted),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
 
               // Trạng thái Sức khỏe (Health Status Selection)
-              const Text(
+              Text(
                 'Tình trạng sức khỏe hiện tại của bạn:',
                 style: TextStyle(
                   fontSize: 14,
@@ -203,8 +209,8 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
               ),
               const SizedBox(height: 24),
 
-              // Đánh giá Cứu hộ viên (Rating 1-5 stars)
-              const Text(
+              // Đánh giá Cứu hộ viên (Overall + 3 khía cạnh)
+              Text(
                 'Đánh giá chất lượng hỗ trợ:',
                 style: TextStyle(
                   fontSize: 14,
@@ -228,6 +234,25 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
                   );
                 }),
               ),
+              const SizedBox(height: 8),
+
+              _buildAspectStarRow(
+                label: '⚡ Tốc độ phản ứng',
+                value: _responseSpeed,
+                onChanged: (v) => setState(() => _responseSpeed = v),
+              ),
+              const SizedBox(height: 8),
+              _buildAspectStarRow(
+                label: '🤝 Thái độ phục vụ',
+                value: _attitude,
+                onChanged: (v) => setState(() => _attitude = v),
+              ),
+              const SizedBox(height: 8),
+              _buildAspectStarRow(
+                label: '🛟 Mức độ hỗ trợ',
+                value: _supportLevel,
+                onChanged: (v) => setState(() => _supportLevel = v),
+              ),
               const SizedBox(height: 16),
 
               // Ô nhập Ghi chú / Phản hồi
@@ -236,16 +261,16 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Nhập phản hồi hoặc ghi chú sức khỏe bổ sung...',
-                  hintStyle: const TextStyle(fontSize: 12, color: ColorConstants.textMuted),
+                  hintStyle: TextStyle(fontSize: 12, color: ColorConstants.textMuted),
                   filled: true,
                   fillColor: ColorConstants.bgCanvas,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: ColorConstants.border),
+                    borderSide: BorderSide(color: ColorConstants.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: ColorConstants.border),
+                    borderSide: BorderSide(color: ColorConstants.border),
                   ),
                 ),
               ),
@@ -278,6 +303,46 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAspectStarRow({
+    required String label,
+    required int value,
+    required ValueChanged<int> onChanged,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: ColorConstants.textPrimary,
+            ),
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(5, (index) {
+            final starIndex = index + 1;
+            return InkWell(
+              onTap: () => onChanged(starIndex),
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                child: Icon(
+                  starIndex <= value ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: Colors.amber.shade600,
+                  size: 26,
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
     );
   }
 

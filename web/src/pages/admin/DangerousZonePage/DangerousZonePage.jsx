@@ -1,10 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import { formatTime } from '@/utils/format_date.util';
-import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones } from '@/api/admin/DangerousZoneApi';
-import { PiLightningFill } from 'react-icons/pi';
+import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones, getDangerousZoneFeedbacks, getPointFeedbacks } from '@/api/admin/DangerousZoneApi';
+import {
+  PiLightningFill,
+  PiHourglassFill,
+  PiShieldCheckFill,
+  PiThumbsUpFill,
+  PiFlagFill,
+  PiCheckCircleFill,
+  PiFireFill,
+  PiXBold,
+} from 'react-icons/pi';
 
-const columns = ({ onApprove, onReject, loading }) => [
+const columns = ({ onApprove, onReject, onOpenFeedbacks, loading }) => [
   {
     key: 'index',
     title: 'STT',
@@ -97,7 +106,7 @@ const columns = ({ onApprove, onReject, loading }) => [
       return (
         <span
           className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 text-xs rounded-full font-semibold border shadow-2xs ${isSystem
-            ? 'bg-gray-900 text-white border-gray-900'
+            ? 'bg-gray-900 text-white border-gray-900 dark:bg-gray-200 dark:text-white dark:border-gray-100'
             : 'bg-gray-100 text-gray-800 border-gray-200'
             }`}
         >
@@ -168,7 +177,7 @@ const DangerousZonePage = () => {
     }));
   };
 
-  const fetchDangerousZones = async () => {
+  const fetchDangerousZones = useCallback(async () => {
     const limit = 10;
     try {
       setLoading(true);
@@ -180,11 +189,11 @@ const DangerousZonePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
 
   useEffect(() => {
     fetchDangerousZones();
-  }, [page]);
+  }, [fetchDangerousZones]);
 
   const handleApprove = async (dangerousPointId) => {
     try {
@@ -227,7 +236,7 @@ const DangerousZonePage = () => {
       fetchDangerousZones();
     } catch (error) {
       console.error(error);
-      setDetectMsg('⚠️ Có lỗi xảy ra khi quét tự động.');
+      setDetectMsg('Có lỗi xảy ra khi quét tự động.');
     } finally {
       setAutoDetecting(false);
     }
@@ -235,29 +244,26 @@ const DangerousZonePage = () => {
 
   const [activeTab, setActiveTab] = useState('points'); // 'points' | 'feedbacks'
   const [feedbacks, setFeedbacks] = useState([]);
-  const [feedbackPage, setFeedbackPage] = useState(1);
-  const [feedbackTotalPages, setFeedbackTotalPages] = useState(1);
   const [selectedPointFeedbacks, setSelectedPointFeedbacks] = useState(null); // { point, stats, list }
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
 
-  const fetchFeedbacks = async () => {
+  const fetchFeedbacks = useCallback(async () => {
     try {
       setLoadingFeedbacks(true);
-      const res = await getDangerousZoneFeedbacks(feedbackPage, 20);
+      const res = await getDangerousZoneFeedbacks(1, 20);
       setFeedbacks(res?.data?.data || []);
-      setFeedbackTotalPages(res?.data?.totalPages || 1);
     } catch (error) {
       console.error(error);
     } finally {
       setLoadingFeedbacks(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'feedbacks') {
       fetchFeedbacks();
     }
-  }, [activeTab, feedbackPage]);
+  }, [activeTab, fetchFeedbacks]);
 
   const handleOpenPointFeedbacks = async (point) => {
     try {
@@ -289,13 +295,13 @@ const DangerousZonePage = () => {
           <div className="flex bg-gray-100 p-1 rounded-2xl border border-gray-200">
             <button
               onClick={() => setActiveTab('points')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'points' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'points' ? 'bg-gray-900 text-white shadow-sm dark:bg-gray-200 dark:text-white' : 'text-gray-600 hover:text-gray-900'}`}
             >
               Danh sách Điểm
             </button>
             <button
               onClick={() => setActiveTab('feedbacks')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'feedbacks' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'feedbacks' ? 'bg-gray-900 text-white shadow-sm dark:bg-gray-200 dark:text-white' : 'text-gray-600 hover:text-gray-900'}`}
             >
               Phản hồi & Xác minh Cộng đồng
             </button>
@@ -304,7 +310,7 @@ const DangerousZonePage = () => {
           <button
             onClick={handleAutoDetect}
             disabled={autoDetecting}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl font-medium shadow-sm transition-all disabled:opacity-50 text-sm cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white rounded-2xl font-medium shadow-sm transition-all disabled:opacity-50 text-sm cursor-pointer"
           >
             <PiLightningFill className="text-amber-400 text-base" />
             {autoDetecting ? "Đang phân tích gom cụm..." : "Quét cụm SOS tự động"}
@@ -314,9 +320,9 @@ const DangerousZonePage = () => {
 
       {/* Thẻ thống kê tổng quan */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
+        <div className="bg-white dark:bg-gray-100 p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-lg">
-            ⏳
+            <PiHourglassFill size={20} />
           </div>
           <div>
             <p className="text-xs text-gray-500 font-medium">Chờ kiểm duyệt</p>
@@ -324,9 +330,9 @@ const DangerousZonePage = () => {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
+        <div className="bg-white dark:bg-gray-100 p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 font-bold text-lg">
-            ⚡
+            <PiLightningFill size={20} />
           </div>
           <div>
             <p className="text-xs text-gray-500 font-medium">Hệ thống tự gom cụm SOS</p>
@@ -334,9 +340,9 @@ const DangerousZonePage = () => {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
+        <div className="bg-white dark:bg-gray-100 p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-lg">
-            🛡️
+            <PiShieldCheckFill size={20} />
           </div>
           <div>
             <p className="text-xs text-gray-500 font-medium">Tổng điểm vùng nguy hiểm</p>
@@ -348,7 +354,7 @@ const DangerousZonePage = () => {
       {detectMsg && (
         <div className="px-4 py-3 rounded-2xl bg-gray-100 border border-gray-200 text-gray-900 text-sm flex items-center justify-between shadow-xs">
           <span>{detectMsg}</span>
-          <button onClick={() => setDetectMsg(null)} className="text-gray-500 hover:text-gray-700 font-bold ml-4 cursor-pointer">✕</button>
+          <button onClick={() => setDetectMsg(null)} className="text-gray-500 hover:text-gray-700 font-bold ml-4 cursor-pointer"><PiXBold /></button>
         </div>
       )}
 
@@ -370,7 +376,7 @@ const DangerousZonePage = () => {
           loading={loading}
         />
       ) : (
-        <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-gray-100 rounded-3xl border border-gray-200 p-5 shadow-sm space-y-4">
           <h2 className="text-lg font-bold text-gray-900">Danh sách Phản hồi Xác minh từ Người dùng & Cứu hộ viên</h2>
           {loadingFeedbacks ? (
             <p className="text-sm text-gray-500 text-center py-8">Đang tải phản hồi...</p>
@@ -380,12 +386,12 @@ const DangerousZonePage = () => {
             <div className="space-y-3">
               {feedbacks.map((fb) => {
                 const typeLabels = {
-                  VERIFY_REAL: { text: '👍 Xác nhận có thật', style: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-                  REPORT_FAKE: { text: '⚠️ Báo cáo giả mạo', style: 'bg-rose-50 text-rose-700 border-rose-200' },
-                  MARKED_RESOLVED: { text: '✅ Báo đã an toàn', style: 'bg-blue-50 text-blue-700 border-blue-200' },
-                  STILL_DANGEROUS: { text: '🔥 Xác nhận nguy hiểm', style: 'bg-amber-50 text-amber-700 border-amber-200' },
+                  VERIFY_REAL: { text: 'Xác nhận có thật', icon: PiThumbsUpFill, style: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                  REPORT_FAKE: { text: 'Báo cáo giả mạo', icon: PiFlagFill, style: 'bg-rose-50 text-rose-700 border-rose-200' },
+                  MARKED_RESOLVED: { text: 'Báo đã an toàn', icon: PiCheckCircleFill, style: 'bg-blue-50 text-blue-700 border-blue-200' },
+                  STILL_DANGEROUS: { text: 'Xác nhận nguy hiểm', icon: PiFireFill, style: 'bg-amber-50 text-amber-700 border-amber-200' },
                 };
-                const finalType = typeLabels[fb.feedbackType] || { text: fb.feedbackType, style: 'bg-gray-50 text-gray-700 border-gray-200' };
+                const finalType = typeLabels[fb.feedbackType] || { text: fb.feedbackType, icon: null, style: 'bg-gray-50 text-gray-700 border-gray-200' };
 
                 return (
                   <div key={fb.feedbackId} className="p-4 rounded-2xl border border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -393,10 +399,13 @@ const DangerousZonePage = () => {
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-gray-900 text-sm">{fb.userName}</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 font-medium">{fb.userRole}</span>
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${finalType.style}`}>{finalType.text}</span>
+                        <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-semibold border ${finalType.style}`}>
+                          {finalType.icon && <finalType.icon size={12} />}
+                          {finalType.text}
+                        </span>
                       </div>
                       <p className="text-xs text-gray-600 font-medium">Vùng nguy hiểm: <strong className="text-gray-900">{fb.zoneName}</strong> ({fb.address})</p>
-                      {fb.comment && <p className="text-xs text-gray-700 bg-white p-2 rounded-xl border border-gray-200 mt-1">"{fb.comment}"</p>}
+                      {fb.comment && <p className="text-xs text-gray-700 bg-white dark:bg-gray-100 p-2 rounded-xl border border-gray-200 mt-1">"{fb.comment}"</p>}
                     </div>
                     <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{formatTime(fb.createdAt)}</span>
                   </div>
@@ -410,7 +419,7 @@ const DangerousZonePage = () => {
       {/* Modal Xem Phản hồi của 1 Điểm */}
       {selectedPointFeedbacks && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-100 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Chi tiết Xác minh Cộng đồng</h3>
@@ -420,7 +429,7 @@ const DangerousZonePage = () => {
                 onClick={() => setSelectedPointFeedbacks(null)}
                 className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 cursor-pointer flex items-center justify-center"
               >
-                ✕
+                <PiXBold />
               </button>
             </div>
 
@@ -428,19 +437,19 @@ const DangerousZonePage = () => {
             <div className="grid grid-cols-4 gap-2 text-center text-xs">
               <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-200">
                 <span className="block font-bold text-emerald-700 text-base">{selectedPointFeedbacks.stats.verifyCount || 0}</span>
-                <span className="text-emerald-800 font-medium">👍 Xác nhận thật</span>
+                <span className="flex items-center justify-center gap-1 text-emerald-800 font-medium"><PiThumbsUpFill size={12} /> Xác nhận thật</span>
               </div>
               <div className="p-2 bg-rose-50 rounded-xl border border-rose-200">
                 <span className="block font-bold text-rose-700 text-base">{selectedPointFeedbacks.stats.fakeCount || 0}</span>
-                <span className="text-rose-800 font-medium">⚠️ Báo giả mạo</span>
+                <span className="flex items-center justify-center gap-1 text-rose-800 font-medium"><PiFlagFill size={12} /> Báo giả mạo</span>
               </div>
               <div className="p-2 bg-blue-50 rounded-xl border border-blue-200">
                 <span className="block font-bold text-blue-700 text-base">{selectedPointFeedbacks.stats.resolvedCount || 0}</span>
-                <span className="text-blue-800 font-medium">✅ Báo đã an toàn</span>
+                <span className="flex items-center justify-center gap-1 text-blue-800 font-medium"><PiCheckCircleFill size={12} /> Báo đã an toàn</span>
               </div>
               <div className="p-2 bg-amber-50 rounded-xl border border-amber-200">
                 <span className="block font-bold text-amber-700 text-base">{selectedPointFeedbacks.stats.stillDangerousCount || 0}</span>
-                <span className="text-amber-800 font-medium">🔥 Vẫn nguy hiểm</span>
+                <span className="flex items-center justify-center gap-1 text-amber-800 font-medium"><PiFireFill size={12} /> Vẫn nguy hiểm</span>
               </div>
             </div>
 
@@ -469,7 +478,7 @@ const DangerousZonePage = () => {
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setSelectedPointFeedbacks(null)}
-                className="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 cursor-pointer"
+                className="px-4 py-2 bg-gray-900 text-white dark:bg-gray-200 dark:text-white rounded-xl text-xs font-bold hover:bg-gray-800 dark:hover:bg-gray-300 cursor-pointer"
               >
                 Đóng
               </button>

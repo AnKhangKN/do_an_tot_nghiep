@@ -3,13 +3,16 @@ const ratingService = require("../service/rating.service");
 class RatingController {
     async submitRating(req, res, next) {
         try {
-            const { sosRequestId, rating, comment } = req.body;
+            const { sosRequestId, rating, responseSpeed, attitude, supportLevel, comment } = req.body;
             const victimId = req.userId;
 
             const result = await ratingService.submitRating({
                 sosRequestId,
                 victimId,
                 rating,
+                responseSpeed,
+                attitude,
+                supportLevel,
                 comment
             });
 
@@ -68,12 +71,29 @@ class RatingController {
 
     async getAllRatingsAdmin(req, res, next) {
         try {
-            const { page, limit, ratingFilter } = req.query;
-            const result = await ratingService.getAllRatingsAdmin({ page, limit, ratingFilter });
+            const { page, limit, ratingFilter, sentimentFilter } = req.query;
+            const result = await ratingService.getAllRatingsAdmin({ page, limit, ratingFilter, sentimentFilter });
             return res.status(200).json({
                 success: true,
                 message: "Lấy toàn bộ danh sách đánh giá thành công!",
                 data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getRatingTrends(req, res, next) {
+        try {
+            const { days } = req.query;
+            const result = await ratingService.getRatingTrends({ days });
+            return res.status(200).json({
+                success: true,
+                message: "Lấy báo cáo xu hướng chất lượng thành công!",
+                data: {
+                    days: days ? Number(days) : 7,
+                    data: result
+                }
             });
         } catch (error) {
             next(error);

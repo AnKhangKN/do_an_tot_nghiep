@@ -391,10 +391,18 @@ class AuthService {
             throwError("Tài khoản của bạn hiện không bị khóa!", 400);
         }
 
-        const countQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1`;
-        const countResult = await pool.query(countQuery, [userId]);
-        if (countResult.rows[0].count >= 3) {
-            throwError("Bạn đã gửi quá số lần kháng cáo cho phép (tối đa 3 lần)!", 400);
+        const rejectedQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1 AND status = 'REJECTED'`;
+        const rejectedResult = await pool.query(rejectedQuery, [userId]);
+        const rejectedCount = rejectedResult.rows[0].count;
+        if (rejectedCount >= 3 || (user.ban_reason && user.ban_reason.includes("khóa vĩnh viễn"))) {
+            throwError("Tài khoản của bạn đã bị khóa vĩnh viễn do bị từ chối kháng cáo 3 lần vì vi phạm chính sách ứng dụng.", 403);
+        }
+
+        const pendingQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1 AND status = 'PENDING'`;
+        const pendingResult = await pool.query(pendingQuery, [userId]);
+        const pendingCount = pendingResult.rows[0].count;
+        if (pendingCount >= 3) {
+            throwError("Bạn đã có 3 yêu cầu kháng cáo đang chờ xử lý. Vui lòng chờ Ban quản trị xét duyệt trước khi gửi thêm!", 400);
         }
 
         const appealId = generateUUID();
@@ -416,10 +424,20 @@ class AuthService {
             throwError("Tài khoản này không bị khóa!", 400);
         }
 
-        const countQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1`;
-        const countResult = await pool.query(countQuery, [user.userId]);
-        if (countResult.rows[0].count >= 3) {
-            throwError("Tài khoản này đã gửi quá số lần kháng cáo cho phép (tối đa 3 lần)!", 400);
+        const targetUserId = user.userId || user.user_id;
+
+        const rejectedQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1 AND status = 'REJECTED'`;
+        const rejectedResult = await pool.query(rejectedQuery, [targetUserId]);
+        const rejectedCount = rejectedResult.rows[0].count;
+        if (rejectedCount >= 3) {
+            throwError("Tài khoản của bạn đã bị khóa vĩnh viễn do bị từ chối kháng cáo 3 lần vì vi phạm chính sách ứng dụng.", 403);
+        }
+
+        const pendingQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1 AND status = 'PENDING'`;
+        const pendingResult = await pool.query(pendingQuery, [targetUserId]);
+        const pendingCount = pendingResult.rows[0].count;
+        if (pendingCount >= 3) {
+            throwError("Bạn đã có 3 yêu cầu kháng cáo đang chờ xử lý. Vui lòng chờ Ban quản trị xét duyệt trước khi gửi thêm!", 400);
         }
 
         const appealId = generateUUID();
@@ -428,8 +446,47 @@ class AuthService {
             VALUES ($1, $2, $3, 'PENDING')
             RETURNING appeal_id, status, created_at
         `;
-        const result = await pool.query(query, [appealId, user.userId, reason]);
+        const result = await pool.query(query, [appealId, targetUserId, reason]);
         return result.rows[0];
+    };
+
+    checkAppealStatusByEmail = async ({ email }) => {
+        const user = await userService.getUserIdByEmail(null, { email });
+        if (!user) {
+            throwError("Email không tồn tại trong hệ thống!", 404);
+        }
+
+        const targetUserId = user.userId || user.user_id;
+
+        const pendingQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1 AND status = 'PENDING'`;
+        const pendingResult = await pool.query(pendingQuery, [targetUserId]);
+        const pendingCount = pendingResult.rows[0].count;
+
+        const rejectedQuery = `SELECT COUNT(*)::int AS count FROM ban_appeals WHERE user_id = $1 AND status = 'REJECTED'`;
+        const rejectedResult = await pool.query(rejectedQuery, [targetUserId]);
+        const rejectedCount = rejectedResult.rows[0].count;
+
+        const fullUserInfo = await userService.getUserInfoById({ userId: targetUserId });
+
+        const isPermanentlyBanned = rejectedCount >= 3 || (fullUserInfo?.ban_reason && fullUserInfo.ban_reason.includes("khóa vĩnh viễn"));
+        const canAppeal = fullUserInfo?.status === "BANNED" && !isPermanentlyBanned && pendingCount < 3;
+
+        let message = null;
+        if (isPermanentlyBanned) {
+            message = "Tài khoản của bạn đã bị khóa vĩnh viễn do bị từ chối kháng cáo 3 lần vì vi phạm chính sách ứng dụng.";
+        } else if (pendingCount >= 3) {
+            message = "Bạn đã có 3 yêu cầu kháng cáo đang chờ xử lý. Vui lòng chờ Ban quản trị xét duyệt trước khi gửi thêm.";
+        }
+
+        return {
+            isBanned: fullUserInfo?.status === "BANNED",
+            banReason: fullUserInfo?.ban_reason,
+            pendingCount,
+            rejectedCount,
+            canAppeal,
+            isPermanentlyBanned,
+            message,
+        };
     };
 
     getMe = async ({ userId }) => {

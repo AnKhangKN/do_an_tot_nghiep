@@ -153,7 +153,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: ColorConstants.textPrimary),
+          icon: Icon(Icons.arrow_back_ios_new, color: ColorConstants.textPrimary),
           onPressed: () => context.go(RouterConstants.login),
         ),
       ),
@@ -198,7 +198,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                 Text(
                   'Mã xác thực 6 số đã được gửi tới email:\n${widget.email}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     color: ColorConstants.textSecondary,
                     height: 1.4,
@@ -265,7 +265,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
                         maxLength: 1,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: ColorConstants.textPrimary,
@@ -276,11 +276,11 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                           fillColor: ColorConstants.surfaceWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: ColorConstants.borderMuted),
+                            borderSide: BorderSide(color: ColorConstants.borderMuted),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: ColorConstants.borderMuted),
+                            borderSide: BorderSide(color: ColorConstants.borderMuted),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),

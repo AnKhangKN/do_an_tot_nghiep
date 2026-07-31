@@ -27,11 +27,15 @@ class ChatRepository {
     findConversationBySosRequestId = async (sosRequestId) => {
         const query = `
             SELECT c.*, 
+                   CASE WHEN c.is_closed = TRUE OR (s.status IN ('DONE', 'COMPLETED', 'CANCELLED') AND s.updated_at < CURRENT_TIMESTAMP - INTERVAL '15 minutes') THEN TRUE ELSE FALSE END as is_closed,
+                   s.status as sos_status,
+                   s.updated_at as sos_updated_at,
                    u1.full_name as user1_name, u1.avatar_url as user1_avatar, u1.phone as user1_phone,
                    u2.full_name as user2_name, u2.avatar_url as user2_avatar, u2.phone as user2_phone
             FROM ${this.conversationModel.table} c
             JOIN users u1 ON c.${this.conversationModel.field.user1Id} = u1.user_id
             JOIN users u2 ON c.${this.conversationModel.field.user2Id} = u2.user_id
+            LEFT JOIN sos_requests s ON c.${this.conversationModel.field.sosRequestId} = s.sos_request_id
             WHERE c.${this.conversationModel.field.sosRequestId} = $1
         `;
         const result = await pool.query(query, [sosRequestId]);
@@ -44,11 +48,15 @@ class ChatRepository {
         }
         const query = `
             SELECT c.*, 
+                   CASE WHEN c.is_closed = TRUE OR (s.status IN ('DONE', 'COMPLETED', 'CANCELLED') AND s.updated_at < CURRENT_TIMESTAMP - INTERVAL '15 minutes') THEN TRUE ELSE FALSE END as is_closed,
+                   s.status as sos_status,
+                   s.updated_at as sos_updated_at,
                    u1.full_name as user1_name, u1.avatar_url as user1_avatar, u1.phone as user1_phone,
                    u2.full_name as user2_name, u2.avatar_url as user2_avatar, u2.phone as user2_phone
             FROM ${this.conversationModel.table} c
             JOIN users u1 ON c.${this.conversationModel.field.user1Id} = u1.user_id
             JOIN users u2 ON c.${this.conversationModel.field.user2Id} = u2.user_id
+            LEFT JOIN sos_requests s ON c.${this.conversationModel.field.sosRequestId} = s.sos_request_id
             WHERE ((c.${this.conversationModel.field.user1Id} = $1 AND c.${this.conversationModel.field.user2Id} = $2)
                OR (c.${this.conversationModel.field.user1Id} = $2 AND c.${this.conversationModel.field.user2Id} = $1))
               AND c.${this.conversationModel.field.sosRequestId} IS NULL
@@ -69,14 +77,31 @@ class ChatRepository {
         return result.rows[0];
     }
 
+    closeConversationBySosRequestId = async (client, sosRequestId) => {
+        const query = `
+            UPDATE ${this.conversationModel.table}
+            SET ${this.conversationModel.field.isClosed} = TRUE,
+                ${this.conversationModel.field.updatedAt} = CURRENT_TIMESTAMP
+            WHERE ${this.conversationModel.field.sosRequestId} = $1
+            RETURNING *
+        `;
+        const executor = client || pool;
+        const result = await executor.query(query, [sosRequestId]);
+        return result.rows[0];
+    }
+
     findConversationById = async (conversationId) => {
         const query = `
             SELECT c.*, 
+                   CASE WHEN c.is_closed = TRUE OR (s.status IN ('DONE', 'COMPLETED', 'CANCELLED') AND s.updated_at < CURRENT_TIMESTAMP - INTERVAL '15 minutes') THEN TRUE ELSE FALSE END as is_closed,
+                   s.status as sos_status,
+                   s.updated_at as sos_updated_at,
                    u1.full_name as user1_name, u1.avatar_url as user1_avatar, u1.phone as user1_phone,
                    u2.full_name as user2_name, u2.avatar_url as user2_avatar, u2.phone as user2_phone
             FROM ${this.conversationModel.table} c
             JOIN users u1 ON c.${this.conversationModel.field.user1Id} = u1.user_id
             JOIN users u2 ON c.${this.conversationModel.field.user2Id} = u2.user_id
+            LEFT JOIN sos_requests s ON c.${this.conversationModel.field.sosRequestId} = s.sos_request_id
             WHERE c.${this.conversationModel.field.conversationId} = $1
         `;
         const result = await pool.query(query, [conversationId]);
@@ -100,6 +125,9 @@ class ChatRepository {
 
         const query = `
             SELECT c.*,
+                   CASE WHEN c.is_closed = TRUE OR (s.status IN ('DONE', 'COMPLETED', 'CANCELLED') AND s.updated_at < CURRENT_TIMESTAMP - INTERVAL '15 minutes') THEN TRUE ELSE FALSE END as is_closed,
+                   s.status as sos_status,
+                   s.updated_at as sos_updated_at,
                    CASE 
                        WHEN c.${this.conversationModel.field.user1Id} = $1 THEN u2.user_id
                        ELSE u1.user_id
@@ -127,6 +155,7 @@ class ChatRepository {
             FROM ${this.conversationModel.table} c
             JOIN users u1 ON c.${this.conversationModel.field.user1Id} = u1.user_id
             JOIN users u2 ON c.${this.conversationModel.field.user2Id} = u2.user_id
+            LEFT JOIN sos_requests s ON c.${this.conversationModel.field.sosRequestId} = s.sos_request_id
             ${whereClause}
             ORDER BY c.last_message_at DESC
         `;

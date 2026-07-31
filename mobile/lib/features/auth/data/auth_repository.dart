@@ -295,6 +295,18 @@ class AuthRepository {
     }
   }
 
+  Future<Map<String, dynamic>?> checkAppealStatus(String email) async {
+    try {
+      final res = await service.checkAppealStatus({'email': email});
+      final data = res.data['data'];
+      if (data == null) return null;
+      return Map<String, dynamic>.from(data);
+    } catch (e) {
+      debugPrint("🚨 [AuthRepository] Lỗi kiểm tra trạng thái kháng cáo: $e");
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> getActiveSOS() async {
     try {
       final res = await service.getActiveSOS();

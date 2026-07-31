@@ -65,7 +65,7 @@ const LoginPage = () => {
     <AuthLayout>
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-md">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white shadow-md">
             <PiLifebuoyFill size={24} />
           </div>
 
@@ -75,9 +75,9 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm sm:p-8">
           <div className="mb-8">
-            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-md">
+            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white shadow-md">
               <PiLockKeyFill size={28} />
             </div>
 
@@ -105,7 +105,7 @@ const LoginPage = () => {
                 onChange={handleChange}
                 placeholder="admin@example.com"
                 autoComplete="email"
-                className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white focus:ring-4 focus:ring-gray-900/10"
+                className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white dark:focus:bg-gray-100 focus:ring-4 focus:ring-gray-900/10"
                 required
               />
             </div>
@@ -136,7 +136,7 @@ const LoginPage = () => {
                   onChange={handleChange}
                   placeholder="Nhập mật khẩu"
                   autoComplete="current-password"
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-4 pr-12 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white focus:ring-4 focus:ring-gray-900/10"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-4 pr-12 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white dark:focus:bg-gray-100 focus:ring-4 focus:ring-gray-900/10"
                   required
                 />
 
@@ -168,7 +168,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+              className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-400"
             >
               {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>

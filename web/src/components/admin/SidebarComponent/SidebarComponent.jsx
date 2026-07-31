@@ -85,13 +85,13 @@ const SidebarComponent = () => {
 
   return (
     <div
-      className={`h-screen bg-white border-r border-gray-200 flex flex-col shadow-sm transition-all duration-300 ease-in-out shrink-0 select-none ${isCollapsed ? "w-24" : "w-72"
+      className={`h-screen bg-white dark:bg-gray-100 border-r border-gray-200 flex flex-col shadow-sm transition-all duration-300 ease-in-out shrink-0 select-none ${isCollapsed ? "w-24" : "w-72"
         }`}
     >
       {/* LOGO & TOGGLE BUTTON */}
       <div className="h-20 flex items-center justify-between px-3.5 border-b border-gray-100">
         <div className="flex items-center">
-          <div className="w-12 h-12 rounded-2xl bg-gray-900 text-white flex items-center justify-center shadow-md shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white flex items-center justify-center shadow-md shrink-0">
             <PiLifebuoyFill size={24} />
           </div>
 
@@ -134,7 +134,7 @@ const SidebarComponent = () => {
                   group flex items-center px-2 py-2 rounded-2xl
                   transition-all duration-300 font-medium text-sm gap-3
                   ${isActive
-                    ? "bg-gray-900 text-white shadow-lg"
+                    ? "bg-gray-900 text-white shadow-lg dark:bg-gray-200 dark:text-white"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   }
                 `
@@ -148,7 +148,7 @@ const SidebarComponent = () => {
                         transition-all duration-300
                         ${isActive
                           ? "bg-white/20 text-white"
-                          : "bg-gray-100 text-gray-600 group-hover:bg-white"
+                          : "bg-gray-100 text-gray-600 group-hover:bg-white dark:group-hover:bg-gray-100"
                         }
                       `}
                     >

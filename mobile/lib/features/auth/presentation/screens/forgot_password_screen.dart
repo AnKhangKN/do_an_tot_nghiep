@@ -120,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: ColorConstants.textSecondary),
+      labelStyle: TextStyle(color: ColorConstants.textSecondary),
       filled: true,
       fillColor: ColorConstants.surfaceWhite,
       border: OutlineInputBorder(
@@ -192,7 +192,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: ColorConstants.textPrimary),
+          icon: Icon(Icons.arrow_back, color: ColorConstants.textPrimary),
           onPressed: _step == _ForgotStep.email
               ? () => context.go(RouterConstants.login)
               : () => setState(() {
@@ -241,7 +241,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               ? "Nhập mật khẩu mới"
                               : "Mật khẩu đã được cập nhật thành công!",
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: ColorConstants.textSecondary, fontSize: 14),
+                  style: TextStyle(color: ColorConstants.textSecondary, fontSize: 14),
                 ),
                 const SizedBox(height: 16),
                 _buildStepIndicator(),
@@ -281,7 +281,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: Text(
                       "Mã OTP đã gửi đến ${emailController.text.trim()}",
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: ColorConstants.textPrimary, fontWeight: FontWeight.w500),
+                      style: TextStyle(color: ColorConstants.textPrimary, fontWeight: FontWeight.w500),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -291,7 +291,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     maxLength: 6,
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       counterText: '',
                       hintText: '------',
                       hintStyle: TextStyle(letterSpacing: 8, color: ColorConstants.borderMuted),
@@ -390,7 +390,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => context.go(RouterConstants.login),
-                    child: const Text("Quay lại đăng nhập", style: TextStyle(color: ColorConstants.textSecondary)),
+                    child: Text("Quay lại đăng nhập", style: TextStyle(color: ColorConstants.textSecondary)),
                   ),
                 ],
               ],

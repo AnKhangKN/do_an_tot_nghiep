@@ -117,7 +117,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       Text(
                                         provider.errorMessage!,
                                         textAlign: TextAlign.center,
-                                        style: const TextStyle(color: ColorConstants.textSecondary),
+                                        style: TextStyle(color: ColorConstants.textSecondary),
                                       ),
                                       const SizedBox(height: 16),
                                       ElevatedButton(
@@ -129,7 +129,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ),
                               )
                             : filteredList.isEmpty
-                                ? const Center(
+                                ? Center(
                                     child: Text(
                                       "Không tìm thấy lịch sử phù hợp.",
                                       style: TextStyle(color: ColorConstants.textSecondary),
@@ -445,7 +445,7 @@ class _HistoryCard extends StatelessWidget {
                         isRescuer 
                             ? "Nạn nhân: ${item.partnerName ?? 'Không rõ'}"
                             : "Cứu hộ: ${item.partnerName ?? 'Đang tìm kiếm...'}",
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: ColorConstants.textPrimary, 
                           fontSize: 13, 
                           fontWeight: FontWeight.bold,
@@ -454,7 +454,7 @@ class _HistoryCard extends StatelessWidget {
                       if (item.partnerPhone != null && item.partnerPhone!.isNotEmpty)
                         Text(
                           "SĐT: ${item.partnerPhone}",
-                          style: const TextStyle(color: ColorConstants.textSecondary, fontSize: 12),
+                          style: TextStyle(color: ColorConstants.textSecondary, fontSize: 12),
                         ),
                     ],
                   ),
@@ -471,7 +471,7 @@ class _HistoryCard extends StatelessWidget {
               ),
               Text(
                 "Mô tả: ${item.description}",
-                style: const TextStyle(color: ColorConstants.textSecondary, fontSize: 13, height: 1.4),
+                style: TextStyle(color: ColorConstants.textSecondary, fontSize: 13, height: 1.4),
               ),
             ],
             

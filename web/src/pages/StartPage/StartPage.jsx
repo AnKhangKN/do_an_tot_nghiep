@@ -15,7 +15,7 @@ const StartPage = () => {
         <div className="grid w-full items-center gap-10 lg:grid-cols-[1fr_0.9fr]">
           <section>
             <div className="mb-8 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-md">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-md dark:bg-gray-200 dark:text-white">
                 <PiLifebuoyFill size={24} />
               </div>
 
@@ -25,7 +25,7 @@ const StartPage = () => {
               </div>
             </div>
 
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white dark:bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600 shadow-sm">
               <PiShieldCheckFill className="text-blue-500" size={18} />
               Trung tâm điều phối cứu hộ
             </div>
@@ -42,7 +42,7 @@ const StartPage = () => {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300"
               >
                 Đăng nhập quản trị
                 <PiArrowRight size={18} />
@@ -50,18 +50,18 @@ const StartPage = () => {
 
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-800 transition hover:bg-gray-100"
+                className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white dark:bg-gray-100 px-5 py-3 text-sm font-semibold text-gray-800 transition hover:bg-gray-100"
               >
                 Vào Dashboard
               </Link>
             </div>
           </section>
 
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+          <section className="rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-5 shadow-sm">
             <div className="rounded-2xl bg-gray-950 p-5 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Tình trạng hệ thống</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-700">Tình trạng hệ thống</p>
                   <p className="mt-1 text-2xl font-bold">Sẵn sàng</p>
                 </div>
 

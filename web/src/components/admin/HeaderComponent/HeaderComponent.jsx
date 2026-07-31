@@ -2,16 +2,19 @@ import React from "react";
 import {
   PiBellSimpleLight,
   PiMoonLight,
+  PiSunLight,
   PiCaretDownLight,
 } from "react-icons/pi";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, NavLink, useNavigate } from "react-router-dom";
 import * as AuthApi from "@/api/shared/AuthApi";
 import { clearUser } from "@/store/user/userSlice";
-import { logout } from "@/store/accessToken/accessTokenSlice"
+import { logout } from "@/store/accessToken/accessTokenSlice";
+import { setThemeMode } from "@/store/theme/themeSlice";
 
 const HeaderComponent = () => {
   const state = useSelector((state) => state.user);
+  const theme = useSelector((state) => state.theme);
   const navigate = useNavigate()
   const dispatch = useDispatch();
 
@@ -53,7 +56,7 @@ const HeaderComponent = () => {
   };
 
   return (
-    <div className="h-20 bg-white border-b border-gray-100 px-6 flex items-center justify-between shadow-sm">
+    <div className="h-20 bg-white dark:bg-gray-100 border-b border-gray-100 px-6 flex items-center justify-between shadow-sm">
       {/* LEFT */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
@@ -71,14 +74,16 @@ const HeaderComponent = () => {
         <div className="flex items-center gap-2">
           {/* DARK MODE */}
           <button
+            onClick={() => dispatch(setThemeMode(theme.isDark ? "light" : "dark"))}
+            title={theme.isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
             className="
               w-11 h-11 rounded-2xl border border-gray-200
               flex items-center justify-center
               text-gray-600 hover:bg-gray-100
-              transition-all duration-200
+              transition-all duration-200 cursor-pointer
             "
           >
-            <PiMoonLight size={22} />
+            {theme.isDark ? <PiSunLight size={22} /> : <PiMoonLight size={22} />}
           </button>
 
           {/* NOTIFICATION */}
@@ -110,17 +115,25 @@ const HeaderComponent = () => {
             "
           >
             {/* avatar */}
-            <div
-              className="
-                w-11 h-11 rounded-2xl
-                bg-linear-to-br from-gray-800 to-gray-600
-                text-white font-semibold
-                flex items-center justify-center
-                shadow-md
-              "
-            >
-              {state?.user?.fullName?.charAt(0)}
-            </div>
+            {state?.user?.avatarUrl ? (
+              <img
+                src={state.user.avatarUrl}
+                alt={state.user.fullName}
+                className="w-11 h-11 rounded-2xl object-cover shadow-md"
+              />
+            ) : (
+              <div
+                className="
+                  w-11 h-11 rounded-2xl
+                  bg-linear-to-br from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-300 dark:text-gray-800
+                  text-white font-semibold
+                  flex items-center justify-center
+                  shadow-md
+                "
+              >
+                {state?.user?.fullName?.charAt(0)}
+              </div>
+            )}
 
             {/* info */}
             <div className="hidden sm:block">
@@ -138,7 +151,7 @@ const HeaderComponent = () => {
           <div
             className="
               absolute right-0 top-full mt-3
-              w-56 bg-white border border-gray-100
+              w-56 bg-white dark:bg-gray-100 border border-gray-100
               rounded-2xl shadow-xl overflow-hidden
               opacity-0 invisible
               group-hover:opacity-100
@@ -152,7 +165,7 @@ const HeaderComponent = () => {
                 {state?.user?.fullName}
               </p>
 
-              <p className="text-xs text-gray-400">admin@gmail.com</p>
+              <p className="text-xs text-gray-400">{state?.user?.email || "Administrator"}</p>
             </div>
 
             <div className="p-2">

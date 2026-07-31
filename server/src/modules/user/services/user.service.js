@@ -103,6 +103,42 @@ class UserService {
     return mapFields(updatedUser, this.userModel);
   }
 
+  updateProfile = async (client, { userId, fullName, phone }) => {
+    if (!fullName || !fullName.toString().trim()) {
+      const err = new Error("Họ và tên không được để trống!");
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const cleanFullName = fullName.toString().trim();
+
+    let cleanPhone = null;
+    if (phone && phone.toString().trim()) {
+      cleanPhone = phone.toString().trim();
+
+      // Kiểm tra xem số điện thoại đã thuộc về tài khoản khác chưa
+      const existingUser = await this.userRepository.findUserByPhone(client, {
+        phone: cleanPhone,
+        excludeUserId: userId,
+      });
+
+      if (existingUser) {
+        const err = new Error("Số điện thoại này đã được sử dụng bởi một tài khoản khác. Vui lòng nhập đúng số điện thoại của bạn!");
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    const updatedUser = await this.userRepository.updateProfile(client, { userId, fullName: cleanFullName, phone: cleanPhone });
+    if (!updatedUser) {
+      const err = new Error("Không tìm thấy thông tin người dùng!");
+      err.statusCode = 404;
+      throw err;
+    }
+
+    return mapFields(updatedUser, this.userModel);
+  }
+
 
   updateIsVerified = async (client, { email, isVerified = true }) => {
     const updatedUser = await this.userRepository.updateIsVerified(client, { email, isVerified });

@@ -79,12 +79,12 @@ const TableComponent = ({
   };
 
   return (
-    <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-white">
+    <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-white dark:bg-gray-100">
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
 
-          <thead className="bg-gray-900">
+          <thead className="bg-gray-900 dark:bg-gray-200">
             <tr>
               {columns.map((col) => (
                 <th
@@ -147,7 +147,7 @@ const TableComponent = ({
 
       {/* PAGINATION FOOTER */}
       {(totalPages >= 1 || totalItems > 0) && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white dark:bg-gray-100 border-t border-gray-100">
           <div className="text-xs text-gray-500 font-medium">
             {totalItems > 0 ? (
               <>
@@ -164,7 +164,7 @@ const TableComponent = ({
               type="button"
               disabled={activePage <= 1}
               onClick={() => handlePageClick(activePage - 1)}
-              className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed transition-all flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 bg-white dark:bg-gray-100 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-gray-100 disabled:cursor-not-allowed transition-all flex items-center gap-1"
             >
               <PiCaretLeftBold size={14} />
               <span>Trước</span>
@@ -206,8 +206,8 @@ const TableComponent = ({
                     onClick={() => handlePageClick(p)}
                     className={`w-8 h-8 rounded-xl border text-xs font-semibold flex items-center justify-center transition-all duration-200 ${
                       activePage === p
-                        ? "bg-gray-900 text-white border-gray-900 shadow-sm"
-                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-gray-900 text-white border-gray-900 shadow-sm dark:bg-gray-200 dark:text-white dark:border-gray-100"
+                        : "bg-white dark:bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900"
                     }`}
                   >
                     {p}
@@ -221,7 +221,7 @@ const TableComponent = ({
               type="button"
               disabled={activePage >= totalPages}
               onClick={() => handlePageClick(activePage + 1)}
-              className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed transition-all flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 bg-white dark:bg-gray-100 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-gray-100 disabled:cursor-not-allowed transition-all flex items-center gap-1"
             >
               <span>Sau</span>
               <PiCaretRightBold size={14} />
@@ -237,7 +237,7 @@ const TableComponent = ({
           onClick={closeModal}
         >
           <div
-            className="bg-white rounded-l-3xl max-w-lg w-full border-l border-gray-100 shadow-xl flex flex-col overflow-hidden h-full transform-gpu will-change-transform overscroll-contain animate-in fade-in slide-in-from-right duration-200"
+            className="bg-white dark:bg-gray-100 rounded-l-3xl max-w-lg w-full border-l border-gray-100 shadow-xl flex flex-col overflow-hidden h-full transform-gpu will-change-transform overscroll-contain animate-in fade-in slide-in-from-right duration-200"
             onClick={(e) => e.stopPropagation()}
           >
 
@@ -335,7 +335,7 @@ const TableComponent = ({
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
               <button
                 onClick={closeModal}
-                className="px-6 py-2.5 rounded-2xl bg-gray-900 text-white hover:bg-slate-800 text-xs font-bold transition shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
+                className="px-6 py-2.5 rounded-2xl bg-gray-900 text-white hover:bg-slate-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 text-xs font-bold transition shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
               >
                 Đóng
               </button>

@@ -8,7 +8,8 @@ import {
   PiStarFill,
   PiTrophyFill,
   PiMagnifyingGlassBold,
-  PiSparkleFill
+  PiSparkleFill,
+  PiMedalFill
 } from 'react-icons/pi';
 
 const columns = [
@@ -16,9 +17,9 @@ const columns = [
     key: 'rank',
     title: 'Hạng',
     render: (_, index) => {
-      if (index === 0) return <span className="text-xl leading-none">🥇</span>;
-      if (index === 1) return <span className="text-xl leading-none">🥈</span>;
-      if (index === 2) return <span className="text-xl leading-none">🥉</span>;
+      if (index === 0) return <span className="flex items-center justify-center"><PiMedalFill className="text-xl text-amber-400" /></span>;
+      if (index === 1) return <span className="flex items-center justify-center"><PiMedalFill className="text-xl text-gray-400" /></span>;
+      if (index === 2) return <span className="flex items-center justify-center"><PiMedalFill className="text-xl text-orange-700" /></span>;
       return <span className="text-xs font-semibold text-gray-400 text-center block">{index + 1}</span>;
     },
   },
@@ -159,6 +160,7 @@ const RescuerAnalyticsPage = () => {
 
   useEffect(() => {
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   const handleSearchSubmit = (e) => {
@@ -196,7 +198,7 @@ const RescuerAnalyticsPage = () => {
 
       {/* Overview Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-white border border-gray-200 shadow-sm flex items-center gap-4">
+        <div className="p-5 rounded-3xl bg-white dark:bg-gray-100 border border-gray-200 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
             <PiShieldFill className="text-indigo-600 text-xl" />
           </div>
@@ -206,7 +208,7 @@ const RescuerAnalyticsPage = () => {
           </div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white border border-gray-200 shadow-sm flex items-center gap-4">
+        <div className="p-5 rounded-3xl bg-white dark:bg-gray-100 border border-gray-200 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
             <PiCheckCircleFill className="text-emerald-600 text-xl" />
           </div>
@@ -216,7 +218,7 @@ const RescuerAnalyticsPage = () => {
           </div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white border border-gray-200 shadow-sm flex items-center gap-4">
+        <div className="p-5 rounded-3xl bg-white dark:bg-gray-100 border border-gray-200 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
             <PiTimerFill className="text-amber-600 text-xl" />
           </div>
@@ -228,7 +230,7 @@ const RescuerAnalyticsPage = () => {
           </div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white border border-gray-200 shadow-sm flex items-center gap-4">
+        <div className="p-5 rounded-3xl bg-white dark:bg-gray-100 border border-gray-200 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-yellow-50 border border-yellow-100 flex items-center justify-center shrink-0">
             <PiStarFill className="text-yellow-500 text-xl" />
           </div>

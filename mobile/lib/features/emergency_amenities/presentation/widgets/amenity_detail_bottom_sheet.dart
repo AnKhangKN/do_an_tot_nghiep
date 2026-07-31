@@ -235,7 +235,7 @@ class AmenityDetailBottomSheet extends StatelessWidget {
       ),
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: ColorConstants.surfaceWhite,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -277,7 +277,7 @@ class AmenityDetailBottomSheet extends StatelessWidget {
                       children: [
                         Text(
                           categoryTitle,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: ColorConstants.textPrimary,
@@ -286,7 +286,7 @@ class AmenityDetailBottomSheet extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           'Tọa độ: ${amenity.latitude.toStringAsFixed(4)}, ${amenity.longitude.toStringAsFixed(4)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             color: ColorConstants.textMuted,
                           ),
@@ -301,11 +301,11 @@ class AmenityDetailBottomSheet extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.access_time_rounded, size: 18, color: ColorConstants.textMuted),
+                  Icon(Icons.access_time_rounded, size: 18, color: ColorConstants.textMuted),
                   const SizedBox(width: 8),
                   Text(
                     'Giờ mở cửa: ${amenity.openingHours}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: ColorConstants.textPrimary,
@@ -359,11 +359,11 @@ class AmenityDetailBottomSheet extends StatelessWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.phone_rounded, size: 18, color: ColorConstants.textMuted),
+                    Icon(Icons.phone_rounded, size: 18, color: ColorConstants.textMuted),
                     const SizedBox(width: 8),
                     Text(
                       'SĐT liên hệ: ${amenity.phone}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: ColorConstants.textPrimary,
@@ -425,7 +425,7 @@ class AmenityDetailBottomSheet extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Đóng', style: TextStyle(color: ColorConstants.textMuted)),
+                    child: Text('Đóng', style: TextStyle(color: ColorConstants.textMuted)),
                   ),
                 ],
               ),

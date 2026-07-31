@@ -68,8 +68,64 @@ const validateGetBannedUsers = (req, res, next) => {
     next();
 };
 
+const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+
+const validateUpdateAdminProfile = (req, res, next) => {
+    const { fullName, phone } = req.body;
+
+    if (!fullName || typeof fullName !== "string" || !fullName.trim()) {
+        throwError("Họ và tên không được để trống!", 400);
+    }
+
+    const trimmedFullName = fullName.trim();
+    if (trimmedFullName.length > 100) {
+        throwError("Họ và tên không được vượt quá 100 ký tự!", 400);
+    }
+
+    if (DANGEROUS_SCRIPT_REGEX.test(trimmedFullName)) {
+        throwError("Dữ liệu chứa ký tự không hợp lệ hoặc mã độc!", 400);
+    }
+
+    if (phone !== undefined && phone !== null && phone !== "") {
+        const trimmedPhone = phone.toString().trim();
+        if (!PHONE_REGEX.test(trimmedPhone)) {
+            throwError("Số điện thoại không đúng định dạng! Vui lòng nhập SĐT Việt Nam 10 chữ số (ví dụ: 0912345678).", 400);
+        }
+        req.body.phone = trimmedPhone;
+    } else {
+        req.body.phone = null;
+    }
+
+    req.body.fullName = trimmedFullName;
+    next();
+};
+
+const validateChangeAdminPassword = (req, res, next) => {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || typeof currentPassword !== "string" || !currentPassword.trim()) {
+        throwError("Mật khẩu hiện tại không được để trống!", 400);
+    }
+
+    if (!newPassword || typeof newPassword !== "string" || !newPassword.trim()) {
+        throwError("Mật khẩu mới không được để trống!", 400);
+    }
+
+    if (newPassword.length < 6) {
+        throwError("Mật khẩu mới phải có ít nhất 6 ký tự!", 400);
+    }
+
+    if (!confirmPassword || confirmPassword !== newPassword) {
+        throwError("Xác nhận mật khẩu mới không khớp!", 400);
+    }
+
+    next();
+};
+
 module.exports = {
     validateBanUser,
     validateUnbanUser,
-    validateGetBannedUsers
+    validateGetBannedUsers,
+    validateUpdateAdminProfile,
+    validateChangeAdminPassword
 };

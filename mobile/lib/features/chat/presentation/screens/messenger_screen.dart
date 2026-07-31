@@ -88,6 +88,14 @@ class _MessengerScreenState extends State<MessengerScreen> {
     final chatProvider = context.watch<ChatProvider>();
     final messages = chatProvider.getMessages(_conversationKey);
 
+    final matchingConv = chatProvider.conversations.firstWhere(
+      (c) => c.id == _conversationKey || c.id == widget.conversation.id,
+      orElse: () => widget.conversation,
+    );
+    final String? sosStatus = matchingConv.sosStatus ?? widget.conversation.sosStatus;
+    final bool isClosed = widget.conversation.isClosed || matchingConv.isClosed;
+    final bool isGracePeriod = !isClosed && (sosStatus == 'DONE' || sosStatus == 'COMPLETED' || sosStatus == 'CANCELLED');
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -138,21 +146,58 @@ class _MessengerScreenState extends State<MessengerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.conversation.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.conversation.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                      if (isClosed) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'Đã đóng',
+                            style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ] else if (isGracePeriod) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'Gia hạn 15p',
+                            style: TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   Text(
-                    widget.conversation.isOnline ? 'Đang hoạt động' : 'Ngoại tuyến',
+                    isClosed
+                        ? 'Kênh trò chuyện đã khóa'
+                        : isGracePeriod
+                            ? 'Thời gian gia hạn 15 phút'
+                            : (widget.conversation.isOnline ? 'Đang hoạt động' : 'Ngoại tuyến'),
                     style: TextStyle(
                       fontSize: 11,
-                      color: widget.conversation.isOnline ? Colors.green : Colors.grey,
+                      color: isClosed ? Colors.orange[800] : (isGracePeriod ? Colors.blue[700] : (widget.conversation.isOnline ? Colors.green : Colors.grey)),
                     ),
                   ),
                 ],
@@ -185,19 +230,58 @@ class _MessengerScreenState extends State<MessengerScreen> {
               ),
             ),
 
-            // Gợi ý tin nhắn nhanh
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Row(
-                children: [
-                  _buildQuickChip('📍 Chia sẻ vị trí hiện tại'),
-                  _buildQuickChip('🚨 Tôi cần hỗ trợ gấp'),
-                  _buildQuickChip('🚗 Đang di chuyển đến nơi'),
-                  _buildQuickChip('✅ Đã an toàn'),
-                ],
+            // Banner thông báo kênh chat đã đóng hoặc gia hạn 15 phút
+            if (isClosed)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                color: const Color(0xFFFEF3C7),
+                child: const Row(
+                  children: [
+                    Icon(Icons.lock_rounded, color: Color(0xFFD97706), size: 18),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Kênh chat này đã tự động đóng do ca cứu hộ đã hoàn thành hoặc bị hủy.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF92400E), fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (isGracePeriod)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                color: const Color(0xFFE0F2FE),
+                child: const Row(
+                  children: [
+                    Icon(Icons.timer_outlined, color: Color(0xFF0284C7), size: 18),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Ca cứu hộ đã kết thúc. Kênh trò chuyện đang trong thời gian gia hạn 15 phút để hỗ trợ phát sinh.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF0369A1), fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+
+            // Gợi ý tin nhắn nhanh (chỉ hiển thị khi kênh còn mở)
+            if (!isClosed)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Row(
+                  children: [
+                    _buildQuickChip('📍 Chia sẻ vị trí hiện tại'),
+                    _buildQuickChip('🚨 Tôi cần hỗ trợ gấp'),
+                    _buildQuickChip('🚗 Đang di chuyển đến nơi'),
+                    _buildQuickChip('✅ Đã an toàn'),
+                  ],
+                ),
+              ),
 
             // Ô nhập liệu
             Container(
@@ -215,35 +299,36 @@ class _MessengerScreenState extends State<MessengerScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF64748B)),
-                    onPressed: () {},
+                    icon: Icon(Icons.add_circle_outline_rounded, color: isClosed ? Colors.grey[400] : const Color(0xFF64748B)),
+                    onPressed: isClosed ? null : () {},
                     tooltip: 'Đính kèm',
                   ),
                   Expanded(
                     child: TextField(
                       controller: _textController,
+                      enabled: !isClosed,
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
-                        hintText: 'Nhập tin nhắn...',
-                        hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+                        hintText: isClosed ? 'Kênh trò chuyện đã bị khóa...' : 'Nhập tin nhắn...',
+                        hintStyle: TextStyle(fontSize: 14, color: isClosed ? Colors.grey[400] : const Color(0xFF94A3B8)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: const Color(0xFFF1F5F9),
+                        fillColor: isClosed ? const Color(0xFFE2E8F0) : const Color(0xFFF1F5F9),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       ),
-                      onSubmitted: (_) => _sendMessage(),
+                      onSubmitted: isClosed ? null : (_) => _sendMessage(),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Material(
-                    color: ColorConstants.redRescue,
+                    color: isClosed ? Colors.grey[400] : ColorConstants.redRescue,
                     shape: const CircleBorder(),
                     child: IconButton(
                       icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-                      onPressed: () => _sendMessage(),
+                      onPressed: isClosed ? null : () => _sendMessage(),
                     ),
                   ),
                 ],

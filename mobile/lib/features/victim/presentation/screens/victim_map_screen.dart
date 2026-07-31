@@ -358,7 +358,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.storefront_rounded,
               color: ColorConstants.surfaceWhite,
               size: 20,
@@ -455,12 +455,12 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                           children: [
                             Text(
                               target.categoryName ?? 'Tiện ích khẩn cấp',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: ColorConstants.textPrimary),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: ColorConstants.textPrimary),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'Khoảng cách: $dist km • Tuyến đường: ~$duration phút',
-                              style: const TextStyle(fontSize: 12, color: ColorConstants.textSecondary, fontWeight: FontWeight.w500),
+                              style: TextStyle(fontSize: 12, color: ColorConstants.textSecondary, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),

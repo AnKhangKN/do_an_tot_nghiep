@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/theme/theme_controller.dart';
 import 'package:mobile/core/storage/offline_queue_service.dart';
 import '../core/background/background_service.dart';
 import '../firebase_options.dart';
@@ -45,6 +46,13 @@ class AppBootstrap {
       await initDI();
     } catch (e) {
       debugPrint("🚨 [Bootstrap] Lỗi khởi tạo Dependency Injection (initDI): $e");
+    }
+
+    // 5.1 Nạp chế độ sáng/tối đã lưu trước khi render màn hình đầu tiên
+    try {
+      await getIt<ThemeController>().load();
+    } catch (e) {
+      debugPrint("⚠️ [Bootstrap] Lỗi nạp chế độ giao diện: $e");
     }
 
     // 6. Xin quyền và khởi tạo cấu hình local notification / background service

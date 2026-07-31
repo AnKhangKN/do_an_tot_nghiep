@@ -190,12 +190,12 @@ class _SearchWidgetState extends State<SearchWidget> {
                     focusNode: _focusNode,
                     onChanged: _onSearchChanged,
                     cursorColor: ColorConstants.primary,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: ColorConstants.slateDark,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Tìm tiện ích gần bạn nhất...',
                       hintStyle: TextStyle(
                         color: ColorConstants.borderMuted,
@@ -209,7 +209,7 @@ class _SearchWidgetState extends State<SearchWidget> {
                 ),
                 if (_controller.text.isNotEmpty || _selectedCategoryFilterId != null || _showSuggestions)
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: ColorConstants.textMuted, size: 20),
+                    icon: Icon(Icons.close_rounded, color: ColorConstants.textMuted, size: 20),
                     onPressed: _closeSearch,
                   ),
               ],
@@ -240,7 +240,7 @@ class _SearchWidgetState extends State<SearchWidget> {
                   if (categories.isNotEmpty) ...[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
-                      child: const Text(
+                      child: Text(
                         'Gợi ý danh mục từ Hệ thống',
                         style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: ColorConstants.textMuted),
                       ),
@@ -305,7 +305,7 @@ class _SearchWidgetState extends State<SearchWidget> {
                       children: [
                         Text(
                           'Tiện ích gần nhất (${sortedList.length})',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ColorConstants.textMuted),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ColorConstants.textMuted),
                         ),
                         GestureDetector(
                           onTap: _closeSearch,
@@ -316,7 +316,7 @@ class _SearchWidgetState extends State<SearchWidget> {
                   ),
                   const Divider(height: 1),
                   if (sortedList.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(16),
                       child: Center(
                         child: Text(
@@ -355,7 +355,7 @@ class _SearchWidgetState extends State<SearchWidget> {
                                 Expanded(
                                   child: Text(
                                     catName,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: ColorConstants.slateDark,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
@@ -382,11 +382,11 @@ class _SearchWidgetState extends State<SearchWidget> {
                             ),
                             subtitle: Text(
                               'Giờ mở cửa: ${item.openingHours}${item.phone != null && item.phone!.isNotEmpty ? ' • SĐT: ${item.phone}' : ''}',
-                              style: const TextStyle(fontSize: 12, color: ColorConstants.textMuted),
+                              style: TextStyle(fontSize: 12, color: ColorConstants.textMuted),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: ColorConstants.borderMuted),
+                            trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: ColorConstants.borderMuted),
                             onTap: () => _selectAmenity(item),
                           );
                         },

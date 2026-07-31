@@ -121,7 +121,8 @@ class UserRepository {
             ${this.user.field.status}, 
             ${this.user.field.banReason},
             ${this.user.field.bannedAt},
-            ${this.user.field.avatarUrl}
+            ${this.user.field.avatarUrl},
+            ${this.user.field.createdAt}
         FROM ${this.user.table}
         WHERE ${this.user.field.userId} = $1
         `;
@@ -183,7 +184,23 @@ class UserRepository {
         RETURNING *
         `;
 
-        const result = await client.query(query, [userId, avatarUrl]);
+        const db = client || pool;
+        const result = await db.query(query, [userId, avatarUrl]);
+        return result.rows[0];
+    }
+
+    updateProfile = async (client, { userId, fullName, phone }) => {
+        const query = `
+        UPDATE ${this.user.table}
+        SET ${this.user.field.fullName} = $2,
+            ${this.user.field.phone} = $3,
+            ${this.user.field.updatedAt} = CURRENT_TIMESTAMP
+        WHERE ${this.user.field.userId} = $1
+        RETURNING *
+        `;
+
+        const db = client || pool;
+        const result = await db.query(query, [userId, fullName, phone]);
         return result.rows[0];
     }
 

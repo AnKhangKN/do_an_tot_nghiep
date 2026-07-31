@@ -12,6 +12,16 @@ import "leaflet.heat";
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { getSosHeatmap } from "@/api/admin/MapApi";
+import { useSelector } from "react-redux";
+import {
+  PiFireFill,
+  PiMapPinFill,
+  PiSirenFill,
+  PiCircleFill,
+  PiWrenchFill,
+  PiAmbulanceFill,
+  PiWarningFill,
+} from "react-icons/pi";
 
 // ================= FIX ICON =================
 delete L.Icon.Default.prototype._getIconUrl;
@@ -86,7 +96,11 @@ const DangerLayer = ({ data }) => (
   <>
     {data.map((item) => (
       <Marker key={item.id} position={item.position} icon={icons[item.type]}>
-        <Popup>⚠️ {item.type}</Popup>
+        <Popup>
+          <span className="flex items-center gap-1">
+            <PiWarningFill className="text-red-500" /> {item.type}
+          </span>
+        </Popup>
       </Marker>
     ))}
   </>
@@ -96,7 +110,11 @@ const DangerZoneLayer = ({ data }) => (
   <>
     {data.map((item) => (
       <Circle key={item.id} center={item.position} radius={item.radius}>
-        <Popup>🔴 Vùng nguy hiểm</Popup>
+        <Popup>
+          <span className="flex items-center gap-1">
+            <PiCircleFill className="text-red-500" /> Vùng nguy hiểm
+          </span>
+        </Popup>
       </Circle>
     ))}
   </>
@@ -106,7 +124,11 @@ const RepairLayer = ({ data }) => (
   <>
     {data.map((item) => (
       <Marker key={item.id} position={item.position} icon={icons.repair}>
-        <Popup>🔧 {item.name}</Popup>
+        <Popup>
+          <span className="flex items-center gap-1">
+            <PiWrenchFill className="text-orange-500" /> {item.name}
+          </span>
+        </Popup>
       </Marker>
     ))}
   </>
@@ -116,7 +138,11 @@ const RescuerLayer = ({ data }) => (
   <>
     {data.map((item) => (
       <Marker key={item.id} position={item.position} icon={icons.rescuer}>
-        <Popup>🚑 {item.name}</Popup>
+        <Popup>
+          <span className="flex items-center gap-1">
+            <PiAmbulanceFill className="text-emerald-600" /> {item.name}
+          </span>
+        </Popup>
       </Marker>
     ))}
   </>
@@ -132,7 +158,9 @@ const SosMarkerLayer = ({ points }) => (
       >
         <Popup>
           <div className="p-1">
-            <h4 className="font-bold text-red-600">🚨 {item.incidentType}</h4>
+            <h4 className="flex items-center gap-1 font-bold text-red-600">
+              <PiSirenFill /> {item.incidentType}
+            </h4>
             <p className="text-xs text-gray-600 mt-1">Trạng thái: <b>{item.status}</b></p>
             <p className="text-xs text-gray-500">Tọa độ: {item.lat.toFixed(4)}, {item.lng.toFixed(4)}</p>
           </div>
@@ -221,7 +249,7 @@ const SearchBox = ({ setLocation }) => {
   }, [query]);
 
   return (
-    <div className="absolute top-3 left-3 z-1000 bg-white p-3 rounded shadow w-[320px]">
+    <div className="absolute top-3 left-3 z-1000 bg-white dark:bg-gray-100 p-3 rounded shadow w-[320px]">
       <input
         className="border p-2 w-full"
         value={query}
@@ -299,7 +327,11 @@ const FlyToLocation = ({ location }) => {
 
   return (
     <Marker position={location}>
-      <Popup>📍 Vị trí bạn tìm</Popup>
+      <Popup>
+        <span className="flex items-center gap-1">
+          <PiMapPinFill className="text-red-500" /> Vị trí bạn tìm
+        </span>
+      </Popup>
     </Marker>
   );
 };
@@ -309,6 +341,7 @@ const MapPage = () => {
   const center = [10.0452, 105.7469];
   const [location, setLocation] = useState(null);
   const [heatmapPoints, setHeatmapPoints] = useState([]);
+  const isDark = useSelector((state) => state.theme.isDark);
 
   useEffect(() => {
     const fetchHeatmapData = async () => {
@@ -334,40 +367,48 @@ const MapPage = () => {
       <SearchBox setLocation={setLocation} />
 
       <MapContainer center={center} zoom={13} className="w-full h-full">
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a> contributors'
+          url={
+            isDark
+              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          }
+          subdomains={isDark ? "abcd" : "abc"}
+        />
 
         <FlyToLocation location={location} />
         <AutoFitHeatmap points={heatmapPoints} />
 
         <LayersControl position="topright">
-          <LayersControl.Overlay checked name="🔥 Điểm nóng tai nạn (Heatmap)">
+          <LayersControl.Overlay checked name={<span className="flex items-center gap-1"><PiFireFill className="text-red-500" /> Điểm nóng tai nạn (Heatmap)</span>}>
             <HeatmapLayer points={heatmapPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name="📍 Vị trí SOS Cứu hộ">
+          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiMapPinFill className="text-red-500" /> Vị trí SOS Cứu hộ</span>}>
             <SosMarkerLayer points={heatmapPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay checked name="🚨 Điểm nguy hiểm">
+          <LayersControl.Overlay checked name={<span className="flex items-center gap-1"><PiSirenFill className="text-red-500" /> Điểm nguy hiểm</span>}>
             <DangerLayer data={dangerPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name="🔴 Vùng nguy hiểm">
+          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiCircleFill className="text-red-500" /> Vùng nguy hiểm</span>}>
             <DangerZoneLayer data={dangerPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name="🔧 Khu sửa xe">
+          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiWrenchFill className="text-orange-500" /> Khu sửa xe</span>}>
             <RepairLayer data={repairShops} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name="🚑 Cứu hộ">
+          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiAmbulanceFill className="text-emerald-600" /> Cứu hộ</span>}>
             <RescuerLayer data={rescuers} />
           </LayersControl.Overlay>
         </LayersControl>
       </MapContainer>
 
       {/* Thẻ thống kê điểm nóng trực quan */}
-      <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm rounded-2xl p-3 flex items-center gap-4 text-xs font-medium text-gray-700">
+      <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 dark:bg-gray-100/90 backdrop-blur-md border border-gray-200 shadow-sm rounded-2xl p-3 flex items-center gap-4 text-xs font-medium text-gray-700">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
           <span>

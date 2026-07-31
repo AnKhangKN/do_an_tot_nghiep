@@ -124,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: ColorConstants.textSecondary, fontWeight: FontWeight.w500),
+      labelStyle: TextStyle(color: ColorConstants.textSecondary, fontWeight: FontWeight.w500),
       filled: true,
       fillColor: ColorConstants.bgCanvas,
       border: OutlineInputBorder(
@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: ColorConstants.border),
+        borderSide: BorderSide(color: ColorConstants.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -350,7 +350,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Divider
                     Row(
                       children: [
-                        const Expanded(child: Divider(color: ColorConstants.border)),
+                        Expanded(child: Divider(color: ColorConstants.border)),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
@@ -363,7 +363,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        const Expanded(child: Divider(color: ColorConstants.border)),
+                        Expanded(child: Divider(color: ColorConstants.border)),
                       ],
                     ),
 
@@ -374,7 +374,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _loginGoogle,
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: ColorConstants.border),
+                        side: BorderSide(color: ColorConstants.border),
                         backgroundColor: ColorConstants.surfaceWhite,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -386,7 +386,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         size: 28,
                         color: Colors.redAccent,
                       ),
-                      label: const Text(
+                      label: Text(
                         'Đăng nhập với Google',
                         style: TextStyle(
                           fontSize: 15,

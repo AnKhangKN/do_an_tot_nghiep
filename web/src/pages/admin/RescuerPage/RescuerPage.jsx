@@ -63,7 +63,7 @@ const RescuerPage = () => {
         ) : (
           <button
             onClick={() => handleVerify(row.userId)}
-            className="px-3.5 py-1.5 text-xs rounded-2xl font-bold bg-gray-900 text-white hover:bg-gray-800 transition shadow-sm hover:shadow active:scale-95 cursor-pointer"
+            className="px-3.5 py-1.5 text-xs rounded-2xl font-bold bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 transition shadow-sm hover:shadow active:scale-95 cursor-pointer"
           >
             Duyệt
           </button>

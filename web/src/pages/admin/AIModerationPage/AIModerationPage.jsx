@@ -19,7 +19,7 @@ const getViolatingPhrasesList = (phrasesData) => {
   if (Array.isArray(phrasesData)) return phrasesData;
   try {
     return JSON.parse(phrasesData);
-  } catch (e) {
+  } catch {
     return [phrasesData];
   }
 };
@@ -115,7 +115,7 @@ const AIModerationPage = () => {
       key: 'entityType',
       title: 'Thực thể',
       render: (row) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-gray-900 text-white whitespace-nowrap">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-gray-900 text-white dark:bg-gray-200 dark:text-white whitespace-nowrap">
           {row.entityType}
         </span>
       )
@@ -211,9 +211,9 @@ const AIModerationPage = () => {
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-gray-100 p-6 rounded-3xl border border-gray-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gray-900 text-white flex items-center justify-center shadow-md shrink-0">
+          <div className="w-14 h-14 rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white flex items-center justify-center shadow-md shrink-0">
             <PiRobotFill size={28} />
           </div>
           <div>
@@ -236,7 +236,7 @@ const AIModerationPage = () => {
       </div>
 
       {/* FILTER PANEL */}
-      <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-gray-100 p-5 rounded-3xl border border-gray-200 shadow-sm space-y-4">
         <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm">
           <PiFunnelFill size={18} />
           <span>Bộ lọc thông minh</span>
@@ -289,7 +289,7 @@ const AIModerationPage = () => {
       </div>
 
       {/* DATA TABLE */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden p-2">
+      <div className="bg-white dark:bg-gray-100 rounded-3xl border border-gray-200 shadow-sm overflow-hidden p-2">
         <TableComponent
           columns={columns}
           data={logs}
@@ -306,12 +306,12 @@ const AIModerationPage = () => {
 
       {/* MODAL CHI TIẾT KIỂM DUYỆT AI */}
       {selectedLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-xl border border-gray-200 animate-in fade-in zoom-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-xs p-4 dark:bg-black/60">
+          <div className="bg-white dark:bg-gray-100 rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-xl border border-gray-200 animate-in fade-in zoom-in duration-150">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gray-900 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <div className="w-10 h-10 rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white flex items-center justify-center shrink-0 shadow-sm">
                   <PiRobotFill size={20} />
                 </div>
                 <div>
@@ -335,13 +335,13 @@ const AIModerationPage = () => {
               <div className="grid grid-cols-2 gap-3 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
                 <div>
                   <span className="text-gray-400 block mb-1 font-medium">Loại thực thể</span>
-                  <span className="font-semibold text-gray-900 bg-white px-2.5 py-1 rounded-lg border border-gray-200 inline-block">
+                  <span className="font-semibold text-gray-900 bg-white dark:bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200 inline-block">
                     {selectedLog.entityType}
                   </span>
                 </div>
                 <div>
                   <span className="text-gray-400 block mb-1 font-medium">Entity ID</span>
-                  <span className="font-mono text-gray-700 bg-white px-2.5 py-1 rounded-lg border border-gray-200 inline-block truncate max-w-full">
+                  <span className="font-mono text-gray-700 bg-white dark:bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200 inline-block truncate max-w-full">
                     {selectedLog.entityId || '--'}
                   </span>
                 </div>

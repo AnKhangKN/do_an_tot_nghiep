@@ -1,5 +1,8 @@
 const adminRepository = require("../repository/admin.repository");
 const userRepository = require("@/modules/user/repository/user.repository");
+const userService = require("@/modules/user/services/user.service");
+const userAuthService = require("@/modules/user_auth/service/user_auth.service");
+const { comparePassword } = require("@/utils/password.util");
 const { transaction } = require("@/config/database.config");
 const { getIO } = require("@/socket");
 const transporter = require("@/config/email.config");
@@ -131,6 +134,43 @@ class AdminService {
 
   getBannedUsers = async ({ page, limit }) => {
     return await adminRepository.getBannedUsers({ page, limit });
+  };
+
+  getAdminProfile = async (userId) => {
+    const user = await userService.getUserInfoById({ userId });
+    if (!user) {
+      throw { status: 404, message: "Không tìm thấy thông tin Admin!" };
+    }
+    return user;
+  };
+
+  updateAdminProfile = async (userId, { fullName, phone }) => {
+    return await transaction(async (client) => {
+      return await userService.updateProfile(client, { userId, fullName, phone });
+    });
+  };
+
+  updateAdminAvatar = async (userId, avatarUrl) => {
+    if (!avatarUrl) {
+      throw { status: 400, message: "Vui lòng chọn hình ảnh để tải lên làm ảnh đại diện!" };
+    }
+    return await userService.updateAvatar(null, { userId, avatarUrl });
+  };
+
+  changeAdminPassword = async (userId, { currentPassword, newPassword }) => {
+    return await transaction(async (client) => {
+      const authRecord = await userAuthService.getPasswordByUserId(client, { userId });
+      if (!authRecord || !authRecord.password) {
+        throw { status: 400, message: "Tài khoản này không có mật khẩu (đăng nhập bằng Google)!" };
+      }
+
+      const isMatch = await comparePassword(currentPassword, authRecord.password);
+      if (!isMatch) {
+        throw { status: 400, message: "Mật khẩu hiện tại không đúng!" };
+      }
+
+      return await userAuthService.updatePassword(client, { userId, password: newPassword });
+    });
   };
 
   getAppeals = async ({ page, limit, status }) => {

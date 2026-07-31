@@ -144,3 +144,16 @@ export const appealBanPublic = async (email, reason) => {
     }
 };
 
+export const checkAppealStatus = async (email) => {
+    try {
+        const response = await axiosJWT.post(
+            `${import.meta.env.VITE_BACKEND_URL}/api/auth/appeal-status`,
+            { email }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Check appeal status error:", error);
+        throw error;
+    }
+};
+

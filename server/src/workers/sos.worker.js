@@ -8,13 +8,17 @@ const matchingService = require("../modules/matching/service/matching.service");
 const dispatchService = require("../modules/dispatch/service/dispatcher.service");
 const connection = require("../config/redis.config");
 const redis = require("../config/redis.config");
-
-const radiusList = [2, 5, 10, 20];
+const settingsUtil = require("../utils/settings.util");
 
 const worker = new Worker(
     "sos",
     async (job) => {
         const { sosId, attempt = 1 } = job.data;
+
+        const settingsMap = await settingsUtil.getSettingsMap();
+        const radiusList = settingsUtil.parseRadiusLadder(settingsMap.search_radius_ladder);
+        const offerAcceptMs = (await settingsUtil.getSettingNumber("offer_accept_seconds", 30)) * 1000;
+        const retryIntervalMs = (await settingsUtil.getSettingNumber("retry_interval_seconds", 15)) * 1000;
 
         if (job.name === "process-sos") {
             const sos = await sosRequestService.findSOSById(sosId);
@@ -53,7 +57,7 @@ const worker = new Worker(
                     `[SOS] Dispatched SOS ${sosId} to ${rescuers.length} rescuers`
                 );
 
-                // Thêm job kiểm tra timeout sau 30 giây
+                // Thêm job kiểm tra timeout sau offerAcceptMs
                 await sosQueue.add(
                     "check-offer-timeout",
                     {
@@ -62,7 +66,7 @@ const worker = new Worker(
                     },
                     {
                         jobId: `check-offer-timeout-${sosId}-attempt-${attempt}`,
-                        delay: 30000,
+                        delay: offerAcceptMs,
                         removeOnComplete: true,
                         removeOnFail: true,
                     }
@@ -77,7 +81,7 @@ const worker = new Worker(
                 const nextRadius = radiusList[nextAttempt - 1];
 
                 console.log(
-                    `[SOS] Retry after 15s with radius ${nextRadius} km (Attempt ${nextAttempt})`
+                    `[SOS] Retry after ${retryIntervalMs / 1000}s with radius ${nextRadius} km (Attempt ${nextAttempt})`
                 );
 
                 await sosQueue.add(
@@ -90,7 +94,7 @@ const worker = new Worker(
                         jobId: `process-sos-${sosId}-attempt-${nextAttempt}`,
                         removeOnComplete: true,
                         removeOnFail: true,
-                        delay: 15000,
+                        delay: retryIntervalMs,
                     }
                 );
             } else {
@@ -132,6 +136,9 @@ const worker = new Worker(
         } else if (job.name === "check-offer-timeout") {
             console.log(`[SOS] Executing check-offer-timeout for SOS ${sosId} (Attempt ${attempt})`);
             await sosRequestService.handleOfferTimeout({ sosRequestId: sosId, attempt });
+        } else if (job.name === "auto-cancel-inactive-sos") {
+            console.log(`⏱️ [SOS WORKER] Executing job 'auto-cancel-inactive-sos' for SOS: ${sosId}`);
+            await sosRequestService.handleInactivityTimeout({ sosRequestId: sosId });
         }
     },
     {

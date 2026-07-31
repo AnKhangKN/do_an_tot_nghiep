@@ -41,27 +41,27 @@ class BottomNavBarWidget extends StatelessWidget {
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: [
             NavigationDestination(
-              icon: const Icon(Icons.explore_outlined, color: ColorConstants.textSecondary),
+              icon: Icon(Icons.explore_outlined, color: ColorConstants.textSecondary),
               selectedIcon: const Icon(Icons.explore, color: ColorConstants.redRescue),
               label: 'Bản đồ',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.assignment_outlined, color: ColorConstants.textSecondary),
+              icon: Icon(Icons.assignment_outlined, color: ColorConstants.textSecondary),
               selectedIcon: const Icon(Icons.assignment, color: ColorConstants.redRescue),
               label: 'Lịch sử',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.forum_outlined, color: ColorConstants.textSecondary),
+              icon: Icon(Icons.forum_outlined, color: ColorConstants.textSecondary),
               selectedIcon: const Icon(Icons.forum, color: ColorConstants.redRescue),
               label: 'Tin nhắn',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.notifications_outlined, color: ColorConstants.textSecondary),
+              icon: Icon(Icons.notifications_outlined, color: ColorConstants.textSecondary),
               selectedIcon: const Icon(Icons.notifications_active, color: ColorConstants.redRescue),
               label: 'Thông báo',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.person_outline, color: ColorConstants.textSecondary),
+              icon: Icon(Icons.person_outline, color: ColorConstants.textSecondary),
               selectedIcon: const Icon(Icons.person, color: ColorConstants.redRescue),
               label: 'Cá nhân',
             ),

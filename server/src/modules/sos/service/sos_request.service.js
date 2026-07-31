@@ -9,6 +9,8 @@ const notificationService = require("@modules/notification/service/notification.
 const rescuerHistoryRepository = require("../repository/rescuer_history.repository");
 const imageService = require("@modules/image/service/image.service");
 const aiModerationService = require("@modules/ai_moderation/service/ai_moderation.service");
+const chatService = require("@modules/chat/service/chat.service");
+const settingsUtil = require("@/utils/settings.util");
 
 class SosRequestService {
     constructor() {
@@ -78,6 +80,22 @@ class SosRequestService {
                 removeOnFail: true,
             }
         );
+
+// Đặt job tự động hủy yêu cầu SOS sau 30 phút nếu Nạn nhân không hoạt động/không được tiếp nhận
+            const autoCancelMs = (await settingsUtil.getSettingNumber("auto_cancel_inactive_minutes", 30)) * 60 * 1000;
+            await sosQueue.add(
+                "auto-cancel-inactive-sos",
+                {
+                    sosId: sos.sos_request_id,
+                },
+                {
+                    jobId: `auto-cancel-inactive-sos-${sos.sos_request_id}`,
+                    delay: autoCancelMs,
+                    removeOnComplete: true,
+                    removeOnFail: true,
+                }
+            );
+            console.log(`⏰ [SOS SERVICE] Đã lên lịch job BullMQ 'auto-cancel-inactive-sos' tự động hủy SOS: ${sos.sos_request_id} sau ${autoCancelMs / 60000} phút không tương tác.`);
 
         const sosLocation = await redis.geoadd(
             "sos_locations",
@@ -268,6 +286,28 @@ class SosRequestService {
             console.log(`[SERVICE] Đã giải phóng active_rescues cho Rescuer: ${result.rescuer_id}`);
         }
 
+        // Lên lịch tự động khóa kênh nhắn tin giữa Nạn nhân và Cứu hộ viên sau 15 phút gia hạn
+        const chatGraceMs = (await settingsUtil.getSettingNumber("chat_close_grace_minutes", 15)) * 60 * 1000;
+        console.log(`💬 [CHAT AUTO-CLOSE TIMER] Bắt đầu đếm ngược ${chatGraceMs / 60000} phút gia hạn chat cho ca SOS hoàn thành: ${sosRequestId}`);
+        setTimeout(async () => {
+            try {
+                const closedConv = await chatService.closeConversationBySosRequestId(sosRequestId);
+                if (closedConv) {
+                    const payload = JSON.stringify({
+                        conversationId: closedConv.conversation_id,
+                        sosRequestId,
+                        victimId: closedConv.user1_id,
+                        rescuerId: closedConv.user2_id,
+                        message: `Hết thời gian ${chatGraceMs / 60000} phút gia hạn. Cuộc trò chuyện này đã tự động đóng.`
+                    });
+                    await redis.publish("chat:conversation_closed", payload);
+                    console.log(`🔒 [CHAT AUTO-CLOSE SUCCESS] Đã tự động đóng kênh nhắn tin ${closedConv.conversation_id} sau ${chatGraceMs / 60000} phút hoàn thành ca SOS: ${sosRequestId}`);
+                }
+            } catch (convErr) {
+                console.error("[SERVICE] Lỗi khóa kênh chat sau gia hạn SOS:", convErr);
+            }
+        }, chatGraceMs);
+
         try {
             const { emitAdminDashboardEvent } = require("@/socket");
             emitAdminDashboardEvent("SOS_COMPLETED", {
@@ -345,7 +385,7 @@ class SosRequestService {
     };
 
     rejectSOS = async ({ sosRequestId, rescuerId }) => {
-        const radiusList = [2, 5, 10, 20];
+        const radiusList = settingsUtil.parseRadiusLadder((await settingsUtil.getSettingsMap()).search_radius_ladder);
         try {
             // 1. Xóa offer của rescuer này
             await redis.del(`sos:offer:rescuer:${rescuerId}`);
@@ -434,7 +474,7 @@ class SosRequestService {
     };
 
     handleOfferTimeout = async ({ sosRequestId, attempt }) => {
-        const radiusList = [2, 5, 10, 20];
+        const radiusList = settingsUtil.parseRadiusLadder((await settingsUtil.getSettingsMap()).search_radius_ladder);
         try {
             // 1. Kiểm xem job check-offer-timeout này có khớp với attempt hiện tại không
             const currentAttemptStr = await redis.get(`sos:${sosRequestId}:attempt`);
@@ -530,6 +570,54 @@ class SosRequestService {
         }
     };
 
+    handleInactivityTimeout = async ({ sosRequestId }) => {
+        try {
+            console.log(`🔍 [AUTO-CANCEL CHECK] Kiểm tra điều kiện tự động hủy ca SOS hết hạn: ${sosRequestId}`);
+            const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+            if (!sos || (sos.status !== "PENDING" && sos.status !== "SEARCHING")) {
+                console.log(`ℹ️ [AUTO-CANCEL SKIPPED] Bỏ qua tự động hủy ca SOS ${sosRequestId} do trạng thái hiện tại là: '${sos?.status}'`);
+                return;
+            }
+
+            console.log(`🚨 [AUTO-CANCEL EXECUTION] Thực hiện tự động hủy ca SOS ${sosRequestId} do hết 30 phút không tương tác.`);
+
+            const cancelReason = "Tự động hủy yêu cầu cứu hộ khẩn cấp do hết thời gian chờ 30 phút không có tương tác";
+            const updatedSos = await this.cancelSOS({
+                sosRequestId,
+                cancelReason
+            });
+
+            if (updatedSos) {
+                // Publish sự kiện socket tự động hủy
+                const payload = JSON.stringify({
+                    sosId: sosRequestId,
+                    sosRequestId,
+                    victimId: updatedSos.user_id,
+                    reason: cancelReason,
+                    message: "Yêu cầu cứu hộ khẩn cấp của bạn đã tự động hủy do 30 phút không có tương tác."
+                });
+                await redis.publish("sos:cancelled", payload);
+
+                // Gửi Push Notification báo cho nạn nhân biết lý do hủy
+                await notificationService.sendPushNotification(updatedSos.user_id, {
+                    title: "Tự động hủy yêu cầu cứu hộ",
+                    body: "Hệ thống đã tự động hủy yêu cầu cứu hộ do không có tương tác sau 30 phút để tránh lãng phí nguồn lực cứu hộ. Vui lòng tạo yêu cầu mới nếu bạn vẫn cần trợ giúp.",
+                    data: {
+                        type: "SOS_AUTO_CANCELLED",
+                        sosRequestId,
+                        cancelReason
+                    }
+                }).catch(err => console.error("Lỗi gửi push notification tự động hủy SOS cho victim:", err));
+
+                // Dọn dẹp Redis
+                await this.cleanupSosKeys(sosRequestId);
+                console.log(`✅ [AUTO-CANCEL COMPLETED] Hoàn tất tự động hủy & phát thông báo cho ca SOS: ${sosRequestId}`);
+            }
+        } catch (error) {
+            console.error("[SERVICE] Lỗi trong handleInactivityTimeout:", error);
+        }
+    };
+
     cancelSOS = async ({ sosRequestId, userId, cancelReason }) => {
         try {
             let targetSosId = sosRequestId;
@@ -593,6 +681,26 @@ class SosRequestService {
                     message: "Người gặp nạn đã dừng yêu cầu cứu hộ."
                 });
                 await redis.publish("sos:cancelled", payload);
+
+                // Lên lịch tự động khóa kênh nhắn tin giữa Nạn nhân và Cứu hộ viên sau 15 phút gia hạn
+                const chatGraceMs2 = (await settingsUtil.getSettingNumber("chat_close_grace_minutes", 15)) * 60 * 1000;
+                setTimeout(async () => {
+                    try {
+                        const closedConv = await chatService.closeConversationBySosRequestId(targetSosId);
+                        if (closedConv) {
+                            const payloadConv = JSON.stringify({
+                                conversationId: closedConv.conversation_id,
+                                sosRequestId: targetSosId,
+                                victimId: closedConv.user1_id,
+                                rescuerId: closedConv.user2_id,
+                                message: `Hết thời gian ${chatGraceMs2 / 60000} phút gia hạn. Cuộc trò chuyện này đã tự động đóng.`
+                            });
+                            await redis.publish("chat:conversation_closed", payloadConv);
+                        }
+                    } catch (convErr) {
+                        console.error("[SERVICE] Lỗi khóa kênh chat sau 15 phút gia hạn khi hủy SOS:", convErr);
+                    }
+                }, chatGraceMs2);
 
                 if (sos && sos.rescuer_id) {
                     // Ghi nhật ký hoạt động: FAILED cho rescuer nhận ca
@@ -760,7 +868,7 @@ class SosRequestService {
         };
     };
 
-    submitPostRescueCheckin = async ({ sosRequestId, userId, healthStatus, checkinNotes, rating, comment }) => {
+    submitPostRescueCheckin = async ({ sosRequestId, userId, healthStatus, checkinNotes, rating, responseSpeed, attitude, supportLevel, comment }) => {
         const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
         if (!sos) {
             throw new Error("Không tìm thấy ca SOS yêu cầu.");
@@ -805,6 +913,9 @@ class SosRequestService {
                 sosRequestId,
                 victimId: userId,
                 rating,
+                responseSpeed,
+                attitude,
+                supportLevel,
                 comment: formattedComment
             });
         }

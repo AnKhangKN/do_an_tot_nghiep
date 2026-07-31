@@ -46,6 +46,9 @@ class RatingDialogWidget extends StatefulWidget {
 
 class _RatingDialogWidgetState extends State<RatingDialogWidget> {
   int _selectedRating = 5;
+  int _responseSpeed = 5;
+  int _attitude = 5;
+  int _supportLevel = 5;
   final TextEditingController _commentController = TextEditingController();
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -57,6 +60,9 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
     super.initState();
     final ratingValue = widget.existingRating?['rating'] ?? widget.existingRating?['score'];
     final commentValue = widget.existingRating?['comment'] ?? widget.existingRating?['review_comment'];
+    final responseSpeed = widget.existingRating?['response_speed'] ?? widget.existingRating?['responseSpeed'];
+    final attitude = widget.existingRating?['attitude'];
+    final supportLevel = widget.existingRating?['support_level'] ?? widget.existingRating?['supportLevel'];
 
     if (ratingValue is num) {
       _selectedRating = ratingValue.toInt().clamp(1, 5);
@@ -67,9 +73,22 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
       }
     }
 
+    _responseSpeed = _parseAspect(responseSpeed);
+    _attitude = _parseAspect(attitude);
+    _supportLevel = _parseAspect(supportLevel);
+
     if (commentValue != null) {
       _commentController.text = commentValue.toString();
     }
+  }
+
+  int _parseAspect(dynamic value) {
+    if (value is num) return value.toInt().clamp(1, 5);
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed.clamp(1, 5);
+    }
+    return 5;
   }
 
   @override
@@ -89,6 +108,9 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
       final result = await ratingRepository.submitRating(
         sosRequestId: widget.sosRequestId,
         rating: _selectedRating,
+        responseSpeed: _responseSpeed,
+        attitude: _attitude,
+        supportLevel: _supportLevel,
         comment: _commentController.text.trim(),
       );
 
@@ -203,6 +225,24 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
                 fontSize: 15,
               ),
             ),
+            const SizedBox(height: 12),
+            _buildAspectRow(
+              label: '⚡ Tốc độ phản ứng',
+              value: _responseSpeed,
+              onChanged: _isSubmitting || _isReadOnly ? null : (v) => setState(() => _responseSpeed = v),
+            ),
+            const SizedBox(height: 6),
+            _buildAspectRow(
+              label: '🤝 Thái độ phục vụ',
+              value: _attitude,
+              onChanged: _isSubmitting || _isReadOnly ? null : (v) => setState(() => _attitude = v),
+            ),
+            const SizedBox(height: 6),
+            _buildAspectRow(
+              label: '🛟 Mức độ hỗ trợ',
+              value: _supportLevel,
+              onChanged: _isSubmitting || _isReadOnly ? null : (v) => setState(() => _supportLevel = v),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: _commentController,
@@ -254,6 +294,46 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
                   )
                 : const Text('Gửi đánh giá', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
+      ],
+    );
+  }
+
+  Widget _buildAspectRow({
+    required String label,
+    required int value,
+    ValueChanged<int>? onChanged,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(5, (index) {
+            final starIndex = index + 1;
+            return InkWell(
+              onTap: onChanged == null ? null : () => onChanged(starIndex),
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                child: Icon(
+                  starIndex <= value ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: _isReadOnly ? Colors.grey.shade600 : Colors.amber,
+                  size: 24,
+                ),
+              ),
+            );
+          }),
+        ),
       ],
     );
   }

@@ -112,7 +112,7 @@ class SosRequestController {
 
     postRescueCheckin = async (req, res, next) => {
         try {
-            const { sosRequestId, healthStatus, checkinNotes, rating, comment } = req.body;
+            const { sosRequestId, healthStatus, checkinNotes, rating, responseSpeed, attitude, supportLevel, comment } = req.body;
             const userId = req.userId;
 
             const result = await sos_requestService.submitPostRescueCheckin({
@@ -121,6 +121,9 @@ class SosRequestController {
                 healthStatus,
                 checkinNotes,
                 rating,
+                responseSpeed,
+                attitude,
+                supportLevel,
                 comment
             });
 

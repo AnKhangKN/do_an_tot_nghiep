@@ -8,11 +8,17 @@ class RatingRepository {
   Future<dynamic> submitRating({
     required String sosRequestId,
     required int rating,
+    int? responseSpeed,
+    int? attitude,
+    int? supportLevel,
     String? comment,
   }) async {
     final response = await ratingService.submitRating(
       sosRequestId: sosRequestId,
       rating: rating,
+      responseSpeed: responseSpeed,
+      attitude: attitude,
+      supportLevel: supportLevel,
       comment: comment,
     );
     return response.data;

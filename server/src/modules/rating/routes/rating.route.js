@@ -1,11 +1,12 @@
 const express = require("express");
 const ratingController = require("../controller/rating.controller");
+const ratingValidator = require("../validator/rating.validator");
 const { verifyToken, isAdmin } = require("@/middlewares/auth.middleware");
 
 const route = express.Router();
 
 // User submit rating for a completed SOS
-route.post("/", verifyToken, ratingController.submitRating);
+route.post("/", verifyToken, ratingValidator.validatorSubmitRating, ratingController.submitRating);
 
 // Get rating for a specific SOS request
 route.get("/sos/:sosRequestId", ratingController.getRatingBySosId);
@@ -17,6 +18,9 @@ route.get("/rescuer/:rescuerId/overview", ratingController.getRescuerRatingOverv
 route.get("/rescuer/:rescuerId", ratingController.getRatingsByRescuerId);
 
 // Admin: Get all ratings
-route.get("/admin", verifyToken, isAdmin, ratingController.getAllRatingsAdmin);
+route.get("/admin", verifyToken, isAdmin, ratingValidator.validatorGetAdminRatings, ratingController.getAllRatingsAdmin);
+
+// Admin: Get quality trend report
+route.get("/admin/trends", verifyToken, isAdmin, ratingValidator.validatorGetRatingTrends, ratingController.getRatingTrends);
 
 module.exports = route;

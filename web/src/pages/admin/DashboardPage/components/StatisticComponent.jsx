@@ -26,7 +26,7 @@ const StatisticComponent = ({ summary }) => {
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       {/* Card 1: SOS Hôm nay */}
-      <div className="flex flex-col justify-between rounded-3xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition duration-200">
+      <div className="flex flex-col justify-between rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm hover:shadow-md transition duration-200">
         <div>
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -52,13 +52,13 @@ const StatisticComponent = ({ summary }) => {
       </div>
 
       {/* Card 2: Ca Đang Xử Lý */}
-      <div className="flex flex-col justify-between rounded-3xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition duration-200">
+      <div className="flex flex-col justify-between rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm hover:shadow-md transition duration-200">
         <div>
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
               Ca Đang Xử Lý Khẩn
             </span>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gray-900 text-white">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white">
               <PiWarningOctagonBold className="text-xl" />
             </div>
           </div>
@@ -75,7 +75,7 @@ const StatisticComponent = ({ summary }) => {
       </div>
 
       {/* Card 3: Ca Hoàn Thành */}
-      <div className="flex flex-col justify-between rounded-3xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition duration-200">
+      <div className="flex flex-col justify-between rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm hover:shadow-md transition duration-200">
         <div>
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -98,7 +98,7 @@ const StatisticComponent = ({ summary }) => {
       </div>
 
       {/* Card 4: Tỷ Lệ Ghép Đôi Thành Công */}
-      <div className="flex flex-col justify-between rounded-3xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition duration-200">
+      <div className="flex flex-col justify-between rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm hover:shadow-md transition duration-200">
         <div>
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">

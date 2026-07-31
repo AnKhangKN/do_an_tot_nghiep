@@ -216,7 +216,7 @@ const IncidentTypePage = () => {
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* HEADER */}
-      <div className="flex items-center justify-between bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between bg-white dark:bg-gray-100 p-6 rounded-3xl border border-gray-200 shadow-sm">
         <div>
           <h1 className="text-xl font-bold text-gray-900 leading-tight">
             Quản lý loại sự cố khẩn cấp
@@ -227,7 +227,7 @@ const IncidentTypePage = () => {
         </div>
         <ButtonComponent
           onClick={() => setIsOpenModal(true)}
-          className="bg-gray-900 text-white hover:bg-gray-800 flex items-center gap-2 rounded-2xl shadow-sm px-4 py-2.5 font-semibold text-xs transition-all cursor-pointer active:scale-95"
+          className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 flex items-center gap-2 rounded-2xl shadow-sm px-4 py-2.5 font-semibold text-xs transition-all cursor-pointer active:scale-95"
         >
           <PiPlus size={16} />
           <span>Tạo loại sự cố mới</span>
@@ -235,7 +235,7 @@ const IncidentTypePage = () => {
       </div>
 
       {/* TABLE CARD */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden p-2">
+      <div className="bg-white dark:bg-gray-100 rounded-3xl border border-gray-200 shadow-sm overflow-hidden p-2">
         <TableComponent
           columns={columns}
           data={incidentTypes}
@@ -260,7 +260,7 @@ const IncidentTypePage = () => {
           }}
         >
           <div
-            className="bg-white rounded-3xl max-w-md w-full border border-gray-100 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full border border-gray-100 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
@@ -326,7 +326,7 @@ const IncidentTypePage = () => {
                 <button
                   type="submit"
                   disabled={createLoading}
-                  className="px-5 py-2.5 rounded-2xl bg-gray-900 text-white hover:bg-gray-800 text-xs font-semibold transition shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-2xl bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 text-xs font-semibold transition shadow-md disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {createLoading ? "Đang tạo..." : "Tạo mới"}
                 </button>
@@ -345,7 +345,7 @@ const IncidentTypePage = () => {
           }}
         >
           <div
-            className="bg-white rounded-3xl max-w-md w-full border border-gray-100 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full border border-gray-100 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
@@ -415,7 +415,7 @@ const IncidentTypePage = () => {
                 <button
                   type="submit"
                   disabled={editLoading}
-                  className="px-5 py-2.5 rounded-2xl bg-gray-900 text-white hover:bg-gray-800 text-xs font-semibold transition shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-2xl bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 text-xs font-semibold transition shadow-md disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {editLoading ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>

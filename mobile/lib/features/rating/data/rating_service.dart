@@ -9,6 +9,9 @@ class RatingService {
   Future<Response> submitRating({
     required String sosRequestId,
     required int rating,
+    int? responseSpeed,
+    int? attitude,
+    int? supportLevel,
     String? comment,
   }) async {
     return await dio.post(
@@ -16,6 +19,9 @@ class RatingService {
       data: {
         'sosRequestId': sosRequestId,
         'rating': rating,
+        if (responseSpeed != null) 'responseSpeed': responseSpeed,
+        if (attitude != null) 'attitude': attitude,
+        if (supportLevel != null) 'supportLevel': supportLevel,
         'comment': comment,
       },
     );

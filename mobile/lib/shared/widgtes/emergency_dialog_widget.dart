@@ -177,7 +177,7 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.78,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(28),
@@ -191,7 +191,7 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
             // Header
             Container(
               padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(color: ColorConstants.divider, width: 1),
                 ),
@@ -211,7 +211,7 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
                     ),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -236,7 +236,7 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: ColorConstants.textMuted),
+                    icon: Icon(Icons.close, color: ColorConstants.textMuted),
                     tooltip: 'Đóng',
                   ),
                 ],
@@ -289,7 +289,7 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
                     ),
                     backgroundColor: ColorConstants.divider,
                   ),
-                  child: const Text(
+                  child: Text(
                     'Đóng',
                     style: TextStyle(
                       color: ColorConstants.textSubtle,
@@ -332,11 +332,11 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
             ),
             title: Text(
               item.title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: ColorConstants.textPrimary),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: ColorConstants.textPrimary),
             ),
             subtitle: Text(
               item.description,
-              style: const TextStyle(fontSize: 11, color: ColorConstants.textMuted),
+              style: TextStyle(fontSize: 11, color: ColorConstants.textMuted),
             ),
             trailing: ElevatedButton.icon(
               onPressed: () => _makeCall(item.phoneNumber),
@@ -371,12 +371,12 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
             child: const Icon(Icons.location_on_rounded, size: 48, color: ColorConstants.purpleQR),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Phát SMS Khẩn Cấp Kèm GPS',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ColorConstants.slateDark),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Tự động gửi tin nhắn kèm đường dẫn vị trí Google Maps đến lực lượng cứu hộ hoặc bất kỳ số điện thoại nào.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: ColorConstants.textMuted, height: 1.4),
@@ -413,12 +413,12 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Số Điện Thoại Người Thân Tin Cậy',
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: ColorConstants.slateDark),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Lưu sẵn số người thân để gọi hoặc nhắn tọa độ GPS nhanh trong tình huống nguy hiểm.',
             style: TextStyle(fontSize: 12, color: ColorConstants.textMuted),
           ),
@@ -432,18 +432,18 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     hintText: 'Nhập SĐT người thân (VD: 0912345678)',
-                    hintStyle: const TextStyle(fontSize: 12, color: ColorConstants.textMuted),
+                    hintStyle: TextStyle(fontSize: 12, color: ColorConstants.textMuted),
                     prefixIcon: const Icon(Icons.phone, size: 18, color: ColorConstants.primary),
                     filled: true,
                     fillColor: ColorConstants.bgCanvas,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: ColorConstants.border),
+                      borderSide: BorderSide(color: ColorConstants.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: ColorConstants.border),
+                      borderSide: BorderSide(color: ColorConstants.border),
                     ),
                   ),
                 ),
@@ -482,10 +482,10 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Đã kết nối người thân:', style: TextStyle(fontSize: 11, color: ColorConstants.textMuted)),
+                          Text('Đã kết nối người thân:', style: TextStyle(fontSize: 11, color: ColorConstants.textMuted)),
                           Text(
                             _savedEmergencyPhone!,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ColorConstants.slateDark),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ColorConstants.slateDark),
                           ),
                         ],
                       ),

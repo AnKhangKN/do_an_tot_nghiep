@@ -249,6 +249,22 @@ class AuthController {
         }
     };
 
+    checkAppealStatus = async (req, res, next) => {
+        try {
+            const { email } = req.body;
+            if (!email || !email.trim()) {
+                return res.status(400).json({ success: false, message: "Vui lòng nhập email!" });
+            }
+            const result = await authService.checkAppealStatusByEmail({ email: email.trim().toLowerCase() });
+            return res.status(200).json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     verifyEmail = async (req, res, next) => { };
 
     forgotPassword = async (req, res, next) => {

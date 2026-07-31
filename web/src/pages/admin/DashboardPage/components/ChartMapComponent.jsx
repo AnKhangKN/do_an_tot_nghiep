@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import {
   MapContainer,
   TileLayer,
@@ -37,6 +38,7 @@ const ChartMapComponent = ({ overviewData }) => {
   } = overviewData || {};
 
   const [activeTab, setActiveTab] = useState("map"); // "map" | "list"
+  const isDark = useSelector((state) => state.theme.isDark);
 
   // Calculate maximum value for daily chart scaling
   const maxDailyTotal = Math.max(...dailyTrend.map((d) => d.total || 0), 5);
@@ -58,10 +60,10 @@ const ChartMapComponent = ({ overviewData }) => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         
         {/* Left 2 cols: Daily SOS Trend */}
-        <div className="lg:col-span-2 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="lg:col-span-2 rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm">
           <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-900 text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white">
                 <PiTrendUpBold className="text-xl" />
               </div>
               <div>
@@ -89,7 +91,7 @@ const ChartMapComponent = ({ overviewData }) => {
                       {/* Bar container */}
                       <div className="w-full max-w-[40px] flex flex-col justify-end h-full relative">
                         {/* Tooltip */}
-                        <div className="opacity-0 group-hover:opacity-100 transition duration-150 absolute -top-12 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[11px] py-1 px-2.5 rounded-lg whitespace-nowrap z-10 pointer-events-none shadow-md">
+                        <div className="opacity-0 group-hover:opacity-100 transition duration-150 absolute -top-12 left-1/2 -translate-x-1/2 bg-gray-900 text-white dark:bg-gray-200 dark:text-white text-[11px] py-1 px-2.5 rounded-lg whitespace-nowrap z-10 pointer-events-none shadow-md">
                           <div>Tổng: {total} ca</div>
                           <div className="text-emerald-400">Xong: {completed} ca</div>
                         </div>
@@ -117,7 +119,7 @@ const ChartMapComponent = ({ overviewData }) => {
               {/* Legend */}
               <div className="mt-4 flex items-center justify-center gap-6 text-xs text-gray-600">
                 <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full bg-gray-900"></span>
+                  <span className="h-3 w-3 rounded-full bg-gray-900 dark:bg-gray-200"></span>
                   <span>Đã hoàn thành</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -134,7 +136,7 @@ const ChartMapComponent = ({ overviewData }) => {
         </div>
 
         {/* Right 1 col: SOS Status Breakdown */}
-        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-5">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-100 text-gray-900">
@@ -189,7 +191,7 @@ const ChartMapComponent = ({ overviewData }) => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         
         {/* Left 1 col: Incident Types Statistics */}
-        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm">
           <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-5">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-100 text-gray-900">
               <PiFirstAidBold className="text-xl" />
@@ -230,11 +232,11 @@ const ChartMapComponent = ({ overviewData }) => {
         </div>
 
         {/* Right 2 cols: Interactive Map or Recent SOS Feed */}
-        <div className="lg:col-span-2 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="lg:col-span-2 rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm">
           {/* Header & Tabs */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-4 mb-5 gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-900 text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white">
                 <PiMapPinBold className="text-xl" />
               </div>
               <div>
@@ -249,7 +251,7 @@ const ChartMapComponent = ({ overviewData }) => {
                 onClick={() => setActiveTab("map")}
                 className={`rounded-xl px-3.5 py-1.5 transition cursor-pointer ${
                   activeTab === "map"
-                    ? "bg-white text-gray-900 shadow-xs"
+                    ? "bg-white dark:bg-gray-100 text-gray-900 shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
@@ -259,7 +261,7 @@ const ChartMapComponent = ({ overviewData }) => {
                 onClick={() => setActiveTab("list")}
                 className={`rounded-xl px-3.5 py-1.5 transition cursor-pointer ${
                   activeTab === "list"
-                    ? "bg-white text-gray-900 shadow-xs"
+                    ? "bg-white dark:bg-gray-100 text-gray-900 shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
@@ -278,8 +280,13 @@ const ChartMapComponent = ({ overviewData }) => {
                 className="h-full w-full"
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a> contributors'
+                  url={
+                    isDark
+                      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  }
+                  subdomains={isDark ? "abcd" : "abc"}
                 />
 
                 {recentRequests.map((req) => {

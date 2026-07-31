@@ -4,7 +4,7 @@ import { PiLock, PiWarningCircle, PiPaperPlaneTilt } from "react-icons/pi";
 const BannedNotification = ({ reason, onAppeal, onLogout }) => {
   return (
     <div className="fixed inset-0 bg-slate-900/60 z-[99999] flex items-center justify-center">
-      <div className="bg-white rounded-3xl max-w-md w-full mx-4 shadow-2xl overflow-hidden">
+      <div className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full mx-4 shadow-2xl overflow-hidden">
         <div className="p-8 text-center">
           <div className="mx-auto w-16 h-16 rounded-3xl bg-red-100 flex items-center justify-center mb-4">
             <PiLock size={32} className="text-red-600" />
@@ -25,7 +25,7 @@ const BannedNotification = ({ reason, onAppeal, onLogout }) => {
             {onAppeal && (
               <button
                 onClick={onAppeal}
-                className="w-full px-5 py-3 rounded-2xl bg-gray-900 text-white hover:bg-gray-800 text-sm font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full px-5 py-3 rounded-2xl bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 text-sm font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
                 <PiPaperPlaneTilt size={18} />
                 Gửi yêu cầu kháng cáo
@@ -33,7 +33,7 @@ const BannedNotification = ({ reason, onAppeal, onLogout }) => {
             )}
             <button
               onClick={onLogout}
-              className="w-full px-5 py-3 rounded-2xl bg-white text-gray-700 hover:bg-gray-100 text-sm font-bold transition border border-gray-200 cursor-pointer"
+              className="w-full px-5 py-3 rounded-2xl bg-white dark:bg-gray-100 text-gray-700 hover:bg-gray-100 text-sm font-bold transition border border-gray-200 cursor-pointer"
             >
               Đã hiểu
             </button>

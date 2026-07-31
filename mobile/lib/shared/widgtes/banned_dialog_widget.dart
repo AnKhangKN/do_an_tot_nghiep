@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart' as dio_package;
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mobile/core/session/session_controller.dart';
@@ -65,7 +66,7 @@ class BannedDialogWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Gửi yêu cầu kháng cáo',
                 style: TextStyle(
                   fontSize: 18,
@@ -74,7 +75,7 @@ class BannedDialogWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Nhập email đã đăng ký và lý do kháng cáo. Admin sẽ xem xét và phản hồi sớm nhất.',
                 style: TextStyle(
                   fontSize: 13,
@@ -118,7 +119,7 @@ class BannedDialogWidget extends StatelessWidget {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Email đã đăng ký',
-                  hintStyle: const TextStyle(
+                  hintStyle: TextStyle(
                     fontSize: 14,
                     color: ColorConstants.textMuted,
                   ),
@@ -151,7 +152,7 @@ class BannedDialogWidget extends StatelessWidget {
                 maxLength: 500,
                 decoration: InputDecoration(
                   hintText: 'Nhập lý do kháng cáo...',
-                  hintStyle: const TextStyle(
+                  hintStyle: TextStyle(
                     fontSize: 14,
                     color: ColorConstants.textMuted,
                   ),
@@ -195,7 +196,7 @@ class BannedDialogWidget extends StatelessWidget {
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: ColorConstants.slateDark,
-                    side: const BorderSide(color: ColorConstants.border),
+                    side: BorderSide(color: ColorConstants.border),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -243,9 +244,15 @@ class BannedDialogWidget extends StatelessWidget {
                               _handleLogout(parentContext);
                             } catch (e) {
                               submitting.value = false;
-                              errorNotifier.value = e.toString().contains('401') || e.toString().contains('404')
-                                  ? 'Email không tồn tại trong hệ thống!'
-                                  : 'Gửi kháng cáo thất bại. Vui lòng thử lại sau.';
+                              String errorMsg = 'Gửi kháng cáo thất bại. Vui lòng thử lại sau.';
+                              if (e is dio_package.DioException && e.response?.data != null && e.response?.data['message'] != null) {
+                                errorMsg = e.response!.data['message'].toString();
+                              } else if (e.toString().contains('khóa vĩnh viễn')) {
+                                errorMsg = 'Tài khoản của bạn đã bị khóa vĩnh viễn do bị từ chối kháng cáo 3 lần vì vi phạm chính sách ứng dụng.';
+                              } else if (e.toString().contains('3 yêu cầu')) {
+                                errorMsg = 'Bạn đã có 3 yêu cầu kháng cáo đang chờ xử lý. Vui lòng chờ Ban quản trị xét duyệt trước khi gửi thêm.';
+                              }
+                              errorNotifier.value = errorMsg;
                             }
                           },
                     style: ElevatedButton.styleFrom(
@@ -304,7 +311,7 @@ class BannedDialogWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Tài khoản đã bị khóa',
               style: TextStyle(
                 fontSize: 18,
@@ -345,7 +352,7 @@ class BannedDialogWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Bạn không thể tiếp tục sử dụng ứng dụng cho đến khi tài khoản được mở khóa.',
               textAlign: TextAlign.center,
               style: TextStyle(

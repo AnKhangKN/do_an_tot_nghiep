@@ -82,7 +82,7 @@ class ChatTileWidget extends StatelessWidget {
               ),
               Text(
                 conversation.time,
-                style: const TextStyle(
+                style: TextStyle(
                   color: ColorConstants.textSecondary,
                   fontSize: 12,
                 ),

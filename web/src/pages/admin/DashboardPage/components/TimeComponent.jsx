@@ -29,7 +29,7 @@ const TimeComponent = ({ selectedDays = 7, onSelectDays }) => {
           setTempDays(selectedDays);
           setOpen(true);
         }}
-        className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition duration-150 cursor-pointer"
+        className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white dark:bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition duration-150 cursor-pointer"
       >
         <PiCalendarBlankBold className="text-lg text-gray-600" />
         <span>{selectedOption.label}</span>
@@ -38,7 +38,7 @@ const TimeComponent = ({ selectedDays = 7, onSelectDays }) => {
       {/* Modal */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200 border border-gray-100">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-100 p-6 shadow-2xl animate-in fade-in zoom-in duration-200 border border-gray-100">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ const TimeComponent = ({ selectedDays = 7, onSelectDays }) => {
                     onClick={() => setTempDays(option.value)}
                     className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-sm font-medium transition cursor-pointer ${
                       isSelected
-                        ? "bg-gray-900 text-white shadow-sm"
+                        ? "bg-gray-900 text-white shadow-sm dark:bg-gray-200 dark:text-white"
                         : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                     }`}
                   >
@@ -91,7 +91,7 @@ const TimeComponent = ({ selectedDays = 7, onSelectDays }) => {
 
               <button
                 onClick={handleApply}
-                className="rounded-2xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 shadow-sm transition cursor-pointer"
+                className="rounded-2xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 shadow-sm transition cursor-pointer"
               >
                 Áp dụng
               </button>

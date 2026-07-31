@@ -141,7 +141,7 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: ColorConstants.surfaceWhite,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(28),
@@ -185,7 +185,7 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -210,7 +210,7 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
                     ),
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close, color: ColorConstants.textMuted),
+                      icon: Icon(Icons.close, color: ColorConstants.textMuted),
                     ),
                   ],
                 ),
@@ -218,7 +218,7 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
                 const SizedBox(height: 18),
 
                 // Ô nhập Số điện thoại (BẮT BỘC & VALIDATE REGEX)
-                const Text(
+                Text(
                   'Số điện thoại liên hệ *',
                   style: TextStyle(
                     fontSize: 13,
@@ -239,11 +239,11 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: ColorConstants.border),
+                      borderSide: BorderSide(color: ColorConstants.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: ColorConstants.border),
+                      borderSide: BorderSide(color: ColorConstants.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -266,7 +266,7 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
                 const SizedBox(height: 14),
 
                 // Ô nhập Tên của bạn (Tùy chọn)
-                const Text(
+                Text(
                   'Tên của bạn (Tùy chọn)',
                   style: TextStyle(
                     fontSize: 13,
@@ -286,7 +286,7 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: ColorConstants.border),
+                      borderSide: BorderSide(color: ColorConstants.border),
                     ),
                   ),
                 ),
@@ -294,7 +294,7 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
                 const SizedBox(height: 14),
 
                 // Ô đính kèm ảnh hiện trường (Tùy chọn)
-                const Text(
+                Text(
                   'Ảnh hiện trường tai nạn (Tùy chọn)',
                   style: TextStyle(
                     fontSize: 13,

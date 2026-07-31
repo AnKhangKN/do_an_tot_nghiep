@@ -4,7 +4,7 @@ import ChartMapComponent from "./components/ChartMapComponent";
 import TimeComponent from "./components/TimeComponent";
 import { getDashboardOverview, getAiDashboardSummary, exportAdminReportApi } from "@/api/admin/DashboardApi";
 import { subscribeConnectionStatus, subscribeDashboardEvents } from "@/socket";
-import { PiArrowsClockwiseBold, PiWarningBold, PiLightningFill, PiBellRingingFill, PiSparkleBold, PiCheckCircleFill, PiLightbulbFill, PiBrainFill, PiFileCsvBold, PiDownloadSimpleBold } from "react-icons/pi";
+import { PiArrowsClockwiseBold, PiWarningBold, PiLightningFill, PiBellRingingFill, PiSparkleBold, PiCheckCircleFill, PiLightbulbFill, PiBrainFill, PiFileCsvBold, PiDownloadSimpleBold, PiXBold } from "react-icons/pi";
 
 const DashboardPage = () => {
   const [days, setDays] = useState(7);
@@ -77,13 +77,13 @@ const DashboardPage = () => {
     const unsubDashboard = subscribeDashboardEvents((event) => {
       let text = "";
       if (event.type === "SOS_CREATED") {
-        text = `⚡ Yêu cầu SOS mới vừa xuất hiện (Mã: #${event.sosId?.substring(0, 8)})`;
+        text = `Yêu cầu SOS mới vừa xuất hiện (Mã: #${event.sosId?.substring(0, 8)})`;
       } else if (event.type === "SOS_ACCEPTED") {
-        text = `🚀 Ca SOS #${event.sosId?.substring(0, 8)} đã có Cứu hộ viên tiếp nhận!`;
+        text = `Ca SOS #${event.sosId?.substring(0, 8)} đã có Cứu hộ viên tiếp nhận!`;
       } else if (event.type === "SOS_COMPLETED") {
-        text = `✅ Ca SOS #${event.sosId?.substring(0, 8)} vừa hoàn thành xử lý thành công!`;
+        text = `Ca SOS #${event.sosId?.substring(0, 8)} vừa hoàn thành xử lý thành công!`;
       } else if (event.type === "SOS_CANCELLED") {
-        text = `⚠️ Ca SOS #${event.sosId?.substring(0, 8)} vừa bị hủy.`;
+        text = `Ca SOS #${event.sosId?.substring(0, 8)} vừa bị hủy.`;
       }
 
       if (text) {
@@ -109,14 +109,14 @@ const DashboardPage = () => {
       {/* Live Event Banner Toast */}
       {liveBanner && (
         <div className="fixed top-6 right-6 z-50 animate-bounce transition-all duration-300">
-          <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 text-white rounded-2xl shadow-xl border border-gray-700">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 text-white dark:bg-gray-200 dark:text-white rounded-2xl shadow-xl border border-gray-700">
             <PiBellRingingFill className="text-emerald-400 text-lg shrink-0 animate-pulse" />
             <span className="text-xs font-semibold">{liveBanner}</span>
             <button
               onClick={() => setLiveBanner(null)}
-              className="ml-2 text-gray-400 hover:text-white text-xs font-bold"
+              className="ml-2 text-gray-400 hover:text-white dark:text-gray-600 dark:hover:text-white text-xs font-bold"
             >
-              ✕
+              <PiXBold />
             </button>
           </div>
         </div>
@@ -179,7 +179,7 @@ const DashboardPage = () => {
           <button
             onClick={() => fetchOverview(days, true)}
             disabled={loading}
-            className="flex items-center justify-center h-10 w-10 rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition duration-150 cursor-pointer disabled:opacity-50"
+            className="flex items-center justify-center h-10 w-10 rounded-2xl border border-gray-200 bg-white dark:bg-gray-100 text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition duration-150 cursor-pointer disabled:opacity-50"
             title="Làm mới dữ liệu"
           >
             <PiArrowsClockwiseBold className={`text-lg ${loading ? "animate-spin text-gray-900" : ""}`} />
@@ -205,21 +205,21 @@ const DashboardPage = () => {
                     Groq Llama 3.3 / 70b
                   </span>
                 </h3>
-                <p className="text-xs text-gray-400">Báo cáo điều hành cứu hộ tự động phân tích bởi AI</p>
+                <p className="text-xs text-gray-400 dark:text-gray-700">Báo cáo điều hành cứu hộ tự động phân tích bởi AI</p>
               </div>
             </div>
 
             <button
               onClick={() => setAiSummary(null)}
-              className="text-gray-400 hover:text-white text-xs font-bold p-1 rounded-full hover:bg-slate-800 transition"
+              className="text-gray-400 hover:text-white dark:text-gray-600 dark:hover:text-white text-xs font-bold p-1 rounded-full hover:bg-slate-800 transition"
             >
-              ✕
+              <PiXBold />
             </button>
           </div>
 
           <div className="space-y-4">
             {/* Văn bản Tóm tắt Tổng quan */}
-            <p className="text-xs sm:text-sm text-gray-200 leading-relaxed bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
+            <p className="text-xs sm:text-sm text-gray-200 dark:text-gray-800 leading-relaxed bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
               {aiSummary.summaryText}
             </p>
 
@@ -229,7 +229,7 @@ const DashboardPage = () => {
                 {aiSummary.highlights.map((item, idx) => (
                   <div key={idx} className="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
                     <PiCheckCircleFill className="text-emerald-400 text-base shrink-0 mt-0.5" />
-                    <span className="text-xs text-gray-300 leading-tight font-medium">{item}</span>
+                    <span className="text-xs text-gray-300 dark:text-gray-700 leading-tight font-medium">{item}</span>
                   </div>
                 ))}
               </div>

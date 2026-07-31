@@ -9,6 +9,8 @@ class ConversationModel {
   final String? avatarUrl;
   final String? phone;
   final String? partnerId;
+  final bool isClosed;
+  final String? sosStatus;
 
   const ConversationModel({
     required this.id,
@@ -21,5 +23,7 @@ class ConversationModel {
     this.avatarUrl,
     this.phone,
     this.partnerId,
+    this.isClosed = false,
+    this.sosStatus,
   });
 }

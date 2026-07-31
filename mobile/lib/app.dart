@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/theme/theme_controller.dart';
 import 'package:mobile/routes/app_router.dart';
 import 'shared/providers/app_providers.dart';
 
@@ -8,11 +10,18 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppProviders(
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        title: 'CỨU HỘ NHANH',
-        theme: ThemeData.light(),
-        routerConfig: AppRouter.router,
+      child: ListenableBuilder(
+        listenable: getIt<ThemeController>(),
+        builder: (context, _) {
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'CỨU HỘ NHANH',
+            theme: ThemeData.light(),
+            darkTheme: ThemeData.dark(),
+            themeMode: getIt<ThemeController>().themeMode,
+            routerConfig: AppRouter.router,
+          );
+        },
       ),
     );
   }

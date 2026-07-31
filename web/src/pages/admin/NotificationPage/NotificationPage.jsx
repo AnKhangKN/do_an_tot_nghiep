@@ -29,7 +29,7 @@ const normalizeNotificationItem = (item) => ({
 const INITIAL_LOGS = [];
 
 const TARGET_CONFIG = {
-  ALL: { label: "Tất cả người dùng", bg: "bg-gray-900 text-white" },
+  ALL: { label: "Tất cả người dùng", bg: "bg-gray-900 text-white dark:bg-gray-200 dark:text-white" },
   RESCUER: { label: "Cứu hộ viên", bg: "bg-blue-100 text-blue-800 border border-blue-200" },
   VICTIM: { label: "Nạn nhân / Dân cư", bg: "bg-emerald-100 text-emerald-800 border border-emerald-200" },
 };
@@ -124,9 +124,9 @@ const NotificationPage = () => {
       setLogs((prev) => [newLog, ...prev]);
       setTitle("");
       setContent("");
-      showToast(`🚀 Đã phát thông báo thành công tới ${recipientCount} người dùng trong hệ thống!`);
+      showToast(`Đã phát thông báo thành công tới ${recipientCount} người dùng trong hệ thống!`);
     } catch (error) {
-      console.warn("⚠️ Không thể kết nối API hoặc hết hạn token Admin:", error);
+      console.warn("Không thể kết nối API hoặc hết hạn token Admin:", error);
 
       showToast("Không thể phát thông báo. Vui lòng kiểm tra kết nối hoặc quyền đăng nhập.", "error");
     } finally {
@@ -156,7 +156,7 @@ const NotificationPage = () => {
         <div
           className={`fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-lg border transition duration-300 animate-slide-in ${toastMessage.type === "error"
             ? "bg-red-900 text-white border-red-800"
-            : "bg-gray-900 text-white border-gray-800"
+            : "bg-gray-900 text-white border-gray-800 dark:bg-gray-200 dark:text-white dark:border-gray-600"
             }`}
         >
           {toastMessage.type === "error" ? (
@@ -169,9 +169,9 @@ const NotificationPage = () => {
       )}
 
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-md">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white shadow-md">
             <PiBellBold className="text-2xl" />
           </div>
           <div>
@@ -192,7 +192,7 @@ const NotificationPage = () => {
 
       {/* STATS OVERVIEW */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm flex items-center gap-4">
+        <div className="rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-5 shadow-sm flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-900">
             <PiPaperPlaneRightBold className="text-xl" />
           </div>
@@ -202,7 +202,7 @@ const NotificationPage = () => {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm flex items-center gap-4">
+        <div className="rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-5 shadow-sm flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-900">
             <PiUsersBold className="text-xl" />
           </div>
@@ -212,7 +212,7 @@ const NotificationPage = () => {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm flex items-center gap-4">
+        <div className="rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-5 shadow-sm flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100">
             <PiCheckBold className="text-xl" />
           </div>
@@ -226,10 +226,10 @@ const NotificationPage = () => {
       {/* MAIN CONTENT: FORM + LOGS */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* LEFT COLUMN: BROADCAST FORM (5 cols) */}
-        <div className="lg:col-span-5 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-5 rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white">
                 <PiBroadcastBold className="text-lg" />
               </div>
               <div>
@@ -249,7 +249,7 @@ const NotificationPage = () => {
                   placeholder="Ví dụ: Cảnh báo bão khẩn cấp khu vực Ninh Kiều..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-900 focus:outline-none transition"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-xs text-gray-900 placeholder-gray-400 focus:bg-white dark:focus:bg-gray-100 focus:border-gray-900 focus:outline-none transition"
                 />
               </div>
 
@@ -260,7 +260,7 @@ const NotificationPage = () => {
                   <select
                     value={targetGroup}
                     onChange={(e) => setTargetGroup(e.target.value)}
-                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-gray-900 focus:outline-none transition cursor-pointer font-medium"
+                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs text-gray-900 focus:bg-white dark:focus:bg-gray-100 focus:border-gray-900 focus:outline-none transition cursor-pointer font-medium"
                   >
                     <option value="ALL">Tất cả người dùng</option>
                     <option value="RESCUER">Cứu hộ viên</option>
@@ -273,12 +273,12 @@ const NotificationPage = () => {
                   <select
                     value={notifType}
                     onChange={(e) => setNotifType(e.target.value)}
-                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-gray-900 focus:outline-none transition cursor-pointer font-medium"
+                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs text-gray-900 focus:bg-white dark:focus:bg-gray-100 focus:border-gray-900 focus:outline-none transition cursor-pointer font-medium"
                   >
-                    <option value="SYSTEM">📢 Hệ thống</option>
-                    <option value="EMERGENCY">🚨 Khẩn cấp / SOS</option>
-                    <option value="WARNING">⚠️ Cảnh báo thiên tai</option>
-                    <option value="INFO">💡 Tin tức chung</option>
+                    <option value="SYSTEM">Hệ thống</option>
+                    <option value="EMERGENCY">Khẩn cấp / SOS</option>
+                    <option value="WARNING">Cảnh báo thiên tai</option>
+                    <option value="INFO">Tin tức chung</option>
                   </select>
                 </div>
               </div>
@@ -293,7 +293,7 @@ const NotificationPage = () => {
                   placeholder="Nhập nội dung chi tiết thông báo gửi đến ứng dụng..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 p-4 text-xs text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-900 focus:outline-none transition resize-none"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 p-4 text-xs text-gray-900 placeholder-gray-400 focus:bg-white dark:focus:bg-gray-100 focus:border-gray-900 focus:outline-none transition resize-none"
                 />
               </div>
 
@@ -315,7 +315,7 @@ const NotificationPage = () => {
               <button
                 type="submit"
                 disabled={isSending}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gray-900 py-3 text-xs font-bold text-white shadow-md hover:bg-gray-800 active:scale-[0.99] transition duration-150 disabled:opacity-50 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gray-900 py-3 text-xs font-bold text-white shadow-md hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 active:scale-[0.99] transition duration-150 disabled:opacity-50 cursor-pointer"
               >
                 {isSending ? (
                   <>
@@ -338,7 +338,7 @@ const NotificationPage = () => {
         </div>
 
         {/* RIGHT COLUMN: SENT LOGS LIST (7 cols) */}
-        <div className="lg:col-span-7 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="lg:col-span-7 rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-6 shadow-sm">
           {/* List Header & Filters */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-4 mb-5 gap-3">
             <div className="flex items-center gap-3">
@@ -355,21 +355,21 @@ const NotificationPage = () => {
             <div className="flex items-center gap-1 rounded-2xl bg-gray-100 p-1 text-[11px] font-semibold">
               <button
                 onClick={() => setFilterTarget("ALL")}
-                className={`rounded-xl px-3 py-1 transition cursor-pointer ${filterTarget === "ALL" ? "bg-white text-gray-900 shadow-xs" : "text-gray-600 hover:text-gray-900"
+                className={`rounded-xl px-3 py-1 transition cursor-pointer ${filterTarget === "ALL" ? "bg-white dark:bg-gray-100 text-gray-900 shadow-xs" : "text-gray-600 hover:text-gray-900"
                   }`}
               >
                 Tất cả ({logs.length})
               </button>
               <button
                 onClick={() => setFilterTarget("RESCUER")}
-                className={`rounded-xl px-3 py-1 transition cursor-pointer ${filterTarget === "RESCUER" ? "bg-white text-gray-900 shadow-xs" : "text-gray-600 hover:text-gray-900"
+                className={`rounded-xl px-3 py-1 transition cursor-pointer ${filterTarget === "RESCUER" ? "bg-white dark:bg-gray-100 text-gray-900 shadow-xs" : "text-gray-600 hover:text-gray-900"
                   }`}
               >
                 Cứu hộ viên
               </button>
               <button
                 onClick={() => setFilterTarget("VICTIM")}
-                className={`rounded-xl px-3 py-1 transition cursor-pointer ${filterTarget === "VICTIM" ? "bg-white text-gray-900 shadow-xs" : "text-gray-600 hover:text-gray-900"
+                className={`rounded-xl px-3 py-1 transition cursor-pointer ${filterTarget === "VICTIM" ? "bg-white dark:bg-gray-100 text-gray-900 shadow-xs" : "text-gray-600 hover:text-gray-900"
                   }`}
               >
                 Nạn nhân
@@ -385,7 +385,7 @@ const NotificationPage = () => {
               placeholder="Tìm kiếm thông báo theo tiêu đề hoặc nội dung..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-2xl border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-xs text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-900 focus:outline-none transition"
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-xs text-gray-900 placeholder-gray-400 focus:bg-white dark:focus:bg-gray-100 focus:border-gray-900 focus:outline-none transition"
             />
           </div>
 

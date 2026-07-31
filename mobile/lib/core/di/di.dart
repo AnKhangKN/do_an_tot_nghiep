@@ -14,6 +14,7 @@ import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/socket/modules/rescuer_socket.dart';
 import 'package:mobile/core/socket/modules/victim_socket.dart';
 import 'package:mobile/core/storage/storage_service.dart';
+import 'package:mobile/core/theme/theme_controller.dart';
 import 'package:mobile/features/auth/data/auth_repository.dart';
 import 'package:mobile/features/auth/data/auth_service.dart';
 import 'package:mobile/features/rescuer/data/rescuer_service.dart';
@@ -85,6 +86,9 @@ Future<void> initDI() async {
     () => BanSocket(getIt<CoreSocket>(), getIt<SessionController>()),
   );
   getIt.registerLazySingleton(() => NotificationService());
+  getIt.registerLazySingleton(
+    () => ThemeController(getIt<StorageService>()),
+  );
 
   // Các Service lấy trực tiếp .dio đã được cấu hình chuẩn chỉ
   getIt.registerLazySingleton(() => AuthService(getIt<DioClient>().dio));

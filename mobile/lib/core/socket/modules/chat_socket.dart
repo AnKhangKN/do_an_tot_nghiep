@@ -27,6 +27,14 @@ class ChatSocket {
     });
   }
 
+  void listenConversationClosed(Function(Map<String, dynamic> payload) onClosed) {
+    coreSocket.on('chat:conversation_closed', (data) {
+      if (data != null && data is Map) {
+        onClosed(Map<String, dynamic>.from(data));
+      }
+    });
+  }
+
   void sendSocketMessage(String conversationId, String content, {String? partnerId, String? tempId}) {
     if (conversationId.isNotEmpty || (partnerId != null && partnerId.isNotEmpty)) {
       coreSocket.emit('chat:send_message', {
@@ -41,5 +49,6 @@ class ChatSocket {
   void dispose() {
     coreSocket.off('chat:new_message');
     coreSocket.off('chat:error');
+    coreSocket.off('chat:conversation_closed');
   }
 }

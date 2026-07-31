@@ -71,4 +71,14 @@ class StorageService {
   Future<String?> getSavedPhone() async {
     return _storage.read(key: _savedPhoneKey);
   }
+
+  static const String _themeModeKey = 'theme_mode';
+
+  Future<void> saveThemeMode(String mode) async {
+    await _storage.write(key: _themeModeKey, value: mode);
+  }
+
+  Future<String?> getThemeMode() async {
+    return _storage.read(key: _themeModeKey);
+  }
 }

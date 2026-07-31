@@ -12,7 +12,7 @@ class LayerWidget extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: ColorConstants.surfaceWhite,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
@@ -44,9 +44,9 @@ class LayerWidget extends StatelessWidget {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      const Icon(Icons.layers_rounded, color: ColorConstants.slateDark, size: 22),
+                      Icon(Icons.layers_rounded, color: ColorConstants.slateDark, size: 22),
                       const SizedBox(width: 8),
-                      const Text(
+                      Text(
                         'Hiển thị trên bản đồ',
                         style: TextStyle(
                           fontSize: 16,
@@ -192,7 +192,7 @@ class _LayerOptionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: ColorConstants.textPrimary,
@@ -200,7 +200,7 @@ class _LayerOptionTile extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       color: ColorConstants.textMuted,
                     ),

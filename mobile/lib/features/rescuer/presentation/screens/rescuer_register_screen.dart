@@ -43,7 +43,7 @@ class _RescuerRegisterScreenState
   InputDecoration _inputDecoration(String label, IconData prefixIcon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(
+      labelStyle: TextStyle(
         color: ColorConstants.textSecondary,
         fontWeight: FontWeight.w500,
       ),
@@ -157,7 +157,7 @@ class _RescuerRegisterScreenState
           onPressed: () {
             context.go(RouterConstants.profile);
           },
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: ColorConstants.textPrimary),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: ColorConstants.textPrimary),
         ),
       ),
       body: SafeArea(
@@ -194,7 +194,7 @@ class _RescuerRegisterScreenState
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       "THAM GIA ĐỘI CỨU HỘ",
                       style: TextStyle(
                         fontSize: 20,
@@ -204,7 +204,7 @@ class _RescuerRegisterScreenState
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       "Hãy hoàn thiện thông tin của bạn để gia nhập mạng lưới hỗ trợ khẩn cấp.",
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -238,7 +238,7 @@ class _RescuerRegisterScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           "Thông tin liên hệ",
                           style: TextStyle(
                             fontSize: 15,
@@ -263,7 +263,7 @@ class _RescuerRegisterScreenState
                         ),
 
                         const SizedBox(height: 20),
-                        const Text(
+                        Text(
                           "Thông tin cá nhân",
                           style: TextStyle(
                             fontSize: 15,
@@ -308,7 +308,7 @@ class _RescuerRegisterScreenState
                         ),
 
                         const SizedBox(height: 20),
-                        const Text(
+                        Text(
                           "Chuyên môn & Khu vực cứu hộ",
                           style: TextStyle(
                             fontSize: 15,

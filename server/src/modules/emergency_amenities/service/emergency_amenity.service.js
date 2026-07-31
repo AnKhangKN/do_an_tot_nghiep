@@ -4,7 +4,7 @@ const emergencyAmenityRepository = require("../repository/emergency_amenity.repo
 const amenityFeedbackRepository = require("../repository/amenity_feedback.repository");
 const imageService = require("@modules/image/service/image.service");
 const aiModerationService = require("@modules/ai_moderation/service/ai_moderation.service");
-
+const { transaction } = require("@/config/database.config");
 
 class EmergencyAmenityService {
     async getActiveCategories() {
@@ -41,12 +41,13 @@ class EmergencyAmenityService {
             });
         }
 
-        return {
+        const result = {
             ...amenity,
             imageUrl: imageUrl || null
         };
-    }
 
+        return result;
+    }
 
     // Admin methods
     async getAllCategoriesAdmin() {
@@ -150,7 +151,6 @@ class EmergencyAmenityService {
     }
 
     async mergeAmenitiesAdmin({ primaryAmenityId, duplicateAmenityId }) {
-        const { transaction } = require("@/config/database.config");
         return await transaction(async (client) => {
             return await emergencyAmenityRepository.mergeAmenities(client, primaryAmenityId, duplicateAmenityId);
         });

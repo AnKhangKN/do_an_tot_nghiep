@@ -25,7 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: ColorConstants.textSecondary, fontWeight: FontWeight.w500),
+      labelStyle: TextStyle(color: ColorConstants.textSecondary, fontWeight: FontWeight.w500),
       filled: true,
       fillColor: ColorConstants.bgCanvas,
       border: OutlineInputBorder(
@@ -34,7 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: ColorConstants.border),
+        borderSide: BorderSide(color: ColorConstants.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),

@@ -96,6 +96,8 @@ class ChatProvider extends ChangeNotifier {
               isOnline: old.isOnline,
               avatarUrl: old.avatarUrl,
               phone: old.phone,
+              partnerId: old.partnerId,
+              isClosed: old.isClosed,
             );
             _conversations.removeAt(index);
             _conversations.insert(0, updated);
@@ -109,6 +111,7 @@ class ChatProvider extends ChangeNotifier {
                 time: 'Vừa xong',
                 unreadCount: isMe ? 0 : 1,
                 isOnline: true,
+                isClosed: convData['is_closed'] == true,
               ),
             );
           }
@@ -140,6 +143,30 @@ class ChatProvider extends ChangeNotifier {
           markFailedInList(entry.value);
         }
         notifyListeners();
+      }
+    });
+
+    chatSocket?.listenConversationClosed((payload) {
+      final conversationId = payload['conversationId']?.toString();
+      if (conversationId != null) {
+        final index = _conversations.indexWhere((c) => c.id == conversationId);
+        if (index != -1) {
+          final old = _conversations[index];
+          _conversations[index] = ConversationModel(
+            id: old.id,
+            name: old.name,
+            lastMessage: old.lastMessage,
+            time: old.time,
+            unreadCount: old.unreadCount,
+            isEmergency: old.isEmergency,
+            isOnline: old.isOnline,
+            avatarUrl: old.avatarUrl,
+            phone: old.phone,
+            partnerId: old.partnerId,
+            isClosed: true,
+          );
+          notifyListeners();
+        }
       }
     });
   }
@@ -195,6 +222,12 @@ class ChatProvider extends ChangeNotifier {
     final cleanText = text.trim();
     if (cleanText.isEmpty) return;
 
+    final convIndex = _conversations.indexWhere((c) => c.id == conversationId);
+    if (convIndex != -1 && _conversations[convIndex].isClosed) {
+      debugPrint('[CHAT] Kênh chat đã đóng. Không thể gửi tin nhắn.');
+      return;
+    }
+
     await resolveCurrentUserId();
 
     final now = TimeOfDay.now();
@@ -228,6 +261,8 @@ class ChatProvider extends ChangeNotifier {
         isOnline: old.isOnline,
         avatarUrl: old.avatarUrl,
         phone: old.phone,
+        partnerId: old.partnerId,
+        isClosed: old.isClosed,
       );
       _conversations.removeAt(index);
       _conversations.insert(0, updated);
@@ -236,7 +271,6 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
 
     // Gửi tin nhắn qua Socket.IO thuần túy (Socket sẽ gọi ChatService lưu DB và broadcast)
-    final convIndex = _conversations.indexWhere((c) => c.id == conversationId);
     final resolvedPartnerId = partnerId ?? (convIndex != -1 ? _conversations[convIndex].partnerId : null);
     chatSocket?.sendSocketMessage(conversationId, cleanText, partnerId: resolvedPartnerId, tempId: tempMsgId);
   }
@@ -256,6 +290,7 @@ class ChatProvider extends ChangeNotifier {
         avatarUrl: old.avatarUrl,
         phone: old.phone,
         partnerId: old.partnerId,
+        isClosed: old.isClosed,
       );
       notifyListeners();
     }

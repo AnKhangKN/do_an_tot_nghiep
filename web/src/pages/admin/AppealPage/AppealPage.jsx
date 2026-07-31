@@ -86,7 +86,7 @@ const AppealPage = () => {
                 </select>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white dark:bg-gray-100 rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                 {loading ? (
                     <div className="text-center py-12 text-gray-500">Đang tải...</div>
                 ) : appeals.length === 0 ? (
@@ -170,7 +170,7 @@ const AppealPage = () => {
                     onClick={() => { setActionModal(null); setActionError(''); }}
                 >
                     <div
-                        className="bg-white rounded-3xl max-w-md w-full mx-4 shadow-xl overflow-hidden"
+                        className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full mx-4 shadow-xl overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
@@ -221,7 +221,7 @@ const AppealPage = () => {
                         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
                             <button
                                 onClick={() => { setActionModal(null); setActionError(''); }}
-                                className="px-5 py-2.5 rounded-2xl bg-white text-gray-700 hover:bg-gray-100 text-xs font-bold transition border border-gray-200 cursor-pointer"
+                                className="px-5 py-2.5 rounded-2xl bg-white dark:bg-gray-100 text-gray-700 hover:bg-gray-100 text-xs font-bold transition border border-gray-200 cursor-pointer"
                             >
                                 Hủy
                             </button>

@@ -174,6 +174,124 @@ Nhiệm vụ: Phân tích đoạn văn bản từ người dùng và trả về 
     }
 
     /**
+     * Phân tích cảm xúc (Sentiment Analysis) cho phản hồi/đánh giá chất lượng cứu hộ
+     * @param {string} text Nội dung phản hồi cần phân tích
+     * @returns {Promise<{ sentiment: string, confidence: number, source: string, keywords: string[] }>}
+     */
+    async classifySentiment(text) {
+        if (!text || text.trim().length === 0) {
+            return {
+                sentiment: "NEUTRAL",
+                confidence: 0.5,
+                source: "EMPTY",
+                keywords: []
+            };
+        }
+
+        if (GROQ_API_KEY) {
+            try {
+                const apiKey = GROQ_API_KEY;
+                const apiUrl = GROQ_API_URL || "https://api.groq.com/openai/v1/chat/completions";
+                const modelName = GROQ_MODEL || "llama-3.3-70b-versatile";
+
+                const systemPrompt = `
+Bạn là Trợ lý AI Phân tích Cảm xúc (Sentiment Analyzer) cho Hệ thống Cứu hộ Khẩn cấp tại Việt Nam.
+Nhiệm vụ: Phân tích cảm xúc của Nạn nhân đối với chất lượng dịch vụ cứu hộ dựa trên đoạn phản hồi/nhận xét và trả về ĐÚNG 1 JSON OBJECT không kèm markdown fence:
+{
+  "sentiment": "POSITIVE" (hài lòng/khen ngợi/biết ơn) | "NEUTRAL" (trung lập, mô tả khách quan) | "NEGATIVE" (không hài lòng/phàn nàn/chê trách),
+  "confidence": 0.0 - 1.0 (mức độ chắc chắn),
+  "keywords": ["Từ/cụm từ ngắn thể hiện cảm xúc (mảng rỗng nếu không có)"]
+}
+Chú ý: Ngôn ngữ có thể là tiếng Việt. Chỉ chấm NEGATIVE khi có dấu hiệu rõ ràng bất mãn; nếu văn bản lịch sự, cảm ơn dù có kèm góp ý nhẹ thì vẫn là POSITIVE hoặc NEUTRAL.
+                `;
+
+                const userPrompt = `Nội dung phản hồi cần phân tích: "${text}"`;
+
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: modelName,
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: userPrompt }
+                        ],
+                        temperature: 0.1,
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`Groq API returned HTTP ${response.status}: ${errText}`);
+                }
+
+                const data = await response.json();
+                const contentStr = data.choices?.[0]?.message?.content;
+                if (contentStr) {
+                    const parsed = JSON.parse(contentStr);
+                    const sentiment = String(parsed.sentiment || "NEUTRAL").toUpperCase();
+                    const normalized = ["POSITIVE", "NEGATIVE"].includes(sentiment) ? sentiment : "NEUTRAL";
+                    return {
+                        sentiment: normalized,
+                        confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0.7,
+                        source: "GROQ_AI",
+                        keywords: Array.isArray(parsed.keywords) ? parsed.keywords : []
+                    };
+                }
+            } catch (error) {
+                console.warn("[AI Sentiment] Groq API error, switching to local NLP fallback:", error.message);
+            }
+        }
+
+        return this.classifySentimentLocalNLP(text);
+    }
+
+    /**
+     * Dự phòng Phân tích cảm xúc tiếng Việt bằng Keyword Matching & Regex
+     */
+    classifySentimentLocalNLP(text) {
+        const lower = text.toLowerCase();
+
+        const positiveKeywords = [
+            "nhanh", "nhiệt tình", "tận tình", "tận tâm", "chu đáo", "tốt", "tuyệt", "tuyệt vời",
+            "cảm ơn", "biết ơn", "hài lòng", "chuyên nghiệp", "giỏi", "xuất sắc", "đáng khen",
+            "hỗ trợ tốt", "kịp thời", "hết lòng", "thân thiện", "âm cần", "nice", "good", "great",
+            "awesome", "excellent", "helpful", "fast", "thank", "thanks", "perfect", "amazing"
+        ];
+        const negativeKeywords = [
+            "chậm", "chậm chạp", "tệ", "tồi", "kém", "thô lỗ", "cọc cằn", "vô trách nhiệm",
+            "không hài lòng", "bất mãn", "thất vọng", "gắt gỏng", "khó chịu", "bực", "đáng ghét",
+            "lừa đảo", "lừa dối", "tởm", "dở", "hư", "sai hẹn", "đến muộn", "bad", "terrible",
+            "awful", "worst", "slow", "rude", "disappointed", "unprofessional", "hate"
+        ];
+
+        const foundPositive = positiveKeywords.filter((kw) => lower.includes(kw));
+        const foundNegative = negativeKeywords.filter((kw) => lower.includes(kw));
+
+        let sentiment = "NEUTRAL";
+        let confidence = 0.5;
+
+        if (foundNegative.length > 0 && foundNegative.length >= foundPositive.length) {
+            sentiment = "NEGATIVE";
+            confidence = Math.min(0.9, 0.6 + foundNegative.length * 0.1);
+        } else if (foundPositive.length > 0) {
+            sentiment = "POSITIVE";
+            confidence = Math.min(0.9, 0.6 + foundPositive.length * 0.1);
+        }
+
+        return {
+            sentiment,
+            confidence,
+            source: "LOCAL_NLP",
+            keywords: foundPositive.concat(foundNegative)
+        };
+    }
+
+    /**
      * AI Tóm tắt Lịch sử & Hiệu suất Vận hành (Operational Activity Executive Summary)
      * @param {Object} params { timeframeDays, stats }
      */

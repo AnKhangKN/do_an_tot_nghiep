@@ -84,6 +84,7 @@ class ChatRepository {
 
   ConversationModel _mapConversation(Map<String, dynamic> item) {
     final lastAt = item['last_message_at'] ?? item['updated_at'];
+    final bool isClosed = item['is_closed'] == true || item['isClosed'] == true;
     return ConversationModel(
       id: item['conversation_id']?.toString() ?? '',
       name: item['partner_name']?.toString() ?? 'Đối tác cứu hộ',
@@ -93,6 +94,8 @@ class ChatRepository {
       isOnline: true,
       phone: item['partner_phone']?.toString(),
       avatarUrl: item['partner_avatar']?.toString(),
+      isClosed: isClosed,
+      sosStatus: item['sos_status']?.toString(),
     );
   }
 

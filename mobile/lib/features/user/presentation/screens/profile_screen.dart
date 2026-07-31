@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
+import '../../../../core/di/di.dart';
+import '../../../../core/theme/theme_controller.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import '../widgets/avatar_picker_widget.dart';
@@ -76,6 +78,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   // Thẻ trạng thái sẵn sàng (Tính năng đặc thù cứu hộ)
                   _buildAvailabilityCard(),
+                  
+                  const SizedBox(height: 20),
+
+                  // Thẻ chọn chế độ sáng/tối
+                  _buildThemeCard(),
                   
                   const SizedBox(height: 20),
 
@@ -210,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 Text(
                   isAvailable ? "Bạn đang sẵn sàng nhận cứu hộ" : "Bạn đang ở trạng thái ngoại tuyến",
-                  style: const TextStyle(color: ColorConstants.textSecondary, fontSize: 13),
+                  style: TextStyle(color: ColorConstants.textSecondary, fontSize: 13),
                 ),
               ],
             ),
@@ -229,6 +236,108 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildThemeCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            "GIAO DIỆN",
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: ColorConstants.textSecondary,
+              letterSpacing: 1.1,
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ColorConstants.surfaceWhite,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ListenableBuilder(
+            listenable: getIt<ThemeController>(),
+            builder: (context, _) {
+              final controller = getIt<ThemeController>();
+              return Row(
+                children: AppThemeMode.values.map((mode) {
+                  final selected = controller.mode == mode;
+                  final IconData icon;
+                  final String label;
+                  switch (mode) {
+                    case AppThemeMode.system:
+                      icon = Icons.brightness_auto_rounded;
+                      label = "Tự động";
+                      break;
+                    case AppThemeMode.light:
+                      icon = Icons.light_mode_rounded;
+                      label = "Sáng";
+                      break;
+                    case AppThemeMode.dark:
+                      icon = Icons.dark_mode_rounded;
+                      label = "Tối";
+                      break;
+                  }
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Material(
+                        color: selected
+                            ? ColorConstants.redRescue
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => controller.setMode(mode),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  icon,
+                                  size: 20,
+                                  color: selected
+                                      ? Colors.white
+                                      : ColorConstants.textSecondary,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  label,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: selected
+                                        ? Colors.white
+                                        : ColorConstants.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildMenuSection(String title, List<Widget> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +346,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             title.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
               color: ColorConstants.textSecondary,
@@ -274,12 +383,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       leading: Icon(icon, color: ColorConstants.redRescue, size: 24),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.w600,
           color: ColorConstants.textPrimary,
         ),
       ),
-      trailing: const Icon(Icons.chevron_right, size: 20, color: ColorConstants.textSecondary),
+      trailing: Icon(Icons.chevron_right, size: 20, color: ColorConstants.textSecondary),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       onTap: () {
         if (route.isNotEmpty) {

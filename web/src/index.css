@@ -1,2 +1,54 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-gray-50: #0a0f1a;
+  --color-gray-100: #121a26;
+  --color-gray-200: #1b2534;
+  --color-gray-300: #283546;
+  --color-gray-400: #64748b;
+  --color-gray-500: #7c8ba1;
+  --color-gray-600: #98a7ba;
+  --color-gray-700: #b9c4d1;
+  --color-gray-800: #d7dee8;
+  --color-gray-900: #eef2f7;
+  --color-emerald-50: #022c22;
+  --color-emerald-100: #064e3b;
+  --color-emerald-200: #065f46;
+  --color-amber-50: #451a03;
+  --color-amber-100: #78350f;
+  --color-amber-200: #92400e;
+  --color-red-50: #450a0a;
+  --color-red-100: #7f1d1d;
+  --color-red-200: #991b1b;
+  --color-blue-50: #172554;
+  --color-blue-100: #1e3a8a;
+  --color-blue-200: #1e40af;
+  --color-sky-50: #082f49;
+  --color-sky-100: #0c4a6e;
+  --color-sky-200: #075985;
+  --color-orange-50: #431407;
+  --color-orange-100: #7c2d12;
+  --color-orange-200: #9a3412;
+  --color-teal-50: #042f2e;
+  --color-teal-100: #134e4a;
+  --color-teal-200: #115e59;
+  --color-purple-50: #2e1065;
+  --color-purple-100: #581c87;
+  --color-purple-200: #6b21a8;
+  --color-indigo-50: #1e1b4b;
+  --color-indigo-100: #312e81;
+  --color-indigo-200: #3730a3;
+  --color-yellow-50: #422006;
+  --color-yellow-100: #713f12;
+  --color-yellow-200: #854d0e;
+  --color-rose-50: #4c0519;
+  --color-rose-100: #881337;
+  --color-rose-200: #9f1239;
+}
