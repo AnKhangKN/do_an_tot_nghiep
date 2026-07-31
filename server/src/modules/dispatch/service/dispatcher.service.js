@@ -33,7 +33,9 @@ class DispatchService {
                     victimLat: sos.victim_lat,
                     victimLng: sos.victim_lng,
                     description: sos.description,
-                    incidentTypeName: sos.incident_type_name
+                    incidentTypeName: sos.incident_type_name,
+                    imageUrl: sos.image_url || sos.imageUrl || null,
+                    image_url: sos.image_url || sos.imageUrl || null
                 };
 
                 pipeline.publish("sos:offer", JSON.stringify(payload));

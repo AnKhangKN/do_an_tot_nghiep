@@ -441,6 +441,11 @@ class AppSession {
           final victimLng = (sosRequest['victimLng'] ?? sosRequest['victim_lng'] as num).toDouble();
           final description = sosRequest['description'];
           final incidentTypeName = sosRequest['incidentTypeName'] ?? sosRequest['incident_type_name'];
+          final imageUrl = (sosRequest['imageUrl'] ??
+                  sosRequest['image_url'] ??
+                  partner?['imageUrl'] ??
+                  partner?['image_url'])
+              ?.toString();
 
           final sosOffer = SOSOfferModel(
             sosId: sosId,
@@ -448,6 +453,7 @@ class AppSession {
             victimLng: victimLng,
             description: description,
             incidentTypeName: incidentTypeName,
+            imageUrl: imageUrl,
           );
 
           // Cập nhật SOSProvider của Rescuer

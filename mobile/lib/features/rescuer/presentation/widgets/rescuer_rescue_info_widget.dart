@@ -27,6 +27,65 @@ class RescuerRescueInfoWidget extends StatelessWidget {
     required this.onComplete,
   });
 
+  void _showFullImageModal(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      builder: (ctx) => Dialog.fullscreen(
+        backgroundColor: Colors.black,
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.network(
+                  url,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (c, child, progress) {
+                    if (progress == null) return child;
+                    return const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    );
+                  },
+                  errorBuilder: (c, e, s) => const Center(
+                    child: Text(
+                      "Không thể tải ảnh hiện trường",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: MediaQuery.of(ctx).padding.top + 12,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  "Ảnh hiện trường nạn nhân",
+                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            Positioned(
+              top: MediaQuery.of(ctx).padding.top + 8,
+              right: 16,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final victimName = activeVictim?['fullName'] ?? 'Không rõ';
@@ -34,6 +93,8 @@ class RescuerRescueInfoWidget extends StatelessWidget {
     final displayIncidentType = incidentTypeName ?? activeVictim?['incidentTypeName'] ?? activeVictim?['serviceType'];
     final victimUserId = activeVictim?['userId'] ?? activeVictim?['user_id'] ?? activeVictim?['victimId'] ?? activeVictim?['victim_id'] ?? activeVictim?['id'];
     final resolvedSosId = sosRequestId ?? activeVictim?['sosRequestId'] ?? activeVictim?['sos_request_id'] ?? activeVictim?['sosId'] ?? activeVictim?['sos_id'];
+    final String? rawImgUrl = (activeVictim?['imageUrl'] ?? activeVictim?['image_url'] ?? activeVictim?['image'] ?? activeVictim?['url'])?.toString();
+    final bool hasImage = rawImgUrl != null && rawImgUrl.isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -53,18 +114,56 @@ class RescuerRescueInfoWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.airport_shuttle, color: Colors.red, size: 22),
-              SizedBox(width: 8),
-              Text(
-                "Đang đi cứu nạn...",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.red,
-                ),
+              const Row(
+                children: [
+                  Icon(Icons.airport_shuttle, color: Colors.red, size: 22),
+                  SizedBox(width: 8),
+                  Text(
+                    "Đang đi cứu nạn...",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
               ),
+              if (hasImage)
+                GestureDetector(
+                  onTap: () => _showFullImageModal(context, rawImgUrl!),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade600,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withValues(alpha: 0.25),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.photo_camera_outlined, size: 15, color: Colors.white),
+                        SizedBox(width: 4),
+                        Text(
+                          "Xem ảnh",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
 
@@ -200,57 +299,42 @@ class RescuerRescueInfoWidget extends StatelessWidget {
               ),
             ),
           ],
-          if ((activeVictim?['imageUrl'] ?? activeVictim?['image_url']) != null &&
-              (activeVictim?['imageUrl'] ?? activeVictim?['image_url']).toString().isNotEmpty) ...[
+          if (hasImage) ...[
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: () {
-                final url = (activeVictim?['imageUrl'] ?? activeVictim?['image_url']).toString();
-                showDialog(
-                  context: context,
-                  builder: (ctx) => Dialog.fullscreen(
-                    backgroundColor: Colors.black,
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: InteractiveViewer(
-                            child: Image.network(url, fit: BoxFit.contain),
-                          ),
-                        ),
-                        Positioned(
-                          top: MediaQuery.of(ctx).padding.top + 12,
-                          right: 16,
-                          child: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                            onPressed: () => Navigator.pop(ctx),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _showFullImageModal(context, rawImgUrl!),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Stack(
                   children: [
                     Image.network(
                       (activeVictim?['imageUrl'] ?? activeVictim?['image_url']).toString(),
-                      height: 100,
+                      height: 120,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (c, e, s) => const SizedBox.shrink(),
                     ),
                     Positioned(
-                      bottom: 4,
-                      right: 4,
+                      bottom: 6,
+                      right: 6,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(6),
+                          color: Colors.black.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('Xem ảnh hiện trường ↗', style: TextStyle(color: Colors.white, fontSize: 10)),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.zoom_in, color: Colors.white, size: 14),
+                            SizedBox(width: 4),
+                            Text(
+                              'Chạm để xem ảnh toàn màn hình',
+                              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

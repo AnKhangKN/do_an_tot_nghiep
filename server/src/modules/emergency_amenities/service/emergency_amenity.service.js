@@ -41,12 +41,10 @@ class EmergencyAmenityService {
             });
         }
 
-        const result = {
+        return {
             ...amenity,
             imageUrl: imageUrl || null
         };
-
-        return result;
     }
 
     // Admin methods
@@ -133,7 +131,6 @@ class EmergencyAmenityService {
             status
         });
 
-        // Nếu Admin chọn gỡ/từ chối điểm tiện ích khi xử lý báo cáo
         if (action === 'REJECT_AMENITY' && amenityId) {
             await emergencyAmenityRepository.updateStatus({
                 amenityId,
@@ -158,4 +155,3 @@ class EmergencyAmenityService {
 }
 
 module.exports = new EmergencyAmenityService();
-

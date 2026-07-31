@@ -1,4 +1,4 @@
--- SQL Select Script for all 23 tables in do_an_tot_nghiep Database
+-- SQL Select Script for all 25 tables in do_an_tot_nghiep Database
 SET timezone = 'Asia/Ho_Chi_Minh';
 
 -- 1. users
@@ -67,5 +67,12 @@ SELECT * FROM admin_reports;
 -- 22. post_rescue_followups
 SELECT * FROM post_rescue_followups;
 
--- 23. dangerous_point_feedbacks
+-- 23. ban_appeals
+SELECT * FROM ban_appeals;
+
+-- 24. dangerous_point_feedbacks
 SELECT * FROM dangerous_point_feedbacks;
+
+-- 25. system_settings
+SELECT * FROM system_settings;
+

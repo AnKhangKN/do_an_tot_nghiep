@@ -32,7 +32,12 @@ class SOSOfferModel {
           json["incidentType"] ??
           json["service_type"] ??
           json["incident_type_name"])?.toString(),
-      imageUrl: (json["imageUrl"] ?? json["image_url"])?.toString(),
+      imageUrl: (json["imageUrl"] ??
+          json["image_url"] ??
+          json["image"] ??
+          json["url"] ??
+          json["photoUrl"] ??
+          json["photo_url"])?.toString(),
     );
   }
-}
+}

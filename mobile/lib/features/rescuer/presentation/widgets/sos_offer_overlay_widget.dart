@@ -228,20 +228,54 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
                   if (widget.sos.imageUrl != null && widget.sos.imageUrl!.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {
                         showDialog(
                           context: context,
+                          useRootNavigator: true,
                           builder: (ctx) => Dialog.fullscreen(
                             backgroundColor: Colors.black,
                             child: Stack(
                               children: [
                                 Center(
                                   child: InteractiveViewer(
-                                    child: Image.network(widget.sos.imageUrl!, fit: BoxFit.contain),
+                                    minScale: 0.5,
+                                    maxScale: 4.0,
+                                    child: Image.network(
+                                      widget.sos.imageUrl!,
+                                      fit: BoxFit.contain,
+                                      loadingBuilder: (c, child, progress) {
+                                        if (progress == null) return child;
+                                        return const Center(
+                                          child: CircularProgressIndicator(color: Colors.white),
+                                        );
+                                      },
+                                      errorBuilder: (c, e, s) => const Center(
+                                        child: Text(
+                                          "Không thể tải ảnh hiện trường",
+                                          style: TextStyle(color: Colors.white70),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 Positioned(
                                   top: MediaQuery.of(ctx).padding.top + 12,
+                                  left: 16,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Text(
+                                      "Ảnh hiện trường nạn nhân",
+                                      style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: MediaQuery.of(ctx).padding.top + 8,
                                   right: 16,
                                   child: IconButton(
                                     icon: const Icon(Icons.close, color: Colors.white, size: 28),
@@ -259,26 +293,29 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
                           children: [
                             Image.network(
                               widget.sos.imageUrl!,
-                              height: 130,
+                              height: 140,
                               width: double.infinity,
                               fit: BoxFit.cover,
                               errorBuilder: (c, e, s) => const SizedBox.shrink(),
                             ),
                             Positioned(
-                              bottom: 6,
-                              right: 6,
+                              bottom: 8,
+                              right: 8,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(6),
+                                  color: Colors.black.withValues(alpha: 0.7),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.zoom_in, color: Colors.white, size: 12),
+                                    Icon(Icons.zoom_in, color: Colors.white, size: 14),
                                     SizedBox(width: 4),
-                                    Text('Xem ảnh hiện trường', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                    Text(
+                                      'Chạm để xem ảnh toàn màn hình',
+                                      style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                    ),
                                   ],
                                 ),
                               ),

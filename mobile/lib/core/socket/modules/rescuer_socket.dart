@@ -56,6 +56,7 @@ class RescuerSocket {
           victimLng: victim['lng'] != null ? (victim['lng'] as num).toDouble() : 0.0,
           description: victim['description'],
           incidentTypeName: victim['incidentTypeName'] ?? victim['serviceType'] ?? data['incidentTypeName'],
+          imageUrl: (victim['imageUrl'] ?? victim['image_url'] ?? data['imageUrl'] ?? data['image_url'])?.toString(),
         );
 
         sosProvider.startRescue(sosOffer, victim);
