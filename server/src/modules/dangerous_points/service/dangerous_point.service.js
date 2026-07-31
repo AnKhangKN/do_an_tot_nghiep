@@ -51,6 +51,10 @@ class DangerousPointService {
         return await this.dangerousPointRepository.getApprovedDangerousPoints()
     }
 
+    async getMyDangerousPoints(userId) {
+        return await this.dangerousPointRepository.getDangerousPointsByReporter(userId);
+    }
+
     async approveDangerousPoint({ dangerousPointId, approvedBy }) {
         const updatedPoint = await transaction(async (client) => {
             return await this.dangerousPointRepository.updateStatus(client, {

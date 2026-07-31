@@ -38,6 +38,28 @@ class EmergencyAmenityRepository {
         }));
     }
 
+    async getAmenitiesByReporter(userId) {
+        const query = `
+            SELECT 
+                ea.*,
+                ac.category_name,
+                ac.icon_name,
+                img.url as image_url
+            FROM ${this.model.table} ea
+            JOIN ${this.categoryModel.table} ac ON ea.${this.model.field.amenityCategoryId} = ac.${this.categoryModel.field.amenityCategoryId}
+            LEFT JOIN images img ON img.entity_id = ea.${this.model.field.amenityId} AND img.entity_type = 'EMERGENCY_AMENITY'
+            WHERE ea.${this.model.field.reportedBy} = $1
+            ORDER BY ea.${this.model.field.createdAt} DESC
+        `;
+        const { rows } = await pool.query(query, [userId]);
+        return rows.map(row => ({
+            ...mapFields(row, this.model),
+            categoryName: row.category_name,
+            iconName: row.icon_name,
+            imageUrl: row.image_url || null
+        }));
+    }
+
 
     async createAmenity(data) {
         const query = `

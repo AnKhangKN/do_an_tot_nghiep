@@ -81,4 +81,19 @@ class StorageService {
   Future<String?> getThemeMode() async {
     return _storage.read(key: _themeModeKey);
   }
+
+  // Cấu hình cài đặt thông báo & báo động
+  static const String _notifyHazardKey = 'settings_notify_hazard';
+
+  Future<void> saveSettingsConfig({required bool notifyHazard}) async {
+    await _storage.write(key: _notifyHazardKey, value: notifyHazard.toString());
+  }
+
+  Future<Map<String, bool>> getSettingsConfig() async {
+    final notifyHazard = await _storage.read(key: _notifyHazardKey);
+
+    return {
+      'notifyHazard': notifyHazard == null ? true : notifyHazard == 'true',
+    };
+  }
 }

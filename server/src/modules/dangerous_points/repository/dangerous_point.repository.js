@@ -88,6 +88,19 @@ class DangerousPointRepository {
         return rows.map(row => mapFields(row, this.dangerousPointModel));
     }
 
+    async getDangerousPointsByReporter(userId) {
+        const query = `
+        SELECT *
+        FROM ${this.dangerousPointModel.table}
+        WHERE ${this.dangerousPointModel.field.reportedBy} = $1
+        ORDER BY ${this.dangerousPointModel.field.createdAt} DESC
+        `;
+
+        const { rows } = await pool.query(query, [userId]);
+
+        return rows.map(row => mapFields(row, this.dangerousPointModel));
+    }
+
     async getDangerousPointById(dangerousPointId) {
         const query = `
         SELECT *

@@ -16,6 +16,9 @@ class UserProvider extends ChangeNotifier {
   bool _uploadingAvatar = false;
   bool get uploadingAvatar => _uploadingAvatar;
 
+  bool _isUpdating = false;
+  bool get isUpdating => _isUpdating;
+
   Future<bool> getProfile() async {
     _loading = true;
     notifyListeners();
@@ -45,6 +48,22 @@ class UserProvider extends ChangeNotifier {
       return false;
     } finally {
       _uploadingAvatar = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateProfile({required String fullName, String? phone}) async {
+    _isUpdating = true;
+    notifyListeners();
+
+    try {
+      _user = await _repo.updateProfile(fullName: fullName, phone: phone);
+      return true;
+    } catch (e) {
+      debugPrint("ERROR UPDATE PROFILE: $e");
+      rethrow;
+    } finally {
+      _isUpdating = false;
       notifyListeners();
     }
   }

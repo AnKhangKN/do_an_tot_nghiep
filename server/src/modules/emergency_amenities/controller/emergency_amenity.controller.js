@@ -36,6 +36,24 @@ class EmergencyAmenityController {
         }
     }
 
+    async getMyAmenities(req, res) {
+        try {
+            const userId = req.userId;
+            const amenities = await emergencyAmenityService.getMyAmenities(userId);
+            return res.status(200).json({
+                success: true,
+                message: "Lấy danh sách tiện ích đã tạo thành công",
+                data: amenities
+            });
+        } catch (error) {
+            console.error("Error in getMyAmenities:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi máy chủ khi lấy danh sách tiện ích đã tạo"
+            });
+        }
+    }
+
     async createAmenity(req, res) {
         try {
             const { amenityCategoryId, phone, latitude, longitude, openingHours } = req.body;

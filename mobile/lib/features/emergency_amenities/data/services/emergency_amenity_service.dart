@@ -17,6 +17,10 @@ class EmergencyAmenityService {
     );
   }
 
+  Future<Response> getMyAmenities() async {
+    return await dio.get(ApiEndpoints.myAmenities);
+  }
+
   Future<Response> createAmenity({
     required String amenityCategoryId,
     required double latitude,

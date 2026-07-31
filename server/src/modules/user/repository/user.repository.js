@@ -163,6 +163,21 @@ class UserRepository {
         return result.rows[0];
     }
 
+    updateUserInfo = async (client, { userId, fullName, phone }) => {
+        const db = client || pool;
+        const query = `
+        UPDATE ${this.user.table}
+        SET 
+            ${this.user.field.fullName} = COALESCE(NULLIF($2, ''), ${this.user.field.fullName}),
+            ${this.user.field.phone} = COALESCE(NULLIF($3, ''), ${this.user.field.phone})
+        WHERE ${this.user.field.userId} = $1
+        RETURNING *
+        `;
+
+        const result = await db.query(query, [userId, fullName || '', phone || '']);
+        return result.rows[0];
+    }
+
     updateRole = async (client, { userId, role }) => {
         const query = `
         UPDATE ${this.user.table}

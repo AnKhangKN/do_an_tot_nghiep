@@ -8,6 +8,7 @@ const route = express.Router();
 // Routes for regular users & rescuers
 route.post('/', verifyToken, validatorCreateDangerousPoint, dangerousPointController.createDangerousPoint);
 route.get('/approved', dangerousPointController.getApprovedDangerousPoints);
+route.get('/my', verifyToken, dangerousPointController.getMyDangerousPoints);
 route.post('/:id/feedbacks', verifyToken, dangerousPointController.createFeedback);
 route.get('/:id/feedbacks', dangerousPointController.getFeedbacksByPointId);
 

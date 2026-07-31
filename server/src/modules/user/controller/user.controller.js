@@ -62,7 +62,26 @@ class UserController {
         }
     }
 
-    updateUserInfo = async (req, res, next) => { }
+    updateUserInfo = async (req, res, next) => {
+        try {
+            const userId = req.userId;
+            const { fullName, phone } = req.body;
+
+            const updatedUser = await userService.updateUserInfo({
+                userId,
+                fullName,
+                phone
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Cập nhật thông tin cá nhân thành công!",
+                data: updatedUser
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 
 
     // user tự khóa - sẽ khóa tạm thời có thể mở lại được

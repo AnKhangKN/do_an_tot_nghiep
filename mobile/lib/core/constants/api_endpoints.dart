@@ -18,6 +18,7 @@ class ApiEndpoints {
   static const String amenityCategories = '/api/emergency-amenities/categories';
   static const String approvedAmenities = '/api/emergency-amenities/approved';
   static const String emergencyAmenities = '/api/emergency-amenities';
+  static const String myAmenities = '/api/emergency-amenities/my';
 
   // Đội cứu hộ (Rescuer)
   static const String registerRescuer = '/api/rescuer/register';
@@ -37,4 +38,5 @@ class ApiEndpoints {
   static const String incidentTypes = '/api/incident_types';
   static const String dangerousPoints = '/api/dangerous_points';
   static const String dangerousPointsApproved = '/api/dangerous_points/approved';
+  static const String myDangerousPoints = '/api/dangerous_points/my';
 }

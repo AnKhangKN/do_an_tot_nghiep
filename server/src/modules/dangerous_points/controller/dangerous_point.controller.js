@@ -39,6 +39,20 @@ class DangerousPointController {
         }
     }
 
+    async getMyDangerousPoints(req, res, next) {
+        try {
+            const userId = req.userId;
+            const result = await dangerousPointService.getMyDangerousPoints(userId);
+            return res.status(200).json({
+                success: true,
+                message: "Lấy danh sách điểm cảnh báo cá nhân thành công!",
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async createFeedback(req, res, next) {
         try {
             const { id } = req.params;

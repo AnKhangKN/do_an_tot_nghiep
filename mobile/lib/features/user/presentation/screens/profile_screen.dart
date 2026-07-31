@@ -77,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 children: [
                   // Thẻ trạng thái sẵn sàng (Tính năng đặc thù cứu hộ)
-                  _buildAvailabilityCard(),
+                  // _buildAvailabilityCard(),
                   
                   const SizedBox(height: 20),
 
@@ -88,10 +88,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Nhóm menu: Hoạt động
                   _buildMenuSection(
-                    "Hoạt động cứu hộ",
+                    "Hoạt động cứu hộ & Đóng góp",
                     [
                       _menuItem(Icons.history, "Lịch sử hỗ trợ", RouterConstants.history),
-                      _menuItem(Icons.warning_amber_rounded, "Điểm cảnh báo đã tạo", ""),
+                      _menuItem(Icons.warning_amber_rounded, "Điểm cảnh báo đã tạo", RouterConstants.myDangerousPoints),
+                      _menuItem(Icons.medical_services_outlined, "Điểm tiện ích đã tạo", RouterConstants.myAmenities),
                       if (user?.role != 'RESCUER')
                         _menuItem(Icons.verified_user_outlined, "Đăng ký cứu hộ viên", RouterConstants.registerRescuer),
                     ],
@@ -103,9 +104,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildMenuSection(
                     "Tài khoản & Hệ thống",
                     [
-                      _menuItem(Icons.person_outline, "Thông tin cá nhân", ""),
+                      _menuItem(Icons.person_outline, "Thông tin cá nhân", RouterConstants.profileDetail),
                       _menuItem(Icons.settings_outlined, "Cấu hình ứng dụng", RouterConstants.setting),
-                      _menuItem(Icons.help_outline, "Trung tâm trợ giúp", ""),
+                      _menuItem(Icons.help_outline, "Trung tâm trợ giúp", RouterConstants.helpCenter),
                       _menuItem(Icons.info_outline, "Thông tin ứng dụng", RouterConstants.appInfo),
                     ],
                   ),
@@ -178,63 +179,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildAvailabilityCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: ColorConstants.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isAvailable ? ColorConstants.success.withOpacity(0.1) : ColorConstants.textSecondary.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isAvailable ? Icons.gpp_good : Icons.gpp_maybe,
-              color: isAvailable ? ColorConstants.success : ColorConstants.textSecondary,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Chế độ sẵn sàng",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-                ),
-                Text(
-                  isAvailable ? "Bạn đang sẵn sàng nhận cứu hộ" : "Bạn đang ở trạng thái ngoại tuyến",
-                  style: TextStyle(color: ColorConstants.textSecondary, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          Switch.adaptive(
-            value: isAvailable,
-            activeColor: ColorConstants.success,
-            onChanged: (val) {
-              setState(() {
-                isAvailable = val;
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildAvailabilityCard() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: ColorConstants.surfaceWhite,
+  //       borderRadius: BorderRadius.circular(16),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.05),
+  //           blurRadius: 10,
+  //           offset: const Offset(0, 4),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Container(
+  //           padding: const EdgeInsets.all(12),
+  //           decoration: BoxDecoration(
+  //             color: isAvailable ? ColorConstants.success.withOpacity(0.1) : ColorConstants.textSecondary.withOpacity(0.1),
+  //             shape: BoxShape.circle,
+  //           ),
+  //           child: Icon(
+  //             isAvailable ? Icons.gpp_good : Icons.gpp_maybe,
+  //             color: isAvailable ? ColorConstants.success : ColorConstants.textSecondary,
+  //             size: 28,
+  //           ),
+  //         ),
+  //         const SizedBox(width: 16),
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               const Text(
+  //                 "Chế độ sẵn sàng",
+  //                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+  //               ),
+  //               Text(
+  //                 isAvailable ? "Bạn đang sẵn sàng nhận cứu hộ" : "Bạn đang ở trạng thái ngoại tuyến",
+  //                 style: TextStyle(color: ColorConstants.textSecondary, fontSize: 13),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         Switch.adaptive(
+  //           value: isAvailable,
+  //           activeColor: ColorConstants.success,
+  //           onChanged: (val) {
+  //             setState(() {
+  //               isAvailable = val;
+  //             });
+  //           },
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildThemeCard() {
     return Column(

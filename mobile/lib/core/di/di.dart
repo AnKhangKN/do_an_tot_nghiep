@@ -43,6 +43,7 @@ import '../../features/dangerous_points/presentation/providers/geofence_provider
 import '../../features/emergency_amenities/data/services/emergency_amenity_service.dart';
 import '../../features/emergency_amenities/data/repositories/emergency_amenity_repository.dart';
 import '../../features/emergency_amenities/presentation/providers/amenity_provider.dart';
+import '../../features/settings/presentation/providers/settings_provider.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -109,6 +110,7 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(() => NotificationProvider());
   getIt.registerLazySingleton(() => GeofenceProvider());
   getIt.registerLazySingleton(() => AmenityProvider(repository: getIt<EmergencyAmenityRepository>()));
+  getIt.registerLazySingleton(() => SettingsProvider(getIt<StorageService>()));
 
   // Đăng ký các Repository
   getIt.registerLazySingleton<AuthRepository>(

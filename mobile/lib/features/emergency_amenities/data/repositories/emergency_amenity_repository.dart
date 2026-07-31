@@ -33,6 +33,19 @@ class EmergencyAmenityRepository {
     }
   }
 
+  Future<List<EmergencyAmenityModel>> getMyAmenities() async {
+    try {
+      final response = await service.getMyAmenities();
+      if (response.data != null && response.data['success'] == true) {
+        final List list = response.data['data'] ?? [];
+        return list.map((item) => EmergencyAmenityModel.fromJson(item)).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<bool> createAmenity({
     required String amenityCategoryId,
     required double latitude,

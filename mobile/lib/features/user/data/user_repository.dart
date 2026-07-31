@@ -17,4 +17,10 @@ class UserRepository {
 
     return UserModel.fromJson(res.data['data']);
   }
+
+  Future<UserModel> updateProfile({required String fullName, String? phone}) async {
+    final res = await userService.updateProfile(fullName: fullName, phone: phone);
+
+    return UserModel.fromJson(res.data['data']);
+  }
 }

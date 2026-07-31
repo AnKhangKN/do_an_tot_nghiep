@@ -21,4 +21,15 @@ class UserService {
     final res = await dio.patch('/api/users/avatar', data: formData);
     return res;
   }
+
+  Future<Response> updateProfile({required String fullName, String? phone}) async {
+    final res = await dio.put(
+      '/api/users',
+      data: {
+        'fullName': fullName,
+        'phone': phone,
+      },
+    );
+    return res;
+  }
 }

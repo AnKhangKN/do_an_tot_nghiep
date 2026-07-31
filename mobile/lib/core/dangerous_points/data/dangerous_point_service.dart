@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../constants/api_endpoints.dart';
 
 class DangerousPointService {
   final Dio dio;
@@ -7,14 +8,19 @@ class DangerousPointService {
 
   Future<Response> createDangerousPoint(Map<String, dynamic> data) async {
     final res = await dio.post(
-      '/api/dangerous_points',
+      ApiEndpoints.dangerousPoints,
       data: data,
     );
     return res;
   }
 
   Future<Response> getApprovedDangerousPoints() async {
-    final res = await dio.get('/api/dangerous_points/approved');
+    final res = await dio.get(ApiEndpoints.dangerousPointsApproved);
+    return res;
+  }
+
+  Future<Response> getMyDangerousPoints() async {
+    final res = await dio.get(ApiEndpoints.myDangerousPoints);
     return res;
   }
 

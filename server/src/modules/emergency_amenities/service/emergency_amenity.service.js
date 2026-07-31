@@ -15,6 +15,10 @@ class EmergencyAmenityService {
         return await emergencyAmenityRepository.getApprovedAmenities({ amenityCategoryId });
     }
 
+    async getMyAmenities(userId) {
+        return await emergencyAmenityRepository.getAmenitiesByReporter(userId);
+    }
+
     async createAmenity({ amenityCategoryId, phone, latitude, longitude, openingHours, reportedBy, userRole, imageUrl }) {
         const amenityId = uuidv4();
         const isAdmin = userRole === 'ADMIN';

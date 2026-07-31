@@ -9,6 +9,7 @@ const route = express.Router();
 // Public/User routes for Victim & Rescuer mobile/web
 route.get('/categories', emergencyAmenityController.getCategories);
 route.get('/approved', emergencyAmenityController.getApprovedAmenities);
+route.get('/my', verifyToken, emergencyAmenityController.getMyAmenities);
 route.post('/', verifyToken, uploadAmenityImage, validatorCreateAmenity, emergencyAmenityController.createAmenity);
 route.post('/:id/feedback', verifyToken, emergencyAmenityController.createFeedback);
 

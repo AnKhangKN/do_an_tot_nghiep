@@ -19,6 +19,9 @@ class AmenityProvider with ChangeNotifier {
   List<EmergencyAmenityModel> _amenities = [];
   List<EmergencyAmenityModel> get amenities => _amenities;
 
+  List<EmergencyAmenityModel> _myAmenities = [];
+  List<EmergencyAmenityModel> get myAmenities => _myAmenities;
+
   String? _selectedCategoryId;
   String? get selectedCategoryId => _selectedCategoryId;
 
@@ -27,6 +30,23 @@ class AmenityProvider with ChangeNotifier {
 
   bool _isLoadingAmenities = false;
   bool get isLoadingAmenities => _isLoadingAmenities;
+
+  bool _isLoadingMyAmenities = false;
+  bool get isLoadingMyAmenities => _isLoadingMyAmenities;
+
+  Future<void> fetchMyAmenities() async {
+    _isLoadingMyAmenities = true;
+    notifyListeners();
+
+    try {
+      _myAmenities = await repository.getMyAmenities();
+    } catch (e) {
+      debugPrint('Error fetching my amenities: $e');
+    } finally {
+      _isLoadingMyAmenities = false;
+      notifyListeners();
+    }
+  }
 
   bool _isSubmitting = false;
   bool get isSubmitting => _isSubmitting;

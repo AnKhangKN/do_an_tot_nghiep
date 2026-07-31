@@ -82,6 +82,37 @@ class UserService {
     return await this.userRepository.updatePhone(client, { userId, phone: cleanPhone });
   }
 
+  updateUserInfo = async ({ userId, fullName, phone }) => {
+    let cleanPhone = null;
+    if (phone && phone.toString().trim()) {
+      cleanPhone = phone.toString().trim();
+      const existingUser = await this.userRepository.findUserByPhone(null, {
+        phone: cleanPhone,
+        excludeUserId: userId,
+      });
+
+      if (existingUser) {
+        const err = new Error("Số điện thoại này đã được sử dụng bởi một tài khoản khác!");
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    const updatedUser = await this.userRepository.updateUserInfo(null, {
+      userId,
+      fullName: fullName ? fullName.trim() : null,
+      phone: cleanPhone,
+    });
+
+    if (!updatedUser) {
+      const err = new Error("Không tìm thấy người dùng!");
+      err.statusCode = 404;
+      throw err;
+    }
+
+    return mapFields(updatedUser, this.userModel);
+  }
+
   updateRole = async (client, { userId, role }) => {
     return await this.userRepository.updateRole(client, { userId, role });
   }

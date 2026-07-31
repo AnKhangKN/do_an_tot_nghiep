@@ -36,6 +36,16 @@ class DangerousPointRepository {
         .toList();
   }
 
+  Future<List<DangerousPointModel>> getMyDangerousPoints() async {
+    final res = await dangerousPointService.getMyDangerousPoints();
+
+    final List data = res.data['data'] ?? [];
+
+    return data
+        .map((e) => DangerousPointModel.fromJson(e))
+        .toList();
+  }
+
   Future<Map<String, dynamic>> submitFeedback({
     required String pointId,
     required String feedbackType,
