@@ -1,16 +1,13 @@
 services:
-  # 1. Express.js RESTful API Server & Socket.io
+  # 1. Express.js RESTful API Server & Socket.io (build từ Dockerfile)
   - type: web
     name: rescue-api-server
-    env: node
+    runtime: docker
     region: singapore
     plan: free
-    rootDir: server
-    buildCommand: npm install
-    startCommand: npm start
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
     envVars:
-      - key: NODE_VERSION
-        value: 22.22.3
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -31,17 +28,25 @@ services:
       - key: FIREBASE_SERVICE_ACCOUNT
         sync: false
 
-  # 2. BullMQ SOS Worker (Xử lý ghép đôi ca cứu hộ chạy ngầm)
+  # 2. BullMQ SOS Worker (Xử lý ghép đôi ca cứu hộ chạy ngầm, cùng Dockerfile)
   - type: worker
     name: rescue-sos-worker
-    env: node
+    runtime: docker
     region: singapore
     plan: free
-    rootDir: server
-    buildCommand: npm install
-    startCommand: npm run worker
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    dockerCommand: node src/workers/sos.worker.js
     envVars:
-      - key: NODE_VERSION
-        value: 22.22.3
       - key: NODE_ENV
         value: production
+      - key: MAIL_DRIVER
+        value: brevo
+      - key: MAIL_FROM
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
