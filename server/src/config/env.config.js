@@ -53,5 +53,8 @@ module.exports = {
 
   // BREVO
   BREVO_API_KEY: process.env.BREVO_API_KEY,
+
+  // FIREBASE (JSON string của service-account.json, dùng khi deploy)
+  FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT,
 };
 

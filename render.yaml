@@ -26,6 +26,10 @@ services:
         sync: false
       - key: BREVO_API_KEY
         sync: false
+      # FIREBASE — dán toàn bộ nội dung file service-account.json (JSON 1 dòng) vào
+      # Render Dashboard cho biến FIREBASE_SERVICE_ACCOUNT.
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
 
   # 2. BullMQ SOS Worker (Xử lý ghép đôi ca cứu hộ chạy ngầm)
   - type: worker
