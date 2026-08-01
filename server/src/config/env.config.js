@@ -29,6 +29,7 @@ module.exports = {
 
   // COOKIE
   COOKIE_SECURE: process.env.COOKIE_SECURE,
+  COOKIE_SAMESITE: process.env.COOKIE_SAMESITE || (process.env.COOKIE_SECURE === "true" ? "none" : "lax"),
 
   // CLOUDINARY
   CLOUDINARY_NAME: process.env.CLOUDINARY_NAME,

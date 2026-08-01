@@ -1,5 +1,5 @@
 const authService = require("../service/auth.service");
-const { COOKIE_SECURE } = require("../../../config/env.config");
+const { COOKIE_SECURE, COOKIE_SAMESITE } = require("../../../config/env.config");
 
 class AuthController {
     register = async (req, res, next) => {
@@ -112,13 +112,13 @@ class AuthController {
             const { accessToken, refreshToken } = result;
 
             if (platform === "WEB") {
-                res.cookie("refreshToken", refreshToken, {
-                    httpOnly: true,
-                    secure: COOKIE_SECURE,
-                    sameSite: "strict",
-                    maxAge: 365 * 24 * 60 * 60 * 1000,
-                    path: "/",
-                });
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: COOKIE_SECURE,
+                sameSite: COOKIE_SAMESITE,
+                maxAge: 365 * 24 * 60 * 60 * 1000,
+                path: "/",
+            });
 
                 return res.status(200).json({
                     success: true,
@@ -171,7 +171,7 @@ class AuthController {
             res.clearCookie("refreshToken", {
                 httpOnly: true,
                 secure: COOKIE_SECURE,
-                sameSite: "strict",
+                sameSite: COOKIE_SAMESITE,
                 path: "/",
             });
 
