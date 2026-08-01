@@ -1,6 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/theme/theme_controller.dart';
@@ -13,11 +12,11 @@ class AppBootstrap {
     // 1. Cấu hình Bắt lỗi toàn cục (Flutter Framework & Async Exceptions)
     _setupGlobalErrorHandling();
 
-    // 2. Load biến môi trường .env (.env.development kèm fallback .env)
+    // 2. Load biến môi trường .env (.env.production kèm fallback .env)
     try {
-      await dotenv.load(fileName: ".env.development");
+      await dotenv.load(fileName: ".env.production");
     } catch (e) {
-      debugPrint("⚠️ [Bootstrap] Không thể tải .env.development: $e");
+      debugPrint("⚠️ [Bootstrap] Không thể tải .env.production: $e");
       try {
         await dotenv.load(fileName: ".env");
       } catch (err) {
