@@ -15,10 +15,13 @@ module.exports = {
   DB_USER: process.env.DB_USER,
   DB_PASSWORD: process.env.DB_PASSWORD,
   DB_NAME: process.env.DB_NAME,
+  DB_SSL: process.env.DB_SSL,
 
   // REDIS
   REDIS_HOST: process.env.REDIS_HOST,
   REDIS_PORT: process.env.REDIS_PORT,
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  REDIS_TLS: process.env.REDIS_TLS,
 
   // JWT
   ACCESS_TOKEN: process.env.JWT_ACCESS_TOKEN,

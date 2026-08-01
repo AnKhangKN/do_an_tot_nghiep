@@ -16,7 +16,6 @@ const TOTAL = 9;
 const StartPage = () => {
   const [thesisInfo, setThesisInfo] = useState({});
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef(null);
   const lockedRef = useRef(false);
   const indexRef = useRef(0);
@@ -48,7 +47,6 @@ const StartPage = () => {
       if (idx < 0 || idx >= sections.length) return;
       lockedRef.current = true;
       indexRef.current = idx;
-      setActiveIndex(idx);
       setShowBackToTop(idx > 0);
       sections[idx].scrollIntoView({ behavior: "smooth", block: "start" });
     };
@@ -91,7 +89,6 @@ const StartPage = () => {
 
   const goToTop = () => {
     indexRef.current = 0;
-    setActiveIndex(0);
     setShowBackToTop(false);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };

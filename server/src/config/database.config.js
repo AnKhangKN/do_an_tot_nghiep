@@ -5,6 +5,7 @@ const {
   DB_USER,
   DB_PASSWORD,
   DB_NAME,
+  DB_SSL,
 } = require("./env.config");
 
 const pool = new Pool({
@@ -13,6 +14,7 @@ const pool = new Pool({
   user: DB_USER,
   password: DB_PASSWORD,
   database: DB_NAME,
+  ssl: DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
 });
 
 const connectDB = async () => {
