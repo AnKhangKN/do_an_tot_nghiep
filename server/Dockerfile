@@ -14,14 +14,15 @@ RUN npm ci --omit=dev
 FROM node:22.22.3-slim AS runner
 WORKDIR /app
 
+# NODE_ENV mặc định là production; PORT sẽ được Render inject tự động
 ENV NODE_ENV=production
-ENV PORT=8080
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY src ./src
 
-EXPOSE 8080
+# Render tự inject PORT (thường là 10000); EXPOSE chỉ mang tính tài liệu
+EXPOSE 10000
 
 # Mặc định chạy API server + BullMQ worker chung 1 tiến trình
 # (deploy free trên Render chỉ cần 1 web service).
