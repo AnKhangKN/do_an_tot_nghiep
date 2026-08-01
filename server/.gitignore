@@ -35,7 +35,7 @@ temp/
 *.sqlite
 *.db
 
-uploads/
+/uploads/
 public/uploads/
 
 *.pid
