@@ -23,6 +23,7 @@ COPY src ./src
 
 EXPOSE 8080
 
-# Mặc định chạy API server (npm start)
-# Muốn chạy worker: docker run --env-file .env.production <image> node src/workers/sos.worker.js
-CMD ["node", "src/server.js"]
+# Mặc định chạy API server + BullMQ worker chung 1 tiến trình
+# (deploy free trên Render chỉ cần 1 web service).
+# Muốn tách worker riêng: docker run <image> node src/workers/sos.worker.js
+CMD ["node", "src/server.all.js"]

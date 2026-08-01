@@ -12,6 +12,7 @@ Run all commands in `server/`:
 | Dev (Worker only) | `npm run dev:worker` |
 | Dev (All) | `npm run dev:all` |
 | Start (API only) | `npm start` |
+| Start (API + Worker cùng tiến trình) | `npm run start:all` |
 | Start (Worker only) | `npm run worker` |
 
 ## Authentication

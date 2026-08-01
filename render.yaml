@@ -1,5 +1,6 @@
 services:
-  # 1. Express.js RESTful API Server & Socket.io (build từ Dockerfile)
+  # API Server + Socket.io + BullMQ Worker (chạy chung 1 tiến trình để dùng gói free;
+  # Render không hỗ trợ background worker ở plan free)
   - type: web
     name: rescue-api-server
     runtime: docker
@@ -25,28 +26,5 @@ services:
         sync: false
       # FIREBASE — dán toàn bộ nội dung file service-account.json (JSON 1 dòng) vào
       # Render Dashboard cho biến FIREBASE_SERVICE_ACCOUNT.
-      - key: FIREBASE_SERVICE_ACCOUNT
-        sync: false
-
-  # 2. BullMQ SOS Worker (Xử lý ghép đôi ca cứu hộ chạy ngầm, cùng Dockerfile)
-  - type: worker
-    name: rescue-sos-worker
-    runtime: docker
-    region: singapore
-    plan: free
-    dockerfilePath: ./server/Dockerfile
-    dockerContext: ./server
-    dockerCommand: node src/workers/sos.worker.js
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: MAIL_DRIVER
-        value: brevo
-      - key: MAIL_FROM
-        sync: false
-      - key: MAIL_USERNAME
-        sync: false
-      - key: BREVO_API_KEY
-        sync: false
       - key: FIREBASE_SERVICE_ACCOUNT
         sync: false

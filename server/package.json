@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon node src/server.js",
     "start": "node src/server.js",
+    "start:all": "node src/server.all.js",
     "dev:worker": "nodemon src/workers/sos.worker.js",
     "worker": "node src/workers/sos.worker.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:worker\""
