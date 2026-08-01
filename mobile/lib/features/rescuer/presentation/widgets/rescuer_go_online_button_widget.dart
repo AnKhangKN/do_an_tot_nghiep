@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/core/constants/color_constants.dart';
 
 class RescuerGoOnlineButtonWidget extends StatelessWidget {
   final bool isOnline;
@@ -39,11 +40,11 @@ class RescuerGoOnlineButtonWidget extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: isProcessing
-                    ? const Padding(
+                    ? Padding(
                   padding: EdgeInsets.all(8.0),
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                    valueColor: AlwaysStoppedAnimation<Color>(ColorConstants.textSecondary),
                   ),
                 )
                     : Icon(

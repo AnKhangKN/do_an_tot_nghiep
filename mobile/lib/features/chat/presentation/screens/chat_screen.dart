@@ -49,7 +49,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: ColorConstants.borderDark,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -208,10 +208,10 @@ class _ChatScreenState extends State<ChatScreen> {
             // Chat list
             Expanded(
               child: chats.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
                         "Chưa có cuộc hội thoại nào",
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: ColorConstants.textSecondary),
                       ),
                     )
                   : ListView.builder(

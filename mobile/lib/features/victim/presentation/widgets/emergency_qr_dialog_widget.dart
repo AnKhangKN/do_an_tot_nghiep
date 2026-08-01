@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../../../../core/constants/color_constants.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class EmergencyQRDialogWidget extends StatelessWidget {
   final String sosRequestId;
@@ -104,24 +106,19 @@ class EmergencyQRDialogWidget extends StatelessWidget {
 
       if (!context.mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '✅ Đã tải ảnh QR về máy:\n${file.path}',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          ),
-          backgroundColor: Colors.green.shade700,
-          duration: const Duration(seconds: 4),
-        ),
+      AppSnackBar.show(
+        context,
+        'Đã tải ảnh QR về máy:\n${file.path}',
+        type: AppSnackBarType.success,
+        duration: const Duration(seconds: 4),
       );
     } catch (e) {
       debugPrint("❌ [QR SAVE] Lỗi lưu ảnh QR: $e");
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không thể tải ảnh QR: $e'),
-          backgroundColor: Colors.red.shade700,
-        ),
+      AppSnackBar.show(
+        context,
+        'Không thể tải ảnh QR: $e',
+        type: AppSnackBarType.error,
       );
     }
   }
@@ -132,8 +129,8 @@ class EmergencyQRDialogWidget extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(24.0),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28.0)),
       ),
       child: Column(
@@ -145,7 +142,7 @@ class EmergencyQRDialogWidget extends StatelessWidget {
             height: 4,
             margin: const EdgeInsets.only(bottom: 20),
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: ColorConstants.borderDark,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -170,19 +167,19 @@ class EmergencyQRDialogWidget extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Mã QR Cứu Hộ Khẩn Cấp',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: ColorConstants.textPrimary,
                       ),
                     ),
                     Text(
                       'Mã ca: #${sosRequestId.length > 8 ? sosRequestId.substring(0, 8) : sosRequestId}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: ColorConstants.textSecondary,
                       ),
                     ),
                   ],
@@ -197,9 +194,9 @@ class EmergencyQRDialogWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.surfaceWhite,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.grey.shade200, width: 2),
+              border: Border.all(color: ColorConstants.border, width: 2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),

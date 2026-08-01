@@ -27,11 +27,15 @@ const validateUpdateSettings = (req, res, next) => {
             }
 
             const value = updates[key];
-            if (value === undefined || value === null || String(value).trim() === "") {
-                throwError(`Giá trị của "${definition.label}" không được để trống!`, 400);
+            if (value === undefined || value === null) {
+                throwError(`Giá trị của "${definition.label}" không hợp lệ!`, 400);
             }
 
             const raw = String(value).trim();
+            if (raw === "" && !key.startsWith("thesis_") && key !== "app_apk_url") {
+                throwError(`Giá trị của "${definition.label}" không được để trống!`, 400);
+            }
+
             if (definition.type === "number") {
                 const num = Number(raw);
                 if (!Number.isFinite(num) || num <= 0) {

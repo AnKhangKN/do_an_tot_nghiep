@@ -90,55 +90,83 @@ class AppRouter {
 
       GoRoute(path: RouterConstants.registerRescuer, builder: (context, state) => const RescuerRegisterScreen()),
 
-      ShellRoute(
-        builder: (context, state, child) {
-          return MainShell(child: child);
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainShell(navigationShell: navigationShell);
         },
-        routes: [
-          GoRoute(path: RouterConstants.map, builder: (context, state) => const VictimMapScreen()),
-          GoRoute(
-            path: RouterConstants.rescuerMap,
-            builder: (context, state) => const RescuerMapScreen(),
+        branches: [
+          // Tab 0: Bản đồ (Victim + Rescuer)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouterConstants.map,
+                builder: (context, state) => const VictimMapScreen(),
+              ),
+              GoRoute(
+                path: RouterConstants.rescuerMap,
+                builder: (context, state) => const RescuerMapScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: RouterConstants.history,
-            builder: (context, state) => const HistoryScreen(),
+          // Tab 1: Lịch sử
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouterConstants.history,
+                builder: (context, state) => const HistoryScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: RouterConstants.chat,
-            builder: (context, state) => const ChatScreen(),
+          // Tab 2: Chat
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouterConstants.chat,
+                builder: (context, state) => const ChatScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: RouterConstants.notification,
-            builder: (context, state) => const NotificationScreen(),
+          // Tab 3: Thông báo
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouterConstants.notification,
+                builder: (context, state) => const NotificationScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: RouterConstants.profile,
-            builder: (context, state) => const ProfileScreen(),
-          ),
-          GoRoute(
-            path: RouterConstants.profileDetail,
-            builder: (context, state) => const ProfileDetailScreen(),
-          ),
-          GoRoute(
-            path: RouterConstants.myDangerousPoints,
-            builder: (context, state) => const MyDangerousPointsScreen(),
-          ),
-          GoRoute(
-            path: RouterConstants.myAmenities,
-            builder: (context, state) => const MyAmenitiesScreen(),
-          ),
-          GoRoute(
-            path: RouterConstants.setting,
-            builder: (context, state) => const SettingsScreen(),
-          ),
-          GoRoute(
-            path: RouterConstants.helpCenter,
-            builder: (context, state) => const HelpCenterScreen(),
-          ),
-          GoRoute(
-            path: RouterConstants.appInfo,
-            builder: (context, state) => const AppInfoScreen(),
+          // Tab 4: Cá nhân + các màn con (giữ bottom nav khi mở)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouterConstants.profile,
+                builder: (context, state) => const ProfileScreen(),
+              ),
+              GoRoute(
+                path: RouterConstants.profileDetail,
+                builder: (context, state) => const ProfileDetailScreen(),
+              ),
+              GoRoute(
+                path: RouterConstants.myDangerousPoints,
+                builder: (context, state) => const MyDangerousPointsScreen(),
+              ),
+              GoRoute(
+                path: RouterConstants.myAmenities,
+                builder: (context, state) => const MyAmenitiesScreen(),
+              ),
+              GoRoute(
+                path: RouterConstants.setting,
+                builder: (context, state) => const SettingsScreen(),
+              ),
+              GoRoute(
+                path: RouterConstants.helpCenter,
+                builder: (context, state) => const HelpCenterScreen(),
+              ),
+              GoRoute(
+                path: RouterConstants.appInfo,
+                builder: (context, state) => const AppInfoScreen(),
+              ),
+            ],
           ),
         ],
       ),

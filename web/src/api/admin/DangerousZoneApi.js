@@ -63,3 +63,14 @@ export const getPointFeedbacks = async (dangerousPointId) => {
         throw error;
     }
 };
+
+export const getApprovedDangerousZones = async () => {
+    try {
+        const response = await axiosJWT.get('/api/dangerous_points/approved');
+        return response.data;
+    } catch (error) {
+        console.error("Get approved dangerous zones error:", error);
+        throw error;
+    }
+};
+

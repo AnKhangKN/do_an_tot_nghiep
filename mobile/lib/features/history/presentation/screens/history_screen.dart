@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
@@ -327,8 +324,8 @@ class _HistoryCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -374,57 +371,35 @@ class _HistoryCard extends StatelessWidget {
               color: ColorConstants.textSecondary,
             ),
 
-            // Minimap Preview (Vị trí nạn nhân trên minimap)
+            // Vị trí nạn nhân (placeholder nhẹ thay cho minimap để cuộn mượt)
             if (hasValidLocation) ...[
               const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  height: 120,
-                  width: double.infinity,
-                  child: FlutterMap(
-                    options: MapOptions(
-                      initialCenter: LatLng(item.victimLat, item.victimLng),
-                      initialZoom: 14.5,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.none,
+              Container(
+                height: 64,
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.25)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.location_on, color: statusColor, size: 18),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        "${item.victimLat.toStringAsFixed(5)}, ${item.victimLng.toStringAsFixed(5)}",
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    children: [
-                      TileLayer(
-                        urlTemplate: AppConstants.urlTemplateDefault,
-                        userAgentPackageName: 'com.example.mobile',
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: LatLng(item.victimLat, item.victimLng),
-                            width: 36,
-                            height: 36,
-                            alignment: Alignment.center,
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: ColorConstants.redRescue,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black26, 
-                                    blurRadius: 4, 
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.location_on,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -519,18 +494,18 @@ class _HistoryCard extends StatelessWidget {
                               }
                             },
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: hasRated ? Colors.grey.shade600 : Colors.amber.shade800,
+                        foregroundColor: hasRated ? ColorConstants.textSecondary : Colors.amber.shade800,
                         side: BorderSide(
-                          color: hasRated ? Colors.grey.shade400 : Colors.amber.shade700,
+                          color: hasRated ? ColorConstants.borderMuted : Colors.amber.shade700,
                           width: 1.5,
                         ),
-                        backgroundColor: hasRated ? Colors.grey.shade100 : Colors.transparent,
+                        backgroundColor: hasRated ? ColorConstants.bgCanvas : Colors.transparent,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 8),
                       ),
                       icon: Icon(
                         hasRated ? Icons.star_rate_rounded : Icons.star_rounded,
-                        color: hasRated ? Colors.grey.shade600 : Colors.amber,
+                        color: hasRated ? ColorConstants.textSecondary : Colors.amber,
                         size: 20,
                       ),
                       label: Text(

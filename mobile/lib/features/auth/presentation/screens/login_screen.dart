@@ -5,6 +5,7 @@ import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../shared/widgtes/banned_dialog_widget.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/guest_sos_dialog.dart';
@@ -90,11 +91,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!success) {
       if (authProvider.requireOtp && authProvider.unverifiedEmail != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.error ?? "Tài khoản chưa xác thực Email. Mã OTP mới đã được gửi!"),
-            backgroundColor: Colors.orange,
-          ),
+        AppSnackBar.show(
+          context,
+          authProvider.error ?? "Tài khoản chưa xác thực Email. Mã OTP mới đã được gửi!",
+          type: AppSnackBarType.warning,
         );
         context.go(RouterConstants.verifyOtp, extra: authProvider.unverifiedEmail);
       }
@@ -111,11 +111,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final success = await authProvider.loginWithGoogle();
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Đăng nhập bằng Google thành công!"),
-          backgroundColor: Colors.green,
-        ),
+      AppSnackBar.show(
+        context,
+        "Đăng nhập bằng Google thành công!",
+        type: AppSnackBarType.success,
       );
       context.go(RouterConstants.splash);
     }
@@ -149,6 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: ColorConstants.backgroundLight,
       body: SafeArea(
         child: SingleChildScrollView(

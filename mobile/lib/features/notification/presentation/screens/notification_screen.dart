@@ -95,7 +95,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             decoration: BoxDecoration(
                               color: unreadCount > 0
                                   ? ColorConstants.redRescue.withOpacity(0.1)
-                                  : Colors.grey.shade200,
+                                  : ColorConstants.border,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -105,7 +105,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               style: TextStyle(
                                 color: unreadCount > 0
                                     ? ColorConstants.redRescue
-                                    : Colors.grey.shade700,
+                                    : ColorConstants.textSecondary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -121,12 +121,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     Expanded(
                       child: notifications.isEmpty
                           ? ListView(
-                              children: const [
-                                SizedBox(height: 100),
+                              children: [
+                                const SizedBox(height: 100),
                                 Center(
                                   child: Text(
                                     "Chưa có thông báo nào từ hệ thống.",
-                                    style: TextStyle(color: Colors.grey),
+                                    style: TextStyle(color: ColorConstants.textSecondary),
                                   ),
                                 ),
                               ],

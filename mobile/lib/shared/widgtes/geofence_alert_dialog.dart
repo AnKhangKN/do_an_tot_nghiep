@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/color_constants.dart';
 import '../../core/dangerous_points/models/dangerous_point_model.dart';
 import '../../features/dangerous_points/presentation/widgets/hazard_feedback_dialog.dart';
 
@@ -103,7 +104,7 @@ class GeofenceAlertDialog extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Bạn đang ở gần vị trí được cảnh báo rủi ro',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12, color: ColorConstants.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -117,9 +118,9 @@ class GeofenceAlertDialog extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: ColorConstants.bgCanvas,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: ColorConstants.borderDark),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,7 +144,7 @@ class GeofenceAlertDialog extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       point.address!,
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                      style: TextStyle(fontSize: 13, color: ColorConstants.textSecondary),
                     ),
                   ],
                   const SizedBox(height: 8),
@@ -195,7 +196,7 @@ class GeofenceAlertDialog extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 point.description!,
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade800, height: 1.4),
+                style: TextStyle(fontSize: 13, color: ColorConstants.textSecondary, height: 1.4),
               ),
             ],
           ],

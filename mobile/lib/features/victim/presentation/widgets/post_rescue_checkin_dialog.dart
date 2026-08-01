@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/utils/app_snackbar.dart';
 import 'package:mobile/features/victim/data/victim_repository.dart';
 
 class PostRescueCheckinDialog extends StatefulWidget {
@@ -66,11 +67,10 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cảm ơn bạn! Đã ghi nhận xác nhận an toàn sau cứu hộ.'),
-            backgroundColor: ColorConstants.amenityGreen,
-          ),
+        AppSnackBar.show(
+          context,
+          'Cảm ơn bạn! Đã ghi nhận xác nhận an toàn sau cứu hộ.',
+          type: AppSnackBarType.success,
         );
       }
     } catch (e) {
@@ -86,12 +86,11 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMsg),
-            backgroundColor: ColorConstants.danger,
-            duration: const Duration(seconds: 4),
-          ),
+        AppSnackBar.show(
+          context,
+          errorMsg,
+          type: AppSnackBarType.error,
+          duration: const Duration(seconds: 4),
         );
       }
     } finally {

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/constants/color_constants.dart';
 
 class ImagePickerHelper {
   /// Hiển thị BottomSheet cho phép người dùng chọn Chụp ảnh trực tiếp từ Máy ảnh hoặc Chọn ảnh từ Thư viện
   static Future<XFile?> pickImage(BuildContext context) async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: ColorConstants.surfaceWhite,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -20,7 +21,7 @@ class ImagePickerHelper {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: ColorConstants.borderDark,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -42,8 +43,8 @@ class ImagePickerHelper {
               ),
               const Divider(),
               ListTile(
-                leading: const Icon(Icons.close_rounded, color: Colors.grey),
-                title: const Text('Hủy / Bỏ qua (Không tải ảnh)', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey)),
+                leading: Icon(Icons.close_rounded, color: ColorConstants.textSecondary),
+                title: Text('Hủy / Bỏ qua (Không tải ảnh)', style: TextStyle(fontWeight: FontWeight.w500, color: ColorConstants.textSecondary)),
                 onTap: () => Navigator.pop(ctx, null),
               ),
 

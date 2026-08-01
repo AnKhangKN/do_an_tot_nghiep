@@ -107,6 +107,13 @@ class _SearchWidgetState extends State<SearchWidget> {
     return ColorConstants.amenityGreen;
   }
 
+  double _suggestionMaxHeight(BuildContext context) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final topOffset = MediaQuery.paddingOf(context).top + 12 + 54 + 8;
+    return (screenHeight - keyboardInset - topOffset).clamp(120.0, 320.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final amenityProvider = context.watch<AmenityProvider>();
@@ -159,12 +166,12 @@ class _SearchWidgetState extends State<SearchWidget> {
             decoration: BoxDecoration(
               color: ColorConstants.surfaceWhite,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+              border: Border.all(color: ColorConstants.border),
               boxShadow: const [
                 BoxShadow(
                   color: ColorConstants.shadowDark,
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -218,17 +225,17 @@ class _SearchWidgetState extends State<SearchWidget> {
           if (_showSuggestions)
             Container(
               margin: const EdgeInsets.only(top: 8),
-              constraints: const BoxConstraints(maxHeight: 320),
+              constraints: BoxConstraints(maxHeight: _suggestionMaxHeight(context)),
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: ColorConstants.surfaceWhite,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
+                border: Border.all(color: ColorConstants.border),
                 boxShadow: const [
                   BoxShadow(
                     color: ColorConstants.shadowDark,
-                    blurRadius: 20,
-                    offset: Offset(0, 8),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
                   ),
                 ],
               ),

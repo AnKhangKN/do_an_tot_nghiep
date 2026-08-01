@@ -25,6 +25,17 @@ const DEFAULT_SETTINGS = [
     { key: "hotline_fire", value: "114", label: "Hotline chữa cháy", group: "hotline", type: "string" },
     { key: "hotline_police", value: "113", label: "Hotline cảnh sát", group: "hotline", type: "string" },
     { key: "hotline_emergency", value: "112", label: "Số khẩn cấp quốc gia", group: "hotline", type: "string" },
+
+    { key: "thesis_author_name", value: "", label: "Tên sinh viên thực hiện", group: "thesis", type: "string" },
+    { key: "thesis_student_id", value: "", label: "Mã số sinh viên", group: "thesis", type: "string" },
+    { key: "thesis_class", value: "", label: "Lớp", group: "thesis", type: "string" },
+    { key: "thesis_school", value: "", label: "Trường", group: "thesis", type: "string" },
+    { key: "thesis_supervisor", value: "", label: "Giảng viên hướng dẫn", group: "thesis", type: "string" },
+    { key: "thesis_github_url", value: "", label: "Link Source code (GitHub)", group: "thesis", type: "string" },
+    { key: "thesis_report_url", value: "", label: "Link Báo cáo PDF", group: "thesis", type: "string" },
+    { key: "thesis_contact_email", value: "", label: "Email liên hệ", group: "thesis", type: "string" },
+    { key: "thesis_contact_phone", value: "", label: "Số điện thoại liên hệ", group: "thesis", type: "string" },
+    { key: "app_apk_url", value: "", label: "Link tải App (APK)", group: "thesis", type: "string" },
 ];
 
 class SettingsRepository {

@@ -192,12 +192,16 @@ class App extends StatelessWidget {
       child: ListenableBuilder(
         listenable: getIt<ThemeController>(),
         builder: (context, _) {
+          final themeMode = getIt<ThemeController>().themeMode;
           return MaterialApp.router(
+            // Force rebuild toàn bộ widget tree khi đổi theme,
+            // đảm bảo các widget dùng ColorConstants static đọc được giá trị màu mới ngay lập tức.
+            key: ValueKey(themeMode),
             debugShowCheckedModeBanner: false,
             title: 'CỨU HỘ NHANH',
             theme: _buildLightTheme(),
             darkTheme: _buildDarkTheme(),
-            themeMode: getIt<ThemeController>().themeMode,
+            themeMode: themeMode,
             routerConfig: AppRouter.router,
           );
         },

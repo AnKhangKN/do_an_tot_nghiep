@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/color_constants.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../providers/victim_map_provider.dart';
 import 'emergency_qr_dialog_widget.dart';
 
@@ -31,14 +33,14 @@ class _VictimSearchingWidgetState extends State<VictimSearchingWidget> {
               ),
             ],
           ),
-          content: const Text(
+          content: Text(
             'Bạn có chắc chắn muốn hủy tín hiệu tín cứu hộ này không? Bạn có thể gửi lại đợt cứu hộ mới bất cứ lúc nào.',
-            style: TextStyle(fontSize: 14, color: Color(0xFF475569)),
+            style: TextStyle(fontSize: 14, color: ColorConstants.textSecondary),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Không', style: TextStyle(color: Colors.grey)),
+              child: Text('Không', style: TextStyle(color: ColorConstants.textSecondary)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -66,12 +68,9 @@ class _VictimSearchingWidgetState extends State<VictimSearchingWidget> {
       await provider.cancelSos(cancelReason: 'Nạn nhân chủ động hủy yêu cầu');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã hủy yêu cầu cứu hộ thành công.'),
-            backgroundColor: Colors.grey,
-            duration: Duration(seconds: 3),
-          ),
+        AppSnackBar.show(
+          context,
+          'Đã hủy yêu cầu cứu hộ thành công.',
         );
       }
     } catch (e) {
@@ -93,7 +92,7 @@ class _VictimSearchingWidgetState extends State<VictimSearchingWidget> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
@@ -131,11 +130,11 @@ class _VictimSearchingWidgetState extends State<VictimSearchingWidget> {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Hệ thống đang quét và gửi tín hiệu đến cứu hộ viên ở gần bạn nhất.',
             style: TextStyle(
               fontSize: 13,
-              color: Color(0xFF64748B),
+              color: ColorConstants.textSecondary,
               height: 1.3,
             ),
           ),
@@ -189,7 +188,7 @@ class _VictimSearchingWidgetState extends State<VictimSearchingWidget> {
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.2),
-                    backgroundColor: const Color(0xFFFEF2F2),
+                    backgroundColor: ColorConstants.dangerLight,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

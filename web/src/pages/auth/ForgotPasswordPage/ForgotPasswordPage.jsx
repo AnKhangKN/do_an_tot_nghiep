@@ -283,7 +283,7 @@ const ForgotPasswordPage = () => {
       </div>
 
       <button
-        onClick={() => navigate("/login")}
+        onClick={() => navigate("/admin/login")}
         className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300"
       >
         Đăng nhập ngay
@@ -328,7 +328,7 @@ const ForgotPasswordPage = () => {
 
           {step !== STEP_DONE && (
             <Link
-              to="/login"
+              to="/admin/login"
               className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white dark:bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 transition hover:bg-gray-100"
             >
               <PiArrowLeft size={18} />

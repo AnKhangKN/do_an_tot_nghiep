@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../shared/widgtes/image_picker_helper.dart';
 import '../providers/user_provider.dart';
 import '../widgets/avatar_picker_widget.dart';
@@ -40,27 +41,22 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (image == null) return;
     if (!mounted) return;
 
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final userProvider = context.read<UserProvider>();
     final success = await userProvider.updateAvatar(image.path);
 
     if (!mounted) return;
-    scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Cập nhật ảnh đại diện thành công!'
-              : 'Cập nhật ảnh đại diện thất bại. Vui lòng thử lại!',
-        ),
-        backgroundColor: success ? ColorConstants.success : ColorConstants.redRescue,
-      ),
+    AppSnackBar.show(
+      context,
+      success
+          ? 'Cập nhật ảnh đại diện thành công!'
+          : 'Cập nhật ảnh đại diện thất bại. Vui lòng thử lại!',
+      type: success ? AppSnackBarType.success : AppSnackBarType.error,
     );
   }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final userProvider = context.read<UserProvider>();
 
     try {
@@ -71,11 +67,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
       if (!mounted) return;
       if (success) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: const Text('Cập nhật thông tin cá nhân thành công!'),
-            backgroundColor: ColorConstants.success,
-          ),
+        AppSnackBar.show(
+          context,
+          'Cập nhật thông tin cá nhân thành công!',
+          type: AppSnackBarType.success,
         );
       }
     } catch (e) {
@@ -84,11 +79,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       if (e.toString().contains('Số điện thoại')) {
         errorMsg = 'Số điện thoại này đã được sử dụng bởi tài khoản khác!';
       }
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text(errorMsg),
-          backgroundColor: ColorConstants.redRescue,
-        ),
+      AppSnackBar.show(
+        context,
+        errorMsg,
+        type: AppSnackBarType.error,
       );
     }
   }
@@ -99,6 +93,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final user = userProvider.user;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: ColorConstants.backgroundLight,
       appBar: AppBar(
         title: const Text(
@@ -328,15 +323,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         labelStyle: TextStyle(color: ColorConstants.textSecondary, fontSize: 13),
         prefixIcon: Icon(icon, color: readOnly ? ColorConstants.textSecondary : ColorConstants.redRescue, size: 22),
         filled: true,
-        fillColor: readOnly ? Colors.grey.shade100 : ColorConstants.backgroundLight,
+        fillColor: readOnly ? ColorConstants.backgroundLight : ColorConstants.backgroundLight,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: ColorConstants.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: ColorConstants.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

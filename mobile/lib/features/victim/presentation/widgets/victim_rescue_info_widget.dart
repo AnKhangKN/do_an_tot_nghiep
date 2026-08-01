@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
@@ -40,7 +41,7 @@ class VictimRescueInfoWidget extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
@@ -127,18 +128,18 @@ class VictimRescueInfoWidget extends StatelessWidget {
                   children: [
                     Text(
                       "Họ tên: $name",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
-                        color: Color(0xFF1E293B),
+                        color: ColorConstants.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       "SĐT: ${phone ?? 'Không rõ'}",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: Color(0xFF64748B),
+                        color: ColorConstants.textSecondary,
                       ),
                     ),
                   ],

@@ -73,10 +73,10 @@ class ChatTileWidget extends StatelessWidget {
                   conversation.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
-                    color: Color(0xFF0F172A),
+                    color: ColorConstants.textPrimary,
                   ),
                 ),
               ),

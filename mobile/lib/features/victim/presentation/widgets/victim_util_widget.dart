@@ -4,6 +4,7 @@ import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/location/data/location_service.dart';
 import 'package:mobile/core/session/session_controller.dart';
+import 'package:mobile/core/utils/app_snackbar.dart';
 import 'package:mobile/features/dangerous_points/presentation/widgets/add_dangerous_point_dialog.dart';
 import 'package:mobile/features/emergency_amenities/presentation/widgets/add_amenity_bottom_sheet.dart';
 import '../providers/victim_map_provider.dart';
@@ -47,12 +48,10 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
       );
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vui lòng bật định vị để đóng góp điểm tiện ích!'),
-            backgroundColor: ColorConstants.orangeWarning,
-            duration: Duration(seconds: 3),
-          ),
+        AppSnackBar.show(
+          context,
+          'Vui lòng bật định vị để đóng góp điểm tiện ích!',
+          type: AppSnackBarType.warning,
         );
       }
     }
@@ -77,12 +76,10 @@ class _VictimUtilWidgetState extends State<VictimUtilWidget> {
       );
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vui lòng bật định vị để báo cáo điểm nguy hiểm!'),
-            backgroundColor: ColorConstants.orangeWarning,
-            duration: Duration(seconds: 3),
-          ),
+        AppSnackBar.show(
+          context,
+          'Vui lòng bật định vị để báo cáo điểm nguy hiểm!',
+          type: AppSnackBarType.warning,
         );
       }
     }
@@ -165,7 +162,7 @@ class _UtilButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(color: ColorConstants.border),
         boxShadow: const [
           BoxShadow(
             color: ColorConstants.shadowDark,

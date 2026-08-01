@@ -107,7 +107,7 @@ class LayerWidget extends StatelessWidget {
         color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: hasActiveExtraLayer ? ColorConstants.amenityGreen : Colors.black.withValues(alpha: 0.08),
+          color: hasActiveExtraLayer ? ColorConstants.amenityGreen : ColorConstants.border,
           width: hasActiveExtraLayer ? 1.5 : 1.0,
         ),
         boxShadow: const [

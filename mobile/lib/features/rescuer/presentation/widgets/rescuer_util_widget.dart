@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/location/data/location_service.dart';
 import 'package:mobile/core/session/session_controller.dart';
+import 'package:mobile/core/utils/app_snackbar.dart';
 import 'package:mobile/features/dangerous_points/presentation/widgets/add_dangerous_point_dialog.dart';
 import '../screens/qr_scanner_screen.dart';
 
@@ -43,12 +45,10 @@ class RescuerUtilWidget extends StatelessWidget {
       );
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vui lòng bật định vị để đóng góp điểm tiện ích!'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 3),
-          ),
+        AppSnackBar.show(
+          context,
+          'Vui lòng bật định vị để đóng góp điểm tiện ích!',
+          type: AppSnackBarType.warning,
         );
       }
     }
@@ -74,12 +74,10 @@ class RescuerUtilWidget extends StatelessWidget {
       );
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vui lòng bật định vị để báo cáo điểm nguy hiểm!'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 3),
-          ),
+        AppSnackBar.show(
+          context,
+          'Vui lòng bật định vị để báo cáo điểm nguy hiểm!',
+          type: AppSnackBarType.warning,
         );
       }
     }
@@ -92,7 +90,7 @@ class RescuerUtilWidget extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 12),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.surfaceWhite,
           borderRadius: BorderRadius.circular(18),
           boxShadow: const [
             BoxShadow(
@@ -174,7 +172,7 @@ class _UtilButton extends StatelessWidget {
             Icon(
               icon,
               size: 28,
-              color: Colors.red,
+              color: ColorConstants.redRescue,
             ),
             const SizedBox(height: 4),
             Text(

@@ -97,13 +97,13 @@ class _MessengerScreenState extends State<MessengerScreen> {
     final bool isGracePeriod = !isClosed && (sosStatus == 'DONE' || sosStatus == 'COMPLETED' || sosStatus == 'CANCELLED');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ColorConstants.surfaceWhite,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: ColorConstants.surfaceWhite,
         elevation: 1,
         titleSpacing: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF1E293B), size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: ColorConstants.textPrimary, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Row(
@@ -114,14 +114,14 @@ class _MessengerScreenState extends State<MessengerScreen> {
                   radius: 20,
                   backgroundColor: widget.conversation.isEmergency
                       ? ColorConstants.redRescue.withValues(alpha: 0.1)
-                      : const Color(0xFFE2E8F0),
+                      : ColorConstants.bgCanvas,
                   child: Icon(
                     widget.conversation.isEmergency
                         ? Icons.admin_panel_settings_rounded
                         : Icons.person_rounded,
                     color: widget.conversation.isEmergency
                         ? ColorConstants.redRescue
-                        : const Color(0xFF64748B),
+                        : ColorConstants.textSecondary,
                     size: 22,
                   ),
                 ),
@@ -153,10 +153,10 @@ class _MessengerScreenState extends State<MessengerScreen> {
                           widget.conversation.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
+                            color: ColorConstants.textPrimary,
                           ),
                         ),
                       ),
@@ -165,12 +165,12 @@ class _MessengerScreenState extends State<MessengerScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.grey[200],
+                            color: ColorConstants.bgCanvas,
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Đã đóng',
-                            style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 10, color: ColorConstants.textSecondary, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ] else if (isGracePeriod) ...[
@@ -197,7 +197,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
                             : (widget.conversation.isOnline ? 'Đang hoạt động' : 'Ngoại tuyến'),
                     style: TextStyle(
                       fontSize: 11,
-                      color: isClosed ? Colors.orange[800] : (isGracePeriod ? Colors.blue[700] : (widget.conversation.isOnline ? Colors.green : Colors.grey)),
+                      color: isClosed ? Colors.orange[800] : (isGracePeriod ? Colors.blue[700] : (widget.conversation.isOnline ? Colors.green : ColorConstants.textSecondary)),
                     ),
                   ),
                 ],
@@ -286,8 +286,8 @@ class _MessengerScreenState extends State<MessengerScreen> {
             // Ô nhập liệu
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: ColorConstants.surfaceWhite,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black12,
@@ -299,7 +299,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.add_circle_outline_rounded, color: isClosed ? Colors.grey[400] : const Color(0xFF64748B)),
+                    icon: Icon(Icons.add_circle_outline_rounded, color: isClosed ? ColorConstants.textMuted : ColorConstants.textSecondary),
                     onPressed: isClosed ? null : () {},
                     tooltip: 'Đính kèm',
                   ),
@@ -310,13 +310,13 @@ class _MessengerScreenState extends State<MessengerScreen> {
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
                         hintText: isClosed ? 'Kênh trò chuyện đã bị khóa...' : 'Nhập tin nhắn...',
-                        hintStyle: TextStyle(fontSize: 14, color: isClosed ? Colors.grey[400] : const Color(0xFF94A3B8)),
+                        hintStyle: TextStyle(fontSize: 14, color: ColorConstants.textMuted),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: isClosed ? const Color(0xFFE2E8F0) : const Color(0xFFF1F5F9),
+                        fillColor: ColorConstants.bgCanvas,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       ),
                       onSubmitted: isClosed ? null : (_) => _sendMessage(),
@@ -324,7 +324,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
                   ),
                   const SizedBox(width: 8),
                   Material(
-                    color: isClosed ? Colors.grey[400] : ColorConstants.redRescue,
+                    color: isClosed ? ColorConstants.textMuted : ColorConstants.redRescue,
                     shape: const CircleBorder(),
                     child: IconButton(
                       icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
@@ -346,10 +346,10 @@ class _MessengerScreenState extends State<MessengerScreen> {
       child: ActionChip(
         label: Text(
           text,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF334155)),
+          style: TextStyle(fontSize: 12, color: ColorConstants.textPrimary),
         ),
-        backgroundColor: Colors.white,
-        side: const BorderSide(color: Color(0xFFCBD5E1)),
+        backgroundColor: ColorConstants.surfaceWhite,
+        side: BorderSide(color: ColorConstants.borderDark),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () => _sendMessage(text),
       ),

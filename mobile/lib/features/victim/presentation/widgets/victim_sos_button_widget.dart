@@ -2,9 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/constants/color_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/storage/storage_service.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../shared/widgtes/image_picker_helper.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../providers/victim_map_provider.dart';
@@ -123,8 +125,8 @@ class _VictimSosButtonWidgetState
               expand: false,
               builder: (context, scrollController) {
                 return Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(24),
                     ),
@@ -146,7 +148,9 @@ class _VictimSosButtonWidgetState
                             width: 50,
                             height: 5,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.grey.shade700
+                                  : Colors.grey.shade300,
                               borderRadius:
                               BorderRadius.circular(10),
                             ),
@@ -235,9 +239,9 @@ class _VictimSosButtonWidgetState
 
                         const SizedBox(height: 16),
 
-                        const Text(
+                        Text(
                           "Ảnh hiện trường (Không bắt buộc)",
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                         ),
                         const SizedBox(height: 8),
 
@@ -305,38 +309,27 @@ class _VictimSosButtonWidgetState
                                     ? null
                                     : () async {
                                   if (phoneController.text.trim().isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Vui lòng nhập số điện thoại liên hệ để gửi cứu hộ!",
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
+                                    AppSnackBar.show(
+                                      context,
+                                      "Vui lòng nhập số điện thoại liên hệ để gửi cứu hộ!",
+                                      type: AppSnackBarType.error,
                                     );
                                     return;
                                   }
 
                                   if (selectedIncidentTypeId ==
                                       null) {
-                                    ScaffoldMessenger.of(
-                                        context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Vui lòng chọn loại sự cố",
-                                        ),
-                                      ),
+                                    AppSnackBar.show(
+                                      context,
+                                      "Vui lòng chọn loại sự cố",
                                     );
                                     return;
                                   }
 
                                   if (widget.victimLat == null || widget.victimLng == null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Không thể xác định vị trí hiện tại của bạn. Vui lòng bật định vị GPS!",
-                                        ),
-                                      ),
+                                    AppSnackBar.show(
+                                      context,
+                                      "Không thể xác định vị trí hiện tại của bạn. Vui lòng bật định vị GPS!",
                                     );
                                     return;
                                   }
@@ -371,26 +364,18 @@ class _VictimSosButtonWidgetState
                                     Navigator.pop(
                                         context);
 
-                                    ScaffoldMessenger.of(
-                                        context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Đã gửi yêu cầu cứu hộ",
-                                        ),
-                                      ),
+                                    AppSnackBar.show(
+                                      context,
+                                      "Đã gửi yêu cầu cứu hộ",
+                                      type: AppSnackBarType.success,
                                     );
                                   } else {
                                     final errorMsg = provider.errorMessage ?? "Gửi yêu cầu thất bại!";
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          errorMsg,
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                        backgroundColor: Colors.red.shade700,
-                                        duration: const Duration(seconds: 5),
-                                      ),
+                                    AppSnackBar.show(
+                                      context,
+                                      errorMsg,
+                                      type: AppSnackBarType.error,
+                                      duration: const Duration(seconds: 5),
                                     );
                                   }
                                 },
@@ -457,6 +442,9 @@ class _VictimSosButtonWidgetState
           return const VictimSearchingWidget();
         }
 
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+
         // Nút SOS bình thường
         return GestureDetector(
           onTapDown: (_) {
@@ -484,7 +472,7 @@ class _VictimSosButtonWidgetState
             width: 150,
             padding: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? theme.colorScheme.surface : Colors.white,
               borderRadius: BorderRadius.circular(26),
               border: Border.all(
                 color: _isPressing ? const Color(0xFFB91C1C) : const Color(0xFFDC2626),
@@ -493,8 +481,8 @@ class _VictimSosButtonWidgetState
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.12),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -514,7 +502,9 @@ class _VictimSosButtonWidgetState
                           valueColor: const AlwaysStoppedAnimation<Color>(
                             Color(0xFFB91C1C),
                           ),
-                          backgroundColor: Colors.grey.shade200,
+                          backgroundColor: isDark
+                              ? Colors.white.withValues(alpha: 0.15)
+                              : ColorConstants.bgCanvas,
                         ),
                       ),
                     Container(
@@ -542,7 +532,7 @@ class _VictimSosButtonWidgetState
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: _isPressing ? const Color(0xFFB91C1C) : Colors.black87,
+                    color: _isPressing ? const Color(0xFFB91C1C) : (isDark ? Colors.white : Colors.black87),
                   ),
                 ),
               ],

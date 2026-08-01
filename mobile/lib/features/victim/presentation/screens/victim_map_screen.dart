@@ -10,6 +10,7 @@ import '../../../../core/location/data/location_service.dart';
 import '../../../../core/location/data/location_repository.dart';
 import '../../../../core/network/direction_service.dart';
 import '../../../../core/session/session_controller.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 import '../../../../shared/widgtes/map_widget.dart';
 import '../../../../shared/widgtes/layer_widget.dart';
@@ -375,6 +376,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     final isBeingRescued = sessionController.isBeingRescued;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           ListenableBuilder(
@@ -572,24 +574,23 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (!mounted) return;
                               final activeSosId = context.read<VictimMapProvider>().activeSosRequestId;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text('Chưa tìm thấy cứu hộ online. Tạo mã QR cho cứu hộ xung quanh quét?'),
-                                  backgroundColor: Colors.amber.shade900,
-                                  duration: const Duration(seconds: 8),
-                                  action: activeSosId != null
-                                      ? SnackBarAction(
-                                          label: 'MÃ QR',
-                                          textColor: Colors.amberAccent,
-                                          onPressed: () {
-                                            EmergencyQRDialogWidget.show(
-                                              context,
-                                              sosRequestId: activeSosId,
-                                            );
-                                          },
-                                        )
-                                      : null,
-                                ),
+                              AppSnackBar.show(
+                                context,
+                                'Chưa tìm thấy cứu hộ online. Tạo mã QR cho cứu hộ xung quanh quét?',
+                                type: AppSnackBarType.warning,
+                                duration: const Duration(seconds: 8),
+                                action: activeSosId != null
+                                    ? SnackBarAction(
+                                        label: 'MÃ QR',
+                                        textColor: Colors.white,
+                                        onPressed: () {
+                                          EmergencyQRDialogWidget.show(
+                                            context,
+                                            sosRequestId: activeSosId,
+                                          );
+                                        },
+                                      )
+                                    : null,
                               );
                             });
                           }
@@ -631,21 +632,21 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: ColorConstants.successLight,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.green.shade300, width: 1.5),
+                    border: Border.all(color: ColorConstants.success, width: 1.5),
                     boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.green, size: 28),
+                      const Icon(Icons.check_circle, color: ColorConstants.success, size: 28),
                       const SizedBox(width: 10),
                       const Expanded(
                         child: Text(
                           "Đã cứu hộ thành công!",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: ColorConstants.success,
                             fontSize: 14,
                           ),
                         ),
@@ -673,7 +674,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                         ),
                       const SizedBox(width: 4),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.green, size: 20),
+                        icon: const Icon(Icons.close, color: ColorConstants.success, size: 20),
                         onPressed: () => sessionController.dismissSuccessAlert(),
                       )
                     ],

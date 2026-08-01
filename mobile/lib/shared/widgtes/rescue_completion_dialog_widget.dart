@@ -24,7 +24,7 @@ class RescueCompletionDialogWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
       ),
       elevation: 8,
-      backgroundColor: Colors.white,
+      backgroundColor: ColorConstants.surfaceWhite,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -48,12 +48,12 @@ class RescueCompletionDialogWidget extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Title
-            const Text(
+            Text(
               'Xác nhận hoàn thành?',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
+                color: ColorConstants.slateDark,
               ),
               textAlign: TextAlign.center,
             ),
@@ -64,9 +64,9 @@ class RescueCompletionDialogWidget extends StatelessWidget {
               victimName != null && victimName!.isNotEmpty
                   ? 'Bạn có chắc chắn đã hoàn tất hỗ trợ cho nạn nhân "$victimName" không?\nSau khi xác nhận, ca cứu hộ sẽ chính thức kết thúc.'
                   : 'Bạn có chắc chắn ca cứu hộ này đã được xử lý hoàn tất không?\nSau khi xác nhận, ca cứu hộ sẽ chính thức kết thúc.',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13.5,
-                color: Color(0xFF64748B),
+                color: ColorConstants.textSecondary,
                 height: 1.4,
               ),
               textAlign: TextAlign.center,
@@ -80,8 +80,8 @@ class RescueCompletionDialogWidget extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
-                      backgroundColor: const Color(0xFFF8FAFC),
+                      side: BorderSide(color: ColorConstants.borderDark, width: 1.2),
+                      backgroundColor: ColorConstants.bgCanvas,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -89,10 +89,10 @@ class RescueCompletionDialogWidget extends StatelessWidget {
                       elevation: 0,
                     ),
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text(
+                    child: Text(
                       'Quay lại',
                       style: TextStyle(
-                        color: Color(0xFF475569),
+                        color: ColorConstants.textSecondary,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),

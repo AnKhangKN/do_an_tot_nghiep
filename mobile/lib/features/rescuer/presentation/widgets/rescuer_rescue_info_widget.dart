@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/network/direction_service.dart';
 import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
 import 'package:mobile/features/chat/presentation/screens/messenger_screen.dart';
@@ -100,7 +101,7 @@ class RescuerRescueInfoWidget extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
@@ -223,18 +224,18 @@ class RescuerRescueInfoWidget extends StatelessWidget {
                   children: [
                     Text(
                       "Nạn nhân: $victimName",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
-                        color: Color(0xFF1E293B),
+                        color: ColorConstants.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       "SĐT: ${victimPhone ?? 'Không rõ'}",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: Color(0xFF64748B),
+                        color: ColorConstants.textSecondary,
                       ),
                     ),
                   ],
@@ -293,9 +294,9 @@ class RescuerRescueInfoWidget extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               "Mô tả sự cố: $description",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey,
+                color: ColorConstants.textSecondary,
               ),
             ),
           ],

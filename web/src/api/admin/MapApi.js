@@ -9,3 +9,15 @@ export const getSosHeatmap = async () => {
     throw error;
   }
 };
+
+export const searchLocations = async (q, limit = 5) => {
+  try {
+    const response = await axiosJWT.get("/api/map/search", {
+      params: { q, limit },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm địa điểm:", error);
+    throw error;
+  }
+};

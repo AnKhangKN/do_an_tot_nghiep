@@ -31,7 +31,7 @@ const NotFoundPage = () => {
           </Link>
 
           <Link
-            to="/login"
+            to="/admin/login"
             className="inline-flex flex-1 items-center justify-center rounded-2xl border border-gray-200 bg-white dark:bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 transition hover:bg-gray-100"
           >
             Đăng nhập

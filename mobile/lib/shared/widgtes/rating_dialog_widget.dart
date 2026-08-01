@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/utils/app_snackbar.dart';
 import 'package:mobile/features/rating/data/rating_repository.dart';
 
 class RatingDialogWidget extends StatefulWidget {
@@ -116,11 +118,10 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
 
       if (mounted) {
         if (result != null && (result['success'] == true || result['rating_id'] != null || result['data'] != null)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đánh giá ca cứu hộ thành công. Cảm ơn bạn!'),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackBar.show(
+            context,
+            'Đánh giá ca cứu hộ thành công. Cảm ơn bạn!',
+            type: AppSnackBarType.success,
           );
           Navigator.of(context).pop();
           if (widget.onSubmitted != null) {
@@ -164,12 +165,12 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _isReadOnly ? Colors.grey.shade200 : Colors.amber.shade100,
+              color: _isReadOnly ? ColorConstants.bgCanvas : Colors.amber.shade100,
               shape: BoxShape.circle,
             ),
             child: Icon(
               _isReadOnly ? Icons.star_rate_rounded : Icons.star_rounded,
-              color: _isReadOnly ? Colors.grey.shade600 : Colors.amber,
+              color: _isReadOnly ? ColorConstants.textSecondary : Colors.amber,
               size: 36,
             ),
           ),
@@ -184,7 +185,7 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
             _isReadOnly
                 ? 'Bạn đã gửi đánh giá cho ca cứu hộ này'
                 : 'Hãy để lại trải nghiệm của bạn $rescuerText',
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 13, color: ColorConstants.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -209,8 +210,8 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
                   icon: Icon(
                     isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
                     color: isSelected
-                        ? (_isReadOnly ? Colors.grey.shade600 : Colors.amber)
-                        : Colors.grey.shade400,
+                        ? (_isReadOnly ? ColorConstants.textSecondary : Colors.amber)
+                        : ColorConstants.textSecondary,
                     size: 38,
                   ),
                 );
@@ -221,7 +222,7 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
               _getRatingLabel(_selectedRating),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: _isReadOnly ? Colors.grey.shade700 : Colors.amber.shade800,
+                color: _isReadOnly ? ColorConstants.textSecondary : Colors.amber.shade800,
                 fontSize: 15,
               ),
             ),
@@ -251,9 +252,9 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
               readOnly: _isReadOnly,
               decoration: InputDecoration(
                 hintText: 'Nhận xét về thái độ, thời gian có mặt... (không bắt buộc)',
-                hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                hintStyle: TextStyle(fontSize: 13, color: ColorConstants.textSecondary),
                 filled: true,
-                fillColor: _isReadOnly ? Colors.grey.shade100 : Colors.grey.shade100,
+                fillColor: _isReadOnly ? ColorConstants.bgCanvas : ColorConstants.bgCanvas,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -275,7 +276,7 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
       actions: [
         TextButton(
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: Text(_isReadOnly ? 'Đóng' : 'Để sau', style: const TextStyle(color: Colors.grey)),
+          child: Text(_isReadOnly ? 'Đóng' : 'Để sau', style: TextStyle(color: ColorConstants.textSecondary)),
         ),
         if (!_isReadOnly)
           ElevatedButton(
@@ -312,7 +313,7 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade800,
+              color: ColorConstants.textSecondary,
             ),
           ),
         ),
@@ -327,7 +328,7 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
                 padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
                 child: Icon(
                   starIndex <= value ? Icons.star_rounded : Icons.star_outline_rounded,
-                  color: _isReadOnly ? Colors.grey.shade600 : Colors.amber,
+                  color: _isReadOnly ? ColorConstants.textSecondary : Colors.amber,
                   size: 24,
                 ),
               ),

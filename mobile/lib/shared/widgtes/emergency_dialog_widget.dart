@@ -5,6 +5,7 @@ import '../../core/constants/color_constants.dart';
 import '../../core/di/di.dart';
 import '../../core/location/data/location_service.dart';
 import '../../core/session/session_controller.dart';
+import '../../core/utils/app_snackbar.dart';
 
 class EmergencyContactItem {
   final String title;
@@ -113,11 +114,10 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
         _savedEmergencyPhone = phone;
         _isSavingPhone = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã lưu số điện thoại người thân khẩn cấp!'),
-          backgroundColor: ColorConstants.amenityGreen,
-        ),
+      AppSnackBar.show(
+        context,
+        'Đã lưu số điện thoại người thân khẩn cấp!',
+        type: AppSnackBarType.success,
       );
     }
   }

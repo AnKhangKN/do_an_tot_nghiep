@@ -49,7 +49,7 @@ const HeaderComponent = () => {
     dispatch(clearUser());
     dispatch(logout());
 
-    navigate("/login", { replace: true });
+    navigate("/admin/login", { replace: true });
     } catch (error) {
       console.log(error);
     }

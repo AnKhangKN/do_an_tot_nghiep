@@ -245,7 +245,7 @@ class _MyDangerousPointsScreenState extends State<MyDangerousPointsScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: ColorConstants.borderDark,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

@@ -4,15 +4,14 @@ import 'package:mobile/shared/widgtes/banned_dialog_widget.dart';
 import 'package:mobile/shared/widgtes/bottom_nav_bar_widget.dart';
 
 import '../../core/di/di.dart';
-import '../../core/session/app_session.dart';
 import '../../core/session/session_controller.dart';
 
 class MainShell extends StatefulWidget {
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
 
   const MainShell({
     super.key,
-    required this.child,
+    required this.navigationShell,
   });
 
   @override
@@ -20,14 +19,6 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  final List<String> _baseRoutes = [
-    '/map',
-    '/history',
-    '/chat',
-    '/notifications',
-    '/profile',
-  ];
-
   bool _banDialogShown = false;
 
   @override
@@ -58,42 +49,19 @@ class _MainShellState extends State<MainShell> {
     }
   }
 
-  int _calculateCurrentIndex(String location) {
-    if (location == '/rescuer-map' || location == '/map') {
-      return 0;
-    }
-
-    final index = _baseRoutes.indexOf(location);
-
-    return index != -1 ? index : 0;
-  }
-
-  void _onTap(BuildContext context, int index) {
-    if (index == 0) {
-      final isRescuer = getIt<AppSession>().isRescuer;
-
-      context.go(
-        isRescuer ? '/rescuer-map' : '/map',
-      );
-      return;
-    }
-
-    context.go(_baseRoutes[index]);
+  void _onTap(int index) {
+    widget.navigationShell.goBranch(index);
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentLocation =
-        GoRouterState.of(context).matchedLocation;
-
-    final currentIndex =
-    _calculateCurrentIndex(currentLocation);
-
     return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: BottomNavBarWidget(
-        currentIndex: currentIndex,
-        onTap: (index) => _onTap(context, index),
+      body: widget.navigationShell,
+      bottomNavigationBar: RepaintBoundary(
+        child: BottomNavBarWidget(
+          currentIndex: widget.navigationShell.currentIndex,
+          onTap: _onTap,
+        ),
       ),
     );
   }

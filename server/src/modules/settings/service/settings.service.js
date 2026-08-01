@@ -8,7 +8,25 @@ const GROUP_LABELS = {
     geofence: "Cảnh báo Rủi ro & Geofencing",
     ai: "Trí tuệ Nhân tạo (AI)",
     hotline: "Hotline Khẩn cấp & Hệ thống",
+    thesis: "Đồ án, Tác giả & Ứng dụng",
 };
+
+const PUBLIC_KEYS = [
+    "thesis_author_name",
+    "thesis_student_id",
+    "thesis_class",
+    "thesis_school",
+    "thesis_supervisor",
+    "thesis_github_url",
+    "thesis_report_url",
+    "thesis_contact_email",
+    "thesis_contact_phone",
+    "app_apk_url",
+    "hotline_medical",
+    "hotline_fire",
+    "hotline_police",
+    "hotline_emergency",
+];
 
 class SettingsService {
     init = async () => {
@@ -70,6 +88,17 @@ class SettingsService {
         await settingsRepository.updateValues(updates);
         await invalidateSettingsCache();
         return await this.getAllAdmin();
+    };
+
+    getPublicThesis = async () => {
+        const rows = await settingsRepository.getAll();
+        const result = {};
+        rows.forEach((row) => {
+            if (PUBLIC_KEYS.includes(row.setting_key)) {
+                result[row.setting_key] = row.setting_value ?? "";
+            }
+        });
+        return result;
     };
 }
 

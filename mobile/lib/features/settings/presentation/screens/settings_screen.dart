@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/theme/theme_controller.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../providers/settings_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -101,11 +102,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () {
                 if (formKey.currentState!.validate()) {
                   Navigator.pop(dialogContext);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Đổi mật khẩu thành công!'),
-                      backgroundColor: ColorConstants.success,
-                    ),
+                  AppSnackBar.show(
+                    context,
+                    'Đổi mật khẩu thành công!',
+                    type: AppSnackBarType.success,
                   );
                 }
               },

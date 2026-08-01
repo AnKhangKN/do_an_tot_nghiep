@@ -8,7 +8,6 @@ import {
   PiMapPinFill,
   PiChatCircleFill,
   PiGearFill,
-  PiLifebuoyFill,
   PiTrophyFill,
   PiStorefrontFill,
   PiCaretLeftBold,
@@ -91,9 +90,11 @@ const SidebarComponent = () => {
       {/* LOGO & TOGGLE BUTTON */}
       <div className="h-20 flex items-center justify-between px-3.5 border-b border-gray-100">
         <div className="flex items-center">
-          <div className="w-12 h-12 rounded-2xl bg-gray-900 text-white dark:bg-gray-200 dark:text-white flex items-center justify-center shadow-md shrink-0">
-            <PiLifebuoyFill size={24} />
-          </div>
+          <img
+            src="/images/SOS-black.png"
+            alt="Rescue Admin"
+            className="h-12 w-12 shrink-0 rounded-2xl object-contain"
+          />
 
           <div
             className={`flex flex-col transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap ${isCollapsed

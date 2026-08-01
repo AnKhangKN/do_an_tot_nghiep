@@ -1,98 +1,149 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import {
-  PiArrowRight,
-  PiLifebuoyFill,
-  PiMapPinFill,
-  PiShieldCheckFill,
-  PiWarningFill,
-} from "react-icons/pi";
+import React, { useEffect, useRef, useState } from "react";
+import { PiArrowCircleUpFill } from "react-icons/pi";
+import { getPublicThesisInfo } from "@/api/public/PublicApi";
+import HeroSectionComponent from "./components/HeroSectionComponent";
+import StatsSectionComponent from "./components/StatsSectionComponent";
+import FeaturesSectionComponent from "./components/FeaturesSectionComponent";
+import HowItWorksSectionComponent from "./components/HowItWorksSectionComponent";
+import TechStackSectionComponent from "./components/TechStackSectionComponent";
+import ArchitectureSectionComponent from "./components/ArchitectureSectionComponent";
+import EcosystemSectionComponent from "./components/EcosystemSectionComponent";
+import DocumentationSectionComponent from "./components/DocumentationSectionComponent";
+import FooterSectionComponent from "./components/FooterSectionComponent";
+
+const TOTAL = 9;
 
 const StartPage = () => {
+  const [thesisInfo, setThesisInfo] = useState({});
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef(null);
+  const lockedRef = useRef(false);
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    const fetchThesisInfo = async () => {
+      try {
+        const res = await getPublicThesisInfo();
+        setThesisInfo(res?.data || {});
+      } catch (error) {
+        console.error("Fetch thesis info error:", error);
+      }
+    };
+    fetchThesisInfo();
+  }, []);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return undefined;
+
+    const isDesktop = () =>
+      window.matchMedia("(min-width: 1024px) and (pointer: fine)").matches;
+
+    const getSections = () =>
+      Array.from(container.querySelectorAll(":scope > div"));
+
+    const scrollToIndex = (idx) => {
+      const sections = getSections();
+      if (idx < 0 || idx >= sections.length) return;
+      lockedRef.current = true;
+      indexRef.current = idx;
+      setActiveIndex(idx);
+      setShowBackToTop(idx > 0);
+      sections[idx].scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    const onScrollEnd = () => {
+      lockedRef.current = false;
+    };
+
+    const onWheel = (e) => {
+      if (!isDesktop()) return;
+      e.preventDefault();
+      if (lockedRef.current) return;
+      const dir = e.deltaY > 0 ? 1 : -1;
+      const next = Math.max(0, Math.min(TOTAL - 1, indexRef.current + dir));
+      if (next !== indexRef.current) scrollToIndex(next);
+    };
+
+    // Fallback cho browser chưa hỗ trợ scrollend
+    let fallbackTimer = null;
+    const onScroll = () => {
+      setShowBackToTop(container.scrollTop > 100);
+      if (!isDesktop()) return;
+      clearTimeout(fallbackTimer);
+      fallbackTimer = setTimeout(() => {
+        lockedRef.current = false;
+      }, 900);
+    };
+
+    container.addEventListener("wheel", onWheel, { passive: false });
+    container.addEventListener("scrollend", onScrollEnd, { passive: true });
+    container.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener("wheel", onWheel);
+      container.removeEventListener("scrollend", onScrollEnd);
+      container.removeEventListener("scroll", onScroll);
+      clearTimeout(fallbackTimer);
+    };
+  }, []);
+
+  const goToTop = () => {
+    indexRef.current = 0;
+    setActiveIndex(0);
+    setShowBackToTop(false);
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid w-full items-center gap-10 lg:grid-cols-[1fr_0.9fr]">
-          <section>
-            <div className="mb-8 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-md dark:bg-gray-200 dark:text-white">
-                <PiLifebuoyFill size={24} />
-              </div>
+    <div
+      ref={scrollRef}
+      className="h-dvh overflow-y-auto overflow-x-hidden overscroll-none bg-white text-gray-900 dark:bg-gray-50"
+    >
+      {/* Desktop: mỗi section chiếm đúng 1 màn hình h-dvh, animate theo activeIndex */}
+      {/* Mobile: tất cả section xếp dọc cuộn tự nhiên, không bị giới hạn chiều cao */}
 
-              <div>
-                <h1 className="text-lg font-bold">Rescue Admin</h1>
-                <p className="text-xs text-gray-500">Hệ thống quản lý cứu hộ</p>
-              </div>
-            </div>
+      <div className="h-auto lg:h-dvh lg:overflow-hidden">
+        <HeroSectionComponent data={thesisInfo} />
+      </div>
+      <div className="h-auto lg:h-dvh lg:overflow-hidden">
+        <StatsSectionComponent />
+      </div>
+      <div className="h-auto lg:h-dvh lg:overflow-hidden">
+        <FeaturesSectionComponent />
+      </div>
+      <div className="h-auto lg:h-dvh lg:overflow-hidden">
+        <HowItWorksSectionComponent />
+      </div>
+      <div className="h-auto lg:h-dvh lg:overflow-hidden">
+        <TechStackSectionComponent />
+      </div>
+      <div className="h-auto lg:h-dvh lg:overflow-hidden">
+        <ArchitectureSectionComponent />
+      </div>
+      <div className="h-auto lg:h-dvh lg:overflow-hidden">
+        <EcosystemSectionComponent data={thesisInfo} />
+      </div>
+      <div className="h-auto lg:h-dvh lg:overflow-hidden">
+        <DocumentationSectionComponent data={thesisInfo} />
+      </div>
+      <div className="h-auto lg:h-dvh lg:overflow-hidden">
+        <FooterSectionComponent data={thesisInfo} />
+      </div>
 
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white dark:bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600 shadow-sm">
-              <PiShieldCheckFill className="text-blue-500" size={18} />
-              Trung tâm điều phối cứu hộ
-            </div>
-
-            <h2 className="max-w-2xl text-4xl font-bold leading-tight sm:text-5xl">
-              Quản lý sự cố, đội cứu hộ và bản đồ vận hành trong một nơi.
-            </h2>
-
-            <p className="mt-5 max-w-xl text-base leading-7 text-gray-500">
-              Giao diện quản trị dành cho việc theo dõi tình huống, điều phối
-              nhân sự và kiểm soát khu vực nguy hiểm.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300"
-              >
-                Đăng nhập quản trị
-                <PiArrowRight size={18} />
-              </Link>
-
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white dark:bg-gray-100 px-5 py-3 text-sm font-semibold text-gray-800 transition hover:bg-gray-100"
-              >
-                Vào Dashboard
-              </Link>
-            </div>
-          </section>
-
-          <section className="rounded-3xl border border-gray-200 bg-white dark:bg-gray-100 p-5 shadow-sm">
-            <div className="rounded-2xl bg-gray-950 p-5 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400 dark:text-gray-700">Tình trạng hệ thống</p>
-                  <p className="mt-1 text-2xl font-bold">Sẵn sàng</p>
-                </div>
-
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
-                  <PiShieldCheckFill size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                <PiWarningFill className="mb-3 text-amber-500" size={24} />
-                <p className="text-2xl font-bold">24/7</p>
-                <p className="mt-1 text-xs text-gray-500">Giám sát</p>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                <PiMapPinFill className="mb-3 text-blue-500" size={24} />
-                <p className="text-2xl font-bold">Live</p>
-                <p className="mt-1 text-xs text-gray-500">Bản đồ</p>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                <PiLifebuoyFill className="mb-3 text-emerald-500" size={24} />
-                <p className="text-2xl font-bold">Admin</p>
-                <p className="mt-1 text-xs text-gray-500">Điều phối</p>
-              </div>
-            </div>
-          </section>
-        </div>
-      </main>
+      <button
+        type="button"
+        aria-label="Trở về đầu trang"
+        onClick={goToTop}
+        className={`fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30 transition-all duration-300 hover:bg-red-500 ${
+          showBackToTop
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-4 opacity-0"
+        }`}
+      >
+        <PiArrowCircleUpFill size={24} />
+      </button>
     </div>
   );
 };

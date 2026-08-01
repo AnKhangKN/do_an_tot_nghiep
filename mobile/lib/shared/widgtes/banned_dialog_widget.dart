@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:mobile/core/session/session_controller.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 import '../../core/constants/color_constants.dart';
+import '../../core/utils/app_snackbar.dart';
 import '../../features/auth/data/auth_repository.dart';
 
 class BannedDialogWidget extends StatelessWidget {
@@ -227,18 +228,10 @@ class BannedDialogWidget extends StatelessWidget {
                               await GetIt.instance<AuthRepository>().appealBan(email: email, reason: reason);
                               Navigator.of(ctx).pop();
                               if (parentContext.mounted) {
-                                ScaffoldMessenger.of(parentContext).showSnackBar(
-                                  SnackBar(
-                                    content: const Text(
-                                      'Đã gửi yêu cầu kháng cáo thành công!',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    backgroundColor: ColorConstants.success,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
+                                AppSnackBar.show(
+                                  parentContext,
+                                  'Đã gửi yêu cầu kháng cáo thành công!',
+                                  type: AppSnackBarType.success,
                                 );
                               }
                               _handleLogout(parentContext);

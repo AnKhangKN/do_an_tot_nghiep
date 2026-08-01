@@ -5,7 +5,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:mobile/shared/widgtes/user_marker_widget.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/di/di.dart';
 import '../../core/animation/lat_lng_tween.dart';
+import '../../core/theme/theme_controller.dart';
 
 class MapWidget extends StatefulWidget {
   final MapController mapController;
@@ -159,12 +161,20 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
         initialZoom: _initialZoom,
       ),
       children: [
-        TileLayer(
-          urlTemplate: AppConstants.urlTemplateDefault,
-          userAgentPackageName: 'com.example.mobile',
-          tileUpdateTransformer: TileUpdateTransformers.debounce(
-            const Duration(milliseconds: 150),
-          ),
+        ListenableBuilder(
+          listenable: getIt<ThemeController>(),
+          builder: (context, _) {
+            final isDark = getIt<ThemeController>().isDark;
+            return TileLayer(
+              urlTemplate: isDark
+                  ? AppConstants.urlTemplateDark
+                  : AppConstants.urlTemplateDefault,
+              userAgentPackageName: 'com.example.mobile',
+              tileUpdateTransformer: TileUpdateTransformers.debounce(
+                const Duration(milliseconds: 150),
+              ),
+            );
+          },
         ),
         if (widget.polylines != null && widget.polylines!.isNotEmpty)
           PolylineLayer(polylines: widget.polylines!),

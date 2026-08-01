@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/color_constants.dart';
+import '../../../../core/utils/app_snackbar.dart';
 
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
@@ -19,11 +20,10 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
       await launchUrl(launchUri);
     } else {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không thể tự động gọi tới $phoneNumber. Vui lòng bấm máy thủ công.'),
-          backgroundColor: ColorConstants.redRescue,
-        ),
+      AppSnackBar.show(
+        context,
+        'Không thể tự động gọi tới $phoneNumber. Vui lòng bấm máy thủ công.',
+        type: AppSnackBarType.error,
       );
     }
   }

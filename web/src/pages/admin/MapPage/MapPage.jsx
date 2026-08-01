@@ -11,16 +11,26 @@ import L from "leaflet";
 import "leaflet.heat";
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { getSosHeatmap } from "@/api/admin/MapApi";
+import { getSosHeatmap, searchLocations } from "@/api/admin/MapApi";
+import { getApprovedDangerousZones } from "@/api/admin/DangerousZoneApi";
+import { getApprovedAmenitiesPublic } from "@/api/admin/EmergencyAmenityApi";
+import { getRescuersAdmin } from "@/api/admin/RescuerApi";
 import { useSelector } from "react-redux";
 import {
   PiFireFill,
   PiMapPinFill,
   PiSirenFill,
   PiCircleFill,
-  PiWrenchFill,
+  PiHospitalFill,
   PiAmbulanceFill,
   PiWarningFill,
+  PiMagnifyingGlass,
+  PiMapPin,
+  PiX,
+  PiPlus,
+  PiMinus,
+  PiCircleNotch,
+  PiCrosshair,
 } from "react-icons/pi";
 
 // ================= FIX ICON =================
@@ -35,20 +45,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // ================= DATA =================
-const dangerPoints = [
-  { id: 1, position: [10.0452, 105.7469], type: "fire", radius: 200 },
-  { id: 2, position: [10.05, 105.75], type: "accident", radius: 150 },
-];
-
-const repairShops = [
-  { id: 1, position: [10.048, 105.748], name: "Tiệm sửa xe A" },
-  { id: 2, position: [10.043, 105.742], name: "Tiệm sửa xe B" },
-];
-
-const rescuers = [
-  { id: 1, position: [10.046, 105.744], name: "Cứu hộ 1" },
-  { id: 2, position: [10.047, 105.749], name: "Cứu hộ 2" },
-];
+// Dữ liệu thực được fetch từ API trong MapPage component
 
 // ================= ICON =================
 const createIcon = (url) =>
@@ -60,10 +57,30 @@ const createIcon = (url) =>
 const icons = {
   fire: createIcon("https://cdn-icons-png.flaticon.com/512/482/482086.png"),
   accident: createIcon("https://cdn-icons-png.flaticon.com/512/296/296216.png"),
-  repair: createIcon("https://cdn-icons-png.flaticon.com/512/684/684908.png"),
   rescuer: createIcon("https://cdn-icons-png.flaticon.com/512/149/149071.png"),
   sos: createIcon("https://cdn-icons-png.flaticon.com/512/564/564619.png"),
 };
+
+const amenityIcon = L.divIcon({
+  className: "",
+  html: `<div style="width:30px;height:30px;border-radius:50%;background:#dc2626;border:2px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.3)">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff">
+      <rect x="6.5" y="0.5" width="3" height="15" rx="1"/>
+      <rect x="0.5" y="6.5" width="15" height="3" rx="1"/>
+    </svg>
+  </div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+});
+
+const myLocationIcon = L.divIcon({
+  className: "",
+  html: `<div style="width:30px;height:30px;border-radius:50%;background:#2563eb;border:2px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.2);display:flex;align-items:center;justify-content:center">
+    <div style="width:12px;height:12px;border-radius:50%;background:#fff"></div>
+  </div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+});
 
 // ================= HEATMAP LAYER =================
 const HeatmapLayer = ({ points }) => {
@@ -95,10 +112,10 @@ const HeatmapLayer = ({ points }) => {
 const DangerLayer = ({ data }) => (
   <>
     {data.map((item) => (
-      <Marker key={item.id} position={item.position} icon={icons[item.type]}>
+      <Marker key={item.id} position={item.position} icon={icons[item.type] || icons.accident}>
         <Popup>
-          <span className="flex items-center gap-1">
-            <PiWarningFill className="text-red-500" /> {item.type}
+          <span className="flex items-center gap-1 font-medium">
+            <PiWarningFill className="text-red-500" /> {item.name || item.type || "Điểm nguy hiểm"}
           </span>
         </Popup>
       </Marker>
@@ -106,28 +123,43 @@ const DangerLayer = ({ data }) => (
   </>
 );
 
+const dangerLevelRadius = { HIGH: 400, MEDIUM: 250, LOW: 150 };
+const dangerLevelColor = { HIGH: "#dc2626", MEDIUM: "#f59e0b", LOW: "#eab308" };
+
 const DangerZoneLayer = ({ data }) => (
   <>
     {data.map((item) => (
-      <Circle key={item.id} center={item.position} radius={item.radius}>
+      <Circle
+        key={item.id}
+        center={item.position}
+        radius={item.radius}
+        pathOptions={{ color: item.color || "#dc2626", fillOpacity: 0.15 }}
+      >
         <Popup>
-          <span className="flex items-center gap-1">
-            <PiCircleFill className="text-red-500" /> Vùng nguy hiểm
-          </span>
+          <div className="p-1">
+            <span className="flex items-center gap-1 font-medium">
+              <PiCircleFill className="text-red-500" /> {item.name || "Vùng nguy hiểm"}
+            </span>
+            <p className="text-xs text-gray-600 mt-1">Mức độ: <b>{item.dangerLevel || "KHÔNG XÁC ĐỊNH"}</b></p>
+          </div>
         </Popup>
       </Circle>
     ))}
   </>
 );
 
-const RepairLayer = ({ data }) => (
+const AmenityLayer = ({ data }) => (
   <>
     {data.map((item) => (
-      <Marker key={item.id} position={item.position} icon={icons.repair}>
+      <Marker key={item.id} position={item.position} icon={amenityIcon}>
         <Popup>
-          <span className="flex items-center gap-1">
-            <PiWrenchFill className="text-orange-500" /> {item.name}
-          </span>
+          <div className="p-1">
+            <span className="flex items-center gap-1 font-medium">
+              <PiHospitalFill className="text-red-600" /> {item.categoryName || "Tiện ích khẩn cấp"}
+            </span>
+            {item.name && <p className="text-sm text-gray-700 mt-1">{item.name}</p>}
+            {item.phone && <p className="text-xs text-gray-500 mt-1">Điện thoại: {item.phone}</p>}
+          </div>
         </Popup>
       </Marker>
     ))}
@@ -139,14 +171,15 @@ const RescuerLayer = ({ data }) => (
     {data.map((item) => (
       <Marker key={item.id} position={item.position} icon={icons.rescuer}>
         <Popup>
-          <span className="flex items-center gap-1">
-            <PiAmbulanceFill className="text-emerald-600" /> {item.name}
+          <span className="flex items-center gap-1 font-medium">
+            <PiAmbulanceFill className="text-emerald-600" /> {item.name || "Cứu hộ viên"}
           </span>
         </Popup>
       </Marker>
     ))}
   </>
 );
+
 
 const SosMarkerLayer = ({ points }) => (
   <>
@@ -171,13 +204,12 @@ const SosMarkerLayer = ({ points }) => (
 );
 
 // ================= SEARCH =================
-const removeVietnameseTones = (str) =>
-  str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
 const SearchBox = ({ setLocation }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [picked, setPicked] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const q = query.trim();
@@ -189,57 +221,15 @@ const SearchBox = ({ setLocation }) => {
 
     const delay = setTimeout(async () => {
       setLoading(true);
+      setError("");
 
       try {
-        const clean = removeVietnameseTones(q);
-        const keyword = encodeURIComponent(clean + " Vietnam");
-
-        // ===== PHOTON =====
-        const res = await fetch(
-          `https://photon.komoot.io/api/?q=${keyword}&limit=5&bbox=102,8,110,24`,
-          {
-            headers: {
-              "User-Agent": "rescue-app",
-            },
-          }
-        );
-
-        if (!res.ok) throw new Error("Photon lỗi");
-
-        const data = await res.json();
-
-        const filtered = (data.features || []).filter(
-          (item) => item.properties.countrycode === "VN"
-        );
-
-        setResults(filtered);
+        const res = await searchLocations(q, 5);
+        setResults(Array.isArray(res?.data) ? res.data : []);
       } catch (err) {
-        console.log(err);
-        try {
-          const keyword = encodeURIComponent(q + " Vietnam");
-
-          const res2 = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${keyword}&limit=5&countrycodes=vn`
-          );
-
-          const data2 = await res2.json();
-
-          const formatted = data2.map((item) => ({
-            geometry: {
-              coordinates: [parseFloat(item.lon), parseFloat(item.lat)],
-            },
-            properties: {
-              name: item.display_name,
-              city: "",
-              country: "Vietnam",
-            },
-          }));
-
-          setResults(formatted);
-        } catch (error) {
-          console.log(error);
-          setResults([]);
-        }
+        console.error("Lỗi khi tìm kiếm địa điểm:", err);
+        setError(err?.response?.data?.message || "Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại!");
+        setResults([]);
       } finally {
         setLoading(false);
       }
@@ -248,47 +238,184 @@ const SearchBox = ({ setLocation }) => {
     return () => clearTimeout(delay);
   }, [query]);
 
+  const showEmptyState = !loading && !picked && !error && query.trim().length >= 3 && results.length === 0;
+
   return (
-    <div className="absolute top-3 left-3 z-1000 bg-white dark:bg-gray-100 p-3 rounded shadow w-[320px]">
-      <input
-        className="border p-2 w-full"
-        value={query}
-        onChange={(e) => {
-          const value = e.target.value;
-          setQuery(value);
-          if (!value) setResults([]);
-        }}
-        placeholder="Nhập địa chỉ tại Việt Nam..."
-      />
-
-      <div className="mt-2 max-h-[200px] overflow-auto">
-        {loading && <div className="p-2 text-gray-500">Đang tìm...</div>}
-
-        {!loading && results.length === 0 && query.length >= 3 && (
-          <div className="p-2 text-gray-500">Không tìm thấy</div>
+    <div className="absolute top-4 left-4 z-[1000] w-[320px] bg-white dark:bg-gray-100 border border-gray-200 shadow-md rounded-2xl overflow-hidden">
+      <div className="relative flex items-center">
+        <PiMagnifyingGlass className="absolute left-4 text-gray-400 pointer-events-none" size={18} />
+        <input
+          className="w-full py-3 pl-11 pr-12 bg-transparent text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+          value={query}
+          onChange={(e) => {
+            const value = e.target.value;
+            setQuery(value);
+            setPicked(false);
+            setError("");
+            if (!value) setResults([]);
+          }}
+          placeholder="Tìm địa điểm tại Việt Nam..."
+        />
+        {query && (
+          <button
+            type="button"
+            aria-label="Xóa tìm kiếm"
+            onClick={() => {
+              setQuery("");
+              setPicked(false);
+              setError("");
+              setResults([]);
+            }}
+            className="absolute right-2 flex items-center justify-center w-8 h-8 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition-colors"
+          >
+            <PiX size={16} />
+          </button>
         )}
+      </div>
 
-        {results.map((item) => {
-          const [lon, lat] = item.geometry.coordinates;
+      {loading && (
+        <div className="flex items-center gap-2 px-4 py-3 text-sm text-gray-500 border-t border-gray-200">
+          <PiCircleNotch size={16} className="animate-spin text-gray-400" />
+          Đang tìm kiếm...
+        </div>
+      )}
 
-          return (
-            <div
-              key={item.properties.osm_id || Math.random()}
+      {error && (
+        <div className="px-4 py-3 text-sm text-red-600 border-t border-gray-200">
+          {error}
+        </div>
+      )}
+
+      {showEmptyState && (
+        <div className="px-4 py-3 text-sm text-gray-500 border-t border-gray-200">
+          Không tìm thấy địa điểm nào
+        </div>
+      )}
+
+      {results.length > 0 && (
+        <div className="max-h-60 overflow-y-auto border-t border-gray-200">
+          {results.map((item) => (
+            <button
+              key={`${item.lat}_${item.lng}`}
+              type="button"
               onClick={() => {
-                setLocation([lat, lon]);
-                setQuery(item.properties.name || "");
+                setLocation([item.lat, item.lng]);
+                setQuery(item.name || "");
+                setPicked(true);
                 setResults([]);
               }}
-              className="p-2 hover:bg-gray-200 cursor-pointer text-sm"
+              className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors"
             >
-              <b>{item.properties.name || "Không tên"}</b>
-              <br />
-              <small>
-                {item.properties.city || ""}, {item.properties.country || ""}
-              </small>
-            </div>
-          );
-        })}
+              <PiMapPin className="mt-0.5 shrink-0 text-gray-400" size={18} />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-gray-900 truncate">
+                  {item.name || "Không tên"}
+                </span>
+                <span className="block text-xs text-gray-500 truncate">
+                  {item.city || ""}, {item.country || ""}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ================= CUSTOM MAP CONTROLS =================
+const MyLocationMarker = ({ position }) => {
+  if (!position) return null;
+
+  return (
+    <Marker position={position} icon={myLocationIcon}>
+      <Popup>
+        <span className="flex items-center gap-1">
+          <PiCrosshair className="text-blue-600" /> Vị trí của bạn
+        </span>
+      </Popup>
+    </Marker>
+  );
+};
+
+const MapControls = ({ onLocate }) => {
+  const map = useMap();
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState("");
+
+  useEffect(() => {
+    if (!locateError) return undefined;
+    const timer = setTimeout(() => setLocateError(""), 4000);
+    return () => clearTimeout(timer);
+  }, [locateError]);
+
+  const handleLocate = () => {
+    if (!("geolocation" in navigator)) {
+      setLocateError("Trình duyệt không hỗ trợ định vị.");
+      return;
+    }
+
+    setLocating(true);
+    setLocateError("");
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = [pos.coords.latitude, pos.coords.longitude];
+        onLocate(coords);
+        map.flyTo(coords, 15);
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocateError("Bạn đã từ chối quyền truy cập vị trí.");
+        } else {
+          setLocateError("Không thể lấy vị trí hiện tại.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  return (
+    <div className="absolute bottom-4 right-4 z-[1000] flex flex-col items-end gap-2">
+      {locateError && (
+        <div className="bg-white dark:bg-gray-100 border border-gray-200 shadow-md rounded-xl px-3 py-2 text-xs text-red-600 max-w-[220px]">
+          {locateError}
+        </div>
+      )}
+
+      <div className="flex flex-col bg-white dark:bg-gray-100 border border-gray-200 shadow-md rounded-2xl overflow-hidden">
+        <button
+          type="button"
+          aria-label="Đến vị trí của tôi"
+          onClick={handleLocate}
+          className="flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-900 hover:text-white transition-colors"
+        >
+          {locating ? (
+            <PiCircleNotch size={18} className="animate-spin" />
+          ) : (
+            <PiCrosshair size={18} weight="bold" />
+          )}
+        </button>
+        <div className="h-px bg-gray-200" />
+        <button
+          type="button"
+          aria-label="Phóng to bản đồ"
+          onClick={() => map.zoomIn()}
+          className="flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-900 hover:text-white transition-colors"
+        >
+          <PiPlus size={18} weight="bold" />
+        </button>
+        <div className="h-px bg-gray-200" />
+        <button
+          type="button"
+          aria-label="Thu nhỏ bản đồ"
+          onClick={() => map.zoomOut()}
+          className="flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-900 hover:text-white transition-colors"
+        >
+          <PiMinus size={18} weight="bold" />
+        </button>
       </div>
     </div>
   );
@@ -341,10 +468,15 @@ const MapPage = () => {
   const center = [10.0452, 105.7469];
   const [location, setLocation] = useState(null);
   const [heatmapPoints, setHeatmapPoints] = useState([]);
+  const [dangerPoints, setDangerPoints] = useState([]);
+  const [amenities, setAmenities] = useState([]);
+  const [rescuers, setRescuers] = useState([]);
+  const [myLocation, setMyLocation] = useState(null);
   const isDark = useSelector((state) => state.theme.isDark);
 
   useEffect(() => {
-    const fetchHeatmapData = async () => {
+    const fetchMapData = async () => {
+      // 1. Fetch Heatmap
       try {
         const res = await getSosHeatmap();
         if (res && res.data) {
@@ -353,9 +485,73 @@ const MapPage = () => {
       } catch (err) {
         console.error("Lỗi khi tải dữ liệu heatmap điểm nóng:", err);
       }
+
+      // 2. Fetch Dangerous Points
+      try {
+        const res = await getApprovedDangerousZones();
+        if (res && res.data && Array.isArray(res.data)) {
+          const mappedPoints = res.data
+            .filter((item) => item.latitude && item.longitude)
+            .map((item) => {
+              const dangerLevel = (item.dangerLevel || "LOW").toUpperCase();
+              return {
+                id: item.dangerousPointId || item.id,
+                position: [parseFloat(item.latitude), parseFloat(item.longitude)],
+                dangerLevel,
+                type: dangerLevel === "HIGH" ? "fire" : "accident",
+                name: item.zoneName || item.address || "Điểm nguy hiểm",
+                radius: dangerLevelRadius[dangerLevel] || 200,
+                color: dangerLevelColor[dangerLevel] || "#dc2626",
+              };
+            });
+          setDangerPoints(mappedPoints);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải danh sách điểm nguy hiểm:", err);
+      }
+
+      // 3. Fetch Emergency Amenities
+      try {
+        const res = await getApprovedAmenitiesPublic();
+        if (res && res.data && Array.isArray(res.data)) {
+          const mappedAmenities = res.data
+            .filter((item) => item.latitude && item.longitude)
+            .map((item) => ({
+              id: item.amenityId || item.id,
+              position: [parseFloat(item.latitude), parseFloat(item.longitude)],
+              name: item.name || item.categoryName || "Tiện ích khẩn cấp",
+              categoryName: item.categoryName || "",
+              phone: item.phone || "",
+            }));
+          setAmenities(mappedAmenities);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải danh sách tiện ích khẩn cấp:", err);
+      }
+
+      // 4. Fetch Rescuers
+      try {
+        const res = await getRescuersAdmin(1, 100);
+        const rescuerList = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : [];
+        if (rescuerList.length > 0) {
+          const mappedRescuers = rescuerList
+            .filter((item) => (item.latitude || item.lat) && (item.longitude || item.lng))
+            .map((item) => ({
+              id: item.rescuerId || item.userId || item.id,
+              position: [
+                parseFloat(item.latitude || item.lat),
+                parseFloat(item.longitude || item.lng),
+              ],
+              name: item.fullName || item.name || "Cứu hộ viên",
+            }));
+          setRescuers(mappedRescuers);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải danh sách cứu hộ viên:", err);
+      }
     };
 
-    fetchHeatmapData();
+    fetchMapData();
   }, []);
 
   const activeHotspotCount = heatmapPoints.filter((p) =>
@@ -366,7 +562,7 @@ const MapPage = () => {
     <div className="w-full h-146 relative">
       <SearchBox setLocation={setLocation} />
 
-      <MapContainer center={center} zoom={13} className="w-full h-full">
+      <MapContainer center={center} zoom={13} zoomControl={false} className="w-full h-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a> contributors'
           url={
@@ -378,7 +574,9 @@ const MapPage = () => {
         />
 
         <FlyToLocation location={location} />
+        <MyLocationMarker position={myLocation} />
         <AutoFitHeatmap points={heatmapPoints} />
+        <MapControls onLocate={setMyLocation} />
 
         <LayersControl position="topright">
           <LayersControl.Overlay checked name={<span className="flex items-center gap-1"><PiFireFill className="text-red-500" /> Điểm nóng tai nạn (Heatmap)</span>}>
@@ -397,8 +595,8 @@ const MapPage = () => {
             <DangerZoneLayer data={dangerPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiWrenchFill className="text-orange-500" /> Khu sửa xe</span>}>
-            <RepairLayer data={repairShops} />
+          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiHospitalFill className="text-red-600" /> Tiện ích khẩn cấp</span>}>
+            <AmenityLayer data={amenities} />
           </LayersControl.Overlay>
 
           <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiAmbulanceFill className="text-emerald-600" /> Cứu hộ</span>}>
@@ -418,6 +616,14 @@ const MapPage = () => {
         <div className="h-4 w-px bg-gray-200" />
         <div>
           Đang xử lý: <b className="text-amber-600">{activeHotspotCount}</b>
+        </div>
+        <div className="h-4 w-px bg-gray-200" />
+        <div>
+          Điểm nguy hiểm đã duyệt: <b className="text-red-600">{dangerPoints.length}</b>
+        </div>
+        <div className="h-4 w-px bg-gray-200" />
+        <div>
+          Tiện ích khẩn cấp: <b className="text-emerald-600">{amenities.length}</b>
         </div>
       </div>
     </div>

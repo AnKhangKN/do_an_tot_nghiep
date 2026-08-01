@@ -16,6 +16,8 @@ import {
   PiToggleLeftFill,
   PiToggleRightFill,
   PiListPlusFill,
+  PiStudentFill,
+  PiLinkSimple,
 } from "react-icons/pi";
 import { getSystemSettings, updateSystemSettings } from "@/api/admin/SettingApi";
 
@@ -50,6 +52,18 @@ const DEFAULT_FORM_VALUES = {
   hotline_fire: "114",
   hotline_police: "113",
   hotline_emergency: "112",
+
+  // Đồ án tốt nghiệp
+  thesis_author_name: "",
+  thesis_student_id: "",
+  thesis_class: "",
+  thesis_school: "",
+  thesis_supervisor: "",
+  thesis_github_url: "",
+  thesis_report_url: "",
+  thesis_contact_email: "",
+  thesis_contact_phone: "",
+  app_apk_url: "",
 };
 
 const SettingPage = () => {
@@ -127,21 +141,20 @@ const SettingPage = () => {
         <button
           type="button"
           onClick={() => handleChange(key, isChecked ? "false" : "true")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-xs transition-all ${
-            isChecked
-              ? "bg-gray-900 text-white shadow-sm hover:bg-gray-800"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
+          className={` flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-xs transition-all ${isChecked
+            ? "dark:bg-gray-100 bg-gray-900 text-white shadow-sm dark:hover:bg-gray-200 hover:bg-gray-800"
+            : "dark:bg-gray-100 bg-gray-200 text-gray-700 dark:hover:bg-gray-200 hover:bg-gray-300"
+            }`}
         >
           {isChecked ? (
             <>
               <PiToggleRightFill size={22} className="text-emerald-400" />
-              <span>Đang BẬT</span>
+              <span className="text-gray-100 dark:text-white">Đang BẬT</span>
             </>
           ) : (
             <>
               <PiToggleLeftFill size={22} className="text-gray-400" />
-              <span>Đang TẮT</span>
+              <span className="text-gray-100 dark:text-white">Đang TẮT</span>
             </>
           )}
         </button>
@@ -161,7 +174,7 @@ const SettingPage = () => {
             type={type}
             value={formValues[key] ?? ""}
             onChange={(e) => handleChange(key, e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all pr-12 font-medium"
+            className="w-full px-4 py-3 rounded-xl dark:bg-gray-200 dark:border-gray-100 dark:text-white bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all pr-12 font-medium"
             placeholder="Nhập giá trị..."
           />
           {unit && (
@@ -184,7 +197,28 @@ const SettingPage = () => {
           value={formValues[key] ?? ""}
           onChange={(e) => handleChange(key, e.target.value)}
           placeholder={placeholder}
-          className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all leading-relaxed font-medium"
+          className="dark:bg-gray-200 dark:border-gray-100 dark:text-white w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all leading-relaxed font-medium"
+        />
+      </div>
+    );
+  };
+
+  const renderLinkField = (key, label, desc, placeholder = "") => {
+    return (
+      <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all flex flex-col justify-between">
+        <div>
+          <label className="block font-semibold text-gray-900 text-sm mb-1 flex items-center gap-2">
+            <PiLinkSimple className="text-gray-400" size={15} />
+            {label}
+          </label>
+          {desc && <p className="text-xs text-gray-500 mb-3 leading-relaxed">{desc}</p>}
+        </div>
+        <input
+          type="url"
+          value={formValues[key] ?? ""}
+          onChange={(e) => handleChange(key, e.target.value)}
+          placeholder={placeholder || "https://..."}
+          className="mt-2 w-full px-4 py-3 rounded-xl dark:bg-gray-200 dark:border-gray-100 dark:text-white bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all font-medium"
         />
       </div>
     );
@@ -195,13 +229,12 @@ const SettingPage = () => {
       {/* Toast Notification */}
       {toastMessage && (
         <div
-          className={`fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-xl border transition-all animate-bounce ${
-            toastMessage.type === "error"
-              ? "bg-red-900 text-white border-red-800"
-              : toastMessage.type === "info"
+          className={`fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-xl border transition-all animate-bounce ${toastMessage.type === "error"
+            ? "bg-red-900 text-white border-red-800"
+            : toastMessage.type === "info"
               ? "bg-blue-900 text-white border-blue-800"
               : "bg-gray-900 text-white border-gray-800"
-          }`}
+            }`}
         >
           {toastMessage.type === "error" ? (
             <PiWarningBold className="text-xl text-red-400 shrink-0" />
@@ -213,7 +246,7 @@ const SettingPage = () => {
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
+      <div className="dark:bg-gray-200 dark:text-white flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center text-white shadow-md">
             <PiGearFill size={26} />
@@ -239,24 +272,23 @@ const SettingPage = () => {
             type="button"
             onClick={handleSave}
             disabled={saving || loading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gray-900 text-white font-semibold text-xs hover:bg-gray-800 transition-all shadow-md disabled:opacity-50"
+            className="dark:hover:bg-gray-200 flex items-center gap-2 px-5 py-2.5 rounded-2xl dark:bg-gray-100 bg-gray-900 dark:text-white font-semibold text-xs hover:bg-gray-800 transition-all shadow-md disabled:opacity-50"
           >
-            <PiCheckBold size={16} className="text-emerald-400" />
-            <span>{saving ? "Đang lưu..." : "Lưu Cấu Hình"}</span>
+            <PiCheckBold size={16} className="dark:text-emerald-400 text-emerald-400" />
+            <span className="dark:text-white text-white">{saving ? "Đang lưu..." : "Lưu Cấu Hình"}</span>
           </button>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 bg-gray-100 p-1.5 rounded-2xl border border-gray-200">
+      <div className="dark:bg-gray-200 dark:text-white flex flex-wrap items-center gap-2 bg-gray-100 p-1.5 rounded-2xl border border-gray-200">
         <button
           type="button"
           onClick={() => setActiveTab("dispatch")}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${
-            activeTab === "dispatch"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-          }`}
+          className={`dark:hover:bg-gray-100 flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${activeTab === "dispatch"
+            ? "dark:bg-gray-100 bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+            }`}
         >
           <PiSirenFill size={18} className={activeTab === "dispatch" ? "text-red-500" : "text-gray-400"} />
           <span>1. Điều phối & Ca SOS</span>
@@ -265,11 +297,10 @@ const SettingPage = () => {
         <button
           type="button"
           onClick={() => setActiveTab("geofence")}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${
-            activeTab === "geofence"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-          }`}
+          className={`dark:hover:bg-gray-100 flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${activeTab === "geofence"
+            ? "dark:bg-gray-100 bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+            }`}
         >
           <PiWarningFill size={18} className={activeTab === "geofence" ? "text-amber-500" : "text-gray-400"} />
           <span>2. Cảnh báo & Geofencing</span>
@@ -278,11 +309,10 @@ const SettingPage = () => {
         <button
           type="button"
           onClick={() => setActiveTab("ai")}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${
-            activeTab === "ai"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-          }`}
+          className={`dark:hover:bg-gray-100 flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${activeTab === "ai"
+            ? "dark:bg-gray-100 bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+            }`}
         >
           <PiRobotFill size={18} className={activeTab === "ai" ? "text-indigo-500" : "text-gray-400"} />
           <span>3. AI & Kiểm duyệt</span>
@@ -291,20 +321,31 @@ const SettingPage = () => {
         <button
           type="button"
           onClick={() => setActiveTab("hotline")}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${
-            activeTab === "hotline"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-          }`}
+          className={`dark:hover:bg-gray-100 flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${activeTab === "hotline"
+            ? "dark:bg-gray-100 bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+            }`}
         >
           <PiPhoneCallFill size={18} className={activeTab === "hotline" ? "text-emerald-500" : "text-gray-400"} />
           <span>4. Hotline & Hệ thống</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("thesis")}
+          className={`dark:hover:bg-gray-100 flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${activeTab === "thesis"
+            ? "dark:bg-gray-100 bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+            }`}
+        >
+          <PiStudentFill size={18} className={activeTab === "thesis" ? "text-blue-500" : "text-gray-400"} />
+          <span>5. Đồ án, Tác giả & Ứng dụng</span>
         </button>
       </div>
 
       {/* Main Content Area */}
       {loading ? (
-        <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
+        <div className="dark:bg-gray-200 dark:text-white bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
           <div className="h-6 bg-gray-200 rounded-lg w-1/4 animate-pulse"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="h-24 bg-gray-100 rounded-2xl animate-pulse"></div>
@@ -314,7 +355,7 @@ const SettingPage = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-200 shadow-sm">
+        <div className="dark:bg-gray-200 dark:text-white bg-white p-6 md:p-8 rounded-3xl border border-gray-200 shadow-sm">
           {/* TAB 1: DISPATCH & SOS */}
           {activeTab === "dispatch" && (
             <div className="space-y-6">
@@ -525,6 +566,109 @@ const SettingPage = () => {
                   "Số điện thoại tổng đài cứu nạn khẩn cấp 24/7",
                   "",
                   "text"
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: THESIS & APP */}
+          {activeTab === "thesis" && (
+            <div className="space-y-6">
+              <div className="border-b border-gray-100 pb-4">
+                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <PiStudentFill className="text-blue-500" />
+                  <span>Thông tin Đồ án tốt nghiệp, Tác giả & Tải ứng dụng</span>
+                </h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  Thông tin này hiển thị công khai trên trang giới thiệu (Landing Page) tại đường dẫn gốc của Website
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderInputField(
+                  "thesis_author_name",
+                  "Tên sinh viên thực hiện",
+                  "Họ tên đầy đủ của tác giả đồ án tốt nghiệp",
+                  "",
+                  "text"
+                )}
+
+                {renderInputField(
+                  "thesis_student_id",
+                  "Mã số sinh viên",
+                  "Mã số sinh viên (MSSV)",
+                  "",
+                  "text"
+                )}
+
+                {renderInputField(
+                  "thesis_class",
+                  "Lớp",
+                  "Lớp học của sinh viên",
+                  "",
+                  "text"
+                )}
+
+                {renderInputField(
+                  "thesis_school",
+                  "Trường",
+                  "Tên trường đại học/cao đẳng",
+                  "",
+                  "text"
+                )}
+
+                {renderInputField(
+                  "thesis_supervisor",
+                  "Giảng viên hướng dẫn",
+                  "Tên giảng viên hướng dẫn đồ án",
+                  "",
+                  "text"
+                )}
+
+                {renderInputField(
+                  "thesis_contact_email",
+                  "Email liên hệ",
+                  "Email để liên hệ về dự án",
+                  "",
+                  "email"
+                )}
+
+                {renderInputField(
+                  "thesis_contact_phone",
+                  "Số điện thoại liên hệ",
+                  "Số điện thoại liên hệ về dự án",
+                  "",
+                  "text"
+                )}
+              </div>
+
+              <div className="border-b border-gray-100 pb-4 pt-2">
+                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <PiLinkSimple className="text-gray-500" size={16} />
+                  <span>Liên kết & Tải ứng dụng</span>
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderLinkField(
+                  "thesis_github_url",
+                  "Link Source code (GitHub)",
+                  "Đường dẫn kho mã nguồn dự án trên GitHub",
+                  "https://github.com/..."
+                )}
+
+                {renderLinkField(
+                  "thesis_report_url",
+                  "Link Báo cáo PDF",
+                  "Đường dẫn file báo cáo đồ án tốt nghiệp (PDF)",
+                  "https://..."
+                )}
+
+                {renderLinkField(
+                  "app_apk_url",
+                  "Link tải App (APK)",
+                  "Đường dẫn file APK tải về (Google Drive, Mediafire...). Được dùng cho nút 'Tải ứng dụng Mobile' trên trang giới thiệu",
+                  "https://..."
                 )}
               </div>
             </div>

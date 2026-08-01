@@ -13,15 +13,19 @@ const ratingRoutes = require("@/modules/rating/routes/rating.route")
 const emergencyAmenityRoutes = require("@/modules/emergency_amenities/routes/emergency_amenity.route")
 const aiModerationRoutes = require("@/modules/ai_moderation/routes/ai_moderation.routes")
 const appealRoutes = require("@/modules/appeal/routes/appeal.route")
+const mapRoutes = require("@/modules/map/routes/map.route")
 
 const adminRoutes = require("@/modules/admin/routes/admin.route")
 const settingsRoutes = require("@/modules/settings/routes/settings.route")
+const settingsPublicRoutes = require("@/modules/settings/routes/settings.public.route")
 
 route.use("/auth", authRoutes)
 
 route.use("/admin", adminRoutes)
 
 route.use("/admin/settings", settingsRoutes)
+
+route.use("/public/settings", settingsPublicRoutes)
 
 route.use("/users", userRoutes)
 
@@ -45,5 +49,7 @@ route.use("/emergency-amenities", emergencyAmenityRoutes)
 
 route.use("/ai-moderation", aiModerationRoutes)
 route.use(appealRoutes)
+
+route.use("/map", mapRoutes)
 
 module.exports = route;

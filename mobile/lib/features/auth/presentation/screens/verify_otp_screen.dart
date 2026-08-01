@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../providers/auth_provider.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
@@ -114,11 +115,10 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     if (!success) return;
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Xác thực Email thành công! Đang tự động đăng nhập..."),
-        backgroundColor: Colors.green,
-      ),
+    AppSnackBar.show(
+      context,
+      "Xác thực Email thành công! Đang tự động đăng nhập...",
+      type: AppSnackBarType.success,
     );
 
     // Tự động cấp Token và chuyển sang màn hình chính
@@ -132,11 +132,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     final success = await authProvider.resendOtp(widget.email);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Đã gửi lại mã OTP 6 số mới tới Email!"),
-          backgroundColor: ColorConstants.primary,
-        ),
+      AppSnackBar.show(
+        context,
+        "Đã gửi lại mã OTP 6 số mới tới Email!",
       );
       _startExpirationTimer();
       _startResendCooldownTimer();
@@ -148,6 +146,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: ColorConstants.backgroundLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,

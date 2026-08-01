@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/location/data/location_service.dart';
 import '../../../../core/session/session_controller.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../data/models/emergency_amenity_model.dart';
 import '../providers/amenity_provider.dart';
 
@@ -41,11 +42,10 @@ class AmenityDetailBottomSheet extends StatelessWidget {
       Navigator.pop(context);
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vui lòng bật định vị GPS để vẽ tuyến đường chỉ đường!'),
-            backgroundColor: Colors.orange,
-          ),
+        AppSnackBar.show(
+          context,
+          'Vui lòng bật định vị GPS để vẽ tuyến đường chỉ đường!',
+          type: AppSnackBarType.warning,
         );
       }
     }
@@ -134,9 +134,9 @@ class AmenityDetailBottomSheet extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Chọn lý do báo cáo để Admin kiểm tra và tạm dừng hiển thị nếu có vi phạm:',
-                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                  style: TextStyle(fontSize: 12, color: ColorConstants.textSecondary),
                 ),
                 const SizedBox(height: 12),
                 RadioListTile<String>(
@@ -175,7 +175,7 @@ class AmenityDetailBottomSheet extends StatelessWidget {
                     hintText: 'Nhập ghi chú chi tiết (Không bắt buộc)...',
                     hintStyle: const TextStyle(fontSize: 12),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: ColorConstants.bgCanvas,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -188,7 +188,7 @@ class AmenityDetailBottomSheet extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+              child: Text('Hủy', style: TextStyle(color: ColorConstants.textSecondary)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -201,15 +201,14 @@ class AmenityDetailBottomSheet extends StatelessWidget {
 
                 if (dialogCtx.mounted) {
                   Navigator.pop(dialogCtx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? 'Cảm ơn phản hồi của bạn! Admin sẽ kiểm tra điểm tiện ích này.'
-                            : 'Gửi báo cáo thất bại. Vui lòng thử lại sau!',
-                      ),
-                      backgroundColor: success ? ColorConstants.success : ColorConstants.redRescue,
-                    ),
+                  AppSnackBar.show(
+                    context,
+                    success
+                        ? 'Cảm ơn phản hồi của bạn! Admin sẽ kiểm tra điểm tiện ích này.'
+                        : 'Gửi báo cáo thất bại. Vui lòng thử lại sau!',
+                    type: success
+                        ? AppSnackBarType.success
+                        : AppSnackBarType.error,
                   );
                 }
               },
@@ -250,7 +249,7 @@ class AmenityDetailBottomSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: ColorConstants.borderDark,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

@@ -107,3 +107,16 @@ export const mergeAmenitiesAdmin = async (primaryAmenityId, duplicateAmenityId) 
     }
 };
 
+export const getApprovedAmenitiesPublic = async (amenityCategoryId = '') => {
+    try {
+        const response = await axiosJWT.get('/api/emergency-amenities/approved', {
+            params: { amenityCategoryId }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Get approved amenities public error:", error);
+        throw error;
+    }
+};
+
+

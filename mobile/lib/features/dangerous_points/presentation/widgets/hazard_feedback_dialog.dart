@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/dangerous_points/data/dangerous_point_repository.dart';
 import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/utils/app_snackbar.dart';
 
 class HazardFeedbackDialog extends StatefulWidget {
   final String dangerousPointId;
@@ -59,11 +60,10 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
 
       if (mounted) {
         Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cảm ơn bạn! Đã gửi phản hồi xác minh thành công.'),
-            backgroundColor: ColorConstants.amenityGreen,
-          ),
+        AppSnackBar.show(
+          context,
+          'Cảm ơn bạn! Đã gửi phản hồi xác minh thành công.',
+          type: AppSnackBarType.success,
         );
       }
     } catch (e) {
@@ -77,11 +77,10 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMsg),
-            backgroundColor: ColorConstants.danger,
-          ),
+        AppSnackBar.show(
+          context,
+          errorMsg,
+          type: AppSnackBarType.error,
         );
       }
     } finally {
@@ -154,8 +153,8 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
     final viewInsets = MediaQuery.of(context).viewInsets;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
@@ -177,7 +176,7 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFCBD5E1),
+                  color: ColorConstants.borderDark,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -203,19 +202,19 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Phản hồi & Xác minh',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                          color: ColorConstants.slateDark,
                         ),
                       ),
                       Text(
                         widget.zoneName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF64748B),
+                          color: ColorConstants.textSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -265,9 +264,9 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
             const SizedBox(height: 14),
 
             // Comment Field
-            const Text(
+            Text(
               'Ghi chú bổ sung (không bắt buộc):',
-              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: ColorConstants.textSecondary),
             ),
             const SizedBox(height: 6),
             TextField(
@@ -276,13 +275,13 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
               style: const TextStyle(fontSize: 13),
               decoration: InputDecoration(
                 hintText: 'Nhập chi tiết tình hình thực tế hiện tại...',
-                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                hintStyle: TextStyle(color: ColorConstants.textMuted, fontSize: 12),
                 contentPadding: const EdgeInsets.all(12),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: ColorConstants.bgCanvas,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: ColorConstants.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -298,17 +297,17 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFCBD5E1)),
-                      backgroundColor: const Color(0xFFF8FAFC),
+                      side: BorderSide(color: ColorConstants.borderDark),
+                      backgroundColor: ColorConstants.bgCanvas,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(false),
-                    child: const Text(
+                    child: Text(
                       'Hủy',
-                      style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.bold),
+                      style: TextStyle(color: ColorConstants.textSecondary, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

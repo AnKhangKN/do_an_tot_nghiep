@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../core/di/di.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../data/rescuer_repository.dart';
 import '../../models/sos_offer_model.dart';
 import '../providers/sos_provider.dart';
@@ -34,23 +35,20 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           _onDetect(capture);
         } else {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Không tìm thấy mã QR cứu hộ hợp lệ trong ảnh!'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
-            ),
+          AppSnackBar.show(
+            context,
+            'Không tìm thấy mã QR cứu hộ hợp lệ trong ảnh!',
+            type: AppSnackBarType.warning,
           );
         }
       }
     } catch (e) {
       debugPrint("❌ [QR SCANNER] Lỗi đọc QR từ thư viện ảnh: $e");
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Không thể đọc hình ảnh. Vui lòng chọn ảnh khác!'),
-          backgroundColor: Colors.red.shade700,
-        ),
+      AppSnackBar.show(
+        context,
+        'Không thể đọc hình ảnh. Vui lòng chọn ảnh khác!',
+        type: AppSnackBarType.error,
       );
     }
   }
@@ -103,15 +101,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
       if (sosRequestId == null || sosRequestId.isEmpty) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Mã QR sai!\nRaw: ${cleanValue.length > 60 ? cleanValue.substring(0, 60) + "..." : cleanValue}',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-            ),
-            backgroundColor: Colors.red.shade700,
-            duration: const Duration(seconds: 5),
-          ),
+        AppSnackBar.show(
+          context,
+          'Mã QR sai!\nRaw: ${cleanValue.length > 60 ? cleanValue.substring(0, 60) + "..." : cleanValue}',
+          type: AppSnackBarType.error,
+          duration: const Duration(seconds: 5),
         );
         return;
       }
@@ -143,15 +137,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         getIt<SOSProvider>().startRescue(sosOffer, victimMap);
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result['message'] ?? 'Tiếp nhận ca cứu hộ thành công!',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: Colors.green.shade700,
-          duration: const Duration(seconds: 3),
-        ),
+      AppSnackBar.show(
+        context,
+        result['message'] ?? 'Tiếp nhận ca cứu hộ thành công!',
+        type: AppSnackBarType.success,
       );
 
       Navigator.pop(context, true);

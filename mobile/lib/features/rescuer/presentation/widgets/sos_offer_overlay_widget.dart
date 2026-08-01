@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../../../core/constants/color_constants.dart';
 import '../../models/sos_offer_model.dart';
 
 class SOSOfferOverlayWidget extends StatefulWidget {
@@ -86,7 +87,7 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
       borderRadius: BorderRadius.circular(20),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.surfaceWhite,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.red.shade600, width: 2),
           boxShadow: [
@@ -127,7 +128,7 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
                     padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: ColorConstants.surfaceWhite,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -145,7 +146,7 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
             // --- THANH PROGRESS BAR ---
             LinearProgressIndicator(
               value: 1 - _progressController.value,
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: ColorConstants.bgCanvas,
               color: Colors.red.shade600,
               minHeight: 4,
             ),
@@ -163,10 +164,10 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
                       const SizedBox(width: 8),
                       Text(
                         "Cách bạn: $_distanceText",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: ColorConstants.textPrimary,
                         ),
                       ),
                     ],
@@ -214,13 +215,13 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: ColorConstants.bgCanvas,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: ColorConstants.borderDark),
                     ),
                     child: Text(
                       widget.sos.description ?? "Nạn nhân không để lại mô tả",
-                      style: const TextStyle(fontSize: 15, color: Colors.black87),
+                      style: TextStyle(fontSize: 15, color: ColorConstants.textPrimary),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -338,15 +339,15 @@ class _SOSOfferOverlayWidgetState extends State<SOSOfferOverlayWidget>
                           onPressed: widget.onReject,
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(color: Colors.grey.shade400),
+                            side: BorderSide(color: ColorConstants.borderMuted),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             "BỎ QUA",
                             style: TextStyle(
-                                color: Colors.black54,
+                                color: ColorConstants.textSecondary,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),

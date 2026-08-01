@@ -29,7 +29,7 @@ function App() {
   const [appealSent, setAppealSent] = useState(false);
   const [appealError, setAppealError] = useState("");
 
-  const publicPaths = ["/", "/login", "/forgot-password"];
+  const publicPaths = ["/", "/admin/login", "/forgot-password"];
   const isPublicPath = publicPaths.includes(location.pathname);
 
   const handleBannedSocket = useCallback((payload) => {
@@ -63,12 +63,12 @@ function App() {
           const user = await UserApi.getUserInfo();
           store.dispatch(setUser(user?.data));
         } else {
-          navigate("/login");
+          navigate("/admin/login");
           return;
         }
       } catch (error) {
         console.log(error);
-        navigate("/login");
+        navigate("/admin/login");
       } finally {
         setIsAuthReady(true);
       }
@@ -115,7 +115,7 @@ function App() {
     store.dispatch(logout());
     store.dispatch(clearUser());
     store.dispatch(clearBanned());
-    navigate("/login");
+    navigate("/admin/login");
   };
 
   if (!isAuthReady) {

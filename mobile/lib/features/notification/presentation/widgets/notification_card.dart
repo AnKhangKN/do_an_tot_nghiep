@@ -93,7 +93,7 @@ class NotificationCard extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: isRead ? FontWeight.w700 : FontWeight.w900,
                         fontSize: 15,
-                        color: isRead ? ColorConstants.textPrimary : Colors.black,
+                        color: ColorConstants.textPrimary,
                       ),
                     ),
                   ),

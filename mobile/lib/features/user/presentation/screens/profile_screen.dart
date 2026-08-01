@@ -7,6 +7,7 @@ import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/theme/theme_controller.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import '../widgets/avatar_picker_widget.dart';
@@ -39,21 +40,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (image == null) return;
     if (!mounted) return;
 
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final userProvider = context.read<UserProvider>();
     final success = await userProvider.updateAvatar(image.path);
 
 
     if (!mounted) return;
-    scaffoldMessenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Cập nhật ảnh đại diện thành công!'
-              : 'Cập nhật ảnh đại diện thất bại. Vui lòng thử lại!',
-        ),
-        backgroundColor: success ? ColorConstants.success : ColorConstants.redRescue,
-      ),
+    AppSnackBar.show(
+      context,
+      success
+          ? 'Cập nhật ảnh đại diện thành công!'
+          : 'Cập nhật ảnh đại diện thất bại. Vui lòng thử lại!',
+      type: success ? AppSnackBarType.success : AppSnackBarType.error,
     );
   }
 
@@ -70,12 +67,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Header với hiệu ứng Sliver
           _buildSliverHeader(userProvider),
 
-          
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
+            child: RepaintBoundary(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
                   // Thẻ trạng thái sẵn sàng (Tính năng đặc thù cứu hộ)
                   // _buildAvailabilityCard(),
                   
@@ -118,6 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   
                   const SizedBox(height: 40),
                 ],
+                ),
               ),
             ),
           ),
@@ -133,10 +131,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return SliverAppBar(
       expandedHeight: 230,
       pinned: true,
-      stretch: true,
       backgroundColor: ColorConstants.redRescue,
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
+        background: RepaintBoundary(
+          child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -174,6 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -260,9 +259,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 3,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
@@ -360,9 +359,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 3,
+                offset: const Offset(0, 1),
               ),
             ],
           ),

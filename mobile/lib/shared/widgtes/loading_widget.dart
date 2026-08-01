@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/color_constants.dart';
 
 class LoadingWidget extends StatefulWidget {
   const LoadingWidget({super.key});
@@ -87,7 +88,7 @@ class _LoadingWidgetState extends State<LoadingWidget> with SingleTickerProvider
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
+              color: ColorConstants.textPrimary,
               letterSpacing: 0.5,
             ),
           ),
@@ -97,7 +98,7 @@ class _LoadingWidgetState extends State<LoadingWidget> with SingleTickerProvider
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w400,
-              color: Colors.grey[500],
+              color: ColorConstants.textSecondary,
             ),
           ),
         ],

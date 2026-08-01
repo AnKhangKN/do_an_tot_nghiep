@@ -9,6 +9,7 @@ import '../../../../core/location/data/location_service.dart';
 import '../../../../core/network/direction_service.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/socket/modules/rescuer_socket.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../providers/rescuer_map_provider.dart';
 import '../../../../shared/widgtes/layer_widget.dart';
 import '../providers/sos_provider.dart';
@@ -154,12 +155,11 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     if (cancelledNotice != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(cancelledNotice),
-            backgroundColor: Colors.orange.shade800,
-            duration: const Duration(seconds: 4),
-          ),
+        AppSnackBar.show(
+          context,
+          cancelledNotice,
+          type: AppSnackBarType.warning,
+          duration: const Duration(seconds: 4),
         );
         sosProvider.clearCancelledNotice();
       });
@@ -370,6 +370,7 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
     final isProcessing = session.isProcessing;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           ListenableBuilder(
@@ -557,11 +558,10 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                                         await provider.goOnline();
                                         if (provider.error != null) {
                                           if (context.mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                backgroundColor: Colors.red,
-                                                content: Text(provider.error!),
-                                              ),
+                                            AppSnackBar.show(
+                                              context,
+                                              provider.error!,
+                                              type: AppSnackBarType.error,
                                             );
                                             provider.clearError();
                                           }
@@ -594,27 +594,27 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: ColorConstants.successLight,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.green.shade300, width: 1.5),
+                  border: Border.all(color: ColorConstants.success, width: 1.5),
                   boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.stars, color: Colors.green, size: 28),
+                    const Icon(Icons.stars, color: ColorConstants.success, size: 28),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
                         "Cứu hộ thành công! Tuyệt vời.",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          color: ColorConstants.success,
                           fontSize: 15,
                         ),
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.green),
+                      icon: const Icon(Icons.close, color: ColorConstants.success),
                       onPressed: () => sosProvider.dismissSuccessAlert(),
                     )
                   ],

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:mobile/features/auth/data/auth_repository.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/constants/router_constants.dart';
+import '../../../../core/constants/color_constants.dart';
 import '../providers/splash_provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -33,11 +31,11 @@ class _SplashScreenState extends State<SplashScreen> {
       );
     }
 
-    // Mặc định luôn hiển thị Loading (Nền trắng + Vòng xoay)
+    // Mặc định luôn hiển thị Loading (Nền + Vòng xoay)
     // thay vì trả về SizedBox.shrink() gây đen màn hình.
-    return const Scaffold(
-      backgroundColor: Colors.white, // Hoặc màu nền App của bạn
-      body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      backgroundColor: ColorConstants.surfaceWhite,
+      body: const Center(child: CircularProgressIndicator()),
     );
   }
 }

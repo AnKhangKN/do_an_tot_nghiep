@@ -10,7 +10,7 @@ export const routes = [
 
     // auth routes
     {
-        path: '/login',
+        path: '/admin/login',
         name: 'Login',
         component: React.lazy(() => import('../pages/auth/LoginPage/LoginPage'))
     },

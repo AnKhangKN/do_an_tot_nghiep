@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../providers/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -71,11 +72,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: ColorConstants.success,
-          content: Text("Đã gửi mã xác thực OTP 6 số tới Email của bạn!"),
-        ),
+      AppSnackBar.show(
+        context,
+        "Đã gửi mã xác thực OTP 6 số tới Email của bạn!",
+        type: AppSnackBarType.success,
       );
       context.go(RouterConstants.verifyOtp, extra: email);
     } else {
@@ -98,6 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: ColorConstants.backgroundLight,
       body: SafeArea(
         child: SingleChildScrollView(

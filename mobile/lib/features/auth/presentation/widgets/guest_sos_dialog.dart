@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/location/data/location_service.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../../../../shared/widgtes/image_picker_helper.dart';
 import '../../../victim/presentation/providers/victim_map_provider.dart';
 import '../../../victim/presentation/screens/victim_map_screen.dart';
@@ -74,11 +75,10 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
       setState(() {
         _isSubmitting = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error ?? 'Đã xảy ra lỗi khi xác thực vị trí khẩn cấp!'),
-          backgroundColor: ColorConstants.dangerHigh,
-        ),
+      AppSnackBar.show(
+        context,
+        authProvider.error ?? 'Đã xảy ra lỗi khi xác thực vị trí khẩn cấp!',
+        type: AppSnackBarType.error,
       );
       return;
     }
@@ -89,11 +89,10 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
       setState(() {
         _isSubmitting = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Không thể lấy vị trí GPS hiện tại. Vui lòng bật vị trí!'),
-          backgroundColor: ColorConstants.dangerHigh,
-        ),
+      AppSnackBar.show(
+        context,
+        'Không thể lấy vị trí GPS hiện tại. Vui lòng bật vị trí!',
+        type: AppSnackBarType.error,
       );
       return;
     }
@@ -125,11 +124,10 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
       setState(() {
         _isSubmitting = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi gửi cứu hộ: $e'),
-          backgroundColor: ColorConstants.dangerHigh,
-        ),
+      AppSnackBar.show(
+        context,
+        'Lỗi gửi cứu hộ: $e',
+        type: AppSnackBarType.error,
       );
     }
   }

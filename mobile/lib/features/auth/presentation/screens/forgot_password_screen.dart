@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
+import '../../../../core/utils/app_snackbar.dart';
 import '../providers/auth_provider.dart';
 
 enum _ForgotStep { email, otp, reset, done }
@@ -46,11 +47,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (success) {
       setState(() => _step = _ForgotStep.otp);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.error ?? "Gửi yêu cầu thất bại!"),
-          backgroundColor: Colors.red,
-        ),
+      AppSnackBar.show(
+        context,
+        auth.error ?? "Gửi yêu cầu thất bại!",
+        type: AppSnackBarType.error,
       );
     }
   }
@@ -58,11 +58,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void _verifyOtp() {
     final otp = otpController.text.trim();
     if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Mã OTP phải đúng 6 chữ số!"),
-          backgroundColor: Colors.red,
-        ),
+      AppSnackBar.show(
+        context,
+        "Mã OTP phải đúng 6 chữ số!",
+        type: AppSnackBarType.error,
       );
       return;
     }
@@ -76,21 +75,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final confirm = confirmPasswordController.text;
 
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Mật khẩu phải ít nhất 6 ký tự!"),
-          backgroundColor: Colors.red,
-        ),
+      AppSnackBar.show(
+        context,
+        "Mật khẩu phải ít nhất 6 ký tự!",
+        type: AppSnackBarType.error,
       );
       return;
     }
 
     if (password != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Mật khẩu xác nhận không khớp!"),
-          backgroundColor: Colors.red,
-        ),
+      AppSnackBar.show(
+        context,
+        "Mật khẩu xác nhận không khớp!",
+        type: AppSnackBarType.error,
       );
       return;
     }
@@ -108,11 +105,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (success) {
       setState(() => _step = _ForgotStep.done);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.error ?? "Đặt lại mật khẩu thất bại!"),
-          backgroundColor: Colors.red,
-        ),
+      AppSnackBar.show(
+        context,
+        auth.error ?? "Đặt lại mật khẩu thất bại!",
+        type: AppSnackBarType.error,
       );
     }
   }
@@ -187,6 +183,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: ColorConstants.backgroundLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
