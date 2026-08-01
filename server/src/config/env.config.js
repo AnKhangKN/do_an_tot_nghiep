@@ -42,11 +42,16 @@ module.exports = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 
   // MAIL
+  MAIL_DRIVER: process.env.MAIL_DRIVER,
+  MAIL_FROM: process.env.MAIL_FROM,
   MAIL_USERNAME: process.env.MAIL_USERNAME,
   MAIL_PASSWORD: process.env.MAIL_PASSWORD,
   MAIL_SERVER: process.env.MAIL_SERVER,
   MAIL_PORT: process.env.MAIL_PORT,
   MAIL_STARTTLS: process.env.MAIL_STARTTLS,
   MAIL_SSL_TLS: process.env.MAIL_SSL_TLS,
+
+  // BREVO
+  BREVO_API_KEY: process.env.BREVO_API_KEY,
 };
 

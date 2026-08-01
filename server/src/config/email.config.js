@@ -1,20 +1,39 @@
 const nodemailer = require("nodemailer");
 const envConfig = require("@/config/env.config");
 
-const port = parseInt(envConfig.MAIL_PORT || "587", 10);
-const isSSL = envConfig.MAIL_SSL_TLS === "true" || port === 465;
+const MAIL_DRIVER = (envConfig.MAIL_DRIVER || "smtp").toLowerCase();
 
-const transporter = nodemailer.createTransport({
-    host: envConfig.MAIL_SERVER || "smtp.gmail.com",
-    port: port,
-    secure: isSSL, // false cho port 587 (STARTTLS), true cho port 465 (Direct SSL)
-    auth: {
-        user: envConfig.MAIL_USERNAME,
-        pass: envConfig.MAIL_PASSWORD
-    },
-    tls: {
-        rejectUnauthorized: false
+const createTransporter = () => {
+    if (MAIL_DRIVER === "brevo") {
+        return nodemailer.createTransport({
+            host: "smtp-relay.brevo.com",
+            port: 587,
+            secure: false, // STARTTLS
+            auth: {
+                user: envConfig.MAIL_USERNAME || "no-reply@cuuho.vn",
+                pass: envConfig.BREVO_API_KEY
+            },
+            tls: {
+                rejectUnauthorized: false
+            }
+        });
     }
-});
 
-module.exports = transporter;
+    const port = parseInt(envConfig.MAIL_PORT || "587", 10);
+    const isSSL = envConfig.MAIL_SSL_TLS === "true" || port === 465;
+
+    return nodemailer.createTransport({
+        host: envConfig.MAIL_SERVER || "smtp.gmail.com",
+        port: port,
+        secure: isSSL, // false cho port 587 (STARTTLS), true cho port 465 (Direct SSL)
+        auth: {
+            user: envConfig.MAIL_USERNAME,
+            pass: envConfig.MAIL_PASSWORD
+        },
+        tls: {
+            rejectUnauthorized: false
+        }
+    });
+};
+
+module.exports = createTransporter;

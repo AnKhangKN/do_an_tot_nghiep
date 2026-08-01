@@ -5,8 +5,6 @@ const userAuthService = require("@/modules/user_auth/service/user_auth.service")
 const { comparePassword } = require("@/utils/password.util");
 const { transaction } = require("@/config/database.config");
 const { getIO } = require("@/socket");
-const transporter = require("@/config/email.config");
-const envConfig = require("@/config/env.config");
 
 class AdminService {
   getDashboardOverview = async (days = 7) => {
@@ -193,7 +191,7 @@ class AdminService {
 
     const user = await userRepository.getUserInfoById({ userId: appeal.user_id });
 
-    const { sendOtpEmail } = require("@utils/mail.service");
+    const { sendEmail } = require("@utils/mail.service");
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
         <div style="text-align: center; margin-bottom: 20px;">
@@ -218,8 +216,7 @@ class AdminService {
     `;
 
     try {
-      await transporter.sendMail({
-        from: `"Hệ Thống Cứu Hộ SOS" <${envConfig.MAIL_USERNAME || 'no-reply@cuuho.vn'}>`,
+      await sendEmail({
         to: user.email,
         subject: "[CỨU HỘ SOS] Yêu cầu kháng cáo của bạn đã được chấp thuận!",
         html: emailContent

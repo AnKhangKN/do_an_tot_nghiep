@@ -15,6 +15,17 @@ services:
         value: production
       - key: PORT
         value: 10000
+      # MAIL — gửi mail bằng Brevo SMTP Relay (MAIL_DRIVER=brevo).
+      # MAIL_FROM/MAIL_USERNAME/BREVO_API_KEY đặt giá trị ở Render Dashboard
+      # (sync: false -> Render không ghi đè giá trị bạn nhập thủ công).
+      - key: MAIL_DRIVER
+        value: brevo
+      - key: MAIL_FROM
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
 
   # 2. BullMQ SOS Worker (Xử lý ghép đôi ca cứu hộ chạy ngầm)
   - type: worker

