@@ -44,9 +44,9 @@ class AuthService {
             const redis = require("@config/redis.config");
             await redis.set(`otp:verify:${cleanEmail}`, otpCode, "EX", 600);
 
-            // Gửi Email HTML chứa mã OTP
+            // Gửi Email HTML chứa mã OTP (non-blocking, không chặn response)
             const { sendOtpEmail } = require("@utils/mail.service");
-            await sendOtpEmail({ toEmail: cleanEmail, otpCode });
+            sendOtpEmail({ toEmail: cleanEmail, otpCode }).catch(() => {});
 
             return {
                 user,
@@ -113,7 +113,7 @@ class AuthService {
         await redis.set(`otp:verify:${cleanEmail}`, otpCode, "EX", 600);
 
         const { sendOtpEmail } = require("@utils/mail.service");
-        await sendOtpEmail({ toEmail: cleanEmail, otpCode });
+        sendOtpEmail({ toEmail: cleanEmail, otpCode }).catch(() => {});
 
         return {
             email: cleanEmail,
@@ -311,7 +311,7 @@ class AuthService {
                 await redis.set(`otp:verify:${cleanEmail}`, otpCode, "EX", 600);
 
                 const { sendOtpEmail } = require("@utils/mail.service");
-                await sendOtpEmail({ toEmail: cleanEmail, otpCode });
+                sendOtpEmail({ toEmail: cleanEmail, otpCode }).catch(() => {});
 
                 const err = new Error("Tài khoản chưa xác thực Email. Đã gửi mã OTP xác thực mới tới Email của bạn!");
                 err.statusCode = 403;
@@ -348,7 +348,7 @@ class AuthService {
         await redis.set(`otp:forgot:${cleanEmail}`, otpCode, "EX", 600);
 
         const { sendOtpEmail } = require("@utils/mail.service");
-        await sendOtpEmail({ toEmail: cleanEmail, otpCode, purpose: "forgotPassword" });
+        sendOtpEmail({ toEmail: cleanEmail, otpCode, purpose: "forgotPassword" }).catch(() => {});
 
         return { message: "Nếu email tồn tại trong hệ thống, mã OTP đặt lại mật khẩu sẽ được gửi đến email của bạn." };
     };
