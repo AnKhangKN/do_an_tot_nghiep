@@ -82,6 +82,19 @@ class AppSession {
     return _deviceId ??= await storageService.getOrCreateDeviceId();
   }
 
+  /// Xóa sạch storage (token, theme, settings, ban state...) NHƯNG GIỮ LẠI deviceId.
+  /// deviceId nhận diện VẬT LÝ thiết bị nên phải ổn định qua mọi lần logout/login
+  /// khác tài khoản trên cùng máy. Nếu để `clearAll()` xóa deviceId, lần login sau
+  /// sẽ sinh deviceId MỚI -> server tưởng là "thiết bị mới" và kick ngược chính
+  /// thiết bị đang dùng (single active session bị kick oan dù chỉ thao tác trên 1 máy).
+  Future<void> _clearAllKeepDeviceId() async {
+    final deviceId = await _ensureDeviceId();
+    await storageService.clearAll();
+    await storageService.clearToken();
+    await storageService.saveDeviceId(deviceId);
+    _deviceId = deviceId;
+  }
+
   // =========================
   // INITIALIZE SESSION
   // =========================
@@ -218,18 +231,16 @@ class AppSession {
 
         // Nếu token đã hết hạn không thể gia hạn -> Đăng xuất triệt để về Login
         debugPrint("🚨 Token hết hạn không thể gia hạn -> Đăng xuất người dùng về LoginScreen");
-        await storageService.clearAll();
+        await _clearAllKeepDeviceId();
         _isInitialized = true;
-        _deviceId = null;
         _resetAllProviders();
         controller.setLoggedIn(false);
         controller.reset();
       }
     } else {
       debugPrint("🎯 Không tìm thấy Token hợp lệ -> Đăng xuất người dùng về LoginScreen");
-      await storageService.clearAll();
+      await _clearAllKeepDeviceId();
       _isInitialized = true;
-      _deviceId = null;
       _resetAllProviders();
       controller.setLoggedIn(false);
       controller.reset();
@@ -356,23 +367,26 @@ class AppSession {
     // 2. Xóa dấu vết FCM của tài khoản cũ (unregister server + thu hồi token để
     //    lần đăng nhập sau được cấp token FCM mới). Chạy TRƯỚC khi xóa token local
     //    để access token cũ còn hiệu lực gọi REST. Best-effort, lỗi thì bỏ qua.
+    //    GIỚI HẠN 3 giây: bước này là dọn dẹp phụ trợ, không được để logout bị treo
+    //    khi mạng chậm (Dio timeout mặc định 30s).
     try {
-      await notificationService.unregisterAndRotateToken();
+      await notificationService
+          .unregisterAndRotateToken()
+          .timeout(const Duration(seconds: 3));
     } catch (e) {
-      debugPrint("⚠️ [AppSession] Lỗi dọn dẹp FCM khi logout: $e");
+      debugPrint("⚠️ [AppSession] Lỗi/quá thời gian dọn dẹp FCM khi logout: $e");
     }
 
-    // 3. Xóa sạch toàn bộ storage: token, refreshToken, deviceId, ban state,
-    //    theme, settings, saved phone... ("app như mới")
-    await storageService.clearAll();
-    await storageService.clearToken();
+    // 3. Xóa sạch toàn bộ storage: token, refreshToken, theme, settings, saved
+    //    phone... ("app như mới") nhưng GIỮ deviceId để thiết bị không bị server
+    //    coi là "thiết bị mới" khi đăng nhập lại (tránh kick oan single active session).
+    await _clearAllKeepDeviceId();
 
     // 4. Reset toàn bộ provider singleton về trạng thái ban đầu
     _resetAllProviders();
 
-    // 5. Reset session state & cờ khởi tạo
+    // 5. Reset session state & cờ khởi tạo (deviceId được giữ lại)
     _isInitialized = false;
-    _deviceId = null;
     controller.reset();
   }
 

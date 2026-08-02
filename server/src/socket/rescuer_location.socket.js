@@ -8,6 +8,10 @@ const lastSeenCache = new Map();
 module.exports = (socket, io) => {
     socket.on("rescuer:location:update", async ({ lat, lng }) => {
         try {
+            // Chỉ RESCUER thật sự (theo JWT của socket) mới được gửi vị trí.
+            if (socket.user?.role !== "RESCUER") {
+                return;
+            }
             const userId = socket.user?.userId;
             if (!userId) return;
 

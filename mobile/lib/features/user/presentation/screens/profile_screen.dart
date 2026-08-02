@@ -399,30 +399,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _logoutButton(BuildContext context) {
+    final isLoading = context.watch<AuthProvider>().isLoading;
     return SizedBox(
       width: double.infinity,
       height: 58,
       child: ElevatedButton.icon(
-        icon: const Icon(Icons.logout, color: Colors.white),
-        label: const Text(
-          "ĐĂNG XUẤT TÀI KHOẢN",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+        icon: isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.logout, color: Colors.white),
+        label: Text(
+          isLoading ? "ĐANG ĐĂNG XUẤT..." : "ĐĂNG XUẤT TÀI KHOẢN",
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.5),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorConstants.redRescue,
           foregroundColor: Colors.white,
+          disabledBackgroundColor: ColorConstants.redRescue.withOpacity(0.6),
           elevation: 4,
           shadowColor: ColorConstants.redRescue.withOpacity(0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
         ),
-        onPressed: () async {
-          await context.read<AuthProvider>().logout();
-          if (!context.mounted) return;
-          context.read<UserProvider>().clear();
-          context.go(RouterConstants.login);
-        },
+        onPressed: isLoading
+            ? null
+            : () async {
+                await context.read<AuthProvider>().logout();
+                if (!context.mounted) return;
+                context.read<UserProvider>().clear();
+                context.go(RouterConstants.login);
+              },
       ),
     );
   }

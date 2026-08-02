@@ -22,6 +22,10 @@ class StorageService {
     return deviceId;
   }
 
+  Future<void> saveDeviceId(String deviceId) async {
+    await _storage.write(key: _deviceIdKey, value: deviceId);
+  }
+
   Future<void> saveToken(String accessToken, String refreshToken) async {
     await _storage.write(key: _accessTokenKey, value: accessToken);
     await _storage.write(key: _refreshTokenKey, value: refreshToken);

@@ -49,6 +49,12 @@ class CoreSocket {
       AppConstants.baseUrl,
       IO.OptionBuilder()
           .setTransports(['websocket'])
+          // BẮT BUỘC tạo Manager/Socket MỚI mỗi lần connect. Không có option này,
+          // socket_io_client dùng global cache theo host:port và có thể TRẢ LẠI
+          // socket cũ (còn auth tài khoản trước) khi logout rồi login tài khoản
+          // khác -> event rescuer bị emit bằng token sai (VD: victim) -> server
+          // 404 "Không tìm thấy người cứu hộ!".
+          .enableForceNew()
           .enableReconnection()
           .setReconnectionAttempts(999999)
           .setReconnectionDelay(1000)

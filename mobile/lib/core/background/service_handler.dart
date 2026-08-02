@@ -141,6 +141,9 @@ class ServiceHandler {
       _baseUrl,
       IO.OptionBuilder()
           .setTransports(['websocket'])
+          // BẮT BUỘC tạo Manager/Socket MỚI mỗi lần kết nối lại để tránh dùng lại
+          // socket cũ của tài khoản trước (socket_io_client cache theo host:port).
+          .enableForceNew()
           .enableReconnection()
           .setReconnectionDelay(2000)
           .setReconnectionDelayMax(5000)

@@ -8,6 +8,12 @@ module.exports = (socket, io) => {
     // Heartbeat mỗi 15s
     socket.on("rescuer:heartbeat", async () => {
         try {
+            // Chỉ chấp nhận khi socket thuộc tài khoản RESCUER thật sự (theo JWT).
+            // Phòng socket zombie còn giữ token tài khoản cũ (VD: victim) emit nhầm.
+            if (socket.user?.role !== "RESCUER") {
+                console.warn(`[SOCKET] Bỏ qua heartbeat từ socket không phải RESCUER (userId: ${socket.user?.userId}, role: ${socket.user?.role})`);
+                return;
+            }
             const userId = socket.user.userId;
             console.log(`[SOCKET] Nhận heartbeat từ user: ${userId}`);
             await rescuerService.updateLastSeen({ userId });
@@ -20,6 +26,18 @@ module.exports = (socket, io) => {
     socket.on("rescuer:online", async () => {
         const userId = socket.user?.userId;
         try {
+            // Chỉ RESCUER thật sự (theo JWT của socket) mới được bật online.
+            // Socket zombie còn giữ token tài khoản cũ sẽ bị từ chối ngay lập tức.
+            if (socket.user?.role !== "RESCUER") {
+                const msg = "Tài khoản hiện tại không phải cứu hộ viên. Vui lòng đăng xuất rồi đăng nhập lại bằng tài khoản cứu hộ!";
+                console.warn("Go online bị từ chối do socket không phải RESCUER | userId:", userId, "| role:", socket.user?.role);
+                socket.emit("rescuer:online:response", {
+                    success: false,
+                    message: msg
+                });
+                return;
+            }
+
             console.log("User going online:", userId);
 
             await rescuerService.goOnline({ userId });

@@ -21,7 +21,14 @@ class BannedDialogWidget extends StatelessWidget {
   }
 
   void _handleLogout(BuildContext context) {
-    GetIt.instance<StorageService>().clearAll();
+    final storage = GetIt.instance<StorageService>();
+    // Xóa sạch storage nhưng GIỮ deviceId (deviceId nhận diện vật lý thiết bị,
+    // phải ổn định qua các lần logout/login để server không kick oan thiết bị).
+    Future(() async {
+      final deviceId = await storage.getOrCreateDeviceId();
+      await storage.clearAll();
+      await storage.saveDeviceId(deviceId);
+    });
     GetIt.instance<SessionController>().dismissBan();
     GetIt.instance<SessionController>().setLoggedIn(false);
     Navigator.of(context).pop();
