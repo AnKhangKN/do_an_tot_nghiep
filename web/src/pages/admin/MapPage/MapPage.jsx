@@ -9,6 +9,7 @@ import {
 import L from "leaflet";
 import "leaflet.heat";
 import React, { useEffect, useState, useMemo } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import "leaflet/dist/leaflet.css";
 import { getSosHeatmap, searchLocations } from "@/api/admin/MapApi";
 import { getApprovedDangerousZones } from "@/api/admin/DangerousZoneApi";
@@ -34,6 +35,14 @@ import {
   PiCaretUpBold,
   PiStackFill,
   PiStorefrontFill,
+  PiCrossBold,
+  PiFireBold,
+  PiPoliceCarBold,
+  PiGasPumpBold,
+  PiWrenchBold,
+  PiHouseBold,
+  PiBowlFoodBold,
+  PiStorefrontBold,
 } from "react-icons/pi";
 
 // ================= FIX ICON =================
@@ -61,64 +70,59 @@ const icons = {
   sos: createIcon("https://cdn-icons-png.flaticon.com/512/564/564619.png"),
 };
 
+const AMENITY_ICONS = [
+  { key: 'medical', label: 'Y tế / Cấp cứu', Icon: PiCrossBold, color: '#dc2626' },
+  { key: 'fire', label: 'Chữa cháy / Cứu hỏa', Icon: PiFireBold, color: '#ea580c' },
+  { key: 'police', label: 'Công an / Cảnh sát', Icon: PiPoliceCarBold, color: '#2563eb' },
+  { key: 'gas', label: 'Trạm xăng / Nhiên liệu', Icon: PiGasPumpBold, color: '#d97706' },
+  { key: 'repair', label: 'Sửa xe / Cứu hộ xe', Icon: PiWrenchBold, color: '#f97316' },
+  { key: 'shelter', label: 'Nơi trú ẩn / Sơ tán', Icon: PiHouseBold, color: '#059669' },
+  { key: 'food', label: 'Thực phẩm / Nước uống', Icon: PiBowlFoodBold, color: '#0d9488' },
+  { key: 'store', label: 'Khác (Mặc định)', Icon: PiStorefrontBold, color: '#6b7280' },
+];
+
+const ICON_ALIASES = { wrench: 'repair', 'gas-pump': 'gas', 'first-aid': 'medical', tire: 'repair' };
+
+const normalizeAmenityIcon = (iconName) => {
+  if (!iconName) return null;
+  const value = String(iconName).trim().toLowerCase();
+  if (AMENITY_ICONS.some((i) => i.key === value)) return value;
+  if (ICON_ALIASES[value]) return ICON_ALIASES[value];
+  return null;
+};
+
 const createAmenityIcon = (categoryName = "", iconName = "") => {
   const name = categoryName.toLowerCase();
 
-  const ICON_SVGS = {
-    medical: `<rect x="6.5" y="0.5" width="3" height="15" rx="1"/><rect x="0.5" y="6.5" width="15" height="3" rx="1"/>`,
-    fire: `<path d="M8 1c2 3 4.5 4.5 4.5 8a4.5 4.5 0 0 1-9 0C3.5 5.5 6 4 8 1z"/>`,
-    police: `<path d="M8 1l6 2v5c0 3.5-2.5 6-6 7-3.5-1-6-3.5-6-7V3l6-2z"/>`,
-    gas: `<path d="M3 2h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm10 3h1a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2v2a1 1 0 0 1-2 0v-2a1 1 0 0 1-1-1V5z"/>`,
-    repair: `<path d="M12 2a4 4 0 0 0-4 4c0 1.25.57 2.37 1.46 3.1L3.2 15.36a1 1 0 0 0 1.41 1.41l6.27-6.27A4 4 0 1 0 12 2z"/>`,
-    shelter: `<path d="M8 1l7 6v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V7l7-6z"/>`,
-    food: `<path d="M2 7h12a6 6 0 0 1-12 0z"/>`,
-    store: `<path d="M1 7V5l1-3h12l1 3v2h-1v7h-2V7H4v7H2V7H1z"/>`,
-  };
-
-  const ICON_COLORS = {
-    medical: "#dc2626",
-    fire: "#ea580c",
-    police: "#2563eb",
-    gas: "#d97706",
-    repair: "#f97316",
-    shelter: "#059669",
-    food: "#0d9488",
-    store: "#6b7280",
-  };
-
-  let bgColor = ICON_COLORS.medical;
-  let iconSvg = ICON_SVGS.medical;
-
-  const normalizedIcon = String(iconName || "").trim().toLowerCase();
-  if (ICON_SVGS[normalizedIcon]) {
-    bgColor = ICON_COLORS[normalizedIcon];
-    iconSvg = ICON_SVGS[normalizedIcon];
-  } else if (name.includes("sửa xe") || name.includes("cứu hộ xe") || name.includes("bảo dưỡng")) {
-    bgColor = ICON_COLORS.repair;
-    iconSvg = ICON_SVGS.repair;
-  } else if (name.includes("xăng") || name.includes("nhiên liệu")) {
-    bgColor = ICON_COLORS.gas;
-    iconSvg = ICON_SVGS.gas;
-  } else if (name.includes("trú") || name.includes("cứu nạn") || name.includes("tập kết")) {
-    bgColor = ICON_COLORS.shelter;
-    iconSvg = ICON_SVGS.shelter;
-  } else if (name.includes("cháy") || name.includes("cứu hỏa")) {
-    bgColor = ICON_COLORS.fire;
-    iconSvg = ICON_SVGS.fire;
-  } else if (name.includes("ăn") || name.includes("nước") || name.includes("thực phẩm")) {
-    bgColor = ICON_COLORS.food;
-    iconSvg = ICON_SVGS.food;
-  } else if (name.includes("an") || name.includes("cảnh sát") || name.includes("công an")) {
-    bgColor = ICON_COLORS.police;
-    iconSvg = ICON_SVGS.police;
+  let iconKey = normalizeAmenityIcon(iconName);
+  if (!iconKey) {
+    if (name.includes("sửa xe") || name.includes("cứu hộ xe") || name.includes("bảo dưỡng")) {
+      iconKey = "repair";
+    } else if (name.includes("xăng") || name.includes("nhiên liệu")) {
+      iconKey = "gas";
+    } else if (name.includes("trú") || name.includes("cứu nạn") || name.includes("tập kết")) {
+      iconKey = "shelter";
+    } else if (name.includes("cháy") || name.includes("cứu hỏa")) {
+      iconKey = "fire";
+    } else if (name.includes("ăn") || name.includes("nước") || name.includes("thực phẩm")) {
+      iconKey = "food";
+    } else if (name.includes("an") || name.includes("cảnh sát") || name.includes("công an")) {
+      iconKey = "police";
+    } else if (name.includes("y tế") || name.includes("bệnh viện") || name.includes("cấp cứu")) {
+      iconKey = "medical";
+    } else {
+      iconKey = "store";
+    }
   }
+
+  const icon = AMENITY_ICONS.find((i) => i.key === iconKey);
+  const IconComp = icon.Icon;
+  const svgMarkup = renderToStaticMarkup(<IconComp className="w-4 h-4" />);
 
   return L.divIcon({
     className: "",
-    html: `<div style="width:32px;height:32px;border-radius:50%;background:${bgColor};border:2px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35)" title="${categoryName}">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff">
-        ${iconSvg}
-      </svg>
+    html: `<div style="width:32px;height:32px;border-radius:50%;background:${icon.color};border:2px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);color:#fff" title="${categoryName}">
+      ${svgMarkup}
     </div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 16],
