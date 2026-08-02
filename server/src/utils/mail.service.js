@@ -8,6 +8,60 @@ const getSenderEmail = () =>
 
 const getAdminEmail = () => envConfig.MAIL_USERNAME || "facebookcopyright1302@gmail.com";
 
+// Gửi mail qua Brevo HTTP API (HTTPS port 443) — tránh bị chặn SMTP port 587 trên cloud
+const sendViaBrevoHttpApi = ({ to, subject, html, from }) => {
+    return new Promise((resolve, reject) => {
+        const apiKey = envConfig.BREVO_HTTP_API_KEY || envConfig.BREVO_API_KEY;
+        if (!apiKey) {
+            return reject(new Error("Thiếu BREVO_HTTP_API_KEY trong environment variables"));
+        }
+
+        const recipients = Array.isArray(to)
+            ? to.map(email => ({ email }))
+            : [{ email: to }];
+
+        const body = JSON.stringify({
+            sender: { email: from },
+            to: recipients,
+            subject,
+            htmlContent: html
+        });
+
+        const options = {
+            hostname: "api.brevo.com",
+            port: 443,
+            path: "/v3/smtp/email",
+            method: "POST",
+            headers: {
+                "api-key": apiKey,
+                "Content-Type": "application/json",
+                "Content-Length": Buffer.byteLength(body)
+            }
+        };
+
+        const https = require("https");
+        const req = https.request(options, (res) => {
+            let data = "";
+            res.on("data", chunk => { data += chunk; });
+            res.on("end", () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    const parsed = JSON.parse(data);
+                    resolve({ messageId: parsed.messageId || "brevo-api" });
+                } else {
+                    reject(new Error(`Brevo API lỗi ${res.statusCode}: ${data}`));
+                }
+            });
+        });
+
+        req.setTimeout(20000, () => {
+            req.destroy(new Error("Brevo API request timeout"));
+        });
+        req.on("error", reject);
+        req.write(body);
+        req.end();
+    });
+};
+
 const sendEmail = async ({ to, subject, html }) => {
     if (MAIL_DRIVER === "log") {
         console.log(`[MAIL DRIVER=log] To: ${Array.isArray(to) ? to.join(", ") : to}`);
@@ -16,14 +70,22 @@ const sendEmail = async ({ to, subject, html }) => {
         return { messageId: "log-only", driver: "log" };
     }
 
+    const senderEmail = getSenderEmail();
+
+    // Brevo: dùng HTTP API (port 443) thay vì SMTP (port 587 bị chặn trên cloud)
+    if (MAIL_DRIVER === "brevo") {
+        return await sendViaBrevoHttpApi({ to, subject, html, from: senderEmail });
+    }
+
     const transporter = createTransporter();
     return await transporter.sendMail({
-        from: `"Hệ Thống Cứu Hộ SOS" <${getSenderEmail()}>`,
+        from: `"Hệ Thống Cứu Hộ SOS" <${senderEmail}>`,
         to,
         subject,
         html
     });
 };
+
 
 const sendOtpEmail = async ({ toEmail, otpCode, purpose = "register" }) => {
     const isForgotPassword = purpose === "forgotPassword";

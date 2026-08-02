@@ -56,7 +56,8 @@ module.exports = {
   MAIL_SSL_TLS: process.env.MAIL_SSL_TLS,
 
   // BREVO
-  BREVO_API_KEY: process.env.BREVO_API_KEY,
+  BREVO_API_KEY: process.env.BREVO_API_KEY,       // SMTP Relay key (xsmtpsib-...)
+  BREVO_HTTP_API_KEY: process.env.BREVO_HTTP_API_KEY, // HTTP API v3 key (xkeysib-...)
 
   // FIREBASE (JSON string của service-account.json, dùng khi deploy)
   FIREBASE_SERVICE_ACCOUNT: process.env.FIREBASE_SERVICE_ACCOUNT,
