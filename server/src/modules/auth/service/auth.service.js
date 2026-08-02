@@ -265,6 +265,9 @@ class AuthService {
                 return { accessToken: newAccessToken };
             });
         } catch (error) {
+            if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError" || error.name === "NotBeforeError") {
+                throwError("Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!", 401);
+            }
             throwError(error.message || "Làm mới token thất bại!", error.statusCode || 401);
         }
     }
