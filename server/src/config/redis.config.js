@@ -6,6 +6,7 @@ const connection = new Redis({
     port: REDIS_PORT,
     password: REDIS_PASSWORD || undefined,
     tls: REDIS_TLS === "true" ? {} : undefined,
+    enableReadyCheck: false,
     maxRetriesPerRequest: null
 });
 
