@@ -32,7 +32,7 @@ import {
   PiCrosshair,
   PiCaretDownBold,
   PiCaretUpBold,
-  PiLayersFill,
+  PiStackFill,
   PiStorefrontFill,
 } from "react-icons/pi";
 
@@ -236,7 +236,7 @@ const LayerControlPanel = ({
         className="flex items-center justify-between px-3.5 py-2.5 bg-gray-900 text-white cursor-pointer select-none"
       >
         <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-          <PiLayersFill className="text-amber-400 text-sm" />
+          <PiStackFill className="text-amber-400 text-sm" />
           Lớp Bản Đồ
         </span>
         {panelExpanded ? <PiCaretUpBold size={14} /> : <PiCaretDownBold size={14} />}
