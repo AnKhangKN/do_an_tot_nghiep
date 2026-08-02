@@ -35,13 +35,21 @@ module.exports = (socket, io) => {
         }
     });
 
-    // Client chủ động offline
+    // Client chủ động offline (cũng được gọi khi vừa mở app để reset trạng thái ACTIVE cũ)
     socket.on("rescuer:offline", async () => {
         try {
             const userId = socket.user.userId;
-            await rescuerService.goOffline({ userId });
+            const result = await rescuerService.resetOffline({ userId });
+            socket.emit("rescuer:offline:response", {
+                success: true,
+                wasOnline: result.wasOnline
+            });
         } catch (error) {
             console.error("Go offline error:", error);
+            socket.emit("rescuer:offline:response", {
+                success: false,
+                message: error.message || "Không thể tắt trạng thái online!"
+            });
         }
     });
 

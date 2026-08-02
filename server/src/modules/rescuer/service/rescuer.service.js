@@ -177,6 +177,37 @@ class RescuerService {
         return await this.rescuerRepository.updateStatus({ userId, status: 'OFFLINE' });
     };
 
+    // Khởi động lại trạng thái offline khi vừa mở app: nếu DB vẫn đang ACTIVE (dữ liệu cũ)
+    // thì đưa về OFFLINE ngay để tránh nhận SOS offer khi người dùng chưa bấm online.
+    resetOffline = async ({ userId }) => {
+        const checkOnline = await this.checkRescuerOnline({ userId });
+
+        if (!checkOnline) {
+            return { wasOnline: false };
+        }
+
+        // 1. Đồng bộ lastSeenAt từ Redis xuống PostgreSQL lần cuối trước khi xóa cache
+        try {
+            await this.rescuerRepository.syncLastSeenToDB({ userId });
+        } catch (e) {
+            console.error("[SERVICE] Lỗi đồng bộ lastSeenAt xuống DB khi reset offline:", e);
+        }
+
+        // 2. Cập nhật status Redis thành OFFLINE và xóa vị trí địa lý trên Redis
+        await redis.set(`rescuer:status:${userId}`, 'OFFLINE');
+        await this.rescuerRepository.offlineRedis({ userId });
+
+        // 3. Dọn dẹp toàn bộ cache trạng thái online/bận của rescuer
+        await redis.hdel('rescuer:last_seen', userId);
+        await redis.hdel('active_rescues', userId);
+        await redis.del(`active:rescuer:${userId}`);
+        await redis.del(`sos:offer:rescuer:${userId}`);
+
+        await this.rescuerRepository.updateStatus({ userId, status: 'OFFLINE' });
+        console.log(`[SERVICE] Cứu hộ viên ${userId} đã được reset về OFFLINE khi mở app (trạng thái ACTIVE cũ)`);
+        return { wasOnline: true };
+    };
+
     // Matching Service gọi tới
     findNearbyRescuers = async ({ lat, lng, radius }) => {
         return await this.rescuerRepository.findNearbyRescuers({ lat, lng, radius });

@@ -120,6 +120,8 @@ class AppSession {
         controller.setLoggedIn(true);
 
         if (userRole == UserRole.rescuer) {
+          // Reset trạng thái online cũ (nếu DB/Redis vẫn còn ACTIVE) trước khi lắng nghe SOS
+          await _resetOfflineOnStartup();
           heartbeatSocket.start();
           await _startBackgroundService(token, profileResponse.userId, profileResponse.role);
           rescuerSocket.listenSosOffer();
@@ -163,6 +165,8 @@ class AppSession {
             controller.setLoggedIn(true);
 
             if (userRole == UserRole.rescuer) {
+              // Reset trạng thái online cũ (nếu DB/Redis vẫn còn ACTIVE) trước khi lắng nghe SOS
+              await _resetOfflineOnStartup();
               heartbeatSocket.start();
               await _startBackgroundService(newToken, profileResponse.userId, profileResponse.role);
               rescuerSocket.listenSosOffer();
@@ -257,6 +261,44 @@ class AppSession {
   // =========================
   // ONLINE STATE
   // =========================
+  /// Khi vừa mở app, yêu cầu server reset trạng thái về OFFLINE nếu DB vẫn đang ACTIVE
+  /// (trạng thái online cũ còn sót lại). Đảm bảo app mới mở (chưa bấm online) không
+  /// bị server đẩy SOS offer. Không gây chặn init nếu lỗi/timeout.
+  Future<void> _resetOfflineOnStartup() async {
+    if (role != UserRole.rescuer || !socket.isConnected) return;
+
+    try {
+      final completer = Completer<void>();
+
+      void handler(dynamic data) {
+        if (data is Map && data['success'] == true) {
+          completer.complete();
+        } else {
+          final msg = data is Map ? (data['message'] ?? 'Không thể reset offline!') : 'Không thể reset offline!';
+          completer.completeError(Exception(msg));
+        }
+      }
+
+      socket.on(SocketEvents.goOfflineResponse, handler);
+
+      // Bắn event yêu cầu reset offline lên Server
+      socket.emit(SocketEvents.goOffline);
+
+      try {
+        // Chờ server xác nhận, timeout 5s
+        await completer.future.timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => throw Exception('Server không phản hồi reset offline'),
+        );
+        debugPrint("🔄 [AppSession] Đã reset trạng thái OFFLINE khi mở app thành công.");
+      } finally {
+        socket.off(SocketEvents.goOfflineResponse);
+      }
+    } catch (e) {
+      debugPrint("⚠️ [AppSession] Reset offline khi mở app không thành công (bỏ qua): $e");
+    }
+  }
+
   Future<bool> goOnline() async {
     if (controller.isProcessing) return false;
 

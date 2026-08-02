@@ -6,7 +6,9 @@ class SocketEvents {
   static const disconnect = "disconnect";
 
   static const goOnline = "rescuer:online";
+  static const goOnlineResponse = "rescuer:online:response";
   static const goOffline = "rescuer:offline";
+  static const goOfflineResponse = "rescuer:offline:response";
 
   // =========================
   // SOS EVENTS
