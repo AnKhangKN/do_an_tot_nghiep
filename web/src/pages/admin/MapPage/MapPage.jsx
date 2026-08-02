@@ -271,7 +271,7 @@ const LayerControlPanel = ({
       {/* Header Panel */}
       <div
         onClick={() => setPanelExpanded(!panelExpanded)}
-        className="flex items-center justify-between px-3.5 py-2.5 dark:bg-gray-900 dark:text-white bg-gray-100 text-gray-900 cursor-pointer select-none"
+        className="flex items-center justify-between px-3.5 py-2.5 bg-gray-100 text-gray-900 dark:bg-gray-200 dark:text-white cursor-pointer select-none"
       >
         <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
           <PiStackFill className="text-amber-400 text-sm" />
@@ -342,7 +342,7 @@ const LayerControlPanel = ({
 
             {/* Sub-list các danh mục tiện ích */}
             {showAmenities && openAmenityList && (
-              <div className="p-2 border-t border-gray-200 space-y-1 max-h-48 overflow-y-auto bg-white dark:bg-gray-50">
+              <div className="p-2 border-t border-gray-200 space-y-1 max-h-48 overflow-y-auto bg-white dark:bg-gray-200">
                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 px-1">
                   Chọn danh mục hiển thị:
                 </p>
@@ -352,8 +352,8 @@ const LayerControlPanel = ({
                   type="button"
                   onClick={() => setSelectedCategory("ALL")}
                   className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors ${selectedCategory === "ALL"
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-gray-900 text-white dark:bg-gray-200 dark:text-white"
+                    : "text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-200"
                     }`}
                 >
                   <span className="flex items-center gap-1.5">
@@ -380,8 +380,8 @@ const LayerControlPanel = ({
                       type="button"
                       onClick={() => setSelectedCategory(catName)}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${isSelected
-                        ? "bg-gray-900 text-white font-semibold"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-gray-900 text-white font-semibold dark:bg-gray-200 dark:text-white"
+                        : "text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-200"
                         }`}
                     >
                       <span className="truncate pr-1">{catName}</span>
@@ -590,7 +590,7 @@ const MapControls = ({ onLocate }) => {
           type="button"
           aria-label="Đến vị trí của tôi"
           onClick={handleLocate}
-          className="flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-900 hover:text-white transition-colors"
+          className="flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-900 hover:text-white dark:hover:bg-gray-200 dark:hover:text-white transition-colors"
         >
           {locating ? (
             <PiCircleNotch size={18} className="animate-spin" />
@@ -603,7 +603,7 @@ const MapControls = ({ onLocate }) => {
           type="button"
           aria-label="Phóng to bản đồ"
           onClick={() => map.zoomIn()}
-          className="flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-900 hover:text-white transition-colors"
+          className="flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-900 hover:text-white dark:hover:bg-gray-200 dark:hover:text-white transition-colors"
         >
           <PiPlus size={18} weight="bold" />
         </button>
@@ -612,7 +612,7 @@ const MapControls = ({ onLocate }) => {
           type="button"
           aria-label="Thu nhỏ bản đồ"
           onClick={() => map.zoomOut()}
-          className="flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-900 hover:text-white transition-colors"
+          className="flex items-center justify-center w-10 h-10 text-gray-700 hover:bg-gray-900 hover:text-white dark:hover:bg-gray-200 dark:hover:text-white transition-colors"
         >
           <PiMinus size={18} weight="bold" />
         </button>
