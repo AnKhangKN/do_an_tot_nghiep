@@ -21,18 +21,18 @@ import {
   PiTrashBold,
   PiStorefrontBold,
   PiListDashesBold,
-  PiEyeBold,
+  // PiEyeBold,
   PiMapPinBold,
   PiPhoneBold,
   PiClockBold,
   PiUserBold,
-  PiPencilBold,
+  // PiPencilBold,
   PiImageBold,
   PiFlagBold,
   PiWarningBold,
   PiCopyBold,
   PiGitMergeBold,
-  PiLightningFill
+  // PiLightningFill
 } from 'react-icons/pi';
 
 
@@ -327,13 +327,12 @@ export default function EmergencyAmenityPage() {
         const isPending = row.status === 'PENDING';
         return (
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-medium ${
-              isApproved
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                : isPending
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-medium ${isApproved
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+              : isPending
                 ? 'bg-amber-50 text-amber-700 border border-amber-200/80'
                 : 'bg-rose-50 text-rose-700 border border-rose-200/80'
-            }`}
+              }`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${isApproved ? 'bg-emerald-500' : isPending ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
             {isApproved ? 'Đã duyệt' : isPending ? 'Chờ duyệt' : 'Đã từ chối'}
@@ -346,6 +345,7 @@ export default function EmergencyAmenityPage() {
       title: 'Ngày tạo',
       render: (row) => <span className="text-xs text-gray-500 block">{formatTime(row.createdAt)}</span>,
     },
+    {/*
     {
       key: 'actions',
       title: 'Thao tác',
@@ -372,6 +372,9 @@ export default function EmergencyAmenityPage() {
         </div>
       ),
     },
+
+    */}
+
   ];
 
   const categoryColumns = [
@@ -395,18 +398,18 @@ export default function EmergencyAmenityPage() {
       title: 'Trạng thái',
       render: (row) => (
         <span
-          className={`inline-flex items-center px-2.5 py-1 text-xs rounded-full font-semibold ${
-            row.status === 'ACTIVE'
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : 'bg-gray-100 text-gray-500 border border-gray-200'
-          }`}
+          className={`inline-flex items-center px-2.5 py-1 text-xs rounded-full font-semibold ${row.status === 'ACTIVE'
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            : 'bg-gray-100 text-gray-500 border border-gray-200'
+            }`}
         >
           {row.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm khóa'}
         </span>
       ),
     },
 
-    {
+    {/*
+      {
       key: 'actions',
       title: 'Thao tác',
       render: (row) => (
@@ -421,17 +424,17 @@ export default function EmergencyAmenityPage() {
           </button>
           <button
             onClick={() => handleToggleCategoryStatus(row)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-xl transition ${
-              row.status === 'ACTIVE'
-                ? 'bg-rose-50 text-rose-600 hover:bg-rose-100'
-                : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-            }`}
+            className={`px-3 py-1.5 text-xs font-medium rounded-xl transition ${row.status === 'ACTIVE'
+              ? 'bg-rose-50 text-rose-600 hover:bg-rose-100'
+              : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+              }`}
           >
             {row.status === 'ACTIVE' ? 'Tạm khóa' : 'Kích hoạt'}
           </button>
         </div>
       ),
     },
+      */}
   ];
 
   const feedbackColumns = [
@@ -500,13 +503,12 @@ export default function EmergencyAmenityPage() {
         const isResolved = row.status === 'RESOLVED';
         return (
           <span
-            className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full font-semibold ${
-              isResolved
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : isPending
+            className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full font-semibold ${isResolved
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : isPending
                 ? 'bg-amber-50 text-amber-700 border border-amber-200 animate-pulse'
                 : 'bg-gray-100 text-gray-500 border border-gray-200'
-            }`}
+              }`}
           >
             {isResolved ? 'Đã gỡ điểm' : isPending ? 'Chờ xử lý' : 'Đã bác bỏ'}
           </span>
@@ -518,7 +520,8 @@ export default function EmergencyAmenityPage() {
       title: 'Thời gian',
       render: (row) => <span className="text-xs text-gray-500 block">{formatTime(row.createdAt)}</span>,
     },
-    {
+    {/*
+      {
       key: 'actions',
       title: 'Hành động Admin',
       render: (row) => (
@@ -546,6 +549,7 @@ export default function EmergencyAmenityPage() {
         </div>
       ),
     },
+  */}
   ];
 
   return (
@@ -576,44 +580,40 @@ export default function EmergencyAmenityPage() {
         <div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-2xl">
           <button
             onClick={() => setActiveTab('points')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${
-              activeTab === 'points'
-                ? 'bg-white dark:bg-gray-100 text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${activeTab === 'points'
+              ? 'bg-white dark:bg-gray-100 text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <PiStorefrontBold className="w-4 h-4" />
             Các Điểm Tiện Ích
           </button>
           <button
             onClick={() => setActiveTab('categories')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${
-              activeTab === 'categories'
-                ? 'bg-white dark:bg-gray-100 text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${activeTab === 'categories'
+              ? 'bg-white dark:bg-gray-100 text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <PiListDashesBold className="w-4 h-4" />
             Quản Lý Danh Mục
           </button>
           <button
             onClick={() => setActiveTab('feedbacks')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${
-              activeTab === 'feedbacks'
-                ? 'bg-rose-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${activeTab === 'feedbacks'
+              ? 'bg-rose-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <PiFlagBold className="w-4 h-4" />
             Báo Cáo Vi Phạm
           </button>
           <button
             onClick={() => setActiveTab('duplicates')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${
-              activeTab === 'duplicates'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition ${activeTab === 'duplicates'
+              ? 'bg-amber-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <PiCopyBold className="w-4 h-4" />
             Nghi Ngờ Trùng Lặp
@@ -892,13 +892,12 @@ export default function EmergencyAmenityPage() {
                   <div className="text-xs text-gray-500 font-medium">Trạng thái phê duyệt</div>
                   <div>
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-semibold ${
-                        selectedPoint.status === 'APPROVED'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : selectedPoint.status === 'PENDING'
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-semibold ${selectedPoint.status === 'APPROVED'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : selectedPoint.status === 'PENDING'
                           ? 'bg-amber-50 text-amber-700 border border-amber-200'
                           : 'bg-rose-50 text-rose-700 border border-rose-200'
-                      }`}
+                        }`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${selectedPoint.status === 'APPROVED' ? 'bg-emerald-500' : selectedPoint.status === 'PENDING' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
                       {selectedPoint.status === 'APPROVED' ? 'Đã duyệt' : selectedPoint.status === 'PENDING' ? 'Chờ duyệt' : 'Đã từ chối'}
