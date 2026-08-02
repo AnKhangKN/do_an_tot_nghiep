@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
   MapContainer,
   TileLayer,
   Marker,
   Popup,
+  useMap,
 } from "react-leaflet";
 import L from "leaflet";
 import {
@@ -27,6 +28,63 @@ const STATUS_CONFIG = {
   IN_PROGRESS: { label: "Đang ứng cứu", bg: "bg-indigo-50 text-indigo-700 border-indigo-200" },
   DONE: { label: "Hoàn thành", bg: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   CANCELLED: { label: "Đã hủy", bg: "bg-gray-100 text-gray-600 border-gray-200" },
+};
+
+// Create custom animated SOS marker icon
+const createSosDivIcon = (status) => {
+  const colorMap = {
+    PENDING: { bg: "#f59e0b" },
+    SEARCHING: { bg: "#3b82f6" },
+    ASSIGNED: { bg: "#a855f7" },
+    IN_PROGRESS: { bg: "#6366f1" },
+    DONE: { bg: "#10b981" },
+    CANCELLED: { bg: "#6b7280" },
+  };
+  const color = colorMap[status] || { bg: "#ef4444" };
+
+  return L.divIcon({
+    className: "custom-sos-marker-icon",
+    html: `
+      <div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
+        <style>
+          @keyframes sos-radar-pulse {
+            0% { transform: scale(0.6); opacity: 0.8; }
+            100% { transform: scale(2.2); opacity: 0; }
+          }
+        </style>
+        <div style="position:absolute;width:24px;height:24px;border-radius:50%;background:${color.bg};animation:sos-radar-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+        <div style="position:relative;width:26px;height:26px;border-radius:50%;background:${color.bg};border:2px solid #ffffff;box-shadow:0 3px 10px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;color:#ffffff;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+  });
+};
+
+// Component to auto fit map view to points
+const MapBoundsFitter = ({ requests }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    const validPoints = requests
+      .filter((r) => r.victim_lat && r.victim_lng)
+      .map((r) => [parseFloat(r.victim_lat), parseFloat(r.victim_lng)]);
+
+    if (validPoints.length === 1) {
+      map.setView(validPoints[0], 14, { animate: true });
+    } else if (validPoints.length > 1) {
+      const bounds = L.latLngBounds(validPoints);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15, animate: true });
+    }
+  }, [requests, map]);
+
+  return null;
 };
 
 const ChartMapComponent = ({ overviewData }) => {
@@ -276,7 +334,7 @@ const ChartMapComponent = ({ overviewData }) => {
               <MapContainer
                 center={defaultCenter}
                 zoom={12}
-                scrollWheelZoom={false}
+                scrollWheelZoom={true}
                 className="h-full w-full"
               >
                 <TileLayer
@@ -289,13 +347,16 @@ const ChartMapComponent = ({ overviewData }) => {
                   subdomains={isDark ? "abcd" : "abc"}
                 />
 
+                <MapBoundsFitter requests={recentRequests} />
+
                 {recentRequests.map((req) => {
                   if (!req.victim_lat || !req.victim_lng) return null;
                   const pos = [parseFloat(req.victim_lat), parseFloat(req.victim_lng)];
-                  const config = STATUS_CONFIG[req.status] || { label: req.status };
+                  const config = STATUS_CONFIG[req.status] || { label: req.status, bg: "bg-gray-100 text-gray-700 border-gray-200" };
+                  const customIcon = createSosDivIcon(req.status);
 
                   return (
-                    <Marker key={req.sos_request_id} position={pos}>
+                    <Marker key={req.sos_request_id} position={pos} icon={customIcon}>
                       <Popup>
                         <div className="p-1 space-y-1.5 text-xs font-sans">
                           <div className="font-bold text-gray-900">{req.incident_type || "Yêu cầu SOS"}</div>
