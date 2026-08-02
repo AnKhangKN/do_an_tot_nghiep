@@ -37,13 +37,11 @@ const FooterSectionComponent = ({ data = {} }) => {
           {/* Brand & emergency */}
           <div>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-lg">
-                <img
-                  src="/images/SOS-black.png"
-                  alt="Rescue System"
-                  className="h-8 w-8 object-cover"
-                />
-              </div>
+              <img
+                src="/images/SOS-black.png"
+                alt="Rescue System"
+                className="h-12 w-12 shrink-0 rounded-2xl object-contain shadow-lg"
+              />
               <div>
                 <h3 className="text-lg font-bold">Rescue System</h3>
                 <p className="text-xs text-gray-400">

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { PiArrowLeft, PiLifebuoyFill, PiWarningFill } from "react-icons/pi";
+import { PiArrowLeft, PiWarningFill } from "react-icons/pi";
 
 const NotFoundPage = () => {
   return (
@@ -11,7 +11,11 @@ const NotFoundPage = () => {
         </div>
 
         <div className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-gray-500">
-          <PiLifebuoyFill size={18} />
+          <img
+            src="/images/SOS-black.png"
+            alt="Rescue Admin"
+            className="h-5 w-5 rounded-md object-contain shrink-0"
+          />
           Rescue Admin
         </div>
 
@@ -23,7 +27,7 @@ const NotFoundPage = () => {
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           <Link
-            to="/"
+            to="/admin/dashboard"
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300"
           >
             <PiArrowLeft size={18} />

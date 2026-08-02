@@ -1,13 +1,14 @@
 import React from "react";
-import { PiLifebuoyFill } from "react-icons/pi";
 
 const SplashPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 text-gray-900">
       <div className="text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-md dark:bg-gray-200 dark:text-white">
-          <PiLifebuoyFill size={30} />
-        </div>
+        <img
+          src="/images/SOS-black.png"
+          alt="Rescue Admin"
+          className="mx-auto h-16 w-16 rounded-2xl object-contain shadow-md"
+        />
 
         <h1 className="mt-5 text-xl font-bold">Rescue Admin</h1>
         <p className="mt-2 text-sm text-gray-500">Đang chuẩn bị hệ thống...</p>
