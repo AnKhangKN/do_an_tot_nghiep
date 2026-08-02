@@ -152,31 +152,7 @@ const AppealPage = () => {
             <span className="text-xs text-gray-400">—</span>
           ),
       },
-      {
-        key: 'action',
-        title: 'Thao tác',
-        render: (row) =>
-          row.status === 'PENDING' ? (
-            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={() => setActionModal({ ...row, action: 'approve' })}
-                className="px-3 py-1.5 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 text-xs font-bold border border-green-200 transition cursor-pointer flex items-center gap-1"
-              >
-                <PiCheck size={14} />
-                Duyệt
-              </button>
-              <button
-                onClick={() => setActionModal({ ...row, action: 'reject' })}
-                className="px-3 py-1.5 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 text-xs font-bold border border-red-200 transition cursor-pointer flex items-center gap-1"
-              >
-                <PiX size={14} />
-                Từ chối
-              </button>
-            </div>
-          ) : (
-            <span className="text-xs text-gray-400">—</span>
-          ),
-      },
+
     ],
     [page]
   );
@@ -230,11 +206,10 @@ const AppealPage = () => {
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className={`p-2 rounded-2xl ${
-                    actionModal.action === 'approve'
+                  className={`p-2 rounded-2xl ${actionModal.action === 'approve'
                       ? 'bg-green-100 text-green-600'
                       : 'bg-red-100 text-red-600'
-                  }`}
+                    }`}
                 >
                   {actionModal.action === 'approve' ? <PiCheck size={24} /> : <PiX size={24} />}
                 </div>
@@ -302,17 +277,16 @@ const AppealPage = () => {
               <button
                 onClick={() => handleAction(actionModal.action === 'approve')}
                 disabled={actionLoading}
-                className={`px-5 py-2.5 rounded-2xl text-white text-xs font-bold transition shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer ${
-                  actionModal.action === 'approve'
+                className={`px-5 py-2.5 rounded-2xl text-white text-xs font-bold transition shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer ${actionModal.action === 'approve'
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-red-600 hover:bg-red-700'
-                }`}
+                  }`}
               >
                 {actionLoading
                   ? 'Đang xử lý...'
                   : actionModal.action === 'approve'
-                  ? 'Xác nhận duyệt'
-                  : 'Xác nhận từ chối'}
+                    ? 'Xác nhận duyệt'
+                    : 'Xác nhận từ chối'}
               </button>
             </div>
           </div>

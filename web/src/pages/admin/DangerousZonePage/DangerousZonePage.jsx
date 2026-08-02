@@ -123,43 +123,7 @@ const columns = () => [
         {formatTime(row.createdAt)}
       </span>
     ),
-  },
-  {/*
-    {
-    key: 'action',
-    title: 'Hành động',
-    render: (row) => (
-      <div className="flex items-center gap-2 whitespace-nowrap">
-        {row.status === 'PENDING' && (
-          <>
-            <button
-              onClick={() => onApprove(row.dangerousPointId)}
-              disabled={loading}
-              className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-all active:scale-95 shadow-2xs cursor-pointer"
-            >
-              Duyệt
-            </button>
-
-            <button
-              onClick={() => onReject(row.dangerousPointId)}
-              disabled={loading}
-              className="px-3 py-1.5 text-xs font-semibold bg-rose-600 text-white rounded-xl hover:bg-rose-700 disabled:opacity-50 transition-all active:scale-95 shadow-2xs cursor-pointer"
-            >
-              Từ chối
-            </button>
-          </>
-        )}
-
-        <button
-          onClick={() => onOpenFeedbacks(row)}
-          className="px-3 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl transition-all cursor-pointer border border-gray-200"
-        >
-          Xác minh cộng đồng
-        </button>
-      </div>
-    ),
-  },
-  */}
+  }
 ];
 
 const DangerousZonePage = () => {

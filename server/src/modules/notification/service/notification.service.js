@@ -65,16 +65,7 @@ class NotificationService {
         const userIds = await notificationRepository.findTargetUserIds({ targetGroup });
         console.log(`[BROADCAST] Đang phát thông báo tới ${userIds.length} người dùng (target: ${targetGroup})`);
 
-        for (const uid of userIds) {
-            await this.saveNotification({
-                userId: uid,
-                title,
-                content,
-                type
-            });
-        }
-
-        // Gửi FCM Push tới từng user có token
+        // Lưu DB + gửi FCM Push tới từng user (sendPushNotification tự lưu record trước khi gửi, tránh trùng lặp)
         for (const uid of userIds) {
             this.sendPushNotification(uid, {
                 title,

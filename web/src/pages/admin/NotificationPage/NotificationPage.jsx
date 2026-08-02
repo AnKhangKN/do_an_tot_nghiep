@@ -108,7 +108,7 @@ const NotificationPage = () => {
         type: notifType,
       });
 
-      const recipientCount = response?.data?.recipientCount || (targetGroup === "ALL" ? 540 : targetGroup === "RESCUER" ? 150 : 390);
+      const recipientCount = response?.data?.recipientCount ?? 0;
 
       const newLog = normalizeNotificationItem({
         id: response?.data?.id || response?.data?.notificationId || `notif-${Date.now()}`,

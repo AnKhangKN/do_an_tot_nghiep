@@ -169,45 +169,6 @@ const AIModerationPage = () => {
         <span className="text-xs text-gray-500 whitespace-nowrap">{formatTime(row.createdAt)}</span>
       )
     },
-    {/*
-      {
-      key: 'actions',
-      title: 'Hành động',
-      render: (row) => {
-        const currentLogId = row.logId || row.log_id;
-        const isUpdating = Boolean(updatingId && currentLogId && updatingId === currentLogId);
-
-        return (
-          <div className="flex items-center gap-1.5 whitespace-nowrap">
-            <button
-              onClick={() => setSelectedLog(row)}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium transition-all cursor-pointer border border-gray-200 active:scale-95"
-              title="Xem chi tiết phân tích"
-            >
-              <PiEyeFill size={14} />
-              <span>Chi tiết</span>
-            </button>
-
-            <button
-              onClick={() => handleReview(currentLogId, 'APPROVED')}
-              disabled={isUpdating || row.actionTaken === 'APPROVED'}
-              className="px-2.5 py-1 rounded-xl bg-rose-900 hover:bg-rose-800 text-white text-xs font-medium transition-all disabled:opacity-40 cursor-pointer active:scale-95 shadow-2xs"
-            >
-              Vi phạm
-            </button>
-
-            <button
-              onClick={() => handleReview(currentLogId, 'DISMISSED')}
-              disabled={isUpdating || row.actionTaken === 'DISMISSED'}
-              className="px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-medium transition-all disabled:opacity-40 cursor-pointer active:scale-95 border border-emerald-200"
-            >
-              An toàn
-            </button>
-          </div>
-        );
-      }
-    }
-      */}
   ];
 
   return (

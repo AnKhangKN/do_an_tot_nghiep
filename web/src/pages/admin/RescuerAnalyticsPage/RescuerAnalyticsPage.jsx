@@ -113,11 +113,10 @@ const columns = [
       const isOnline = row.status === 'ONLINE' || row.status === 'ACTIVE';
       return (
         <span
-          className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full font-semibold whitespace-nowrap shadow-2xs ${
-            isOnline
+          className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full font-semibold whitespace-nowrap shadow-2xs ${isOnline
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
               : 'bg-gray-100 text-gray-600 border border-gray-200'
-          }`}
+            }`}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
           {isOnline ? 'Hoạt động' : 'Ngoại tuyến'}
@@ -176,9 +175,7 @@ const RescuerAnalyticsPage = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-gray-900">Phân tích hiệu suất Cứu hộ viên</h1>
-            <span className="px-2.5 py-0.5 text-xs font-semibold bg-purple-100 text-purple-800 rounded-full flex items-center gap-1 border border-purple-200">
-              <PiSparkleFill className="text-purple-600 text-xs" /> Analytics
-            </span>
+
           </div>
           <p className="text-sm text-gray-500 mt-0.5">Bảng xếp hạng KPI, tốc độ phản hồi và chất lượng phục vụ của đội ngũ cứu hộ</p>
         </div>
