@@ -18,6 +18,7 @@ import {
   changeAdminPassword,
 } from "@/api/admin/ProfileApi";
 import { setUser } from "@/store/user/userSlice";
+import { formatTime } from "@/utils/format_date.util";
 
 const getErrorMessage = (error) => {
   return error?.response?.data?.message || "Đã có lỗi xảy ra. Vui lòng thử lại!";
@@ -222,7 +223,7 @@ const ProfilePage = () => {
                   </div>
                   <div className="flex items-center gap-2.5 text-xs text-gray-600">
                     <PiCalendarBlankFill size={16} className="text-gray-400 shrink-0" />
-                    <span>Tham gia: {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString("vi-VN") : "--"}</span>
+                    <span>Tham gia: {profile?.createdAt ? formatTime(profile.createdAt) : "--"}</span>
                   </div>
                 </div>
               </div>

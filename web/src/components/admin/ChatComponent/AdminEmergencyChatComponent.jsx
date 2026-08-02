@@ -13,6 +13,7 @@ import {
 } from "react-icons/pi";
 import { getConversationsAdmin, getMessagesAdmin } from "@/api/admin/ChatApi";
 import { subscribeChatEvents, subscribeChatErrors, sendChatMessage } from "@/socket";
+import { formatTime } from "@/utils/format_date.util";
 
 const AdminEmergencyChatComponent = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -328,12 +329,7 @@ const AdminEmergencyChatComponent = () => {
                               )}
                             </div>
                             <span className="text-[10px] text-gray-400 dark:text-gray-600">
-                              {conv.last_message_at
-                                ? new Date(conv.last_message_at).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                : ""}
+                              {conv.last_message_at ? formatTime(conv.last_message_at) : ""}
                             </span>
                           </div>
                           <p
@@ -412,12 +408,7 @@ const AdminEmergencyChatComponent = () => {
                         </div>
                         <span className="text-[10px] text-gray-400 dark:text-gray-600 mt-1 px-1 flex items-center gap-1">
                           {isFailed && <span className="text-red-500 font-semibold">Gửi thất bại</span>}
-                          {msg.created_at
-                            ? new Date(msg.created_at).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            : ""}
+                          {msg.created_at ? formatTime(msg.created_at) : ""}
                         </span>
                       </div>
                     );

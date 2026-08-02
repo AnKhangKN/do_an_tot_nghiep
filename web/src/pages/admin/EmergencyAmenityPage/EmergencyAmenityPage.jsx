@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
+import CellDetailComponent from '@/components/admin/TableComponent/CellDetailComponent/CellDetailComponent';
+import AddUpdateModelComponent from '@/components/admin/AddUpdateModelComponent/AddUpdateModelComponent';
 import { formatTime } from '@/utils/format_date.util';
 import {
   getCategoriesAdmin,
@@ -813,355 +815,281 @@ export default function EmergencyAmenityPage() {
       </div>
 
 
-      {/* Detail Point Modal */}
+      {/* Detail Point Drawer */}
       {selectedPoint && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-100 rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-6">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gray-100 rounded-2xl text-gray-900">
-                  <PiStorefrontBold className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    {selectedPoint.categoryName || 'Tiện ích khẩn cấp'}
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Chi tiết thông tin & Phê duyệt điểm</p>
-                </div>
+        <CellDetailComponent
+          open
+          onClose={() => setSelectedPoint(null)}
+          title={selectedPoint.categoryName || 'Tiện ích khẩn cấp'}
+          subtitle="Chi tiết thông tin & Phê duyệt điểm"
+          actions={[
+            {
+              key: 'delete',
+              label: 'Xóa điểm',
+              icon: PiTrashBold,
+              variant: 'danger',
+              position: 'left',
+              onClick: () => handleDeletePoint(selectedPoint.amenityId),
+            },
+            {
+              key: 'reject',
+              label: 'Từ chối',
+              icon: PiXBold,
+              variant: 'warning',
+              hidden: selectedPoint.status === 'REJECTED',
+              onClick: () => handleUpdateStatus(selectedPoint.amenityId, 'REJECTED'),
+            },
+            {
+              key: 'approve',
+              label: 'Duyệt điểm tiện ích',
+              icon: PiCheckBold,
+              variant: 'success',
+              hidden: selectedPoint.status === 'APPROVED',
+              onClick: () => handleUpdateStatus(selectedPoint.amenityId, 'APPROVED'),
+            },
+          ]}
+        >
+          {/* Modal Content: Split 2 Columns (Left: Image, Right: Grid Info) */}
+          <div className="flex flex-col md:flex-row gap-5">
+            {/* Left Column: Hình ảnh đính kèm */}
+            <div className="w-full md:w-5/12 flex flex-col">
+              <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mb-2">
+                <PiImageBold className="w-4 h-4 text-blue-600" />
+                Hình ảnh minh họa thực tế
               </div>
-              <button
-                onClick={() => setSelectedPoint(null)}
-                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition cursor-pointer"
-              >
-                <PiXBold className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Content: Split 2 Columns (Left: Image, Right: Grid Info) */}
-            <div className="flex flex-col md:flex-row gap-5">
-              {/* Left Column: Hình ảnh đính kèm */}
-              <div className="w-full md:w-5/12 flex flex-col">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mb-2">
-                  <PiImageBold className="w-4 h-4 text-blue-600" />
-                  Hình ảnh minh họa thực tế
-                </div>
-                <div className="flex-1 min-h-[220px] bg-gray-50 rounded-2xl border border-gray-200 p-2 flex items-center justify-center relative group overflow-hidden">
-                  {selectedPoint.imageUrl ? (
-                    <>
-                      <img
-                        src={selectedPoint.imageUrl}
-                        alt="Ảnh tiện ích"
-                        className="w-full h-full max-h-[300px] object-cover rounded-xl transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <a
-                        href={selectedPoint.imageUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="absolute bottom-3 right-3 px-3 py-1.5 bg-gray-900/80 hover:bg-gray-900 dark:bg-black/70 dark:hover:bg-black/80 text-white text-xs font-semibold rounded-xl backdrop-blur-xs transition shadow-sm"
-                      >
-                        Phóng to ↗
-                      </a>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-6 text-center text-gray-400 space-y-2">
-                      <PiImageBold className="w-10 h-10 text-gray-300 dark:text-gray-600" />
-                      <p className="text-xs italic">Không có hình ảnh đính kèm cho tiện ích này</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Column: Grid Thông tin chi tiết */}
-              <div className="w-full md:w-7/12 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                    <PiStorefrontBold className="w-4 h-4 text-gray-400" />
-                    Loại tiện ích
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {selectedPoint.categoryName || 'Chưa xác định'}
-                  </div>
-                </div>
-
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
-                  <div className="text-xs text-gray-500 font-medium">Trạng thái phê duyệt</div>
-                  <div>
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-semibold ${selectedPoint.status === 'APPROVED'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : selectedPoint.status === 'PENDING'
-                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                          : 'bg-rose-50 text-rose-700 border border-rose-200'
-                        }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${selectedPoint.status === 'APPROVED' ? 'bg-emerald-500' : selectedPoint.status === 'PENDING' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
-                      {selectedPoint.status === 'APPROVED' ? 'Đã duyệt' : selectedPoint.status === 'PENDING' ? 'Chờ duyệt' : 'Đã từ chối'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                    <PiPhoneBold className="w-4 h-4 text-gray-400" />
-                    Số điện thoại
-                  </div>
-                  <div className="text-sm font-mono font-semibold text-gray-900">
-                    {selectedPoint.phone || 'Không có SĐT'}
-                  </div>
-                </div>
-
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                    <PiClockBold className="w-4 h-4 text-gray-400" />
-                    Giờ mở cửa
-                  </div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {selectedPoint.openingHours || '07:00 - 21:00'}
-                  </div>
-                </div>
-
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1 sm:col-span-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                      <PiMapPinBold className="w-4 h-4 text-rose-500" />
-                      Tọa độ GPS (Lat, Lng)
-                    </div>
+              <div className="flex-1 min-h-[220px] bg-gray-50 rounded-2xl border border-gray-200 p-2 flex items-center justify-center relative group overflow-hidden">
+                {selectedPoint.imageUrl ? (
+                  <>
+                    <img
+                      src={selectedPoint.imageUrl}
+                      alt="Ảnh tiện ích"
+                      className="w-full h-full max-h-[300px] object-cover rounded-xl transition-transform duration-300 group-hover:scale-105"
+                    />
                     <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${selectedPoint.latitude},${selectedPoint.longitude}`}
+                      href={selectedPoint.imageUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs text-blue-600 hover:underline font-medium"
+                      className="absolute bottom-3 right-3 px-3 py-1.5 bg-gray-900/80 hover:bg-gray-900 dark:bg-black/70 dark:hover:bg-black/80 text-white text-xs font-semibold rounded-xl backdrop-blur-xs transition shadow-sm"
                     >
-                      Mở Google Maps →
+                      Phóng to ↗
                     </a>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-6 text-center text-gray-400 space-y-2">
+                    <PiImageBold className="w-10 h-10 text-gray-300 dark:text-gray-600" />
+                    <p className="text-xs italic">Không có hình ảnh đính kèm cho tiện ích này</p>
                   </div>
-                  <div className="text-sm font-mono font-semibold text-gray-900">
-                    {selectedPoint.latitude}, {selectedPoint.longitude}
-                  </div>
-                </div>
-
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                    <PiUserBold className="w-4 h-4 text-gray-400" />
-                    Người đóng góp
-                  </div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {selectedPoint.reporterName || 'Hệ thống'}
-                  </div>
-                </div>
-
-                <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
-                  <div className="text-xs text-gray-500 font-medium">Thời gian gửi</div>
-                  <div className="text-sm text-gray-900">
-                    {formatTime(selectedPoint.createdAt)}
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
+            {/* Right Column: Grid Thông tin chi tiết */}
+            <div className="w-full md:w-7/12 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                  <PiStorefrontBold className="w-4 h-4 text-gray-400" />
+                  Loại tiện ích
+                </div>
+                <div className="text-sm font-semibold text-gray-900">
+                  {selectedPoint.categoryName || 'Chưa xác định'}
+                </div>
+              </div>
 
-
-            {/* Modal Actions Footer */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
-              <button
-                onClick={() => handleDeletePoint(selectedPoint.amenityId)}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-2xl transition"
-              >
-                <PiTrashBold className="w-4 h-4" />
-                Xóa điểm
-              </button>
-
-              <div className="flex items-center gap-2">
-                {selectedPoint.status !== 'REJECTED' && (
-                  <button
-                    onClick={() => handleUpdateStatus(selectedPoint.amenityId, 'REJECTED')}
-                    className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold rounded-2xl transition"
+              <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
+                <div className="text-xs text-gray-500 font-medium">Trạng thái phê duyệt</div>
+                <div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-semibold ${selectedPoint.status === 'APPROVED'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : selectedPoint.status === 'PENDING'
+                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                      }`}
                   >
-                    <PiXBold className="w-4 h-4" />
-                    Từ chối
-                  </button>
-                )}
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedPoint.status === 'APPROVED' ? 'bg-emerald-500' : selectedPoint.status === 'PENDING' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
+                    {selectedPoint.status === 'APPROVED' ? 'Đã duyệt' : selectedPoint.status === 'PENDING' ? 'Chờ duyệt' : 'Đã từ chối'}
+                  </span>
+                </div>
+              </div>
 
-                {selectedPoint.status !== 'APPROVED' && (
-                  <button
-                    onClick={() => handleUpdateStatus(selectedPoint.amenityId, 'APPROVED')}
-                    className="flex items-center gap-1.5 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-2xl shadow-sm transition"
+              <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                  <PiPhoneBold className="w-4 h-4 text-gray-400" />
+                  Số điện thoại
+                </div>
+                <div className="text-sm font-mono font-semibold text-gray-900">
+                  {selectedPoint.phone || 'Không có SĐT'}
+                </div>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                  <PiClockBold className="w-4 h-4 text-gray-400" />
+                  Giờ mở cửa
+                </div>
+                <div className="text-sm font-medium text-gray-900">
+                  {selectedPoint.openingHours || '07:00 - 21:00'}
+                </div>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-2xl space-y-1 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                    <PiMapPinBold className="w-4 h-4 text-rose-500" />
+                    Tọa độ GPS (Lat, Lng)
+                  </div>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${selectedPoint.latitude},${selectedPoint.longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-blue-600 hover:underline font-medium"
                   >
-                    <PiCheckBold className="w-4 h-4" />
-                    Duyệt điểm tiện ích
-                  </button>
-                )}
+                    Mở Google Maps →
+                  </a>
+                </div>
+                <div className="text-sm font-mono font-semibold text-gray-900">
+                  {selectedPoint.latitude}, {selectedPoint.longitude}
+                </div>
+              </div>
 
-                <button
-                  onClick={() => setSelectedPoint(null)}
-                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-2xl transition"
-                >
-                  Đóng
-                </button>
+              <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                  <PiUserBold className="w-4 h-4 text-gray-400" />
+                  Người đóng góp
+                </div>
+                <div className="text-sm font-medium text-gray-900">
+                  {selectedPoint.reporterName || 'Hệ thống'}
+                </div>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-2xl space-y-1">
+                <div className="text-xs text-gray-500 font-medium">Thời gian gửi</div>
+                <div className="text-sm text-gray-900">
+                  {formatTime(selectedPoint.createdAt)}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </CellDetailComponent>
       )}
 
       {/* Add Category Modal */}
-      {showAddCategoryModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full p-6 shadow-xl space-y-4">
-            <h3 className="text-lg font-bold text-gray-900">Thêm Danh Mục Tiện Ích Mới</h3>
+      <AddUpdateModelComponent
+        open={showAddCategoryModal}
+        onClose={() => setShowAddCategoryModal(false)}
+        title="Thêm Danh Mục Tiện Ích Mới"
+        onSubmit={handleCreateCategory}
+        submitLabel="Tạo danh mục"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">Tên danh mục (*)</label>
+            <input
+              type="text"
+              required
+              placeholder="Ví dụ: Trạm sạc EV, Sửa xe cứu hộ..."
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900"
+            />
+          </div>
 
-            <form onSubmit={handleCreateCategory} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">Tên danh mục (*)</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ví dụ: Trạm sạc EV, Sửa xe cứu hộ..."
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1.5">Biểu tượng (Icon)</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {AMENITY_ICONS.map(({ key, label, Icon, color }) => {
-                    const IconComp = Icon;
-                    const selected = newIconName === key;
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setNewIconName(key)}
-                        title={label}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-2xl border transition ${selected
-                          ? 'bg-gray-900 text-white border-gray-900'
-                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-900'
-                          }`}
-                      >
-                        <span
-                          className="flex items-center justify-center w-8 h-8 rounded-lg text-white"
-                          style={{ backgroundColor: color }}
-                        >
-                          <IconComp className="w-4.5 h-4.5" />
-                        </span>
-                        <span className="text-[10px] font-semibold leading-tight text-center">{label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddCategoryModal(false)}
-                  className="px-4 py-2 rounded-2xl text-xs font-semibold text-gray-600 hover:bg-gray-100 transition"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white rounded-2xl text-xs font-semibold shadow-sm transition"
-                >
-                  Tạo danh mục
-                </button>
-              </div>
-            </form>
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1.5">Biểu tượng (Icon)</label>
+            <div className="grid grid-cols-4 gap-2">
+              {AMENITY_ICONS.map(({ key, label, Icon, color }) => {
+                const IconComp = Icon;
+                const selected = newIconName === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setNewIconName(key)}
+                    title={label}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl border transition ${selected
+                      ? 'bg-gray-900 text-white border-gray-900'
+                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-900'
+                      }`}
+                  >
+                    <span
+                      className="flex items-center justify-center w-8 h-8 rounded-lg text-white"
+                      style={{ backgroundColor: color }}
+                    >
+                      <IconComp className="w-4.5 h-4.5" />
+                    </span>
+                    <span className="text-[10px] font-semibold leading-tight text-center">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      )}
+      </AddUpdateModelComponent>
 
       {/* Edit Category Modal */}
-      {showEditCategoryModal && editingCategory && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">Cập Nhật Danh Mục Tiện Ích</h3>
-              <button
-                onClick={() => setShowEditCategoryModal(false)}
-                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition"
-              >
-                <PiXBold className="w-5 h-5" />
-              </button>
+      <AddUpdateModelComponent
+        open={showEditCategoryModal}
+        onClose={() => setShowEditCategoryModal(false)}
+        title="Cập Nhật Danh Mục Tiện Ích"
+        onSubmit={handleUpdateCategory}
+        submitLabel="Lưu thay đổi"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">Tên danh mục (*)</label>
+            <input
+              type="text"
+              required
+              placeholder="Ví dụ: Trạm sạc EV, Sửa xe cứu hộ..."
+              value={editCategoryName}
+              onChange={(e) => setEditCategoryName(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1.5">Biểu tượng (Icon)</label>
+            <div className="grid grid-cols-4 gap-2">
+              {AMENITY_ICONS.map(({ key, label, Icon, color }) => {
+                const IconComp = Icon;
+                const selected = editIconName === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setEditIconName(key)}
+                    title={label}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl border transition ${selected
+                      ? 'bg-gray-900 text-white border-gray-900'
+                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-900'
+                      }`}
+                  >
+                    <span
+                      className="flex items-center justify-center w-8 h-8 rounded-lg text-white"
+                      style={{ backgroundColor: color }}
+                    >
+                      <IconComp className="w-4.5 h-4.5" />
+                    </span>
+                    <span className="text-[10px] font-semibold leading-tight text-center">{label}</span>
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            <form onSubmit={handleUpdateCategory} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">Tên danh mục (*)</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ví dụ: Trạm sạc EV, Sửa xe cứu hộ..."
-                  value={editCategoryName}
-                  onChange={(e) => setEditCategoryName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1.5">Biểu tượng (Icon)</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {AMENITY_ICONS.map(({ key, label, Icon, color }) => {
-                    const IconComp = Icon;
-                    const selected = editIconName === key;
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setEditIconName(key)}
-                        title={label}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-2xl border transition ${selected
-                          ? 'bg-gray-900 text-white border-gray-900'
-                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-900'
-                          }`}
-                      >
-                        <span
-                          className="flex items-center justify-center w-8 h-8 rounded-lg text-white"
-                          style={{ backgroundColor: color }}
-                        >
-                          <IconComp className="w-4.5 h-4.5" />
-                        </span>
-                        <span className="text-[10px] font-semibold leading-tight text-center">{label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">Trạng thái</label>
-                <select
-                  value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900"
-                >
-                  <option value="ACTIVE">Hoạt động (ACTIVE)</option>
-                  <option value="INACTIVE">Tạm khóa (INACTIVE)</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEditCategoryModal(false)}
-                  className="px-4 py-2 rounded-2xl text-xs font-semibold text-gray-600 hover:bg-gray-100 transition"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white rounded-2xl text-xs font-semibold shadow-sm transition"
-                >
-                  Lưu thay đổi
-                </button>
-              </div>
-            </form>
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">Trạng thái</label>
+            <select
+              value={editStatus}
+              onChange={(e) => setEditStatus(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900"
+            >
+              <option value="ACTIVE">Hoạt động (ACTIVE)</option>
+              <option value="INACTIVE">Tạm khóa (INACTIVE)</option>
+            </select>
           </div>
         </div>
-      )}
+      </AddUpdateModelComponent>
     </div>
   );
 }

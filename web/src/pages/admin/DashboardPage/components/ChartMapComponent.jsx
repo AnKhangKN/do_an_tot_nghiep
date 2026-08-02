@@ -19,6 +19,7 @@ import {
   PiUserBold,
   PiInfoBold,
 } from "react-icons/pi";
+import { formatTime } from "@/utils/format_date.util";
 
 // Standard status badges mapping
 const STATUS_CONFIG = {
@@ -416,10 +417,7 @@ const ChartMapComponent = ({ overviewData }) => {
                     <div className="text-right text-xs text-gray-400 flex sm:flex-col items-center sm:items-end justify-between">
                       <span className="flex items-center gap-1 font-medium text-gray-500">
                         <PiClockBold className="text-sm" />
-                        {req.created_at ? new Date(req.created_at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : "N/A"}
-                      </span>
-                      <span className="text-[11px] text-gray-400">
-                        {req.created_at ? new Date(req.created_at).toLocaleDateString("vi-VN") : ""}
+                        {req.created_at ? formatTime(req.created_at) : "N/A"}
                       </span>
                     </div>
                   </div>

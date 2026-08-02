@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
+import CellDetailComponent from '@/components/admin/TableComponent/CellDetailComponent/CellDetailComponent';
 import { formatTime } from '@/utils/format_date.util';
 import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones, getDangerousZoneFeedbacks, getPointFeedbacks } from '@/api/admin/DangerousZoneApi';
 import {
@@ -382,76 +383,55 @@ const DangerousZonePage = () => {
         </div>
       )}
 
-      {/* Modal Xem Phản hồi của 1 Điểm */}
-      {selectedPointFeedbacks && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white dark:bg-gray-100 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Chi tiết Xác minh Cộng đồng</h3>
-                <p className="text-xs text-gray-500">{selectedPointFeedbacks.point.zoneName}</p>
-              </div>
-              <button
-                onClick={() => setSelectedPointFeedbacks(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-bold hover:bg-gray-200 cursor-pointer flex items-center justify-center"
-              >
-                <PiXBold />
-              </button>
-            </div>
-
-            {/* Thống kê nhanh */}
-            <div className="grid grid-cols-4 gap-2 text-center text-xs">
-              <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-200">
-                <span className="block font-bold text-emerald-700 text-base">{selectedPointFeedbacks.stats.verifyCount || 0}</span>
-                <span className="flex items-center justify-center gap-1 text-emerald-800 font-medium"><PiThumbsUpFill size={12} /> Xác nhận thật</span>
-              </div>
-              <div className="p-2 bg-rose-50 rounded-xl border border-rose-200">
-                <span className="block font-bold text-rose-700 text-base">{selectedPointFeedbacks.stats.fakeCount || 0}</span>
-                <span className="flex items-center justify-center gap-1 text-rose-800 font-medium"><PiFlagFill size={12} /> Báo giả mạo</span>
-              </div>
-              <div className="p-2 bg-blue-50 rounded-xl border border-blue-200">
-                <span className="block font-bold text-blue-700 text-base">{selectedPointFeedbacks.stats.resolvedCount || 0}</span>
-                <span className="flex items-center justify-center gap-1 text-blue-800 font-medium"><PiCheckCircleFill size={12} /> Báo đã an toàn</span>
-              </div>
-              <div className="p-2 bg-amber-50 rounded-xl border border-amber-200">
-                <span className="block font-bold text-amber-700 text-base">{selectedPointFeedbacks.stats.stillDangerousCount || 0}</span>
-                <span className="flex items-center justify-center gap-1 text-amber-800 font-medium"><PiFireFill size={12} /> Vẫn nguy hiểm</span>
-              </div>
-            </div>
-
-            {/* Danh sách phản hồi */}
-            <div className="space-y-2 pt-2">
-              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Danh sách ghi chú thực tế</h4>
-              {selectedPointFeedbacks.list.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-4">Chưa có phản hồi nào.</p>
-              ) : (
-                selectedPointFeedbacks.list.map((item) => (
-                  <div key={item.feedbackId} className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-gray-900">{item.userName} ({item.userRole})</span>
-                      <span className="text-gray-400">{formatTime(item.createdAt)}</span>
-                    </div>
-                    {item.comment ? (
-                      <p className="text-gray-700 italic">"{item.comment}"</p>
-                    ) : (
-                      <p className="text-gray-400 italic">(Không có ghi chú thêm)</p>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => setSelectedPointFeedbacks(null)}
-                className="px-4 py-2 bg-gray-900 text-white dark:bg-gray-200 dark:text-white rounded-xl text-xs font-bold hover:bg-gray-800 dark:hover:bg-gray-300 cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
+      {/* Detail Drawer Xem Phản hồi của 1 Điểm */}
+      <CellDetailComponent
+        open={!!selectedPointFeedbacks}
+        onClose={() => setSelectedPointFeedbacks(null)}
+        title="Chi tiết Xác minh Cộng đồng"
+        subtitle={selectedPointFeedbacks ? selectedPointFeedbacks.point.zoneName : undefined}
+      >
+        {/* Thống kê nhanh */}
+        <div className="grid grid-cols-4 gap-2 text-center text-xs">
+          <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-200">
+            <span className="block font-bold text-emerald-700 text-base">{selectedPointFeedbacks?.stats.verifyCount || 0}</span>
+            <span className="flex items-center justify-center gap-1 text-emerald-800 font-medium"><PiThumbsUpFill size={12} /> Xác nhận thật</span>
+          </div>
+          <div className="p-2 bg-rose-50 rounded-xl border border-rose-200">
+            <span className="block font-bold text-rose-700 text-base">{selectedPointFeedbacks?.stats.fakeCount || 0}</span>
+            <span className="flex items-center justify-center gap-1 text-rose-800 font-medium"><PiFlagFill size={12} /> Báo giả mạo</span>
+          </div>
+          <div className="p-2 bg-blue-50 rounded-xl border border-blue-200">
+            <span className="block font-bold text-blue-700 text-base">{selectedPointFeedbacks?.stats.resolvedCount || 0}</span>
+            <span className="flex items-center justify-center gap-1 text-blue-800 font-medium"><PiCheckCircleFill size={12} /> Báo đã an toàn</span>
+          </div>
+          <div className="p-2 bg-amber-50 rounded-xl border border-amber-200">
+            <span className="block font-bold text-amber-700 text-base">{selectedPointFeedbacks?.stats.stillDangerousCount || 0}</span>
+            <span className="flex items-center justify-center gap-1 text-amber-800 font-medium"><PiFireFill size={12} /> Vẫn nguy hiểm</span>
           </div>
         </div>
-      )}
+
+        {/* Danh sách phản hồi */}
+        <div className="space-y-2 pt-2">
+          <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Danh sách ghi chú thực tế</h4>
+          {selectedPointFeedbacks?.list.length === 0 ? (
+            <p className="text-xs text-gray-400 text-center py-4">Chưa có phản hồi nào.</p>
+          ) : (
+            selectedPointFeedbacks?.list.map((item) => (
+              <div key={item.feedbackId} className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-gray-900">{item.userName} ({item.userRole})</span>
+                  <span className="text-gray-400">{formatTime(item.createdAt)}</span>
+                </div>
+                {item.comment ? (
+                  <p className="text-gray-700 italic">"{item.comment}"</p>
+                ) : (
+                  <p className="text-gray-400 italic">(Không có ghi chú thêm)</p>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </CellDetailComponent>
     </div>
   );
 };

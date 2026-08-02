@@ -3,7 +3,8 @@ import * as IncidentTypesApi from "@/api/admin/IncidentTypeApi";
 import { formatTime } from "@/utils/format_date.util";
 import TableComponent from "@/components/admin/TableComponent/TableComponent";
 import ButtonComponent from "@/components/shared/ButtonComponent/ButtonComponent";
-import { PiPlus, PiX, PiPencilSimpleBold, PiToggleLeftBold, PiToggleRightBold } from "react-icons/pi";
+import AddUpdateModelComponent from "@/components/admin/AddUpdateModelComponent/AddUpdateModelComponent";
+import { PiPlus, PiPencilSimpleBold, PiToggleLeftBold, PiToggleRightBold } from "react-icons/pi";
 
 const IncidentTypePage = () => {
   const [incidentTypes, setIncidentTypes] = useState([]);
@@ -248,182 +249,94 @@ const IncidentTypePage = () => {
       </div>
 
       {/* MODAL TẠO LOẠI SỰ CỐ */}
-      {isOpenModal && (
-        <div
-          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm transition-all duration-300"
-          onClick={() => {
-            if (!createLoading) {
-              setIsOpenModal(false);
-              setNewIncidentType("");
-              setErrorMessage("");
-            }
-          }}
-        >
-          <div
-            className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full border border-gray-100 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-base font-bold text-gray-900">
-                Tạo loại sự cố mới
-              </h3>
-              <button
-                onClick={() => {
-                  if (!createLoading) {
-                    setIsOpenModal(false);
-                    setNewIncidentType("");
-                    setErrorMessage("");
-                  }
-                }}
-                className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition flex items-center justify-center"
-              >
-                <PiX size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreate}>
-              <div className="p-6 space-y-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-700">
-                    Tên loại sự cố <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={newIncidentType}
-                    onChange={(e) => {
-                      setNewIncidentType(e.target.value);
-                      if (errorMessage) setErrorMessage("");
-                    }}
-                    placeholder="Nhập tên loại sự cố (Ví dụ: Cứu hộ ngập lụt, Tai nạn...)"
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-gray-900 text-xs font-semibold text-gray-900"
-                    disabled={createLoading}
-                    autoFocus
-                  />
-                  <p className="text-[11px] text-gray-400 italic">
-                    * Hệ thống sẽ tự động in hoa và lưu vào cơ sở dữ liệu.
-                  </p>
-                  {errorMessage && (
-                    <span className="text-xs text-rose-600 font-medium">
-                      {errorMessage}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOpenModal(false);
-                    setNewIncidentType("");
-                    setErrorMessage("");
-                  }}
-                  disabled={createLoading}
-                  className="px-5 py-2.5 rounded-2xl border border-gray-200 text-gray-700 hover:bg-gray-100 text-xs font-semibold transition"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={createLoading}
-                  className="px-5 py-2.5 rounded-2xl bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 text-xs font-semibold transition shadow-md disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {createLoading ? "Đang tạo..." : "Tạo mới"}
-                </button>
-              </div>
-            </form>
-          </div>
+      <AddUpdateModelComponent
+        open={isOpenModal}
+        onClose={() => {
+          setIsOpenModal(false);
+          setNewIncidentType("");
+          setErrorMessage("");
+        }}
+        title="Tạo loại sự cố mới"
+        onSubmit={handleCreate}
+        submitLabel="Tạo mới"
+        loading={createLoading}
+      >
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold text-gray-700">
+            Tên loại sự cố <span className="text-rose-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={newIncidentType}
+            onChange={(e) => {
+              setNewIncidentType(e.target.value);
+              if (errorMessage) setErrorMessage("");
+            }}
+            placeholder="Nhập tên loại sự cố (Ví dụ: Cứu hộ ngập lụt, Tai nạn...)"
+            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-gray-900 text-xs font-semibold text-gray-900"
+            disabled={createLoading}
+            autoFocus
+          />
+          <p className="text-[11px] text-gray-400 italic">
+            * Hệ thống sẽ tự động in hoa và lưu vào cơ sở dữ liệu.
+          </p>
+          {errorMessage && (
+            <span className="text-xs text-rose-600 font-medium">
+              {errorMessage}
+            </span>
+          )}
         </div>
-      )}
+      </AddUpdateModelComponent>
 
       {/* MODAL CHỈNH SỬA LOẠI SỰ CỐ */}
-      {editingItem && (
-        <div
-          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm transition-all duration-300"
-          onClick={() => {
-            if (!editLoading) setEditingItem(null);
-          }}
-        >
-          <div
-            className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full border border-gray-100 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-base font-bold text-gray-900">
-                Chỉnh sửa loại sự cố
-              </h3>
-              <button
-                onClick={() => {
-                  if (!editLoading) setEditingItem(null);
-                }}
-                className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition flex items-center justify-center"
-              >
-                <PiX size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdate}>
-              <div className="p-6 space-y-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-700">
-                    Tên loại sự cố <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editIncidentType}
-                    onChange={(e) => {
-                      setEditIncidentType(e.target.value);
-                      if (editErrorMessage) setEditErrorMessage("");
-                    }}
-                    placeholder="Nhập tên loại sự cố"
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-gray-900 text-xs font-semibold text-gray-900"
-                    disabled={editLoading}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-700">
-                    Trạng thái hoạt động
-                  </label>
-                  <select
-                    value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-gray-900 text-xs font-semibold text-gray-900"
-                    disabled={editLoading}
-                  >
-                    <option value="ACTIVE">ACTIVE - Hoạt động (Hiển thị cho Nạn nhân)</option>
-                    <option value="INACTIVE">INACTIVE - Tắt (Ẩn khỏi ứng dụng)</option>
-                  </select>
-                </div>
-
-                {editErrorMessage && (
-                  <span className="text-xs text-rose-600 font-medium">
-                    {editErrorMessage}
-                  </span>
-                )}
-              </div>
-
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(null)}
-                  disabled={editLoading}
-                  className="px-5 py-2.5 rounded-2xl border border-gray-200 text-gray-700 hover:bg-gray-100 text-xs font-semibold transition"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={editLoading}
-                  className="px-5 py-2.5 rounded-2xl bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-200 dark:text-white dark:hover:bg-gray-300 text-xs font-semibold transition shadow-md disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {editLoading ? "Đang lưu..." : "Lưu thay đổi"}
-                </button>
-              </div>
-            </form>
+      <AddUpdateModelComponent
+        open={!!editingItem}
+        onClose={() => setEditingItem(null)}
+        title="Chỉnh sửa loại sự cố"
+        onSubmit={handleUpdate}
+        submitLabel="Lưu thay đổi"
+        loading={editLoading}
+      >
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-gray-700">
+              Tên loại sự cố <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={editIncidentType}
+              onChange={(e) => {
+                setEditIncidentType(e.target.value);
+                if (editErrorMessage) setEditErrorMessage("");
+              }}
+              placeholder="Nhập tên loại sự cố"
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-gray-900 text-xs font-semibold text-gray-900"
+              disabled={editLoading}
+            />
           </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-gray-700">
+              Trạng thái hoạt động
+            </label>
+            <select
+              value={editStatus}
+              onChange={(e) => setEditStatus(e.target.value)}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-gray-900 text-xs font-semibold text-gray-900"
+              disabled={editLoading}
+            >
+              <option value="ACTIVE">ACTIVE - Hoạt động (Hiển thị cho Nạn nhân)</option>
+              <option value="INACTIVE">INACTIVE - Tắt (Ẩn khỏi ứng dụng)</option>
+            </select>
+          </div>
+
+          {editErrorMessage && (
+            <span className="text-xs text-rose-600 font-medium">
+              {editErrorMessage}
+            </span>
+          )}
         </div>
-      )}
+      </AddUpdateModelComponent>
     </div>
   );
 };

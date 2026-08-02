@@ -1,8 +1,9 @@
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
+import AddUpdateModelComponent from '@/components/admin/AddUpdateModelComponent/AddUpdateModelComponent';
 import { formatTime } from '@/utils/format_date.util';
 import React from 'react';
 import { getUsersAdmin, banUser, unbanUser } from '@/api/admin/UserApi';
-import { PiLock, PiLockOpen, PiX, PiWarningCircle } from 'react-icons/pi';
+import { PiLock, PiLockOpen, PiWarningCircle } from 'react-icons/pi';
 
 const UserPage = () => {
   const [users, setUsers] = React.useState([]);
@@ -184,116 +185,61 @@ const UserPage = () => {
       />
 
       {/* Ban Modal */}
-      {banModal && (
-        <div
-          className="fixed inset-0 bg-slate-900/40 z-[9999] flex items-center justify-center"
-          onClick={() => { setBanModal(null); setBanError(''); }}
-        >
-          <div
-            className="bg-white dark:bg-gray-100 rounded-3xl max-w-md w-full mx-4 shadow-xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-2xl bg-red-100 text-red-600">
-                  <PiWarningCircle size={24} />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-gray-900">Khóa tài khoản</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {banModal.fullName} ({banModal.email})
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => { setBanModal(null); setBanError(''); }}
-                className="p-2 rounded-2xl text-gray-400 hover:bg-gray-200/60 hover:text-gray-900 transition cursor-pointer"
-              >
-                <PiX size={20} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              {banError && (
-                <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-red-50 border border-red-200">
-                  <PiWarningCircle size={18} className="text-red-600 mt-0.5 shrink-0" />
-                  <span className="text-sm text-red-700 font-medium">{banError}</span>
-                </div>
-              )}
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">
-                  Lý do khóa
-                </label>
-                <textarea
-                  value={banReason}
-                  onChange={(e) => { setBanReason(e.target.value); setBanError(''); }}
-
-                  placeholder="Nhập lý do khóa tài khoản..."
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 resize-none"
-                />
-              </div>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-              <button
-                onClick={() => { setBanModal(null); setBanError(''); }}
-                className="px-5 py-2.5 rounded-2xl bg-white dark:bg-gray-100 text-gray-700 hover:bg-gray-100 text-xs font-bold transition border border-gray-200 cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleBan}
-                disabled={!banReason.trim() || banning}
-                className="px-5 py-2.5 rounded-2xl bg-red-600 text-white hover:bg-red-700 text-xs font-bold transition shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
-              >
-                {banning ? 'Đang xử lý...' : 'Xác nhận khóa'}
-              </button>
-            </div>
+      <AddUpdateModelComponent
+        open={!!banModal}
+        onClose={() => { setBanModal(null); setBanError(''); }}
+        title="Khóa tài khoản"
+        subtitle={banModal ? `${banModal.fullName} (${banModal.email})` : undefined}
+        headerIcon={
+          <div className="p-2 rounded-2xl bg-red-100 text-red-600">
+            <PiWarningCircle size={24} />
           </div>
+        }
+        onSubmit={handleBan}
+        submitLabel="Xác nhận khóa"
+        submitVariant="danger"
+        submitDisabled={!banReason.trim()}
+        loading={banning}
+      >
+        {banError && (
+          <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-red-50 border border-red-200 mb-4">
+            <PiWarningCircle size={18} className="text-red-600 mt-0.5 shrink-0" />
+            <span className="text-sm text-red-700 font-medium">{banError}</span>
+          </div>
+        )}
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">
+            Lý do khóa
+          </label>
+          <textarea
+            value={banReason}
+            onChange={(e) => { setBanReason(e.target.value); setBanError(''); }}
+            placeholder="Nhập lý do khóa tài khoản..."
+            rows={4}
+            className="w-full px-4 py-3 rounded-2xl bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 resize-none"
+          />
         </div>
-      )}
+      </AddUpdateModelComponent>
 
       {/* Unban Confirm */}
-      {unbanConfirm && (
-        <div
-          className="fixed inset-0 bg-slate-900/40 z-[9999] flex items-center justify-center"
-          onClick={() => { setUnbanConfirm(null); setUnbanError(''); }}
-        >
-          <div
-            className="bg-white dark:bg-gray-100 rounded-3xl max-w-sm w-full mx-4 shadow-xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-6 py-5 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900">Mở khóa tài khoản</h3>
-              <p className="text-sm text-gray-600 mt-2">
-                Bạn có chắc muốn mở khóa tài khoản <strong>{unbanConfirm.fullName}</strong>?
-              </p>
-            </div>
-            {unbanError && (
-              <div className="px-6 pt-4">
-                <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-red-50 border border-red-200">
-                  <PiWarningCircle size={18} className="text-red-600 mt-0.5 shrink-0" />
-                  <span className="text-sm text-red-700 font-medium">{unbanError}</span>
-                </div>
-              </div>
-            )}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-              <button
-                onClick={() => { setUnbanConfirm(null); setUnbanError(''); }}
-                className="px-5 py-2.5 rounded-2xl bg-white dark:bg-gray-100 text-gray-700 hover:bg-gray-100 text-xs font-bold transition border border-gray-200 cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleUnban}
-                disabled={unbanning}
-                className="px-5 py-2.5 rounded-2xl bg-green-600 text-white hover:bg-green-700 text-xs font-bold transition shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
-              >
-                {unbanning ? 'Đang xử lý...' : 'Xác nhận mở khóa'}
-              </button>
-            </div>
+      <AddUpdateModelComponent
+        open={!!unbanConfirm}
+        onClose={() => { setUnbanConfirm(null); setUnbanError(''); }}
+        title="Mở khóa tài khoản"
+        subtitle={unbanConfirm ? `Bạn có chắc muốn mở khóa tài khoản ${unbanConfirm.fullName}?` : undefined}
+        onSubmit={handleUnban}
+        submitLabel="Xác nhận mở khóa"
+        submitVariant="success"
+        loading={unbanning}
+        maxWidth="max-w-sm"
+      >
+        {unbanError && (
+          <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-red-50 border border-red-200">
+            <PiWarningCircle size={18} className="text-red-600 mt-0.5 shrink-0" />
+            <span className="text-sm text-red-700 font-medium">{unbanError}</span>
           </div>
-        </div>
-      )}
+        )}
+      </AddUpdateModelComponent>
     </div>
   );
 };

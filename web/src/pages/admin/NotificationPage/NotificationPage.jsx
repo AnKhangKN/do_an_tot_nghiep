@@ -14,6 +14,7 @@ import {
   PiCheckBold,
 } from "react-icons/pi";
 import * as NotificationApi from "@/api/admin/NotificationApi";
+import { formatTime } from "@/utils/format_date.util";
 
 const normalizeNotificationItem = (item) => ({
   id: item.id || item.notificationId || `notif-${Date.now()}`,
@@ -441,13 +442,7 @@ const NotificationPage = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <PiClockBold />
-                        {new Date(item.sentAt).toLocaleString("vi-VN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                        })}
+                        {formatTime(item.sentAt)}
                       </span>
                     </div>
                   </div>
