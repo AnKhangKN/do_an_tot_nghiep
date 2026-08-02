@@ -7,6 +7,7 @@ import '../../core/session/session_controller.dart';
 import '../../features/emergency_amenities/data/models/emergency_amenity_model.dart';
 import '../../features/emergency_amenities/presentation/providers/amenity_provider.dart';
 import '../../features/emergency_amenities/presentation/widgets/amenity_detail_bottom_sheet.dart';
+import '../../features/emergency_amenities/presentation/amenity_icon_helper.dart';
 
 class SearchWidget extends StatefulWidget {
   const SearchWidget({super.key});
@@ -74,37 +75,6 @@ class _SearchWidgetState extends State<SearchWidget> {
       isScrollControlled: true,
       builder: (_) => AmenityDetailBottomSheet(amenity: amenity),
     );
-  }
-
-  IconData _getCategoryIcon(String? categoryName) {
-    final name = (categoryName ?? '').toLowerCase();
-    if (name.contains('y tế') || name.contains('bệnh viện') || name.contains('thuốc') || name.contains('cấp cứu')) {
-      return Icons.medical_services_rounded;
-    }
-    if (name.contains('trú ẩn') || name.contains('sơ tán') || name.contains('nhà')) {
-      return Icons.night_shelter_rounded;
-    }
-    if (name.contains('sửa') || name.contains('xe') || name.contains('cứu hộ')) {
-      return Icons.build_circle_rounded;
-    }
-    if (name.contains('ăn') || name.contains('nước') || name.contains('thực phẩm')) {
-      return Icons.rice_bowl_rounded;
-    }
-    return Icons.storefront_rounded;
-  }
-
-  Color _getCategoryColor(String? categoryName) {
-    final name = (categoryName ?? '').toLowerCase();
-    if (name.contains('y tế') || name.contains('bệnh viện') || name.contains('cấp cứu')) {
-      return ColorConstants.danger;
-    }
-    if (name.contains('trú ẩn') || name.contains('sơ tán')) {
-      return ColorConstants.purpleQR;
-    }
-    if (name.contains('sửa') || name.contains('cứu hộ')) {
-      return ColorConstants.dangerMedium;
-    }
-    return ColorConstants.amenityGreen;
   }
 
   double _suggestionMaxHeight(BuildContext context) {
@@ -343,8 +313,8 @@ class _SearchWidgetState extends State<SearchWidget> {
                           final itemData = sortedList[index];
                           final item = itemData.amenity;
                           final catName = item.categoryName ?? 'Tiện ích khẩn cấp';
-                          final icon = _getCategoryIcon(catName);
-                          final iconColor = _getCategoryColor(catName);
+                          final icon = AmenityIconHelper.iconFor(item.iconName, categoryName: item.categoryName);
+                          final iconColor = AmenityIconHelper.colorFor(item.iconName, categoryName: item.categoryName);
                           final distText = itemData.formattedDistance;
 
                           return ListTile(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../providers/amenity_provider.dart';
+import '../amenity_icon_helper.dart';
 
 class AmenityCategoryChips extends StatelessWidget {
   const AmenityCategoryChips({super.key});
@@ -55,6 +56,11 @@ class AmenityCategoryChips extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
+                    avatar: Icon(
+                      AmenityIconHelper.iconFor(cat.iconName),
+                      color: isSelected ? ColorConstants.surfaceWhite : ColorConstants.slateDark,
+                      size: 16,
+                    ),
                     label: Text(cat.categoryName),
                     selected: isSelected,
                     selectedColor: ColorConstants.slateDark,

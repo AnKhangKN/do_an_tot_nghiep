@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../../data/models/emergency_amenity_model.dart';
 import '../providers/amenity_provider.dart';
+import '../amenity_icon_helper.dart';
 
 class MyAmenitiesScreen extends StatefulWidget {
   const MyAmenitiesScreen({super.key});
@@ -147,9 +148,9 @@ class _MyAmenitiesScreenState extends State<MyAmenitiesScreen> {
                           width: 64,
                           height: 64,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _buildDefaultAmenityIcon(),
+                          errorBuilder: (_, __, ___) => _buildDefaultAmenityIcon(amenity),
                         )
-                      : _buildDefaultAmenityIcon(),
+                      : _buildDefaultAmenityIcon(amenity),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -216,14 +217,16 @@ class _MyAmenitiesScreenState extends State<MyAmenitiesScreen> {
     );
   }
 
-  Widget _buildDefaultAmenityIcon() {
+  Widget _buildDefaultAmenityIcon(EmergencyAmenityModel amenity) {
+    final icon = AmenityIconHelper.iconFor(amenity.iconName, categoryName: amenity.categoryName);
+    final iconColor = AmenityIconHelper.colorFor(amenity.iconName, categoryName: amenity.categoryName);
     return Container(
       width: 64,
       height: 64,
-      color: ColorConstants.redRescue.withOpacity(0.1),
-      child: const Icon(
-        Icons.medical_services_outlined,
-        color: ColorConstants.redRescue,
+      color: iconColor.withOpacity(0.1),
+      child: Icon(
+        icon,
+        color: iconColor,
         size: 32,
       ),
     );
@@ -270,9 +273,9 @@ class _MyAmenitiesScreenState extends State<MyAmenitiesScreen> {
                             width: 56,
                             height: 56,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _buildDefaultAmenityIcon(),
+                            errorBuilder: (_, __, ___) => _buildDefaultAmenityIcon(amenity),
                           )
-                        : _buildDefaultAmenityIcon(),
+                        : _buildDefaultAmenityIcon(amenity),
                   ),
                   const SizedBox(width: 14),
                   Expanded(

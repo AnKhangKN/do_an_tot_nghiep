@@ -31,8 +31,36 @@ import {
   PiWarningBold,
   PiCopyBold,
   PiGitMergeBold,
+  PiCrossBold,
+  PiFireBold,
+  PiPoliceCarBold,
+  PiGasPumpBold,
+  PiWrenchBold,
+  PiHouseBold,
+  PiBowlFoodBold,
   // PiLightningFill
 } from 'react-icons/pi';
+
+const AMENITY_ICONS = [
+  { key: 'medical', label: 'Y tế / Cấp cứu', Icon: PiCrossBold, color: '#dc2626' },
+  { key: 'fire', label: 'Chữa cháy / Cứu hỏa', Icon: PiFireBold, color: '#ea580c' },
+  { key: 'police', label: 'Công an / Cảnh sát', Icon: PiPoliceCarBold, color: '#2563eb' },
+  { key: 'gas', label: 'Trạm xăng / Nhiên liệu', Icon: PiGasPumpBold, color: '#d97706' },
+  { key: 'repair', label: 'Sửa xe / Cứu hộ xe', Icon: PiWrenchBold, color: '#f97316' },
+  { key: 'shelter', label: 'Nơi trú ẩn / Sơ tán', Icon: PiHouseBold, color: '#059669' },
+  { key: 'food', label: 'Thực phẩm / Nước uống', Icon: PiBowlFoodBold, color: '#0d9488' },
+  { key: 'store', label: 'Khác (Mặc định)', Icon: PiStorefrontBold, color: '#6b7280' },
+];
+
+const ICON_ALIASES = { wrench: 'repair', 'gas-pump': 'gas', 'first-aid': 'medical', tire: 'repair' };
+
+const normalizeIcon = (icon) => {
+  if (!icon) return 'store';
+  const value = String(icon).trim().toLowerCase();
+  if (AMENITY_ICONS.some((i) => i.key === value)) return value;
+  if (ICON_ALIASES[value]) return ICON_ALIASES[value];
+  return 'store';
+};
 
 
 export default function EmergencyAmenityPage() {
@@ -196,7 +224,7 @@ export default function EmergencyAmenityPage() {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
     try {
-      const res = await createCategoryAdmin({ categoryName: newCategoryName, iconName: newIconName });
+      const res = await createCategoryAdmin({ categoryName: newCategoryName, iconName: normalizeIcon(newIconName) });
       if (res.success) {
         setShowAddCategoryModal(false);
         setNewCategoryName('');
@@ -229,7 +257,7 @@ export default function EmergencyAmenityPage() {
   const handleOpenEditCategory = (row) => {
     setEditingCategory(row);
     setEditCategoryName(row.categoryName || '');
-    setEditIconName(row.iconName || 'wrench');
+    setEditIconName(normalizeIcon(row.iconName));
     setEditStatus(row.status || 'ACTIVE');
     setShowEditCategoryModal(true);
   };
@@ -239,7 +267,7 @@ export default function EmergencyAmenityPage() {
     try {
       const res = await updateCategoryAdmin(row.amenityCategoryId, {
         categoryName: row.categoryName,
-        iconName: row.iconName || 'wrench',
+        iconName: normalizeIcon(row.iconName),
         status: nextStatus
       });
       if (res.success) {
@@ -347,7 +375,21 @@ export default function EmergencyAmenityPage() {
     {
       key: 'iconName',
       title: 'Biểu tượng (Icon)',
-      render: (row) => <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">{row.iconName || 'wrench'}</span>,
+      render: (row) => {
+        const icon = AMENITY_ICONS.find((i) => i.key === normalizeIcon(row.iconName)) || AMENITY_ICONS[AMENITY_ICONS.length - 1];
+        const IconComp = icon.Icon;
+        return (
+          <span className="inline-flex items-center gap-2">
+            <span
+              className="flex items-center justify-center w-7 h-7 rounded-lg text-white"
+              style={{ backgroundColor: icon.color }}
+            >
+              <IconComp className="w-4 h-4" />
+            </span>
+            <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">{icon.key}</span>
+          </span>
+        );
+      },
     },
     {
       key: 'status',
@@ -983,14 +1025,33 @@ export default function EmergencyAmenityPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">Tên Icon</label>
-                <input
-                  type="text"
-                  placeholder="wrench, gas-pump, first-aid, tire"
-                  value={newIconName}
-                  onChange={(e) => setNewIconName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm font-mono text-gray-900 focus:outline-none focus:border-gray-900"
-                />
+                <label className="text-xs font-semibold text-gray-700 block mb-1.5">Biểu tượng (Icon)</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {AMENITY_ICONS.map(({ key, label, Icon, color }) => {
+                    const IconComp = Icon;
+                    const selected = newIconName === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setNewIconName(key)}
+                        title={label}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-2xl border transition ${selected
+                          ? 'bg-gray-900 text-white border-gray-900'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-900'
+                          }`}
+                      >
+                        <span
+                          className="flex items-center justify-center w-8 h-8 rounded-lg text-white"
+                          style={{ backgroundColor: color }}
+                        >
+                          <IconComp className="w-4.5 h-4.5" />
+                        </span>
+                        <span className="text-[10px] font-semibold leading-tight text-center">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
@@ -1041,14 +1102,33 @@ export default function EmergencyAmenityPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">Tên Icon</label>
-                <input
-                  type="text"
-                  placeholder="wrench, gas-pump, first-aid, tire"
-                  value={editIconName}
-                  onChange={(e) => setEditIconName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm font-mono text-gray-900 focus:outline-none focus:border-gray-900"
-                />
+                <label className="text-xs font-semibold text-gray-700 block mb-1.5">Biểu tượng (Icon)</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {AMENITY_ICONS.map(({ key, label, Icon, color }) => {
+                    const IconComp = Icon;
+                    const selected = editIconName === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setEditIconName(key)}
+                        title={label}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-2xl border transition ${selected
+                          ? 'bg-gray-900 text-white border-gray-900'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-900'
+                          }`}
+                      >
+                        <span
+                          className="flex items-center justify-center w-8 h-8 rounded-lg text-white"
+                          style={{ backgroundColor: color }}
+                        >
+                          <IconComp className="w-4.5 h-4.5" />
+                        </span>
+                        <span className="text-[10px] font-semibold leading-tight text-center">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>

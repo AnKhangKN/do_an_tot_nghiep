@@ -28,6 +28,7 @@ import '../../../../shared/widgtes/geofence_alert_dialog.dart';
 import '../../../emergency_amenities/presentation/providers/amenity_provider.dart';
 import '../../../emergency_amenities/presentation/widgets/amenity_category_chips.dart';
 import '../../../emergency_amenities/presentation/widgets/amenity_detail_bottom_sheet.dart';
+import '../../../emergency_amenities/presentation/amenity_icon_helper.dart';
 import '../../../../shared/providers/map_layer_provider.dart';
 import '../widgets/post_rescue_checkin_dialog.dart';
 import '../../../../shared/widgtes/map_layer_toggle_widget.dart';
@@ -333,6 +334,8 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     final amenities = amenityProvider.amenities;
 
     return amenities.map((item) {
+      final icon = AmenityIconHelper.iconFor(item.iconName, categoryName: item.categoryName);
+      final iconColor = AmenityIconHelper.colorFor(item.iconName, categoryName: item.categoryName);
       return Marker(
         point: LatLng(item.latitude, item.longitude),
         width: 38,
@@ -347,7 +350,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
           },
           child: Container(
             decoration: BoxDecoration(
-              color: ColorConstants.primary,
+              color: iconColor,
               shape: BoxShape.circle,
               border: Border.all(color: ColorConstants.surfaceWhite, width: 2),
               boxShadow: const [
@@ -360,7 +363,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
               ],
             ),
             child: Icon(
-              Icons.storefront_rounded,
+              icon,
               color: ColorConstants.surfaceWhite,
               size: 20,
             ),

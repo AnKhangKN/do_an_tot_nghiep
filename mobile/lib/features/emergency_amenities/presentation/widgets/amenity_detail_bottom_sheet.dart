@@ -9,6 +9,7 @@ import '../../../../core/session/session_controller.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../data/models/emergency_amenity_model.dart';
 import '../providers/amenity_provider.dart';
+import '../amenity_icon_helper.dart';
 
 class AmenityDetailBottomSheet extends StatelessWidget {
   final EmergencyAmenityModel amenity;
@@ -263,8 +264,8 @@ class AmenityDetailBottomSheet extends StatelessWidget {
                       color: ColorConstants.primaryLight,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
-                      Icons.storefront_rounded,
+                    child: Icon(
+                      AmenityIconHelper.iconFor(amenity.iconName, categoryName: amenity.categoryName),
                       color: ColorConstants.primary,
                       size: 24,
                     ),

@@ -36,7 +36,7 @@ class AmenityCategoryRepository {
         const { rows } = await pool.query(query, [
             amenityCategoryId,
             categoryName,
-            iconName || 'wrench',
+            iconName || 'store',
             status || 'ACTIVE'
         ]);
         return mapFields(rows[0], this.model);

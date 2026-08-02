@@ -61,20 +61,56 @@ const icons = {
   sos: createIcon("https://cdn-icons-png.flaticon.com/512/564/564619.png"),
 };
 
-const createAmenityIcon = (categoryName = "") => {
+const createAmenityIcon = (categoryName = "", iconName = "") => {
   const name = categoryName.toLowerCase();
-  let bgColor = "#dc2626"; // Mặc định màu đỏ (Y tế/Khẩn cấp)
-  let iconSvg = `<rect x="6.5" y="0.5" width="3" height="15" rx="1"/><rect x="0.5" y="6.5" width="15" height="3" rx="1"/>`;
 
-  if (name.includes("sửa xe") || name.includes("cứu hộ xe") || name.includes("bảo dưỡng")) {
-    bgColor = "#ea580c"; // Cam
-    iconSvg = `<path d="M12 2a4 4 0 0 0-4 4c0 1.25.57 2.37 1.46 3.1L3.2 15.36a1 1 0 0 0 1.41 1.41l6.27-6.27A4 4 0 1 0 12 2z"/>`;
+  const ICON_SVGS = {
+    medical: `<rect x="6.5" y="0.5" width="3" height="15" rx="1"/><rect x="0.5" y="6.5" width="15" height="3" rx="1"/>`,
+    fire: `<path d="M8 1c2 3 4.5 4.5 4.5 8a4.5 4.5 0 0 1-9 0C3.5 5.5 6 4 8 1z"/>`,
+    police: `<path d="M8 1l6 2v5c0 3.5-2.5 6-6 7-3.5-1-6-3.5-6-7V3l6-2z"/>`,
+    gas: `<path d="M3 2h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm10 3h1a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2v2a1 1 0 0 1-2 0v-2a1 1 0 0 1-1-1V5z"/>`,
+    repair: `<path d="M12 2a4 4 0 0 0-4 4c0 1.25.57 2.37 1.46 3.1L3.2 15.36a1 1 0 0 0 1.41 1.41l6.27-6.27A4 4 0 1 0 12 2z"/>`,
+    shelter: `<path d="M8 1l7 6v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V7l7-6z"/>`,
+    food: `<path d="M2 7h12a6 6 0 0 1-12 0z"/>`,
+    store: `<path d="M1 7V5l1-3h12l1 3v2h-1v7h-2V7H4v7H2V7H1z"/>`,
+  };
+
+  const ICON_COLORS = {
+    medical: "#dc2626",
+    fire: "#ea580c",
+    police: "#2563eb",
+    gas: "#d97706",
+    repair: "#f97316",
+    shelter: "#059669",
+    food: "#0d9488",
+    store: "#6b7280",
+  };
+
+  let bgColor = ICON_COLORS.medical;
+  let iconSvg = ICON_SVGS.medical;
+
+  const normalizedIcon = String(iconName || "").trim().toLowerCase();
+  if (ICON_SVGS[normalizedIcon]) {
+    bgColor = ICON_COLORS[normalizedIcon];
+    iconSvg = ICON_SVGS[normalizedIcon];
+  } else if (name.includes("sửa xe") || name.includes("cứu hộ xe") || name.includes("bảo dưỡng")) {
+    bgColor = ICON_COLORS.repair;
+    iconSvg = ICON_SVGS.repair;
   } else if (name.includes("xăng") || name.includes("nhiên liệu")) {
-    bgColor = "#d97706"; // Vàng sậm
-    iconSvg = `<path d="M3 2h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm10 3h1a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2v2a1 1 0 0 1-2 0v-2a1 1 0 0 1-1-1V5z"/>`;
+    bgColor = ICON_COLORS.gas;
+    iconSvg = ICON_SVGS.gas;
   } else if (name.includes("trú") || name.includes("cứu nạn") || name.includes("tập kết")) {
-    bgColor = "#059669"; // Xanh lá
-    iconSvg = `<path d="M8 1l7 6v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V7l7-6z"/>`;
+    bgColor = ICON_COLORS.shelter;
+    iconSvg = ICON_SVGS.shelter;
+  } else if (name.includes("cháy") || name.includes("cứu hỏa")) {
+    bgColor = ICON_COLORS.fire;
+    iconSvg = ICON_SVGS.fire;
+  } else if (name.includes("ăn") || name.includes("nước") || name.includes("thực phẩm")) {
+    bgColor = ICON_COLORS.food;
+    iconSvg = ICON_SVGS.food;
+  } else if (name.includes("an") || name.includes("cảnh sát") || name.includes("công an")) {
+    bgColor = ICON_COLORS.police;
+    iconSvg = ICON_SVGS.police;
   }
 
   return L.divIcon({
@@ -161,7 +197,7 @@ const DangerLayer = ({ data }) => (
 const AmenityLayer = ({ data }) => (
   <>
     {data.map((item) => (
-      <Marker key={item.id} position={item.position} icon={createAmenityIcon(item.categoryName)}>
+      <Marker key={item.id} position={item.position} icon={createAmenityIcon(item.categoryName, item.iconName)}>
         <Popup>
           <div className="p-1 min-w-[160px]">
             <span className="flex items-center gap-1.5 font-bold text-gray-900 text-sm">
@@ -698,6 +734,7 @@ const MapPage = () => {
               position: [parseFloat(item.latitude), parseFloat(item.longitude)],
               name: item.name || item.categoryName || "Tiện ích khẩn cấp",
               categoryName: item.categoryName || "Khác",
+              iconName: item.iconName || "",
               categoryId: item.amenityCategoryId || item.categoryId || "",
               phone: item.phone || "",
             }));
