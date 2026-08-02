@@ -36,15 +36,19 @@ const FooterSectionComponent = ({ data = {} }) => {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr] lg:gap-12">
           {/* Brand & emergency */}
           <div>
-            <div className="flex items-center gap-3">
-              <img
-                src="/images/SOS-black.png"
-                alt="Rescue System"
-                className="h-12 w-12 shrink-0 rounded-2xl object-contain shadow-lg"
-              />
+            <div className="flex items-center gap-3.5">
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 p-0.5 ring-1 ring-white/20 shadow-xl overflow-hidden transition-transform duration-300 hover:scale-105">
+                <img
+                  src="/images/SOS-black.png"
+                  alt="Rescue System"
+                  className="h-full w-full rounded-[14px] object-cover"
+                />
+              </div>
               <div>
-                <h3 className="text-lg font-bold">Rescue System</h3>
-                <p className="text-xs text-gray-400">
+                <h3 className="text-lg font-bold text-white tracking-tight leading-tight">
+                  Rescue System
+                </h3>
+                <p className="mt-0.5 text-xs font-medium text-gray-400">
                   Hệ thống cứu hộ khẩn cấp thời gian thực
                 </p>
               </div>
