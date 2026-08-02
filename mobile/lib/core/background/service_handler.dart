@@ -13,6 +13,7 @@ class ServiceHandler {
   String? _userId;
   String? _role;
   String? _baseUrl;
+  String? _deviceId;
 
   // Quản lý định vị Stream và Heartbeat
   StreamSubscription<Position>? _positionSubscription;
@@ -99,6 +100,7 @@ class ServiceHandler {
       _userId = payload["userId"];
       _role = payload["role"];
       _baseUrl = payload["baseUrl"];
+      _deviceId = payload["deviceId"];
       print("[BACKGROUND SERVICE] Initialized with token: ${_token != null}, userId: $_userId, baseUrl: $_baseUrl");
 
       _connectSocket();
@@ -130,7 +132,7 @@ class ServiceHandler {
           .enableReconnection()
           .setReconnectionDelay(2000)
           .setReconnectionDelayMax(5000)
-          .setAuth({'token': _token, 'userId': _userId, 'role': _role})
+          .setAuth({'token': _token, 'userId': _userId, 'role': _role, 'deviceId': _deviceId})
           .build(),
     );
 

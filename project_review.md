@@ -129,3 +129,22 @@ Visual step-by-step đơn giản:
 
 **Verify**: `npm run lint` ✅, `npm run build` ✅ (web); script test tạm chạy OK trên DB thật rồi xóa ngay ✅.
 
+---
+
+## 📱 Single Active Session (kick thiết bị cũ) — Đã hoàn thành cả 3 nền tảng
+
+**Ngày ghi nhận**: 2026-08-03 — **Trạng thái: ✅ Hoàn thành (Server + Mobile + Web Admin)**
+
+### Bối cảnh
+Đã triển khai tính năng "single active session" cho **Server + Mobile + Web Admin**:
+- Mỗi thiết bị có `deviceId` gửi qua `socket.auth.deviceId`.
+- Server giữ `active_session:{userId}` (Redis, TTL 24h) trong `server/src/socket/session.socket.js`.
+- Khi thiết bị khác đăng nhập cùng tài khoản: ADMIN luôn kick thiết bị cũ (`user:kicked`); RESCUER/VICTIM đang trong ca cứu hộ → chặn thiết bị mới (`session:blocked`, không đụng thiết bị cũ); rảnh → kick thiết bị cũ.
+- Mobile: `lib/core/socket/modules/session_socket.dart` lắng nghe `user:kicked` / `session:blocked` → `KickedDialogWidget` (nút "Đã hiểu") → tự logout về Login. LoginScreen hiện dialog.
+- Web Admin: `web/src/socket/core/socketCore.js` sinh/lưu `deviceId` (localStorage, `crypto.randomUUID()`) gửi qua `auth` callback; `web/src/socket/features/session/sessionSocket.js` lắng nghe `user:kicked`; `web/src/App.jsx` subscribe `subscribeKickedEvent` → `KickedNotification` (nút "Đã hiểu") + auto logout (`logout` + `clearUser` + `disconnectAdminSocket` + navigate `/admin/login`).
+
+### Ghi chú
+- Admin không có khái niệm ca cứu hộ → server không chặn `session:blocked` cho ADMIN (luôn kick).
+- Test tay Web: 2 cửa sổ/browser admin khác nhau, đăng nhập cùng tài khoản → cửa sổ cũ bị kick về login kèm `KickedNotification`.
+
+

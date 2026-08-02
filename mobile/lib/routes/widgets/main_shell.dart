@@ -53,6 +53,7 @@ class _MainShellState extends State<MainShell> {
 
   void _onSessionChanged() {
     final controller = getIt<SessionController>();
+
     if (controller.isBanned && !_banDialogShown && mounted) {
       _banDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {

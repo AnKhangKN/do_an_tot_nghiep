@@ -1,10 +1,26 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:uuid/uuid.dart';
 
 class StorageService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final Uuid _uuid = const Uuid();
 
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
+
+  static const String _deviceIdKey = 'device_id';
+
+  /// Lấy deviceId cố định của thiết bị. Tạo mới (UUID) và lưu lại nếu chưa có.
+  /// Dùng để nhận diện thiết bị khi xử lý "single active session" ở server.
+  Future<String> getOrCreateDeviceId() async {
+    final existing = await _storage.read(key: _deviceIdKey);
+    if (existing != null && existing.isNotEmpty) {
+      return existing;
+    }
+    final deviceId = _uuid.v4();
+    await _storage.write(key: _deviceIdKey, value: deviceId);
+    return deviceId;
+  }
 
   Future<void> saveToken(String accessToken, String refreshToken) async {
     await _storage.write(key: _accessTokenKey, value: accessToken);

@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mobile/core/background/background_config.dart';
 import 'package:mobile/core/firebase/notification_service.dart';
 import 'package:mobile/core/socket/modules/ban_socket.dart';
+import 'package:mobile/core/socket/modules/session_socket.dart';
 import 'package:mobile/core/socket/modules/heartbeat_socket.dart';
 import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/socket/modules/rescuer_socket.dart';
@@ -35,6 +36,7 @@ class AppSession {
   final RescuerSocket rescuerSocket;
   final VictimSocket victimSocket;
   final BanSocket banSocket;
+  final SessionSocket sessionSocket;
   final NotificationService notificationService;
 
   AppSession({
@@ -49,6 +51,7 @@ class AppSession {
     required this.rescuerSocket,
     required this.victimSocket,
     required this.banSocket,
+    required this.sessionSocket,
     required this.notificationService
   });
 
@@ -62,6 +65,12 @@ class AppSession {
   bool get isOnline => controller.state.isOnline;
 
   StreamSubscription<Position>? _locationSubscription;
+  String? _deviceId;
+
+  /// Lấy deviceId cố định của thiết bị (tạo mới + lưu nếu chưa có), cache trong vòng đời app.
+  Future<String> _ensureDeviceId() async {
+    return _deviceId ??= await storageService.getOrCreateDeviceId();
+  }
 
   // =========================
   // INITIALIZE SESSION
@@ -108,7 +117,14 @@ class AppSession {
           token,
           profileResponse.userId,
           profileResponse.role,
+          deviceId: await _ensureDeviceId(),
         );
+
+        // Đăng ký sớm để không bỏ lỡ sự kiện kick/chặn "single active session"
+        // (server emit ngay sau khi kết nối)
+        banSocket.listenUserBanned();
+        sessionSocket.listenSessionKicked();
+        sessionSocket.listenSessionBlocked();
 
         final String roleStr = profileResponse.role;
         final UserRole userRole = roleStr == 'RESCUER'
@@ -130,9 +146,6 @@ class AppSession {
           victimSocket.listenSosNotFound();
         }
 
-        // Lắng nghe sự kiện khóa tài khoản
-        banSocket.listenUserBanned();
-
         // Tự động kiểm tra và khôi phục tiến trình cứu hộ (nếu có)
         await checkAndRestoreActiveRescue();
       } catch (e, stackTrace) {
@@ -153,7 +166,13 @@ class AppSession {
               newToken,
               profileResponse.userId,
               profileResponse.role,
+              deviceId: await _ensureDeviceId(),
             );
+
+            // Đăng ký sớm để không bỏ lỡ sự kiện kick/chặn "single active session"
+            banSocket.listenUserBanned();
+            sessionSocket.listenSessionKicked();
+            sessionSocket.listenSessionBlocked();
 
             final String roleStr = profileResponse.role;
             final UserRole userRole = roleStr == 'RESCUER'
@@ -174,7 +193,6 @@ class AppSession {
               victimSocket.listenSosNotFound();
             }
 
-            banSocket.listenUserBanned();
             await checkAndRestoreActiveRescue();
             return;
           } catch (err) {
@@ -206,11 +224,14 @@ class AppSession {
     await background.start();
     // Chờ 1.5 giây để background isolate khởi động và đăng ký listener xong
     await Future.delayed(const Duration(milliseconds: 1500));
+    // Nếu session đã bị kết thúc (VD: bị kick/chặn do single active session) thì không khởi tạo lại background
+    if (!_isInitialized) return;
     background.send({
       "type": "init",
       "token": token,
       "userId": userId,
       "role": role,
+      "deviceId": await _ensureDeviceId(),
       "baseUrl": AppConstants.baseUrl,
     });
   }
@@ -247,8 +268,13 @@ class AppSession {
       banSocket.stopListening();
     } catch (_) {}
 
+    try {
+      sessionSocket.stopListening();
+    } catch (_) {}
+
     // 4. Reset trạng thái SessionController & cờ khởi tạo
     _isInitialized = false;
+    _deviceId = null;
     controller.reset();
   }
 
@@ -317,6 +343,7 @@ class AppSession {
         token,
         profileResponse.userId,
         profileResponse.role,
+        deviceId: await _ensureDeviceId(),
       );
 
       // QUAN TRỌNG: Tái đăng ký lắng nghe SOS đề phòng socket vừa bị reconnect/re-init
@@ -456,6 +483,9 @@ class AppSession {
 
   /// Tự động kiểm tra và khôi phục ca cứu hộ đang dở dang trên server
   Future<void> checkAndRestoreActiveRescue() async {
+    // Không khôi phục nếu đã bị kick/chặn (single active session) hoặc không còn đăng nhập
+    if (controller.kickedMessage != null || !controller.isLoggedIn) return;
+
     try {
       final activeRescueData = await authRepository.getActiveSOS();
       if (activeRescueData == null || activeRescueData['sosRequest'] == null) {

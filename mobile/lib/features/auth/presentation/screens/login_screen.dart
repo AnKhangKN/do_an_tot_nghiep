@@ -7,6 +7,7 @@ import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../shared/widgtes/banned_dialog_widget.dart';
+import '../../../../shared/widgtes/kicked_dialog_widget.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/guest_sos_dialog.dart';
 
@@ -22,20 +23,55 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _banDialogShown = false;
+  bool _kickedDialogShown = false;
 
   @override
   void initState() {
     super.initState();
     _checkBanState();
-    getIt<SessionController>().addListener(_onBanStateChanged);
+    _checkKickedMessage();
+    getIt<SessionController>().addListener(_onSessionChanged);
   }
 
   @override
   void dispose() {
-    getIt<SessionController>().removeListener(_onBanStateChanged);
+    getIt<SessionController>().removeListener(_onSessionChanged);
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  void _onSessionChanged() {
+    _onBanStateChanged();
+    _onKickedStateChanged();
+  }
+
+  void _onKickedStateChanged() {
+    final controller = getIt<SessionController>();
+    if (controller.kickedMessage != null && !_kickedDialogShown && mounted) {
+      _kickedDialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => KickedDialogWidget(message: controller.kickedMessage!),
+        ).then((_) => _kickedDialogShown = false);
+      });
+    }
+  }
+
+  void _checkKickedMessage() {
+    final controller = getIt<SessionController>();
+    if (controller.kickedMessage != null && mounted) {
+      _kickedDialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => KickedDialogWidget(message: controller.kickedMessage!),
+        ).then((_) => _kickedDialogShown = false);
+      });
+    }
   }
 
   void _onBanStateChanged() {

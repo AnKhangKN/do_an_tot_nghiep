@@ -12,15 +12,18 @@ import { clearUser } from "./store/user/userSlice";
 import { setUser } from "./store/user/userSlice";
 import { logout } from "./store/accessToken/accessTokenSlice";
 import { setBanned, clearBanned } from "./store/ban/banSlice";
+import { setKicked, clearKicked } from "./store/kicked/kickedSlice";
 import { setSystemTheme } from "./store/theme/themeSlice";
 import SplashPage from "./pages/SplashPage/SplashPage";
 import BannedNotification from "@/components/shared/BannedNotification/BannedNotification";
-import { subscribeBanEvent } from "./socket";
+import KickedNotification from "@/components/shared/KickedNotification/KickedNotification";
+import { subscribeBanEvent, subscribeKickedEvent, disconnectAdminSocket } from "./socket";
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const banState = useSelector((state) => state.ban);
+  const kickedState = useSelector((state) => state.kicked);
   const theme = useSelector((state) => state.theme);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [showAppealForm, setShowAppealForm] = useState(false);
@@ -38,6 +41,15 @@ function App() {
       bannedAt: payload.bannedAt,
     }));
   }, []);
+
+  const handleKickedSocket = useCallback((payload) => {
+    store.dispatch(setKicked({ message: payload?.message }));
+    disconnectAdminSocket();
+    store.dispatch(logout());
+    store.dispatch(clearUser());
+    store.dispatch(clearBanned());
+    navigate("/admin/login");
+  }, [navigate]);
 
   useEffect(() => {
     const initApp = async () => {
@@ -96,6 +108,13 @@ function App() {
     }
   }, [isAuthReady, isPublicPath, handleBannedSocket]);
 
+  useEffect(() => {
+    if (isAuthReady && !isPublicPath) {
+      const unsub = subscribeKickedEvent(handleKickedSocket);
+      return () => unsub();
+    }
+  }, [isAuthReady, isPublicPath, handleKickedSocket]);
+
   const handleAppealSubmit = async () => {
     if (!appealText.trim()) return;
     setAppealSending(true);
@@ -142,6 +161,13 @@ function App() {
           );
         })}
       </Routes>
+
+      {kickedState.kicked && (
+        <KickedNotification
+          message={kickedState.kickedMessage}
+          onConfirm={() => store.dispatch(clearKicked())}
+        />
+      )}
 
       {banState.banned && !appealSent && !showAppealForm && (
         <BannedNotification

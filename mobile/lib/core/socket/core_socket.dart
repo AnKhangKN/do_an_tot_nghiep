@@ -18,10 +18,11 @@ class CoreSocket {
   String? _currentToken;
   String? _currentUserId;
   String? _currentRole;
+  String? _currentDeviceId;
 
   Completer<void>? _connectCompleter;
 
-  void connect(String token, String userId, String role, {bool force = false}) {
+  void connect(String token, String userId, String role, {String? deviceId, bool force = false}) {
     // Nếu socket đang hoạt động với ĐÚNG token này và không ép buộc reconnect thì giữ nguyên
     if (!force && _socket != null && _socket!.connected && _currentToken == token) {
       debugPrint("⚠️ Socket đã tồn tại và đang hoạt động với token hợp lệ.");
@@ -31,6 +32,7 @@ class CoreSocket {
     _currentToken = token;
     _currentUserId = userId;
     _currentRole = role;
+    _currentDeviceId = deviceId;
 
     if (_socket != null) {
       try {
@@ -51,7 +53,7 @@ class CoreSocket {
           .setReconnectionAttempts(999999)
           .setReconnectionDelay(1000)
           .setReconnectionDelayMax(3000)
-          .setAuth({'token': token, 'userId': userId, 'role': role})
+          .setAuth({'token': token, 'userId': userId, 'role': role, 'deviceId': deviceId})
           .build(),
     );
 
@@ -82,7 +84,7 @@ class CoreSocket {
             final newToken = await getIt<AuthRepository>().getValidAccessToken();
             if (newToken != null && newToken != token) {
               debugPrint("🟢 [SOCKET] Lấy Access Token mới thành công! Đang tự động kết nối lại Socket...");
-              connect(newToken, userId, role, force: true);
+              connect(newToken, userId, role, deviceId: _currentDeviceId, force: true);
             }
           } catch (err) {
             debugPrint("❌ [SOCKET] Lỗi tự động lấy token mới: $err");
@@ -101,12 +103,12 @@ class CoreSocket {
     });
   }
 
-  Future<void> ensureConnected(String token, String userId, String role) async {
+  Future<void> ensureConnected(String token, String userId, String role, {String? deviceId}) async {
     if (_isConnected && _socket != null && _currentToken == token) {
       return;
     }
 
-    connect(token, userId, role, force: true);
+    connect(token, userId, role, deviceId: deviceId, force: true);
     await _connectCompleter?.future;
   }
 
@@ -116,6 +118,7 @@ class CoreSocket {
     _currentToken = null;
     _currentUserId = null;
     _currentRole = null;
+    _currentDeviceId = null;
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;

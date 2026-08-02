@@ -25,7 +25,8 @@ const socketAuth = async (socket, next) => {
 
         socket.user = {
             ...decoded,
-            role: freshUser?.role || decoded.role
+            role: freshUser?.role || decoded.role,
+            deviceId: socket.handshake.auth?.deviceId || null
         };
 
         next();

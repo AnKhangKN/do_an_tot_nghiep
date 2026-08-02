@@ -9,6 +9,7 @@ import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/session/session_controller.dart';
 import 'package:mobile/core/socket/core_socket.dart';
 import 'package:mobile/core/socket/modules/ban_socket.dart';
+import 'package:mobile/core/socket/modules/session_socket.dart';
 import 'package:mobile/core/socket/modules/heartbeat_socket.dart';
 import 'package:mobile/core/socket/modules/location_socket.dart';
 import 'package:mobile/core/socket/modules/rescuer_socket.dart';
@@ -86,6 +87,9 @@ Future<void> initDI() async {
   getIt.registerLazySingleton(
     () => BanSocket(getIt<CoreSocket>(), getIt<SessionController>()),
   );
+  getIt.registerLazySingleton(
+    () => SessionSocket(getIt<CoreSocket>(), getIt<SessionController>()),
+  );
   getIt.registerLazySingleton(() => NotificationService());
   getIt.registerLazySingleton(
     () => ThemeController(getIt<StorageService>()),
@@ -148,6 +152,7 @@ Future<void> initDI() async {
       rescuerSocket: getIt<RescuerSocket>(),
       victimSocket: getIt<VictimSocket>(),
       banSocket: getIt<BanSocket>(),
+      sessionSocket: getIt<SessionSocket>(),
       notificationService: getIt<NotificationService>()
     ),
   );

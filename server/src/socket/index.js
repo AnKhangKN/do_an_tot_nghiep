@@ -1,4 +1,5 @@
 const socketAuth = require("@middlewares/socket.middleware");
+const sessionSocket = require("../socket/session.socket");
 const initRedisSubscriber = require("../socket/socket.subscriber");
 
 let ioInstance = null;
@@ -10,10 +11,16 @@ const initSocket = (io) => {
 
     initRedisSubscriber(io);
 
-    io.on("connection", (socket) => {
+    io.on("connection", async (socket) => {
         const { userId, role } = socket.user;
 
         console.log("role: ", role)
+
+        // Xử lý "single active session": kick thiết bị cũ hoặc chặn thiết bị mới đang trong ca cứu hộ
+        const takeover = await sessionSocket.handleSessionTakeover(io, socket);
+        if (takeover === "blocked") {
+            return;
+        }
 
         socket.join(`user:${userId}`);
 
@@ -41,6 +48,9 @@ const initSocket = (io) => {
 
         // Khi đăng xuất
         require("./connection.socket")(socket, io);
+
+        // Dọn dẹp active_session khi ngắt kết nối
+        sessionSocket(socket, io);
     });
 };
 

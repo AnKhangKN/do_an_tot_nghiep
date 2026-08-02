@@ -6,14 +6,28 @@ import { refreshToken } from "@/api/shared/AuthApi";
 let socketInstance = null;
 let isRefreshingSocketToken = false;
 
+const DEVICE_ID_KEY = "web_admin_device_id";
+
+const getOrCreateDeviceId = () => {
+  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+  if (!deviceId) {
+    deviceId = typeof crypto?.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `web-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  }
+  return deviceId;
+};
+
 export const getSocketInstance = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
 
   if (!socketInstance) {
+    const deviceId = getOrCreateDeviceId();
     socketInstance = io(backendUrl, {
       auth: (cb) => {
         const token = store.getState().auth?.accessToken || "";
-        cb({ token });
+        cb({ token, deviceId });
       },
       transports: ["websocket", "polling"],
       autoConnect: true,

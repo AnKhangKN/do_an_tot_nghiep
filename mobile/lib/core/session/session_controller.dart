@@ -73,6 +73,26 @@ class SessionController with ChangeNotifier {
   bool get isBanned => _isBanned;
   String? get banReason => _banReason;
 
+  // Thông báo kick/chặn do "single active session" (thiết bị khác đăng nhập hoặc đang trong ca cứu hộ).
+  // Không bị xóa bởi reset() để LoginScreen đọc được sau khi auto-logout.
+  String? _kickedMessage;
+  String? get kickedMessage => _kickedMessage;
+
+  void setKickedFromOtherDevice(String message) {
+    _kickedMessage = message;
+    notifyListeners();
+  }
+
+  /// Đọc và xóa thông báo (dùng sau khi đã hiển thị cho người dùng).
+  String? consumeKickedMessage() {
+    final message = _kickedMessage;
+    _kickedMessage = null;
+    if (message != null) {
+      notifyListeners();
+    }
+    return message;
+  }
+
   String? _rescueCancelledMessage;
   String? get rescueCancelledMessage => _rescueCancelledMessage;
 

@@ -44,4 +44,10 @@ class SocketEvents {
   // BAN
   // =========================
   static const userBanned = "user:banned";
+
+  // =========================
+  // SESSION (single active session)
+  // =========================
+  static const userKicked = "user:kicked";
+  static const sessionBlocked = "session:blocked";
 }
