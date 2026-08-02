@@ -3,17 +3,16 @@ import {
   TileLayer,
   Marker,
   Popup,
-  LayersControl,
   Circle,
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet.heat";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import "leaflet/dist/leaflet.css";
 import { getSosHeatmap, searchLocations } from "@/api/admin/MapApi";
 import { getApprovedDangerousZones } from "@/api/admin/DangerousZoneApi";
-import { getApprovedAmenitiesPublic } from "@/api/admin/EmergencyAmenityApi";
+import { getApprovedAmenitiesPublic, getCategoriesAdmin } from "@/api/admin/EmergencyAmenityApi";
 import { getRescuersAdmin } from "@/api/admin/RescuerApi";
 import { useSelector } from "react-redux";
 import {
@@ -31,6 +30,10 @@ import {
   PiMinus,
   PiCircleNotch,
   PiCrosshair,
+  PiCaretDownBold,
+  PiCaretUpBold,
+  PiLayersFill,
+  PiStorefrontFill,
 } from "react-icons/pi";
 
 // ================= FIX ICON =================
@@ -43,9 +46,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl:
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
-
-// ================= DATA =================
-// Dữ liệu thực được fetch từ API trong MapPage component
 
 // ================= ICON =================
 const createIcon = (url) =>
@@ -61,17 +61,33 @@ const icons = {
   sos: createIcon("https://cdn-icons-png.flaticon.com/512/564/564619.png"),
 };
 
-const amenityIcon = L.divIcon({
-  className: "",
-  html: `<div style="width:30px;height:30px;border-radius:50%;background:#dc2626;border:2px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.3)">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff">
-      <rect x="6.5" y="0.5" width="3" height="15" rx="1"/>
-      <rect x="0.5" y="6.5" width="15" height="3" rx="1"/>
-    </svg>
-  </div>`,
-  iconSize: [30, 30],
-  iconAnchor: [15, 15],
-});
+const createAmenityIcon = (categoryName = "") => {
+  const name = categoryName.toLowerCase();
+  let bgColor = "#dc2626"; // Mặc định màu đỏ (Y tế/Khẩn cấp)
+  let iconSvg = `<rect x="6.5" y="0.5" width="3" height="15" rx="1"/><rect x="0.5" y="6.5" width="15" height="3" rx="1"/>`;
+
+  if (name.includes("sửa xe") || name.includes("cứu hộ xe") || name.includes("bảo dưỡng")) {
+    bgColor = "#ea580c"; // Cam
+    iconSvg = `<path d="M12 2a4 4 0 0 0-4 4c0 1.25.57 2.37 1.46 3.1L3.2 15.36a1 1 0 0 0 1.41 1.41l6.27-6.27A4 4 0 1 0 12 2z"/>`;
+  } else if (name.includes("xăng") || name.includes("nhiên liệu")) {
+    bgColor = "#d97706"; // Vàng sậm
+    iconSvg = `<path d="M3 2h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm10 3h1a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2v2a1 1 0 0 1-2 0v-2a1 1 0 0 1-1-1V5z"/>`;
+  } else if (name.includes("trú") || name.includes("cứu nạn") || name.includes("tập kết")) {
+    bgColor = "#059669"; // Xanh lá
+    iconSvg = `<path d="M8 1l7 6v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V7l7-6z"/>`;
+  }
+
+  return L.divIcon({
+    className: "",
+    html: `<div style="width:32px;height:32px;border-radius:50%;background:${bgColor};border:2px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35)" title="${categoryName}">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff">
+        ${iconSvg}
+      </svg>
+    </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+};
 
 const myLocationIcon = L.divIcon({
   className: "",
@@ -109,41 +125,35 @@ const HeatmapLayer = ({ points }) => {
 };
 
 // ================= LAYERS =================
-const DangerLayer = ({ data }) => (
-  <>
-    {data.map((item) => (
-      <Marker key={item.id} position={item.position} icon={icons[item.type] || icons.accident}>
-        <Popup>
-          <span className="flex items-center gap-1 font-medium">
-            <PiWarningFill className="text-red-500" /> {item.name || item.type || "Điểm nguy hiểm"}
-          </span>
-        </Popup>
-      </Marker>
-    ))}
-  </>
-);
-
 const dangerLevelRadius = { HIGH: 400, MEDIUM: 250, LOW: 150 };
 const dangerLevelColor = { HIGH: "#dc2626", MEDIUM: "#f59e0b", LOW: "#eab308" };
 
-const DangerZoneLayer = ({ data }) => (
+const DangerLayer = ({ data }) => (
   <>
     {data.map((item) => (
-      <Circle
-        key={item.id}
-        center={item.position}
-        radius={item.radius}
-        pathOptions={{ color: item.color || "#dc2626", fillOpacity: 0.15 }}
-      >
-        <Popup>
-          <div className="p-1">
+      <React.Fragment key={item.id}>
+        <Circle
+          center={item.position}
+          radius={item.radius}
+          pathOptions={{ color: item.color || "#dc2626", fillOpacity: 0.15 }}
+        >
+          <Popup>
+            <div className="p-1">
+              <span className="flex items-center gap-1 font-medium">
+                <PiCircleFill className="text-red-500" /> {item.name || "Vùng nguy hiểm"}
+              </span>
+              <p className="text-xs text-gray-600 mt-1">Mức độ: <b>{item.dangerLevel || "KHÔNG XÁC ĐỊNH"}</b></p>
+            </div>
+          </Popup>
+        </Circle>
+        <Marker position={item.position} icon={icons[item.type] || icons.accident}>
+          <Popup>
             <span className="flex items-center gap-1 font-medium">
-              <PiCircleFill className="text-red-500" /> {item.name || "Vùng nguy hiểm"}
+              <PiWarningFill className="text-red-500" /> {item.name || item.type || "Điểm nguy hiểm"}
             </span>
-            <p className="text-xs text-gray-600 mt-1">Mức độ: <b>{item.dangerLevel || "KHÔNG XÁC ĐỊNH"}</b></p>
-          </div>
-        </Popup>
-      </Circle>
+          </Popup>
+        </Marker>
+      </React.Fragment>
     ))}
   </>
 );
@@ -151,14 +161,18 @@ const DangerZoneLayer = ({ data }) => (
 const AmenityLayer = ({ data }) => (
   <>
     {data.map((item) => (
-      <Marker key={item.id} position={item.position} icon={amenityIcon}>
+      <Marker key={item.id} position={item.position} icon={createAmenityIcon(item.categoryName)}>
         <Popup>
-          <div className="p-1">
-            <span className="flex items-center gap-1 font-medium">
-              <PiHospitalFill className="text-red-600" /> {item.categoryName || "Tiện ích khẩn cấp"}
+          <div className="p-1 min-w-[160px]">
+            <span className="flex items-center gap-1.5 font-bold text-gray-900 text-sm">
+              <PiHospitalFill className="text-red-600 shrink-0" /> {item.categoryName || "Tiện ích khẩn cấp"}
             </span>
-            {item.name && <p className="text-sm text-gray-700 mt-1">{item.name}</p>}
-            {item.phone && <p className="text-xs text-gray-500 mt-1">Điện thoại: {item.phone}</p>}
+            {item.name && <p className="text-xs font-semibold text-gray-800 mt-1">{item.name}</p>}
+            {item.phone && (
+              <p className="text-xs text-gray-600 mt-1 font-mono flex items-center gap-1">
+                📞 {item.phone}
+              </p>
+            )}
           </div>
         </Popup>
       </Marker>
@@ -180,28 +194,194 @@ const RescuerLayer = ({ data }) => (
   </>
 );
 
+// ================= CUSTOM LAYER CONTROL PANEL =================
+const LayerControlPanel = ({
+  showHeatmap,
+  setShowHeatmap,
+  showDanger,
+  setShowDanger,
+  showAmenities,
+  setShowAmenities,
+  showRescuers,
+  setShowRescuers,
+  categories,
+  selectedCategory,
+  setSelectedCategory,
+  amenities,
+}) => {
+  const [openAmenityList, setOpenAmenityList] = useState(true);
+  const [panelExpanded, setPanelExpanded] = useState(true);
 
-const SosMarkerLayer = ({ points }) => (
-  <>
-    {points.map((item) => (
-      <Marker
-        key={item.sosRequestId}
-        position={[item.lat, item.lng]}
-        icon={icons.sos}
+  // Thống kê số lượng tiện ích theo danh mục
+  const categoryCounts = useMemo(() => {
+    const counts = {};
+    amenities.forEach((item) => {
+      const name = item.categoryName || "Khác";
+      counts[name] = (counts[name] || 0) + 1;
+    });
+    return counts;
+  }, [amenities]);
+
+  const uniqueCategoryNames = useMemo(() => {
+    const namesFromAmenities = Object.keys(categoryCounts);
+    const namesFromApi = categories.map((c) => c.categoryName).filter(Boolean);
+    return Array.from(new Set([...namesFromAmenities, ...namesFromApi]));
+  }, [categoryCounts, categories]);
+
+  return (
+    <div className="absolute top-4 right-4 z-[1000] w-[280px] bg-white/95 dark:bg-gray-100/95 backdrop-blur-md border border-gray-200 shadow-lg rounded-2xl overflow-hidden transition-all">
+      {/* Header Panel */}
+      <div
+        onClick={() => setPanelExpanded(!panelExpanded)}
+        className="flex items-center justify-between px-3.5 py-2.5 bg-gray-900 text-white cursor-pointer select-none"
       >
-        <Popup>
-          <div className="p-1">
-            <h4 className="flex items-center gap-1 font-bold text-red-600">
-              <PiSirenFill /> {item.incidentType}
-            </h4>
-            <p className="text-xs text-gray-600 mt-1">Trạng thái: <b>{item.status}</b></p>
-            <p className="text-xs text-gray-500">Tọa độ: {item.lat.toFixed(4)}, {item.lng.toFixed(4)}</p>
+        <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+          <PiLayersFill className="text-amber-400 text-sm" />
+          Lớp Bản Đồ
+        </span>
+        {panelExpanded ? <PiCaretUpBold size={14} /> : <PiCaretDownBold size={14} />}
+      </div>
+
+      {panelExpanded && (
+        <div className="p-2.5 space-y-2 text-xs font-medium text-gray-800">
+          {/* 1. Heatmap */}
+          <label className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors cursor-pointer">
+            <span className="flex items-center gap-2">
+              <span>🔥</span>
+              <span>Heatmap điểm nóng SOS</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={showHeatmap}
+              onChange={(e) => setShowHeatmap(e.target.checked)}
+              className="w-4 h-4 rounded text-gray-900 focus:ring-0 cursor-pointer"
+            />
+          </label>
+
+          {/* 2. Danger Points */}
+          <label className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors cursor-pointer">
+            <span className="flex items-center gap-2">
+              <span>⚠️</span>
+              <span>Điểm & Vùng nguy hiểm</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={showDanger}
+              onChange={(e) => setShowDanger(e.target.checked)}
+              className="w-4 h-4 rounded text-gray-900 focus:ring-0 cursor-pointer"
+            />
+          </label>
+
+          {/* 3. Amenities (Bật/Tắt & Mở danh sách danh mục) */}
+          <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50">
+            <div className="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors">
+              <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                <input
+                  type="checkbox"
+                  checked={showAmenities}
+                  onChange={(e) => {
+                    setShowAmenities(e.target.checked);
+                    if (e.target.checked) setOpenAmenityList(true);
+                  }}
+                  className="w-4 h-4 rounded text-gray-900 focus:ring-0 cursor-pointer"
+                />
+                <span className="truncate font-semibold flex items-center gap-1">
+                  <span>🏥</span> Tiện ích khẩn cấp
+                </span>
+              </label>
+
+              {showAmenities && (
+                <button
+                  type="button"
+                  onClick={() => setOpenAmenityList(!openAmenityList)}
+                  className="p-1 text-gray-500 hover:text-gray-900 rounded-lg hover:bg-gray-200 transition-colors"
+                  title="Mở danh sách danh mục"
+                >
+                  {openAmenityList ? <PiCaretUpBold size={14} /> : <PiCaretDownBold size={14} />}
+                </button>
+              )}
+            </div>
+
+            {/* Sub-list các danh mục tiện ích */}
+            {showAmenities && openAmenityList && (
+              <div className="p-2 border-t border-gray-200 space-y-1 max-h-48 overflow-y-auto bg-white dark:bg-gray-50">
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 px-1">
+                  Chọn danh mục hiển thị:
+                </p>
+
+                {/* Chọn Tất cả danh mục */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory("ALL")}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors ${
+                    selectedCategory === "ALL"
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <PiStorefrontFill className={selectedCategory === "ALL" ? "text-amber-400" : "text-gray-400"} />
+                    Tất cả tiện ích
+                  </span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                      selectedCategory === "ALL"
+                        ? "bg-gray-800 text-gray-200"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {amenities.length}
+                  </span>
+                </button>
+
+                {/* Từng danh mục cụ thể */}
+                {uniqueCategoryNames.map((catName) => {
+                  const count = categoryCounts[catName] || 0;
+                  const isSelected = selectedCategory === catName;
+                  return (
+                    <button
+                      key={catName}
+                      type="button"
+                      onClick={() => setSelectedCategory(catName)}
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${
+                        isSelected
+                          ? "bg-gray-900 text-white font-semibold"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span className="truncate pr-1">{catName}</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] shrink-0 ${
+                          isSelected ? "bg-gray-800 text-gray-200" : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </Popup>
-      </Marker>
-    ))}
-  </>
-);
+
+          {/* 4. Rescuers */}
+          <label className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors cursor-pointer">
+            <span className="flex items-center gap-2">
+              <span>🚑</span>
+              <span>Cứu hộ viên trực</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={showRescuers}
+              onChange={(e) => setShowRescuers(e.target.checked)}
+              className="w-4 h-4 rounded text-gray-900 focus:ring-0 cursor-pointer"
+            />
+          </label>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ================= SEARCH =================
 const SearchBox = ({ setLocation }) => {
@@ -471,9 +651,17 @@ const MapPage = () => {
   const [heatmapPoints, setHeatmapPoints] = useState([]);
   const [dangerPoints, setDangerPoints] = useState([]);
   const [amenities, setAmenities] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [rescuers, setRescuers] = useState([]);
   const [myLocation, setMyLocation] = useState(null);
   const isDark = useSelector((state) => state.theme.isDark);
+
+  // State quản lý hiển thị các lớp
+  const [showHeatmap, setShowHeatmap] = useState(true);
+  const [showDanger, setShowDanger] = useState(true);
+  const [showAmenities, setShowAmenities] = useState(true);
+  const [showRescuers, setShowRescuers] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
 
   useEffect(() => {
     const fetchMapData = async () => {
@@ -511,23 +699,32 @@ const MapPage = () => {
         console.error("Lỗi khi tải danh sách điểm nguy hiểm:", err);
       }
 
-      // 3. Fetch Emergency Amenities
+      // 3. Fetch Emergency Amenities & Categories
       try {
-        const res = await getApprovedAmenitiesPublic();
-        if (res && res.data && Array.isArray(res.data)) {
-          const mappedAmenities = res.data
+        const [categoriesRes, amenitiesRes] = await Promise.all([
+          getCategoriesAdmin().catch(() => null),
+          getApprovedAmenitiesPublic().catch(() => null),
+        ]);
+
+        if (categoriesRes && categoriesRes.data) {
+          setCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data : []);
+        }
+
+        if (amenitiesRes && amenitiesRes.data && Array.isArray(amenitiesRes.data)) {
+          const mappedAmenities = amenitiesRes.data
             .filter((item) => item.latitude && item.longitude)
             .map((item) => ({
               id: item.amenityId || item.id,
               position: [parseFloat(item.latitude), parseFloat(item.longitude)],
               name: item.name || item.categoryName || "Tiện ích khẩn cấp",
-              categoryName: item.categoryName || "",
+              categoryName: item.categoryName || "Khác",
+              categoryId: item.amenityCategoryId || item.categoryId || "",
               phone: item.phone || "",
             }));
           setAmenities(mappedAmenities);
         }
       } catch (err) {
-        console.error("Lỗi khi tải danh sách tiện ích khẩn cấp:", err);
+        console.error("Lỗi khi tải dữ liệu tiện ích khẩn cấp & danh mục:", err);
       }
 
       // 4. Fetch Rescuers
@@ -555,9 +752,33 @@ const MapPage = () => {
     fetchMapData();
   }, []);
 
+  // Lọc tiện ích theo danh mục được chọn
+  const filteredAmenities = useMemo(() => {
+    if (selectedCategory === "ALL") return amenities;
+    return amenities.filter(
+      (item) => item.categoryName === selectedCategory || item.categoryId === selectedCategory
+    );
+  }, [amenities, selectedCategory]);
+
   return (
     <div className="w-full h-146 relative">
       <SearchBox setLocation={setLocation} />
+
+      {/* Control Panel Tùy chỉnh Các Lớp & Danh mục */}
+      <LayerControlPanel
+        showHeatmap={showHeatmap}
+        setShowHeatmap={setShowHeatmap}
+        showDanger={showDanger}
+        setShowDanger={setShowDanger}
+        showAmenities={showAmenities}
+        setShowAmenities={setShowAmenities}
+        showRescuers={showRescuers}
+        setShowRescuers={setShowRescuers}
+        categories={categories}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        amenities={amenities}
+      />
 
       <MapContainer center={center} zoom={13} zoomControl={false} className="w-full h-full">
         <TileLayer
@@ -572,30 +793,14 @@ const MapPage = () => {
 
         <FlyToLocation location={location} />
         <MyLocationMarker position={myLocation} />
-        <AutoFitMapBounds dangerPoints={dangerPoints} amenities={amenities} />
+        <AutoFitMapBounds dangerPoints={dangerPoints} amenities={filteredAmenities} />
         <MapControls onLocate={setMyLocation} />
 
-        <LayersControl position="topright">
-          <LayersControl.Overlay checked name="🔥 Heatmap điểm nóng">
-            <HeatmapLayer points={heatmapPoints} />
-          </LayersControl.Overlay>
-
-          <LayersControl.Overlay checked name="⚠️ Điểm nguy hiểm">
-            <DangerLayer data={dangerPoints} />
-          </LayersControl.Overlay>
-
-          <LayersControl.Overlay checked name="⭕ Vùng nguy hiểm">
-            <DangerZoneLayer data={dangerPoints} />
-          </LayersControl.Overlay>
-
-          <LayersControl.Overlay checked name="🏥 Tiện ích khẩn cấp">
-            <AmenityLayer data={amenities} />
-          </LayersControl.Overlay>
-
-          <LayersControl.Overlay name="🚑 Cứu hộ viên">
-            <RescuerLayer data={rescuers} />
-          </LayersControl.Overlay>
-        </LayersControl>
+        {/* Render Lớp bản đồ theo Toggle */}
+        {showHeatmap && <HeatmapLayer points={heatmapPoints} />}
+        {showDanger && <DangerLayer data={dangerPoints} />}
+        {showAmenities && <AmenityLayer data={filteredAmenities} />}
+        {showRescuers && <RescuerLayer data={rescuers} />}
       </MapContainer>
 
       {/* Thẻ thống kê điểm nguy hiểm & tiện ích */}
@@ -610,7 +815,8 @@ const MapPage = () => {
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
           <span>
-            Tiện ích khẩn cấp: <b className="text-emerald-600">{amenities.length}</b>
+            Tiện ích {selectedCategory !== "ALL" ? `(${selectedCategory})` : "khẩn cấp"}:{" "}
+            <b className="text-emerald-600">{filteredAmenities.length}</b>
           </span>
         </div>
       </div>
