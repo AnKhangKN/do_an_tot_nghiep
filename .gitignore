@@ -2,5 +2,9 @@
 /logs
 /.vscode
 script-db.sql
+select-db.sql
+render.yaml
+.agents
+.codegraph
 
 *.docx
