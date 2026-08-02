@@ -73,6 +73,19 @@ class SessionController with ChangeNotifier {
   bool get isBanned => _isBanned;
   String? get banReason => _banReason;
 
+  String? _rescueCancelledMessage;
+  String? get rescueCancelledMessage => _rescueCancelledMessage;
+
+  void setRescueCancelledMessage(String? message) {
+    _rescueCancelledMessage = message;
+    notifyListeners();
+  }
+
+  void clearRescueCancelledMessage() {
+    _rescueCancelledMessage = null;
+    notifyListeners();
+  }
+
   void setBanned({String? reason}) {
     _isBanned = true;
     _banReason = reason;
@@ -131,6 +144,7 @@ class SessionController with ChangeNotifier {
     _completedRescuerName = null;
     _isBanned = false;
     _banReason = null;
+    _rescueCancelledMessage = null;
     GetIt.instance<StorageService>().clearBanState();
     notifyListeners();
   }

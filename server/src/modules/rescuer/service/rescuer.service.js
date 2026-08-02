@@ -117,6 +117,12 @@ class RescuerService {
     goOnline = async ({ userId }) => {
         console.log("goOnline", userId);
 
+        // Kiểm tra tài khoản có đang bị tạm khóa do hủy ca cứu hộ nhiều lần không
+        const suspended = await redis.exists(`rescuer:suspended:${userId}`);
+        if (suspended) {
+            throwError("Tài khoản của bạn đang bị tạm khóa 2 giờ do hủy ca cứu hộ 2 lần liên tiếp!", 403);
+        }
+
         const rescuer = await this.findRescuerByUserId({ userId });
 
         if (!rescuer) {
@@ -174,6 +180,23 @@ class RescuerService {
     // ở đây là tìm người dùng
     getRescuersByIds = async (rescuerIds) => {
         return await this.rescuerRepository.getRescuersByIds(rescuerIds);
+    }
+
+    // Tạm khóa Rescuer do hủy ca cứu hộ 2 lần liên tiếp: đưa về offline để không nhận ca mới
+    suspendRescuer = async ({ userId }) => {
+        try {
+            await redis.set(`rescuer:status:${userId}`, 'OFFLINE');
+            await this.rescuerRepository.offlineRedis({ userId });
+            await redis.hdel('rescuer:last_seen', userId);
+            await redis.hdel('active_rescues', userId);
+            await redis.del(`active:rescuer:${userId}`);
+            await redis.del(`sos:offer:rescuer:${userId}`);
+            await redis.zrem('rescuer_locations', userId);
+            await this.rescuerRepository.updateStatus({ userId, status: 'OFFLINE' });
+            console.log(`[SERVICE] Cứu hộ viên ${userId} đã bị tạm khóa (OFFLINE) do hủy ca cứu hộ nhiều lần`);
+        } catch (err) {
+            console.error("[SERVICE] Lỗi suspendRescuer:", err);
+        }
     }
 
     getRescuersIncidentTypes = async (rescuerIds) => {

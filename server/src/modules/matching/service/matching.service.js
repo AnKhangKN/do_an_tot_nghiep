@@ -148,6 +148,7 @@ class MatchingService {
         rescuerIds.forEach(id => {
             pipeline.hexists("active_rescues", id);
             pipeline.exists(`sos:offer:rescuer:${id}`);
+            pipeline.exists(`rescuer:suspended:${id}`);
         });
 
         const busyResults = await pipeline.exec();
@@ -158,6 +159,7 @@ class MatchingService {
                 rescuerId: r.userId,
                 isRescuing: busyResults[index * 2]?.[1] === 1,
                 hasOffer: busyResults[index * 2 + 1]?.[1] === 1,
+                isSuspended: busyResults[index * 2 + 2]?.[1] === 1,
                 lastSeenAt: r.lastSeenAt
             }))
         );
@@ -186,7 +188,6 @@ class MatchingService {
                 return false;
             }
 
-            // Lấy kết quả từ Redis pipeline
             const isRescuing = busyResults[index * 2][1] === 1; // hexists trả về 1 nếu field tồn tại
             if (isRescuing) {
                 // Tự động kiểm tra giải phóng key rác nếu ca cũ đã kết thúc/hủy
@@ -233,6 +234,13 @@ class MatchingService {
                 }).catch(() => {});
 
                 console.log(`[MATCHING] loại ${r.userId} vì đang có sos:offer:rescuer:${r.userId}`);
+                return false;
+            }
+
+            // Bị tạm khóa do hủy ca cứu hộ 2 lần liên tiếp (khóa 2 giờ)
+            const isSuspended = busyResults[index * 2 + 2][1] === 1; // exists trả về 1 nếu key tồn tại
+            if (isSuspended) {
+                console.log(`[MATCHING] loại ${r.userId} vì đang bị tạm khóa 2 giờ do hủy ca cứu hộ nhiều lần`);
                 return false;
             }
 

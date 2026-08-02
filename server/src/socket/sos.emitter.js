@@ -158,6 +158,62 @@ const handleSosCompleted = (io, data) => {
     }
 };
 
+/**
+ * Emit sự kiện rescue:cancelled (tới Victim và Rescuer) khi Cứu hộ viên hủy ca cứu hộ đang thực hiện
+ * @param {Object} io - Socket.IO Server
+ * @param {Object} data - Dữ liệu parse từ Redis PubSub
+ */
+const handleRescueCancelled = (io, data) => {
+    try {
+        const payload = {
+            sosRequestId: data.sosRequestId || data.sosId,
+            sosId: data.sosRequestId || data.sosId,
+            rescuerId: data.rescuerId,
+            victimId: data.victimId,
+            reason: data.reason,
+            message: data.message || "Cứu hộ viên đã hủy ca cứu hộ.",
+        };
+
+        if (data.victimId) {
+            io.to(`victim:${data.victimId}`).emit("rescue:cancelled", payload);
+            io.to(`user:${data.victimId}`).emit("rescue:cancelled", payload);
+        }
+        if (data.rescuerId) {
+            io.to(`rescuer:${data.rescuerId}`).emit("rescue:cancelled", payload);
+            io.to(`user:${data.rescuerId}`).emit("rescue:cancelled", payload);
+        }
+        io.to("admin:dashboard").emit("SOS_CANCELLED", {
+            sosId: data.sosRequestId || data.sosId,
+            rescuerId: data.rescuerId
+        });
+        console.log(`[SOS EMITTER] Emitted 'rescue:cancelled' for SOS: ${payload.sosRequestId}`);
+    } catch (err) {
+        console.error(`[SOS EMITTER] Error emitting rescue:cancelled:`, err);
+    }
+};
+
+/**
+ * Emit sự kiện rescuer:suspended tới Rescuer khi tài khoản bị tạm khóa do hủy ca nhiều lần
+ * @param {Object} io - Socket.IO Server
+ * @param {Object} data - Dữ liệu parse từ Redis PubSub
+ */
+const handleRescuerSuspended = (io, data) => {
+    try {
+        const payload = {
+            reason: data.reason || "Bạn đã hủy ca cứu hộ 2 lần liên tiếp. Tài khoản bị tạm khóa nhận ca cứu hộ mới trong 2 giờ.",
+            suspendedUntil: data.suspendedUntil,
+        };
+
+        if (data.rescuerId) {
+            io.to(`rescuer:${data.rescuerId}`).emit("rescuer:suspended", payload);
+            io.to(`user:${data.rescuerId}`).emit("rescuer:suspended", payload);
+        }
+        console.log(`[SOS EMITTER] Emitted 'rescuer:suspended' for Rescuer: ${data.rescuerId}`);
+    } catch (err) {
+        console.error(`[SOS EMITTER] Error emitting rescuer:suspended:`, err);
+    }
+};
+
 module.exports = {
     handleSosOffer,
     handleSosNotFound,
@@ -165,4 +221,6 @@ module.exports = {
     handleSosAccepted,
     handleChatConversationClosed,
     handleSosCompleted,
+    handleRescueCancelled,
+    handleRescuerSuspended,
 };

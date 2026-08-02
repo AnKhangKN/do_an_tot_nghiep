@@ -378,6 +378,21 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
     final sessionController = getIt<SessionController>();
     final isBeingRescued = sessionController.isBeingRescued;
 
+    // Hiển thị thông báo khi Cứu hộ viên hủy ca cứu hộ (nếu có)
+    final cancelledMsg = sessionController.rescueCancelledMessage;
+    if (cancelledMsg != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppSnackBar.show(
+          context,
+          cancelledMsg,
+          type: AppSnackBarType.error,
+          duration: const Duration(seconds: 6),
+        );
+        sessionController.clearRescueCancelledMessage();
+      });
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
@@ -512,20 +527,28 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Column(
-                  children: [
-                    const SearchWidget(),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: const [
-                        Expanded(
-                          child: AmenityCategoryChips(),
+                child: ListenableBuilder(
+                  listenable: getIt<SessionController>(),
+                  builder: (context, _) {
+                    if (getIt<SessionController>().isBeingRescued) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      children: [
+                        const SearchWidget(),
+                        const SizedBox(height: 6),
+                        const Row(
+                          children: [
+                            Expanded(
+                              child: AmenityCategoryChips(),
+                            ),
+                            SizedBox(width: 8),
+                            LayerWidget(),
+                          ],
                         ),
-                        SizedBox(width: 8),
-                        LayerWidget(),
                       ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ),

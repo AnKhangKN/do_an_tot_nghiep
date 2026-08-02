@@ -93,6 +93,27 @@ module.exports = (socket, io) => {
         }
     });
 
+    // Cứu hộ viên hủy ca cứu hộ đang thực hiện (kèm lý do)
+    socket.on("rescue:cancel", async (payload) => {
+        try {
+            const rescuerId = socket.user.userId;
+            const sosRequestId = payload?.sosRequestId || payload?.incidentId;
+            const cancelReason = payload?.cancelReason || payload?.reason;
+
+            if (!sosRequestId) {
+                throw new Error("Mã yêu cầu cứu hộ là bắt buộc!");
+            }
+
+            console.log(`[SOCKET] Rescuer ${rescuerId} cancels SOS ${sosRequestId}`);
+
+            await sosRequestService.cancelSOSByRescuer({ sosRequestId, rescuerId, cancelReason });
+
+        } catch (error) {
+            console.error("Cancel SOS error:", error);
+            socket.emit("error", { message: error.message || "Không thể hủy cứu hộ!" });
+        }
+    });
+
     // Cứu hộ từ chối hoặc bỏ qua SOS offer
     socket.on("rescue:reject", async (payload) => {
         try {

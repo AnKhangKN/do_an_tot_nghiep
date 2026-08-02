@@ -112,4 +112,18 @@ class SOSProvider extends ChangeNotifier {
     _cancelledNotice = null;
     notifyListeners();
   }
+
+  String? _suspendedNotice;
+  String? get suspendedNotice => _suspendedNotice;
+
+  void handleRescuerSuspended({String? message}) {
+    _suspendedNotice = message ?? "Bạn đã hủy ca cứu hộ 2 lần liên tiếp. Tài khoản bị tạm khóa nhận ca cứu hộ mới trong 2 giờ.";
+    endRescue();
+    notifyListeners();
+  }
+
+  void clearSuspendedNotice() {
+    _suspendedNotice = null;
+    notifyListeners();
+  }
 }

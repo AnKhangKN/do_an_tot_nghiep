@@ -286,6 +286,12 @@ class SosRequestService {
             console.log(`[SERVICE] Đã giải phóng active_rescues cho Rescuer: ${result.rescuer_id}`);
         }
 
+        // Reset bộ đếm hủy ca liên tiếp khi Rescuer hoàn thành một ca cứu hộ
+        if (result && result.rescuer_id) {
+            await redis.del(`rescuer:cancel_streak:${result.rescuer_id}`);
+            console.log(`[SERVICE] Đã reset bộ đếm hủy ca liên tiếp cho Rescuer: ${result.rescuer_id}`);
+        }
+
         // Lên lịch tự động khóa kênh nhắn tin giữa Nạn nhân và Cứu hộ viên sau 15 phút gia hạn
         const chatGraceMs = (await settingsUtil.getSettingNumber("chat_close_grace_minutes", 15)) * 60 * 1000;
         console.log(`💬 [CHAT AUTO-CLOSE TIMER] Bắt đầu đếm ngược ${chatGraceMs / 60000} phút gia hạn chat cho ca SOS hoàn thành: ${sosRequestId}`);
@@ -682,6 +688,18 @@ class SosRequestService {
                 });
                 await redis.publish("sos:cancelled", payload);
 
+                // Gửi Push Notification tới Rescuer khi Nạn nhân hủy ca cứu hộ đang thực hiện
+                if (rescuerIdToRelease) {
+                    notificationService.sendPushNotification(rescuerIdToRelease, {
+                        title: "Nạn nhân đã hủy ca cứu hộ",
+                        body: "Người gặp nạn đã dừng yêu cầu cứu hộ. Bạn có thể tiếp nhận ca cứu hộ mới.",
+                        data: {
+                            type: "RESCUE_CANCELLED",
+                            sosRequestId: targetSosId
+                        }
+                    }).catch(err => console.error("[SERVICE] Lỗi gửi push notification cho rescuer khi victim hủy SOS:", err));
+                }
+
                 // Lên lịch tự động khóa kênh nhắn tin giữa Nạn nhân và Cứu hộ viên sau 15 phút gia hạn
                 const chatGraceMs2 = (await settingsUtil.getSettingNumber("chat_close_grace_minutes", 15)) * 60 * 1000;
                 setTimeout(async () => {
@@ -718,6 +736,148 @@ class SosRequestService {
             return updated;
         } catch (error) {
             console.error("[SERVICE] Lỗi trong cancelSOS:", error);
+        }
+    };
+
+    cancelSOSByRescuer = async ({ sosRequestId, rescuerId, cancelReason }) => {
+        try {
+            if (!sosRequestId) {
+                throw new Error("Mã yêu cầu cứu hộ là bắt buộc!");
+            }
+
+            const sos = await this.sos_requestRepository.findSOSById(sosRequestId);
+            if (!sos) {
+                throw new Error("Không tìm thấy yêu cầu cứu hộ!");
+            }
+            if (sos.status !== "IN_PROGRESS") {
+                throw new Error("Ca cứu hộ không ở trạng thái đang thực hiện!");
+            }
+            if (sos.rescuer_id !== rescuerId) {
+                throw new Error("Bạn không phải cứu hộ viên đang thực hiện ca này!");
+            }
+
+            const reason = cancelReason || "Cứu hộ viên hủy ca cứu hộ";
+
+            const updated = await this.sos_requestRepository.updateStatusOnly({
+                sosRequestId,
+                status: 'CANCELLED',
+                cancelReason: reason
+            });
+
+            if (updated) {
+                // Ngắt luồng tìm kiếm BullMQ (nếu có)
+                dispatchService.stopSOS(sosRequestId);
+
+                // Dọn dẹp Redis tracking keys
+                await this.cleanupSosKeys(sosRequestId);
+
+                // Giải phóng lập tức cờ bận cứu hộ trên Redis cho Rescuer
+                await redis.hdel("active_rescues", rescuerId);
+                await redis.del(`sos:offer:rescuer:${rescuerId}`);
+                console.log(`[SERVICE] Đã giải phóng active_rescues cho Rescuer khi Rescuer tự hủy SOS: ${rescuerId}`);
+
+                // Ghi nhật ký hoạt động: CANCELLED
+                await transaction(async (client) => {
+                    await rescuerHistoryRepository.createHistory(client, {
+                        historyId: uuidUtil.generateUUID(),
+                        rescuerId,
+                        sosRequestId,
+                        action: 'CANCELLED'
+                    });
+                }).catch(err => console.error("Lỗi ghi log CANCELLED vào DB:", err));
+
+                // Publish sự kiện hủy qua Redis pubsub để Socket Server đồng bộ Victim & Rescuer
+                const payload = JSON.stringify({
+                    sosId: sosRequestId,
+                    sosRequestId,
+                    victimId: updated.user_id,
+                    rescuerId,
+                    reason,
+                    message: `Cứu hộ viên đã hủy ca cứu hộ. Lý do: ${reason}`
+                });
+                await redis.publish("rescue:cancelled", payload);
+
+                // Gửi Push Notification Firebase tới Nạn nhân
+                notificationService.sendPushNotification(updated.user_id, {
+                    title: "Cứu hộ viên đã hủy ca cứu hộ",
+                    body: `Lý do: ${reason}. Vui lòng tạo yêu cầu mới nếu bạn vẫn cần trợ giúp.`,
+                    data: {
+                        type: "RESCUE_CANCELLED",
+                        sosRequestId,
+                        cancelReason: reason
+                    }
+                }).catch(err => console.error("[SERVICE] Lỗi gửi push notification cho victim khi rescuer hủy SOS:", err));
+
+                // Lên lịch tự động khóa kênh nhắn tin sau 15 phút gia hạn
+                const chatGraceMs2 = (await settingsUtil.getSettingNumber("chat_close_grace_minutes", 15)) * 60 * 1000;
+                setTimeout(async () => {
+                    try {
+                        const closedConv = await chatService.closeConversationBySosRequestId(sosRequestId);
+                        if (closedConv) {
+                            const payloadConv = JSON.stringify({
+                                conversationId: closedConv.conversation_id,
+                                sosRequestId,
+                                victimId: closedConv.user1_id,
+                                rescuerId: closedConv.user2_id,
+                                message: `Hết thời gian ${chatGraceMs2 / 60000} phút gia hạn. Cuộc trò chuyện này đã tự động đóng.`
+                            });
+                            await redis.publish("chat:conversation_closed", payloadConv);
+                        }
+                    } catch (convErr) {
+                        console.error("[SERVICE] Lỗi khóa kênh chat sau gia hạn khi rescuer hủy SOS:", convErr);
+                    }
+                }, chatGraceMs2);
+
+                // Phạt: đếm số lần hủy ca liên tiếp của Rescuer
+                await this._trackRescuerCancelPenalty({ rescuerId });
+
+                try {
+                    const { emitAdminDashboardEvent } = require("@/socket");
+                    emitAdminDashboardEvent("SOS_CANCELLED", {
+                        sosId: sosRequestId,
+                        rescuerId
+                    });
+                } catch (e) {
+                    console.error("[SERVICE] Lỗi phát event socket admin dashboard:", e);
+                }
+            }
+
+            return updated;
+        } catch (error) {
+            console.error("[SERVICE] Lỗi trong cancelSOSByRescuer:", error);
+            throw error;
+        }
+    };
+
+    _trackRescuerCancelPenalty = async ({ rescuerId }) => {
+        try {
+            const STREAK_KEY = `rescuer:cancel_streak:${rescuerId}`;
+            const streak = await redis.incr(STREAK_KEY);
+            // Giữ bộ đếm tối đa 30 ngày để tránh key tồn tại vĩnh viễn (reset khi hoàn thành COMPLETED)
+            await redis.expire(STREAK_KEY, 30 * 24 * 60 * 60);
+
+            console.log(`[PENALTY] Rescuer ${rescuerId} đã hủy lần thứ ${streak} liên tiếp`);
+
+            if (streak >= 2) {
+                await redis.del(STREAK_KEY);
+                await redis.set(`rescuer:suspended:${rescuerId}`, "1", "EX", 2 * 60 * 60);
+
+                // Đưa Rescuer về offline để không nhận ca mới trong thời gian bị khóa
+                const rescuerService = require("@modules/rescuer/service/rescuer.service");
+                await rescuerService.suspendRescuer({ userId: rescuerId });
+
+                // Thông báo tức thì tới app của Rescuer qua Redis PubSub
+                const suspendedUntil = Date.now() + 2 * 60 * 60 * 1000;
+                await redis.publish("rescuer:suspended", JSON.stringify({
+                    rescuerId,
+                    reason: "Bạn đã hủy ca cứu hộ 2 lần liên tiếp. Tài khoản bị tạm khóa nhận ca cứu hộ mới trong 2 giờ.",
+                    suspendedUntil
+                }));
+
+                console.log(`[PENALTY] Rescuer ${rescuerId} đã bị tạm khóa 2 giờ do hủy ${streak} lần liên tiếp`);
+            }
+        } catch (err) {
+            console.error("[PENALTY] Lỗi xử lý phạt rescuer hủy ca:", err);
         }
     };
 

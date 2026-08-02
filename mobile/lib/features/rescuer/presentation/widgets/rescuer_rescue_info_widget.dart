@@ -7,6 +7,8 @@ import 'package:mobile/features/chat/presentation/screens/messenger_screen.dart'
 import 'package:mobile/shared/widgtes/messenger_widget.dart';
 import 'package:mobile/shared/widgtes/phone_call_widget.dart';
 import 'package:mobile/shared/widgtes/rescue_completion_dialog_widget.dart';
+import 'package:mobile/shared/widgtes/emergency_dialog_widget.dart';
+import 'package:mobile/shared/widgtes/rescue_cancel_reason_dialog.dart';
 
 class RescuerRescueInfoWidget extends StatelessWidget {
   final Map<String, dynamic>? activeVictim;
@@ -16,6 +18,7 @@ class RescuerRescueInfoWidget extends StatelessWidget {
   final double? distanceKm;   // Khoảng cách còn lại (km)
   final int? durationSec;     // Thời gian ước tính (giây)
   final VoidCallback onComplete;
+  final void Function(String reason)? onCancel;
 
   const RescuerRescueInfoWidget({
     super.key,
@@ -26,7 +29,15 @@ class RescuerRescueInfoWidget extends StatelessWidget {
     this.distanceKm,
     this.durationSec,
     required this.onComplete,
+    this.onCancel,
   });
+
+  Future<void> _onCancelPressed(BuildContext context) async {
+    final reason = await RescueCancelReasonDialog.show(context);
+    if (reason != null && reason.isNotEmpty) {
+      onCancel?.call(reason);
+    }
+  }
 
   void _showFullImageModal(BuildContext context, String url) {
     showDialog(
@@ -371,6 +382,50 @@ class RescuerRescueInfoWidget extends StatelessWidget {
                 fontSize: 15,
               ),
             ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _onCancelPressed(context),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ColorConstants.danger,
+                    side: BorderSide(color: ColorConstants.danger),
+                    minimumSize: const Size.fromHeight(44),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.cancel_outlined, size: 18),
+                  label: const Text(
+                    "Hủy cứu hộ",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => EmergencyDialogWidget.show(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorConstants.dangerHigh,
+                    minimumSize: const Size.fromHeight(44),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.emergency_outlined, size: 18),
+                  label: const Text(
+                    "Gọi khẩn cấp",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

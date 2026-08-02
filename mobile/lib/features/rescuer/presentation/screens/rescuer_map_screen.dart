@@ -166,6 +166,20 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
       });
     }
 
+    final suspendedNotice = sosProvider.suspendedNotice;
+    if (suspendedNotice != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppSnackBar.show(
+          context,
+          suspendedNotice,
+          type: AppSnackBarType.error,
+          duration: const Duration(seconds: 6),
+        );
+        sosProvider.clearSuspendedNotice();
+      });
+    }
+
     if (isRescuing && activeRescue != null && position != null) {
       _updateRoute(
         LatLng(position.latitude, position.longitude),
@@ -502,17 +516,19 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Column(
                   children: [
-                    const SearchWidget(),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AmenityCategoryChips(),
-                        ),
-                        SizedBox(width: 8),
-                        LayerWidget(),
-                      ],
-                    ),
+                    if (!isRescuing) ...[
+                      const SearchWidget(),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AmenityCategoryChips(),
+                          ),
+                          SizedBox(width: 8),
+                          LayerWidget(),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -538,6 +554,9 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
                         onComplete: () {
                           getIt<RescuerSocket>().completeRescue(activeRescue.sosId);
                           sosProvider.endRescue();
+                        },
+                        onCancel: (reason) {
+                          getIt<RescuerSocket>().cancelRescue(activeRescue.sosId, reason);
                         },
                       )
                     : SizedBox(

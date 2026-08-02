@@ -28,6 +28,9 @@ class SocketEvents {
   static const rescueReject = "rescue:reject";
   static const rescueAssign = "rescue:assign";
   static const rescueComplete = "rescue:complete";
+  static const rescueCancel = "rescue:cancel";
+  static const rescueCancelled = "rescue:cancelled";
+  static const rescuerSuspended = "rescuer:suspended";
 
   // =========================
   // HEARTBEAT

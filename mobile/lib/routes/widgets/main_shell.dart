@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/features/rescuer/presentation/providers/sos_provider.dart';
 import 'package:mobile/shared/widgtes/banned_dialog_widget.dart';
 import 'package:mobile/shared/widgtes/bottom_nav_bar_widget.dart';
 
 import '../../core/di/di.dart';
 import '../../core/session/session_controller.dart';
+import '../../core/session/session_state.dart';
 
 class MainShell extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -26,12 +28,27 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     final sessionController = getIt<SessionController>();
     sessionController.addListener(_onSessionChanged);
+    getIt<SOSProvider>().addListener(_onRescueStateChanged);
   }
 
   @override
   void dispose() {
     getIt<SessionController>().removeListener(_onSessionChanged);
+    getIt<SOSProvider>().removeListener(_onRescueStateChanged);
     super.dispose();
+  }
+
+  bool _isInRescue() {
+    final session = getIt<SessionController>();
+    final isRescuer = session.role == UserRole.rescuer;
+    return isRescuer ? getIt<SOSProvider>().isRescuing : session.isBeingRescued;
+  }
+
+  void _onRescueStateChanged() {
+    if (!_isInRescue()) return;
+    if (widget.navigationShell.currentIndex != 0) {
+      widget.navigationShell.goBranch(0);
+    }
   }
 
   void _onSessionChanged() {
@@ -57,11 +74,22 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: widget.navigationShell,
-      bottomNavigationBar: RepaintBoundary(
-        child: BottomNavBarWidget(
-          currentIndex: widget.navigationShell.currentIndex,
-          onTap: _onTap,
-        ),
+      bottomNavigationBar: ListenableBuilder(
+        listenable: Listenable.merge([
+          getIt<SessionController>(),
+          getIt<SOSProvider>(),
+        ]),
+        builder: (context, _) {
+          if (_isInRescue()) {
+            return const SizedBox.shrink();
+          }
+          return RepaintBoundary(
+            child: BottomNavBarWidget(
+              currentIndex: widget.navigationShell.currentIndex,
+              onTap: _onTap,
+            ),
+          );
+        },
       ),
     );
   }
