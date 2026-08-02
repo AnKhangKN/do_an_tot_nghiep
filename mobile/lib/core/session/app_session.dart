@@ -428,6 +428,16 @@ class AppSession {
 
       final profileResponse = await authRepository.getMe();
 
+      // BẢO VỆ: Chỉ cho phép bật online nếu tài khoản THỰC SỰ là RESCUER theo nguồn
+      // chân lý (getMe). Phòng trường hợp màn hình rescuer bị hiển thị nhầm trong khi
+      // token đang thuộc tài khoản khác (VD: victim) -> trước đây vẫn emit
+      // "rescuer:online" bằng token sai -> server 404 "Không tìm thấy người cứu hộ!".
+      if (profileResponse.role != 'RESCUER') {
+        throw Exception(
+          'Tài khoản hiện tại không phải cứu hộ viên. Vui lòng đăng xuất rồi đăng nhập lại bằng tài khoản cứu hộ!',
+        );
+      }
+
       await _startBackgroundService(token, profileResponse.userId, profileResponse.role);
 
       // Đảm bảo socket đã kết nối

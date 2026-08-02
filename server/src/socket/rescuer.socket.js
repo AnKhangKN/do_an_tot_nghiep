@@ -18,15 +18,15 @@ module.exports = (socket, io) => {
 
     // Bật chế độ sẵn sàng nhận SOS
     socket.on("rescuer:online", async () => {
+        const userId = socket.user?.userId;
         try {
-            const userId = socket.user.userId;
             console.log("User going online:", userId);
 
             await rescuerService.goOnline({ userId });
 
             socket.emit("rescuer:online:response", { success: true });
         } catch (error) {
-            console.error("Go online error:", error);
+            console.error("Go online error:", error.message, "| userId:", userId, "| role:", socket.user?.role);
 
             socket.emit("rescuer:online:response", {
                 success: false,
