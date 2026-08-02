@@ -313,22 +313,20 @@ const LayerControlPanel = ({
                 <button
                   type="button"
                   onClick={() => setSelectedCategory("ALL")}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors ${
-                    selectedCategory === "ALL"
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors ${selectedCategory === "ALL"
                       ? "bg-gray-900 text-white"
                       : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <span className="flex items-center gap-1.5">
                     <PiStorefrontFill className={selectedCategory === "ALL" ? "text-amber-400" : "text-gray-400"} />
                     Tất cả tiện ích
                   </span>
                   <span
-                    className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                      selectedCategory === "ALL"
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] ${selectedCategory === "ALL"
                         ? "bg-gray-800 text-gray-200"
                         : "bg-gray-200 text-gray-700"
-                    }`}
+                      }`}
                   >
                     {amenities.length}
                   </span>
@@ -343,17 +341,15 @@ const LayerControlPanel = ({
                       key={catName}
                       type="button"
                       onClick={() => setSelectedCategory(catName)}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${
-                        isSelected
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${isSelected
                           ? "bg-gray-900 text-white font-semibold"
                           : "text-gray-700 hover:bg-gray-100"
-                      }`}
+                        }`}
                     >
                       <span className="truncate pr-1">{catName}</span>
                       <span
-                        className={`px-1.5 py-0.5 rounded-full text-[10px] shrink-0 ${
-                          isSelected ? "bg-gray-800 text-gray-200" : "bg-gray-200 text-gray-700"
-                        }`}
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] shrink-0 ${isSelected ? "bg-gray-800 text-gray-200" : "bg-gray-200 text-gray-700"
+                          }`}
                       >
                         {count}
                       </span>
@@ -363,20 +359,6 @@ const LayerControlPanel = ({
               </div>
             )}
           </div>
-
-          {/* 4. Rescuers */}
-          <label className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors cursor-pointer">
-            <span className="flex items-center gap-2">
-              <span>🚑</span>
-              <span>Cứu hộ viên trực</span>
-            </span>
-            <input
-              type="checkbox"
-              checked={showRescuers}
-              onChange={(e) => setShowRescuers(e.target.checked)}
-              className="w-4 h-4 rounded text-gray-900 focus:ring-0 cursor-pointer"
-            />
-          </label>
         </div>
       )}
     </div>
