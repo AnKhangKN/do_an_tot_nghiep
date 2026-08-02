@@ -43,3 +43,4 @@ public/uploads/
 *.pid.lock
 
 service-account.json
+scripts/

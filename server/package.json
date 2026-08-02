@@ -10,7 +10,8 @@
     "start:all": "node src/server.all.js",
     "dev:worker": "nodemon src/workers/sos.worker.js",
     "worker": "node src/workers/sos.worker.js",
-    "dev:all": "concurrently \"npm run dev\" \"npm run dev:worker\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:worker\"",
+    "seed:user": "node scripts/seed_admin.js"
   },
   "_moduleAliases": {
     "@": "src",
