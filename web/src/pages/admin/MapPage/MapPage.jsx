@@ -579,27 +579,27 @@ const MapPage = () => {
         <MapControls onLocate={setMyLocation} />
 
         <LayersControl position="topright">
-          <LayersControl.Overlay checked name={<span className="flex items-center gap-1"><PiFireFill className="text-red-500" /> Điểm nóng tai nạn (Heatmap)</span>}>
+          <LayersControl.Overlay checked name="🔥 Điểm nóng tai nạn (Heatmap)">
             <HeatmapLayer points={heatmapPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiMapPinFill className="text-red-500" /> Vị trí SOS Cứu hộ</span>}>
+          <LayersControl.Overlay name="📍 Vị trí SOS Cứu hộ">
             <SosMarkerLayer points={heatmapPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay checked name={<span className="flex items-center gap-1"><PiSirenFill className="text-red-500" /> Điểm nguy hiểm</span>}>
+          <LayersControl.Overlay checked name="⚠️ Điểm nguy hiểm">
             <DangerLayer data={dangerPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiCircleFill className="text-red-500" /> Vùng nguy hiểm</span>}>
+          <LayersControl.Overlay name="⭕ Vùng nguy hiểm">
             <DangerZoneLayer data={dangerPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiHospitalFill className="text-red-600" /> Tiện ích khẩn cấp</span>}>
+          <LayersControl.Overlay name="🏥 Tiện ích khẩn cấp">
             <AmenityLayer data={amenities} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name={<span className="flex items-center gap-1"><PiAmbulanceFill className="text-emerald-600" /> Cứu hộ</span>}>
+          <LayersControl.Overlay name="🚑 Cứu hộ viên">
             <RescuerLayer data={rescuers} />
           </LayersControl.Overlay>
         </LayersControl>
