@@ -25,7 +25,7 @@ import {
   PiPhoneBold,
   PiClockBold,
   PiUserBold,
-  // PiPencilBold,
+  PiPencilBold,
   PiImageBold,
   PiFlagBold,
   PiWarningBold,
@@ -226,6 +226,30 @@ export default function EmergencyAmenityPage() {
     }
   };
 
+  const handleOpenEditCategory = (row) => {
+    setEditingCategory(row);
+    setEditCategoryName(row.categoryName || '');
+    setEditIconName(row.iconName || 'wrench');
+    setEditStatus(row.status || 'ACTIVE');
+    setShowEditCategoryModal(true);
+  };
+
+  const handleToggleCategoryStatus = async (row) => {
+    const nextStatus = row.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    try {
+      const res = await updateCategoryAdmin(row.amenityCategoryId, {
+        categoryName: row.categoryName,
+        iconName: row.iconName || 'wrench',
+        status: nextStatus
+      });
+      if (res.success) {
+        fetchCategories();
+      }
+    } catch (err) {
+      console.error('Error toggling category status:', err);
+    }
+  };
+
   const pointColumns = [
     {
       key: 'index',
@@ -340,8 +364,7 @@ export default function EmergencyAmenityPage() {
       ),
     },
 
-    {/*
-      {
+    {
       key: 'actions',
       title: 'Thao tác',
       render: (row) => (
@@ -366,7 +389,6 @@ export default function EmergencyAmenityPage() {
         </div>
       ),
     },
-      */}
   ];
 
   const feedbackColumns = [

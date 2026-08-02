@@ -202,8 +202,6 @@ const LayerControlPanel = ({
   setShowDanger,
   showAmenities,
   setShowAmenities,
-  showRescuers,
-  setShowRescuers,
   categories,
   selectedCategory,
   setSelectedCategory,
