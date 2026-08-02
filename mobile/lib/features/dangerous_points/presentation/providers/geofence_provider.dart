@@ -166,4 +166,17 @@ class GeofenceProvider with ChangeNotifier {
 
     return nearby;
   }
+
+  /// Reset toàn bộ state về trạng thái ban đầu khi đăng xuất (không giữ dữ liệu tài khoản cũ).
+  void reset() {
+    _approvedPoints = [];
+    _myPoints = [];
+    _activeAlertPoint = null;
+    _activeAlertDistanceMeters = null;
+    _lastAlertTime = null;
+    _hasShownSessionAlert = false;
+    _isLoading = false;
+    _isLoadingMyPoints = false;
+    notifyListeners();
+  }
 }

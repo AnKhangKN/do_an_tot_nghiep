@@ -365,4 +365,13 @@ class ChatProvider extends ChangeNotifier {
       partnerId: 'admin',
     );
   }
+
+  /// Reset toàn bộ state về trạng thái ban đầu khi đăng xuất (không giữ dữ liệu tài khoản cũ).
+  void reset() {
+    _conversations = [];
+    _messagesMap.clear();
+    _currentUserId = '';
+    _isLoading = false;
+    notifyListeners();
+  }
 }

@@ -140,4 +140,26 @@ class NotificationService {
       debugPrint("🚨 Lỗi gửi FCM token lên Server: $e");
     }
   }
+
+  /// Xóa dấu vết FCM của tài khoản cũ khi đăng xuất:
+  /// 1. Hủy đăng ký token cũ trên server (xóa mapping token -> tài khoản cũ).
+  /// 2. Thu hồi token cũ trên Firebase để lần `getToken()` sau được cấp token FCM MỚI.
+  /// Cả 2 bước đều best-effort (lỗi thì bỏ qua, không chặn logout).
+  Future<void> unregisterAndRotateToken() async {
+    try {
+      final oldToken = await FirebaseMessaging.instance.getToken();
+      if (oldToken != null && oldToken.isNotEmpty) {
+        await GetIt.instance<AuthRepository>().unregisterDeviceToken(oldToken);
+      }
+    } catch (e) {
+      debugPrint("🚨 Lỗi hủy đăng ký FCM token cũ trên server: $e");
+    }
+
+    try {
+      await FirebaseMessaging.instance.deleteToken();
+      debugPrint("🟢 Đã thu hồi FCM token cũ. Lần đăng nhập sau sẽ được cấp token FCM mới.");
+    } catch (e) {
+      debugPrint("🚨 Lỗi thu hồi FCM token cũ: $e");
+    }
+  }
 }

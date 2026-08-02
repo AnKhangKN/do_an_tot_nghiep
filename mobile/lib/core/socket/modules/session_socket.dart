@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/session/session_controller.dart';
@@ -17,26 +18,34 @@ class SessionSocket {
   SessionSocket(this._socket, this._sessionController);
 
   void listenSessionKicked() {
-    _socket.on(SocketEvents.userKicked, (data) {
+    _socket.on(SocketEvents.userKicked, (data) async {
       final message = data is Map ? data['message']?.toString() : null;
-      _handleForceLogout(
-        message ?? 'Tài khoản của bạn đã được đăng nhập trên thiết bị khác.',
-      );
+      try {
+        await _handleForceLogout(
+          message ?? 'Tài khoản của bạn đã được đăng nhập trên thiết bị khác.',
+        );
+      } catch (e) {
+        debugPrint("🚨 [SessionSocket] Lỗi logout khi bị kick: $e");
+      }
     });
   }
 
   void listenSessionBlocked() {
-    _socket.on(SocketEvents.sessionBlocked, (data) {
+    _socket.on(SocketEvents.sessionBlocked, (data) async {
       final message = data is Map ? data['message']?.toString() : null;
-      _handleForceLogout(
-        message ?? 'Tài khoản của bạn đang tham gia ca cứu hộ trên thiết bị khác. Vui lòng đăng nhập lại sau khi ca cứu hộ kết thúc.',
-      );
+      try {
+        await _handleForceLogout(
+          message ?? 'Tài khoản của bạn đang tham gia ca cứu hộ trên thiết bị khác. Vui lòng đăng nhập lại sau khi ca cứu hộ kết thúc.',
+        );
+      } catch (e) {
+        debugPrint("🚨 [SessionSocket] Lỗi logout khi bị chặn: $e");
+      }
     });
   }
 
-  void _handleForceLogout(String message) {
+  Future<void> _handleForceLogout(String message) async {
     _sessionController.setKickedFromOtherDevice(message);
-    GetIt.instance<AppSession>().logout();
+    await GetIt.instance<AppSession>().logout();
   }
 
   void stopListening() {

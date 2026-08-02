@@ -197,6 +197,25 @@ class AmenityProvider with ChangeNotifier {
       return false;
     }
   }
+
+  /// Reset toàn bộ state về trạng thái ban đầu khi đăng xuất (không giữ dữ liệu tài khoản cũ).
+  void reset() {
+    _categories = [];
+    _amenities = [];
+    _myAmenities = [];
+    _selectedCategoryId = null;
+    _isLoadingCategories = false;
+    _isLoadingAmenities = false;
+    _isLoadingMyAmenities = false;
+    _isSubmitting = false;
+    _isSearching = false;
+    _activeNavigationAmenity = null;
+    _routePoints = [];
+    _routeDistanceKm = null;
+    _routeDurationSec = null;
+    _isNavigating = false;
+    notifyListeners();
+  }
 }
 
 

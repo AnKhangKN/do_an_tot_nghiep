@@ -58,4 +58,12 @@ class NotificationProvider extends ChangeNotifier {
       debugPrint("Lỗi đánh dấu đã đọc: $e");
     }
   }
+
+  /// Reset toàn bộ state về trạng thái ban đầu khi đăng xuất (không giữ dữ liệu tài khoản cũ).
+  void reset() {
+    _notifications = [];
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 }

@@ -68,6 +68,14 @@ class ServiceHandler {
     _socket?.dispose();
     _socket = null;
 
+    // Xóa toàn bộ credentials của tài khoản cũ để isolate không auto-reconnect
+    // socket cũ (tránh bị server kick ngược thiết bị mới sau khi đăng xuất).
+    _token = null;
+    _userId = null;
+    _role = null;
+    _baseUrl = null;
+    _deviceId = null;
+
     service.stopSelf();
   }
 
@@ -92,6 +100,8 @@ class ServiceHandler {
   /// HANDLE MESSAGE FROM MAIN
   /// =========================
   void handleMessage(dynamic event) {
+    if (!_running) return;
+
     final data = Map<String, dynamic>.from(event ?? {});
     final payload = data["payload"];
     print("[BACKGROUND SERVICE] Received event: $data");
@@ -115,6 +125,8 @@ class ServiceHandler {
   /// CONNECT BACKGROUND SOCKET
   /// =========================
   void _connectSocket() {
+    if (!_running) return;
+
     _socket?.disconnect();
     _socket?.dispose();
 

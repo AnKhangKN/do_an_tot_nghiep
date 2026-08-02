@@ -31,4 +31,11 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     await _storageService.saveSettingsConfig(notifyHazard: _notifyHazard);
   }
+
+  /// Reset về giá trị mặc định khi đăng xuất (app như mới, storage đã bị xóa).
+  void reset() {
+    _notifyHazard = true;
+    _isLoaded = true;
+    notifyListeners();
+  }
 }

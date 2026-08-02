@@ -282,6 +282,21 @@ class AuthRepository {
     }
   }
 
+  /// Hủy đăng ký FCM token cũ khỏi server (best-effort, lỗi thì bỏ qua) trước khi xóa token local.
+  Future<void> unregisterDeviceToken(String token) async {
+    try {
+      final validToken = await getValidAccessToken();
+      if (validToken == null) {
+        debugPrint("⚠️ [AuthRepository] Không có token hợp lệ để hủy đăng ký thiết bị.");
+        return;
+      }
+      await service.unregisterDeviceToken({"token": token});
+      debugPrint("🟢 [AuthRepository] Hủy đăng ký FCM token lên Server thành công.");
+    } catch (e) {
+      debugPrint("🚨 [AuthRepository] Lỗi hủy đăng ký thiết bị: $e");
+    }
+  }
+
   Future<void> appealBan({String? email, required String reason}) async {
     try {
       if (email != null && email.isNotEmpty) {

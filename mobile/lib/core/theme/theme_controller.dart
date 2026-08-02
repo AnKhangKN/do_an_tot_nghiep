@@ -60,6 +60,13 @@ class ThemeController extends ChangeNotifier with WidgetsBindingObserver {
     _apply();
   }
 
+  /// Reset về chế độ mặc định (system) khi đăng xuất (app như mới, storage đã bị xóa).
+  void reset() {
+    if (_mode == AppThemeMode.system) return;
+    _mode = AppThemeMode.system;
+    _apply();
+  }
+
   void _apply() {
     ColorConstants.applyBrightness(isDark ? Brightness.dark : Brightness.light);
     notifyListeners();

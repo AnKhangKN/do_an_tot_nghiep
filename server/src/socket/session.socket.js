@@ -3,6 +3,32 @@ const sosRequestService = require("@modules/sos/service/sos_request.service");
 
 const SESSION_TTL_SECONDS = 24 * 60 * 60;
 
+// Thời gian chặn reconnect của thiết bị vừa bị kick (giây) — chống vòng lặp kick qua lại:
+// thiết bị cũ còn giữ creds/token cũ (socket auto-reconnect, background isolate) reconnect
+// bằng deviceId cũ rồi kick ngược thiết bị mới.
+const KICKED_TTL_SECONDS = 60;
+
+// Đánh dấu thiết bị vừa bị kick để chặn mọi socket cùng deviceId reconnect trong cooldown.
+const setKickedDevice = async (userId, deviceId) => {
+    if (!deviceId) return;
+    try {
+        await redis.set(`kicked_device:${userId}:${deviceId}`, "1", "EX", KICKED_TTL_SECONDS);
+    } catch (error) {
+        console.warn(`[SESSION] Lỗi ghi kicked_device: ${error.message}`);
+    }
+};
+
+const isDeviceKicked = async (userId, deviceId) => {
+    if (!deviceId) return false;
+    try {
+        const raw = await redis.get(`kicked_device:${userId}:${deviceId}`);
+        return Boolean(raw);
+    } catch (error) {
+        console.warn(`[SESSION] Lỗi đọc kicked_device: ${error.message}`);
+        return false;
+    }
+};
+
 const getActiveSession = async (userId) => {
     try {
         const raw = await redis.get(`active_session:${userId}`);
@@ -116,6 +142,19 @@ const handleSessionTakeover = async (io, socket) => {
 
     const active = await getActiveSession(userId);
 
+    // Thiết bị vừa bị kick không được phép reconnect trong thời gian cooldown.
+    // Đặt TRƯỚC mọi xử lý takeover để socket cũ (còn giữ token/deviceId cũ) không thể
+    // tự reconnect rồi kick ngược thiết bị mới. Đăng nhập lại thật (sau khi logout
+    // xóa sạch storage) sẽ tạo deviceId mới nên không bị vướng cooldown này.
+    if (await isDeviceKicked(userId, deviceId)) {
+        socket.emit("session:blocked", {
+            message: "Tài khoản của bạn đã được đăng nhập trên thiết bị khác. Vui lòng đăng nhập lại.",
+        });
+        socket.disconnect(true);
+        console.log(`[SESSION] Chặn reconnect của thiết bị vừa bị kick ${deviceId} cho ${role} ${userId}.`);
+        return "blocked";
+    }
+
     // Reconnect cùng thiết bị (deviceId trùng) -> chỉ cập nhật, không kick
     if (active && active.deviceId && deviceId && active.deviceId === deviceId) {
         await setActiveSession(userId, deviceId, socket.id);
@@ -141,6 +180,7 @@ const handleSessionTakeover = async (io, socket) => {
         // Kick toàn bộ socket của thiết bị cũ (foreground + background) để tránh ping-pong
         const oldDeviceId = active.deviceId;
         const oldSocketIds = await getDeviceSocketIds(userId, oldDeviceId);
+        await setKickedDevice(userId, oldDeviceId);
         for (const oldSocketId of oldSocketIds) {
             const oldSocket = io.sockets.sockets.get(oldSocketId);
             kickSocket(oldSocket, "Tài khoản của bạn đã được đăng nhập trên thiết bị khác.");

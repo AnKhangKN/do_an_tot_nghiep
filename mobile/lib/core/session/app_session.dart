@@ -23,6 +23,12 @@ import 'session_state.dart';
 import 'package:mobile/features/rescuer/presentation/providers/sos_provider.dart';
 import 'package:mobile/features/rescuer/models/sos_offer_model.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mobile/core/theme/theme_controller.dart';
+import 'package:mobile/features/chat/presentation/providers/chat_provider.dart';
+import 'package:mobile/features/dangerous_points/presentation/providers/geofence_provider.dart';
+import 'package:mobile/features/emergency_amenities/presentation/providers/amenity_provider.dart';
+import 'package:mobile/features/notification/presentation/providers/notification_provider.dart';
+import 'package:mobile/features/settings/presentation/providers/settings_provider.dart';
 
 class AppSession {
   final SessionController controller;
@@ -67,6 +73,10 @@ class AppSession {
   StreamSubscription<Position>? _locationSubscription;
   String? _deviceId;
 
+  /// Khóa chống 2 luồng logout chạy đồng thời; đồng thời là "barrier" để `init()`
+  /// chờ logout xong trước khi đọc token mới (serialize logout vs login mới).
+  Future<void>? _pendingLogout;
+
   /// Lấy deviceId cố định của thiết bị (tạo mới + lưu nếu chưa có), cache trong vòng đời app.
   Future<String> _ensureDeviceId() async {
     return _deviceId ??= await storageService.getOrCreateDeviceId();
@@ -76,7 +86,13 @@ class AppSession {
   // INITIALIZE SESSION
   // =========================
   Future<void> init() async {
-    // 0. Kiểm tra trạng thái khóa tài khoản đã lưu ở lần trước
+    // 0. Nếu đang có logout đang chạy, chờ logout xong hoàn toàn (xóa sạch storage/state)
+    //    trước khi đọc token, tránh đọc nhầm token cũ của tài khoản vừa logout.
+    if (_pendingLogout != null) {
+      await _pendingLogout;
+    }
+
+    // 1. Kiểm tra trạng thái khóa tài khoản đã lưu ở lần trước
     final wasBanned = await storageService.getIsBanned();
     if (wasBanned) {
       final banReason = await storageService.getBanReason();
@@ -204,6 +220,8 @@ class AppSession {
         debugPrint("🚨 Token hết hạn không thể gia hạn -> Đăng xuất người dùng về LoginScreen");
         await storageService.clearAll();
         _isInitialized = true;
+        _deviceId = null;
+        _resetAllProviders();
         controller.setLoggedIn(false);
         controller.reset();
       }
@@ -211,6 +229,8 @@ class AppSession {
       debugPrint("🎯 Không tìm thấy Token hợp lệ -> Đăng xuất người dùng về LoginScreen");
       await storageService.clearAll();
       _isInitialized = true;
+      _deviceId = null;
+      _resetAllProviders();
       controller.setLoggedIn(false);
       controller.reset();
     }
@@ -239,7 +259,10 @@ class AppSession {
   // =========================
   // STOP & LOGOUT
   // =========================
-  Future<void> stopSession() async {
+
+  /// Dừng toàn bộ service (GPS, heartbeat, socket, background, listener) nhưng
+  /// KHÔNG reset state/storage — để logout có thể "xóa sạch trước, reset sau".
+  Future<void> _stopServices() async {
     // 1. Luôn hủy theo dõi vị trí trước tiên
     await _locationSubscription?.cancel();
     _locationSubscription = null;
@@ -271,17 +294,86 @@ class AppSession {
     try {
       sessionSocket.stopListening();
     } catch (_) {}
+  }
 
-    // 4. Reset trạng thái SessionController & cờ khởi tạo
+  /// Reset toàn bộ provider singleton (đã đăng ký trong GetIt) về trạng thái ban đầu
+  /// để không giữ bất kỳ dữ liệu nào của tài khoản cũ ("app như mới").
+  void _resetAllProviders() {
+    if (getIt.isRegistered<SOSProvider>()) {
+      getIt<SOSProvider>().reset();
+    }
+    if (getIt.isRegistered<ChatProvider>()) {
+      getIt<ChatProvider>().reset();
+    }
+    if (getIt.isRegistered<NotificationProvider>()) {
+      getIt<NotificationProvider>().reset();
+    }
+    if (getIt.isRegistered<GeofenceProvider>()) {
+      getIt<GeofenceProvider>().reset();
+    }
+    if (getIt.isRegistered<AmenityProvider>()) {
+      getIt<AmenityProvider>().reset();
+    }
+    if (getIt.isRegistered<SettingsProvider>()) {
+      getIt<SettingsProvider>().reset();
+    }
+    if (getIt.isRegistered<ThemeController>()) {
+      getIt<ThemeController>().reset();
+    }
+  }
+
+  /// Dừng toàn bộ service và reset session state (dùng khi app bị terminate).
+  Future<void> stopSession() async {
+    await _stopServices();
     _isInitialized = false;
     _deviceId = null;
     controller.reset();
   }
 
+  /// Đăng xuất triệt để theo thứ tự bắt buộc: dừng services (không reset) →
+  /// xóa dấu vết FCM → xóa sạch storage → reset providers → reset session.
+  /// Nhờ vậy mọi luồng đọc lại token cũ (Splash `init()`, socket auto-reconnect,
+  /// background isolate) đều thấy storage/state TRỐNG → không tự login tài khoản cũ
+  /// → không kick thiết bị mới, không bị dính userId/role của tài khoản cũ.
   Future<void> logout() async {
-    await stopSession();
+    if (_pendingLogout != null) {
+      return _pendingLogout!;
+    }
+
+    final future = _performLogout();
+    _pendingLogout = future;
+    try {
+      await future;
+    } finally {
+      _pendingLogout = null;
+    }
+  }
+
+  Future<void> _performLogout() async {
+    // 1. Dừng toàn bộ service trước (không reset state)
+    await _stopServices();
+
+    // 2. Xóa dấu vết FCM của tài khoản cũ (unregister server + thu hồi token để
+    //    lần đăng nhập sau được cấp token FCM mới). Chạy TRƯỚC khi xóa token local
+    //    để access token cũ còn hiệu lực gọi REST. Best-effort, lỗi thì bỏ qua.
+    try {
+      await notificationService.unregisterAndRotateToken();
+    } catch (e) {
+      debugPrint("⚠️ [AppSession] Lỗi dọn dẹp FCM khi logout: $e");
+    }
+
+    // 3. Xóa sạch toàn bộ storage: token, refreshToken, deviceId, ban state,
+    //    theme, settings, saved phone... ("app như mới")
     await storageService.clearAll();
     await storageService.clearToken();
+
+    // 4. Reset toàn bộ provider singleton về trạng thái ban đầu
+    _resetAllProviders();
+
+    // 5. Reset session state & cờ khởi tạo
+    _isInitialized = false;
+    _deviceId = null;
+    controller.reset();
   }
 
   // =========================

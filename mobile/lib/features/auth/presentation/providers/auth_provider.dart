@@ -4,7 +4,6 @@ import 'package:mobile/core/session/app_session.dart';
 import 'package:mobile/core/storage/storage_service.dart';
 
 import 'package:dio/dio.dart';
-import '../../../../core/session/session_state.dart';
 import '../../data/auth_repository.dart';
 import '../../models/login_request.dart';
 import '../../models/register_request.dart';
@@ -169,14 +168,7 @@ class AuthProvider extends ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
-      // 1. Gọi API logout trên server
-      try {
-        await authRepository.logout();
-      } catch (e) {
-        debugPrint("⚠️ Lỗi gọi API logout server: $e");
-      }
-
-      // 2. Đăng xuất Google SDK (nếu có)
+      // 1. Đăng xuất Google SDK (nếu có)
       try {
         final GoogleSignIn googleSignIn = GoogleSignIn();
         if (await googleSignIn.isSignedIn()) {
@@ -186,10 +178,11 @@ class AuthProvider extends ChangeNotifier {
         debugPrint("⚠️ Lỗi signOut Google SDK: $e");
       }
 
-      // 3. Xóa toàn bộ Token (Access & Refresh), hủy định vị GPS, ngắt Socket và reset Session
+      // 2. Logout triệt để qua AppSession (thứ tự bắt buộc: dừng services →
+      //    xóa dấu vết FCM → xóa toàn bộ storage → reset providers → reset session)
       await appSession.logout();
 
-      // 4. Clear hết biến lỗi và OTP state trong AuthProvider
+      // 3. Clear hết biến lỗi và OTP state trong AuthProvider
       clearError();
     } catch (e) {
       debugPrint("🚨 Lỗi trong quá trình đăng xuất: $e");

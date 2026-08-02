@@ -41,6 +41,10 @@ class AuthService {
     return await dio.post('/api/device_tokens', data: data);
   }
 
+  Future<Response> unregisterDeviceToken(Map<String, dynamic> data) async {
+    return await dio.delete('/api/device_tokens', data: data);
+  }
+
   Future<Response> getActiveSOS() async {
     return await dio.get('/api/sos/sos_requests/active');
   }

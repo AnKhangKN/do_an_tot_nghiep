@@ -126,4 +126,15 @@ class SOSProvider extends ChangeNotifier {
     _suspendedNotice = null;
     notifyListeners();
   }
+
+  /// Reset toàn bộ state về trạng thái ban đầu khi đăng xuất (không giữ dữ liệu tài khoản cũ).
+  void reset() {
+    _currentSOS = null;
+    _activeRescue = null;
+    _activeVictim = null;
+    _cancelledNotice = null;
+    _suspendedNotice = null;
+    _showSuccessRescueAlert = false;
+    notifyListeners();
+  }
 }
