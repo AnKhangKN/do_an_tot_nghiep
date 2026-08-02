@@ -1,5 +1,5 @@
 const redis = require("../config/redis.config");
-const { handleSosOffer, handleSosNotFound, handleSosCancelled, handleSosAccepted, handleChatConversationClosed } = require("./sos.emitter");
+const { handleSosOffer, handleSosNotFound, handleSosCancelled, handleSosAccepted, handleChatConversationClosed, handleSosCompleted } = require("./sos.emitter");
 
 const subscriber = redis.duplicate();
 
@@ -37,6 +37,11 @@ module.exports = async (io) => {
                     handleSosAccepted(io, data);
                     break;
 
+                case "sos:completed":
+                    // Thông báo về cả victim và rescuer khi hoàn thành ca cứu hộ
+                    handleSosCompleted(io, data);
+                    break;
+
                 case "chat:conversation_closed":
                     // Thông báo đóng kênh chat ca cứu hộ
                     handleChatConversationClosed(io, data);
@@ -51,5 +56,5 @@ module.exports = async (io) => {
     });
 
     // Subscribe các channels
-    await subscriber.subscribe("sos:offer", "sos:not_found", "sos:cancelled", "sos:accepted", "chat:conversation_closed");
+    await subscriber.subscribe("sos:offer", "sos:not_found", "sos:cancelled", "sos:accepted", "sos:completed", "chat:conversation_closed");
 };

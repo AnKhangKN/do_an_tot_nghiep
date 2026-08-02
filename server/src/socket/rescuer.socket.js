@@ -78,11 +78,13 @@ module.exports = (socket, io) => {
             // Xóa active rescue khỏi Redis
             await redis.hdel("active_rescues", rescuerId);
 
-            // Gửi sự kiện hoàn thành về cho cả Victim và Rescuer
-            const victimRoom = `victim:${updatedSos.user_id}`;
-            io.to(victimRoom).emit("rescue:completed", { sosRequestId });
+            // Bắn event qua Redis PubSub để đồng bộ tức thì cho tất cả Socket instance
+            await redis.publish("sos:completed", JSON.stringify({
+                sosRequestId,
+                victimId: updatedSos.user_id,
+                rescuerId
+            }));
 
-            socket.emit("rescue:completed", { sosRequestId });
             console.log(`[SOCKET] SOS ${sosRequestId} completed successfully.`);
 
         } catch (error) {

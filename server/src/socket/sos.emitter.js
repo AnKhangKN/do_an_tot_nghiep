@@ -138,10 +138,31 @@ const handleChatConversationClosed = (io, data) => {
     }
 };
 
+/**
+ * Emit sự kiện rescue:completed (tới Victim và Rescuer) khi ca cứu hộ hoàn thành
+ * @param {Object} io - Socket.IO Server
+ * @param {Object} data - Dữ liệu parse từ Redis PubSub
+ */
+const handleSosCompleted = (io, data) => {
+    try {
+        if (data.victimId) {
+            io.to(`victim:${data.victimId}`).emit("rescue:completed", { sosRequestId: data.sosRequestId });
+        }
+        if (data.rescuerId) {
+            io.to(`rescuer:${data.rescuerId}`).emit("rescue:completed", { sosRequestId: data.sosRequestId });
+        }
+        io.to("admin:dashboard").emit("SOS_COMPLETED", { sosId: data.sosRequestId });
+        console.log(`[SOS EMITTER] Emitted 'rescue:completed' for SOS: ${data.sosRequestId}`);
+    } catch (err) {
+        console.error(`[SOS EMITTER] Error emitting handleSosCompleted:`, err);
+    }
+};
+
 module.exports = {
     handleSosOffer,
     handleSosNotFound,
     handleSosCancelled,
     handleSosAccepted,
     handleChatConversationClosed,
+    handleSosCompleted,
 };
