@@ -147,7 +147,8 @@ class UserRepository {
         }
         query += ` LIMIT 1`;
 
-        const result = await client.query(query, params);
+        const db = client || pool;
+        const result = await db.query(query, params);
         return result.rows[0] ? result.rows[0] : null;
     }
 
