@@ -76,7 +76,9 @@ const NotificationPage = () => {
             ? payload.notifications
             : [];
 
-      setLogs(items.map(normalizeNotificationItem));
+      const normalized = items.map(normalizeNotificationItem);
+      normalized.sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
+      setLogs(normalized);
     } catch (error) {
       console.error("Không tải được danh sách thông báo:", error);
       setLogs([]);
