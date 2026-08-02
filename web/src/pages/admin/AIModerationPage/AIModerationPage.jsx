@@ -169,7 +169,8 @@ const AIModerationPage = () => {
         <span className="text-xs text-gray-500 whitespace-nowrap">{formatTime(row.createdAt)}</span>
       )
     },
-    {
+    {/*
+      {
       key: 'actions',
       title: 'Hành động',
       render: (row) => {
@@ -206,6 +207,7 @@ const AIModerationPage = () => {
         );
       }
     }
+      */}
   ];
 
   return (

@@ -124,7 +124,8 @@ const columns = ({ onApprove, onReject, onOpenFeedbacks, loading }) => [
       </span>
     ),
   },
-  {
+  {/*
+    {
     key: 'action',
     title: 'Hành động',
     render: (row) => (
@@ -158,6 +159,7 @@ const columns = ({ onApprove, onReject, onOpenFeedbacks, loading }) => [
       </div>
     ),
   },
+  */}
 ];
 
 const DangerousZonePage = () => {
