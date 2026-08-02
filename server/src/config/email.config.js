@@ -6,13 +6,16 @@ const MAIL_DRIVER = (envConfig.MAIL_DRIVER || "smtp").toLowerCase();
 const createTransporter = () => {
     if (MAIL_DRIVER === "brevo") {
         return nodemailer.createTransport({
-            host: "smtp-relay.brevo.com",
-            port: 587,
+            host: envConfig.BREVO_SMTP_SERVER || "smtp-relay.brevo.com",
+            port: parseInt(envConfig.BREVO_PORT || "587", 10),
             secure: false, // STARTTLS
             auth: {
                 user: envConfig.MAIL_USERNAME || "no-reply@cuuho.vn",
                 pass: envConfig.BREVO_API_KEY
             },
+            connectionTimeout: 15000,
+            greetingTimeout: 15000,
+            socketTimeout: 20000,
             tls: {
                 rejectUnauthorized: false
             }
