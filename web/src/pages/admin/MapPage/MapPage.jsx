@@ -271,7 +271,7 @@ const LayerControlPanel = ({
       {/* Header Panel */}
       <div
         onClick={() => setPanelExpanded(!panelExpanded)}
-        className="flex items-center justify-between px-3.5 py-2.5 bg-gray-900 text-white cursor-pointer select-none"
+        className="flex items-center justify-between px-3.5 py-2.5 dark:bg-gray-900 dark:text-white bg-gray-100 text-gray-900 cursor-pointer select-none"
       >
         <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
           <PiStackFill className="text-amber-400 text-sm" />
@@ -352,8 +352,8 @@ const LayerControlPanel = ({
                   type="button"
                   onClick={() => setSelectedCategory("ALL")}
                   className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors ${selectedCategory === "ALL"
-                      ? "bg-gray-900 text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
                     }`}
                 >
                   <span className="flex items-center gap-1.5">
@@ -362,8 +362,8 @@ const LayerControlPanel = ({
                   </span>
                   <span
                     className={`px-1.5 py-0.5 rounded-full text-[10px] ${selectedCategory === "ALL"
-                        ? "bg-gray-800 text-gray-200"
-                        : "bg-gray-200 text-gray-700"
+                      ? "bg-gray-800 text-gray-200"
+                      : "bg-gray-200 text-gray-700"
                       }`}
                   >
                     {amenities.length}
@@ -380,8 +380,8 @@ const LayerControlPanel = ({
                       type="button"
                       onClick={() => setSelectedCategory(catName)}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${isSelected
-                          ? "bg-gray-900 text-white font-semibold"
-                          : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-gray-900 text-white font-semibold"
+                        : "text-gray-700 hover:bg-gray-100"
                         }`}
                     >
                       <span className="truncate pr-1">{catName}</span>

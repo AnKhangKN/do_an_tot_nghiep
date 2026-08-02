@@ -43,3 +43,29 @@ Run all commands in `web/`:
 - `src/utils` và `src/api` không import React component
 - Luôn dùng alias `@/` thay cho path tương đối sâu
 - Token phải đọc/cập nhật qua Redux Store
+
+## Components chuẩn hóa bảng + modal
+Khi xây trang quản trị dùng `TableComponent` có **xem chi tiết / thêm / sửa / xóa**, bắt buộc dùng 2 component chung sau (KHÔNG tự viết modal inline):
+
+### `components/admin/TableComponent/CellDetailComponent/CellDetailComponent.jsx`
+Drawer chi tiết **bên phải, full `h-screen`**, body scroll, nút hành động ở footer. Props chính:
+- `open`, `onClose`, `title`, `subtitle`
+- `columns`, `row`, `rowIndex`, `imageUrl`, `extraFields` — body mặc định (loop cột + ảnh + trường phụ)
+- `children` — thay body mặc định khi cần layout riêng (vd: split 2 cột ảnh + grid info)
+- `actions` — mảng nút footer: `{ key, label, icon, variant: 'primary'|'success'|'danger'|'warning'|'ghost', position: 'left', hidden, loading, disabled, onClick }`
+- `closeLabel` (default `Đóng`)
+
+Dùng qua `TableComponent` với prop passthrough `detailActions` / `detailTitle` / `detailSubtitle`, hoặc render trực tiếp trong trang.
+
+### `components/admin/AddUpdateModelComponent/AddUpdateModelComponent.jsx`
+Modal **trung tâm** (`inset-0`), `max-h-screen` + body `overflow-y-auto`, luôn có nút Hủy + Lưu. Props chính:
+- `open`, `onClose`, `title`, `subtitle`, `headerIcon` (node)
+- `children` — nội dung form (KHÔNG bọc `<form>`; component tự bao form và submit)
+- `onSubmit` (submit handler), `submitLabel` (default `Lưu`), `submitVariant` ('primary'|'success'|'danger'), `submitDisabled`
+- `loading` — chặn đóng modal khi đang xử lý
+- `cancelLabel`, `maxWidth` (default `max-w-md`)
+
+### Quy tắc
+- Modal xem chi tiết (read-only, có nút thao tác) → `CellDetailComponent`
+- Modal thêm/sửa (form + nút lưu) → `AddUpdateModelComponent`
+- Không tạo thêm wrapper/modal tương tự mới; tái sử dụng 2 component trên
