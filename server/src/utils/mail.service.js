@@ -75,7 +75,7 @@ const sendOtpEmail = async ({ toEmail, otpCode, purpose = "register" }) => {
         console.log(`✉️ [MAIL SERVICE][${MAIL_DRIVER}] Đã gửi Email OTP (${otpCode}) thành công tới: ${Array.isArray(recipientList) ? recipientList.join(' & ') : recipientList} | MessageId: ${info.messageId}`);
         return true;
     } catch (error) {
-        console.error(`🚨 [MAIL SERVICE ERROR] Không thể gửi Email OTP tới ${toEmail}:`, error.message);
+        console.error(`🚨 [MAIL SERVICE ERROR] Không thể gửi Email OTP tới ${toEmail} (driver=${MAIL_DRIVER}, host=${envConfig.MAIL_SERVER || (MAIL_DRIVER === "brevo" ? "smtp-relay.brevo.com" : "smtp.gmail.com")}, port=${envConfig.MAIL_PORT || 587}):`, error.message);
         console.log(`🔑 [DEV BACKUP OTP] Mã OTP của ${toEmail} là: ${otpCode}`);
         return false;
     }

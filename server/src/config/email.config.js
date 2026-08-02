@@ -30,6 +30,9 @@ const createTransporter = () => {
             user: envConfig.MAIL_USERNAME,
             pass: envConfig.MAIL_PASSWORD
         },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
         tls: {
             rejectUnauthorized: false
         }
