@@ -5,7 +5,7 @@ const aiModerationService = require("@modules/ai_moderation/service/ai_moderatio
 const aiClassifierService = require("@utils/ai_classifier.service");
 
 class RatingService {
-    async submitRating({ sosRequestId, victimId, rating, responseSpeed, attitude, supportLevel, comment }) {
+    async submitRating({ sosRequestId, victimId, rating, responseSpeed, attitude, supportLevel, comment, cancelledUnreasonably = false }) {
         if (!rating || rating < 1 || rating > 5) {
             throw new Error("Điểm đánh giá phải từ 1 đến 5 sao");
         }
@@ -29,8 +29,10 @@ class RatingService {
             throw new Error("Không tìm thấy thông tin ca cứu hộ");
         }
 
-        if (sos.status !== "DONE") {
-            throw new Error("Chỉ có thể đánh giá ca cứu hộ đã hoàn thành");
+        // Chỉ đánh giá được khi: ca HOÀN THÀNH (DONE) hoặc ca bị CHÍNH CỨU HỘ VIÊN hủy (CANCELLED bởi rescuer)
+        const canRateCancelled = sos.status === "CANCELLED" && sos.cancelled_by === "RESCUER";
+        if (sos.status !== "DONE" && !canRateCancelled) {
+            throw new Error("Chỉ có thể đánh giá ca cứu hộ đã hoàn thành hoặc bị cứu hộ viên hủy");
         }
 
         if (sos.user_id !== victimId) {
@@ -56,7 +58,8 @@ class RatingService {
             responseSpeed: responseSpeed !== undefined && responseSpeed !== null ? parseInt(responseSpeed, 10) : null,
             attitude: attitude !== undefined && attitude !== null ? parseInt(attitude, 10) : null,
             supportLevel: supportLevel !== undefined && supportLevel !== null ? parseInt(supportLevel, 10) : null,
-            comment
+            comment,
+            cancelledUnreasonably
         });
 
         if (comment) {

@@ -31,6 +31,7 @@ class SocketEvents {
   static const rescueCancel = "rescue:cancel";
   static const rescueCancelled = "rescue:cancelled";
   static const rescuerSuspended = "rescuer:suspended";
+  static const victimCancelBlocked = "victim:cancel_blocked";
 
   // =========================
   // HEARTBEAT

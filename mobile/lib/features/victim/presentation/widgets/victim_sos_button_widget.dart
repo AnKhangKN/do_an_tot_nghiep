@@ -102,6 +102,18 @@ class _VictimSosButtonWidgetState
   }
 
   void _showSosForm() {
+    final session = getIt<SessionController>();
+    final blocked = session.cancelBlockedMessage;
+    if (blocked != null && blocked.isNotEmpty) {
+      AppSnackBar.show(
+        context,
+        blocked,
+        type: AppSnackBarType.error,
+        duration: const Duration(seconds: 5),
+      );
+      return;
+    }
+
     String? selectedSosImagePath;
 
     // Nếu danh sách loại sự cố chưa load thì mới fetch
@@ -428,14 +440,66 @@ class _VictimSosButtonWidgetState
     );
   }
 
+  /// Widget cảnh báo khi victim bị khóa do hủy ca cứu hộ liên tiếp
+  Widget _buildCancelBlockedWidget(String message) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      height: 52,
+      constraints: const BoxConstraints(maxWidth: 320),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: isDark ? theme.colorScheme.surface : Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: const Color(0xFFDC2626),
+          width: 1.4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.block, color: Color(0xFFDC2626), size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFFB91C1C),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Bao trong ListenableBuilder để tự rebuild khi SessionController thay đổi state
     return ListenableBuilder(
       listenable: getIt<SessionController>(),
       builder: (context, _) {
-        final isSearchingRescuer =
-            getIt<SessionController>().isSearchingRescuer;
+        final session = getIt<SessionController>();
+        final isSearchingRescuer = session.isSearchingRescuer;
+
+        // Victim đang bị khóa vì hủy ca liên tiếp: hiển thị cảnh báo thay vì nút SOS
+        final cancelBlockedMessage = session.cancelBlockedMessage;
+        if (cancelBlockedMessage != null && cancelBlockedMessage.isNotEmpty) {
+          return _buildCancelBlockedWidget(cancelBlockedMessage);
+        }
 
         // Khi đang tìm cứu hộ viên: hiển thị Box thông tin tìm kiếm kèm nút Hủy cứu hộ
         if (isSearchingRescuer) {

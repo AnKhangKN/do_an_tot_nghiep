@@ -30,6 +30,8 @@ const sosRequestModel = {
         completedAt: 'completed_at',
 
         cancelReason: 'cancel_reason',
+        // 'VICTIM' | 'RESCUER' | 'SYSTEM'
+        cancelledBy: 'cancelled_by',
 
         createdAt: 'created_at',
         updatedAt: 'updated_at'

@@ -119,6 +119,7 @@ class SosRequestRepository {
                 s.${this.sos_requestModel.field.acceptedAt},
                 s.${this.sos_requestModel.field.completedAt},
                 s.${this.sos_requestModel.field.cancelReason},
+                s.${this.sos_requestModel.field.cancelledBy},
                 s.${this.sos_requestModel.field.createdAt},
                 s.${this.sos_requestModel.field.updatedAt},
                 t.incident_type,
@@ -136,19 +137,20 @@ class SosRequestRepository {
         return result.rows;
     }
 
-    updateStatusOnly = async ({ sosRequestId, status, cancelReason }) => {
+    updateStatusOnly = async ({ sosRequestId, status, cancelReason, cancelledBy }) => {
         const query = `
             UPDATE ${this.sos_requestModel.table}
             SET 
                 ${this.sos_requestModel.field.status} = $1,
                 ${this.sos_requestModel.field.cancelReason} = $2,
+                ${this.sos_requestModel.field.cancelledBy} = $3,
                 ${this.sos_requestModel.field.updatedAt} = CURRENT_TIMESTAMP
-            WHERE ${this.sos_requestModel.field.sosRequestId} = $3
+            WHERE ${this.sos_requestModel.field.sosRequestId} = $4
               AND ${this.sos_requestModel.field.status} IN ('PENDING', 'SEARCHING', 'ASSIGNED', 'IN_PROGRESS')
             RETURNING *
         `;
 
-        const result = await pool.query(query, [status, cancelReason, sosRequestId]);
+        const result = await pool.query(query, [status, cancelReason, cancelledBy || null, sosRequestId]);
         return result.rows[0];
     }
 

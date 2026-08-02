@@ -94,7 +94,7 @@ class RescuerSocket {
       debugPrint("🚨 [RESCUER SOCKET] Nhận rescuer:suspended: $data");
       final String? msg = data != null && data['reason'] != null
           ? data['reason'].toString()
-          : "Bạn đã hủy ca cứu hộ 2 lần liên tiếp. Tài khoản bị tạm khóa nhận ca cứu hộ mới trong 2 giờ.";
+          : "Bạn đã hủy ca cứu hộ liên tiếp. Tài khoản bị tạm khóa nhận ca cứu hộ mới (2 giờ → 12 giờ → 24 giờ → cấm vĩnh viễn).";
       sosProvider.handleRescuerSuspended(message: msg);
     });
   }

@@ -118,9 +118,14 @@ class RescuerService {
         console.log("goOnline", userId);
 
         // Kiểm tra tài khoản có đang bị tạm khóa do hủy ca cứu hộ nhiều lần không
-        const suspended = await redis.exists(`rescuer:suspended:${userId}`);
-        if (suspended) {
-            throwError("Tài khoản của bạn đang bị tạm khóa 2 giờ do hủy ca cứu hộ 2 lần liên tiếp!", 403);
+        const suspendedRaw = await redis.get(`rescuer:suspended:${userId}`);
+        if (suspendedRaw) {
+            let reason = "Tài khoản của bạn đang bị tạm khóa nhận ca cứu hộ do hủy ca liên tiếp!";
+            try {
+                const info = JSON.parse(suspendedRaw);
+                if (info && info.reason) reason = info.reason;
+            } catch (err) { /* key cũ giá trị "1" — dùng message mặc định */ }
+            throwError(reason, 403);
         }
 
         const rescuer = await this.findRescuerByUserId({ userId });

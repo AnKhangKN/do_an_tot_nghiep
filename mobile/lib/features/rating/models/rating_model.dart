@@ -6,6 +6,7 @@ class RatingRequest {
   final int? attitude;
   final int? supportLevel;
   final String? comment;
+  final bool? cancelledUnreasonably;
 
   const RatingRequest({
     required this.sosRequestId,
@@ -14,6 +15,7 @@ class RatingRequest {
     this.attitude,
     this.supportLevel,
     this.comment,
+    this.cancelledUnreasonably,
   });
 
   Map<String, dynamic> toJson() => {
@@ -23,6 +25,7 @@ class RatingRequest {
     if (attitude != null) 'attitude': attitude,
     if (supportLevel != null) 'supportLevel': supportLevel,
     if (comment != null && comment!.isNotEmpty) 'comment': comment,
+    if (cancelledUnreasonably != null) 'cancelledUnreasonably': cancelledUnreasonably,
   };
 }
 
@@ -39,6 +42,7 @@ class RatingResponse {
   final String? sentiment;
   final double? sentimentConfidence;
   final bool? isFlagged;
+  final bool? cancelledUnreasonably;
   final String? comment;
   final String? victimName;
   final String? victimAvatar;
@@ -56,6 +60,7 @@ class RatingResponse {
     this.sentiment,
     this.sentimentConfidence,
     this.isFlagged,
+    this.cancelledUnreasonably,
     this.comment,
     this.victimName,
     this.victimAvatar,
@@ -81,6 +86,7 @@ class RatingResponse {
       sentiment: value<String>('sentiment', 'sentiment'),
       sentimentConfidence: double.tryParse('${json['sentiment_confidence'] ?? json['sentimentConfidence'] ?? ''}'),
       isFlagged: json['is_flagged'] ?? json['isFlagged'],
+      cancelledUnreasonably: json['cancelled_unreasonably'] ?? json['cancelledUnreasonably'],
       comment: value<String>('comment', 'comment'),
       victimName: value<String>('victim_name', 'victimName'),
       victimAvatar: value<String>('victim_avatar', 'victimAvatar'),

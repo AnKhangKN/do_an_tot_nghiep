@@ -2,7 +2,7 @@ const throwError = require("@/utils/throw_error.util");
 
 const validatorSubmitRating = (req, res, next) => {
     try {
-        const { sosRequestId, rating, responseSpeed, attitude, supportLevel, comment } = req.body;
+        const { sosRequestId, rating, responseSpeed, attitude, supportLevel, comment, cancelledUnreasonably } = req.body;
 
         if (!sosRequestId || sosRequestId.trim() === "") {
             throwError("Thiếu ID ca cứu hộ!", 400);
@@ -10,6 +10,10 @@ const validatorSubmitRating = (req, res, next) => {
 
         if (rating === undefined || rating === null || Number(rating) < 1 || Number(rating) > 5) {
             throwError("Điểm đánh giá phải từ 1 đến 5 sao!", 400);
+        }
+
+        if (cancelledUnreasonably !== undefined && typeof cancelledUnreasonably !== "boolean") {
+            throwError("Trường cancelledUnreasonably phải là boolean!", 400);
         }
 
         const aspectValues = [

@@ -393,6 +393,21 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
       });
     }
 
+    // Hiển thị thông báo khi tài khoản bị tạm khóa gửi yêu cầu cứu hộ do hủy ca liên tiếp
+    final blockedMsg = sessionController.cancelBlockedMessage;
+    if (blockedMsg != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppSnackBar.show(
+          context,
+          blockedMsg,
+          type: AppSnackBarType.error,
+          duration: const Duration(seconds: 6),
+        );
+        sessionController.clearCancelBlockedMessage();
+      });
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(

@@ -5,7 +5,7 @@ class RatingService {
 
   RatingService(this.dio);
 
-  /// Gửi đánh giá cho ca cứu hộ đã hoàn thành
+  /// Gửi đánh giá cho ca cứu hộ đã hoàn thành hoặc bị Cứu hộ viên hủy
   Future<Response> submitRating({
     required String sosRequestId,
     required int rating,
@@ -13,6 +13,7 @@ class RatingService {
     int? attitude,
     int? supportLevel,
     String? comment,
+    bool? cancelledUnreasonably,
   }) async {
     return await dio.post(
       '/api/ratings',
@@ -23,6 +24,7 @@ class RatingService {
         if (attitude != null) 'attitude': attitude,
         if (supportLevel != null) 'supportLevel': supportLevel,
         'comment': comment,
+        if (cancelledUnreasonably != null) 'cancelledUnreasonably': cancelledUnreasonably,
       },
     );
   }

@@ -102,7 +102,11 @@ class VictimMapProvider extends ChangeNotifier {
       debugPrint("❌ [SEND SOS ERROR]: $err");
       if (err is DioException) {
         final resData = err.response?.data;
-        if (resData is Map && resData['message'] != null) {
+        if (err.response?.statusCode == 403 && resData is Map && resData['message'] != null) {
+          // Victim đang bị khóa do hủy ca liên tiếp -> lưu message vào SessionController để UI hiển thị
+          getIt<SessionController>().setCancelBlockedMessage(resData['message'].toString());
+          _errorMessage = resData['message'].toString();
+        } else if (resData is Map && resData['message'] != null) {
           _errorMessage = resData['message'].toString();
         } else {
           _errorMessage = "Không thể gửi yêu cầu cứu hộ. Vui lòng kiểm tra lại thông tin!";
@@ -135,6 +139,13 @@ class VictimMapProvider extends ChangeNotifier {
     } catch (err) {
       debugPrint("❌ [PROVIDER] Lỗi khi cancelSos: $err");
       _activeSosRequestId = null;
+      if (err is DioException && err.response?.statusCode == 403) {
+        final resData = err.response?.data;
+        if (resData is Map && resData['message'] != null) {
+          // Victim bị khóa do hủy ca liên tiếp -> lưu message để UI hiển thị
+          getIt<SessionController>().setCancelBlockedMessage(resData['message'].toString());
+        }
+      }
       // Dù API gặp lỗi thì cũng đặt lại state local về false để cho phép nạn nhân thao tác lại
       getIt<SessionController>().setSearchingRescuer(false);
       return false;

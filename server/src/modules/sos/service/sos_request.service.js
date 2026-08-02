@@ -11,6 +11,8 @@ const imageService = require("@modules/image/service/image.service");
 const aiModerationService = require("@modules/ai_moderation/service/ai_moderation.service");
 const chatService = require("@modules/chat/service/chat.service");
 const settingsUtil = require("@/utils/settings.util");
+const penaltyService = require("@modules/penalty/service/penalty.service");
+const throwError = require("@/utils/throw_error.util");
 
 class SosRequestService {
     constructor() {
@@ -27,6 +29,15 @@ class SosRequestService {
         victimLng,
         imageUrl,
     }) => {
+        // CHẶN NGAY TỪ ĐẦU (Early Block): Kiểm tra victim có bị tạm khóa do hủy ca liên tiếp không
+        const cancelBlock = await penaltyService.getCancelBlock({ userId, role: 'VICTIM' });
+        if (cancelBlock.blocked) {
+            const message = cancelBlock.reason
+                ? `${cancelBlock.reason} (Hết khóa lúc ${cancelBlock.blockedUntil})`
+                : "Tài khoản của bạn đang bị tạm khóa gửi yêu cầu cứu hộ do hủy quá nhiều ca liên tiếp.";
+            throwError(message, 403);
+        }
+
         // CHẶN NGAY TỪ ĐẦU (Early Block): Nếu mô tả SOS thuộc danh sách đã từng bị Cắm cờ/Duyệt vi phạm trước đó
         if (description) {
             const spamCheck = await aiModerationService.checkKnownSpamText(description);
@@ -286,10 +297,14 @@ class SosRequestService {
             console.log(`[SERVICE] Đã giải phóng active_rescues cho Rescuer: ${result.rescuer_id}`);
         }
 
-        // Reset bộ đếm hủy ca liên tiếp khi Rescuer hoàn thành một ca cứu hộ
+        // Reset bộ đếm hủy ca liên tiếp khi có một ca cứu hộ hoàn thành (cho cả Rescuer lẫn Victim)
         if (result && result.rescuer_id) {
-            await redis.del(`rescuer:cancel_streak:${result.rescuer_id}`);
+            await penaltyService.resetCancelStreak({ userId: result.rescuer_id });
             console.log(`[SERVICE] Đã reset bộ đếm hủy ca liên tiếp cho Rescuer: ${result.rescuer_id}`);
+        }
+        if (result && result.user_id) {
+            await penaltyService.resetCancelStreak({ userId: result.user_id });
+            console.log(`[SERVICE] Đã reset bộ đếm hủy ca liên tiếp cho Victim: ${result.user_id}`);
         }
 
         // Lên lịch tự động khóa kênh nhắn tin giữa Nạn nhân và Cứu hộ viên sau 15 phút gia hạn
@@ -590,7 +605,8 @@ class SosRequestService {
             const cancelReason = "Tự động hủy yêu cầu cứu hộ khẩn cấp do hết thời gian chờ 30 phút không có tương tác";
             const updatedSos = await this.cancelSOS({
                 sosRequestId,
-                cancelReason
+                cancelReason,
+                cancelledBy: 'SYSTEM'
             });
 
             if (updatedSos) {
@@ -624,7 +640,7 @@ class SosRequestService {
         }
     };
 
-    cancelSOS = async ({ sosRequestId, userId, cancelReason }) => {
+    cancelSOS = async ({ sosRequestId, userId, cancelReason, cancelledBy = 'VICTIM' }) => {
         try {
             let targetSosId = sosRequestId;
 
@@ -657,10 +673,13 @@ class SosRequestService {
             // Lấy thông tin SOS trước khi hủy để biết rescuer_id (nếu có)
             const sos = await this.sos_requestRepository.findSOSById(targetSosId);
 
+            let cancelBlock = null;
+
             const updated = await this.sos_requestRepository.updateStatusOnly({
                 sosRequestId: targetSosId,
                 status: 'CANCELLED',
-                cancelReason
+                cancelReason,
+                cancelledBy
             });
 
             if (updated) {
@@ -731,9 +750,25 @@ class SosRequestService {
                         });
                     }).catch(err => console.error("Lỗi ghi log FAILED vào DB:", err));
                 }
+
+                // Phạt victim khi tự hủy ca cứu hộ ĐÃ có rescuer nhận (không tính khi chưa có rescuer)
+                if (cancelledBy === 'VICTIM' && (updated.rescuer_id || sos?.rescuer_id)) {
+                    const penalty = await penaltyService.trackCancelPenalty({
+                        userId: updated.user_id || sos?.user_id || userId,
+                        role: 'VICTIM'
+                    });
+                    if (penalty.level || penalty.banned) {
+                        cancelBlock = {
+                            level: penalty.level,
+                            banned: !!penalty.banned,
+                            reason: penalty.reason,
+                            blockedUntil: penalty.blockedUntil
+                        };
+                    }
+                }
             }
 
-            return updated;
+            return { ...updated, cancelBlock };
         } catch (error) {
             console.error("[SERVICE] Lỗi trong cancelSOS:", error);
         }
@@ -761,7 +796,8 @@ class SosRequestService {
             const updated = await this.sos_requestRepository.updateStatusOnly({
                 sosRequestId,
                 status: 'CANCELLED',
-                cancelReason: reason
+                cancelReason: reason,
+                cancelledBy: 'RESCUER'
             });
 
             if (updated) {
@@ -829,7 +865,7 @@ class SosRequestService {
                 }, chatGraceMs2);
 
                 // Phạt: đếm số lần hủy ca liên tiếp của Rescuer
-                await this._trackRescuerCancelPenalty({ rescuerId });
+                await penaltyService.trackCancelPenalty({ userId: rescuerId, role: 'RESCUER' });
 
                 try {
                     const { emitAdminDashboardEvent } = require("@/socket");
@@ -846,38 +882,6 @@ class SosRequestService {
         } catch (error) {
             console.error("[SERVICE] Lỗi trong cancelSOSByRescuer:", error);
             throw error;
-        }
-    };
-
-    _trackRescuerCancelPenalty = async ({ rescuerId }) => {
-        try {
-            const STREAK_KEY = `rescuer:cancel_streak:${rescuerId}`;
-            const streak = await redis.incr(STREAK_KEY);
-            // Giữ bộ đếm tối đa 30 ngày để tránh key tồn tại vĩnh viễn (reset khi hoàn thành COMPLETED)
-            await redis.expire(STREAK_KEY, 30 * 24 * 60 * 60);
-
-            console.log(`[PENALTY] Rescuer ${rescuerId} đã hủy lần thứ ${streak} liên tiếp`);
-
-            if (streak >= 2) {
-                await redis.del(STREAK_KEY);
-                await redis.set(`rescuer:suspended:${rescuerId}`, "1", "EX", 2 * 60 * 60);
-
-                // Đưa Rescuer về offline để không nhận ca mới trong thời gian bị khóa
-                const rescuerService = require("@modules/rescuer/service/rescuer.service");
-                await rescuerService.suspendRescuer({ userId: rescuerId });
-
-                // Thông báo tức thì tới app của Rescuer qua Redis PubSub
-                const suspendedUntil = Date.now() + 2 * 60 * 60 * 1000;
-                await redis.publish("rescuer:suspended", JSON.stringify({
-                    rescuerId,
-                    reason: "Bạn đã hủy ca cứu hộ 2 lần liên tiếp. Tài khoản bị tạm khóa nhận ca cứu hộ mới trong 2 giờ.",
-                    suspendedUntil
-                }));
-
-                console.log(`[PENALTY] Rescuer ${rescuerId} đã bị tạm khóa 2 giờ do hủy ${streak} lần liên tiếp`);
-            }
-        } catch (err) {
-            console.error("[PENALTY] Lỗi xử lý phạt rescuer hủy ca:", err);
         }
     };
 

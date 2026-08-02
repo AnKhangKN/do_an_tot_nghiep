@@ -23,10 +23,10 @@ class RatingRepository {
         this.ratingModel = ratingModel;
     }
 
-    async createRating({ ratingId, sosRequestId, victimId, rescuerId, rating, responseSpeed, attitude, supportLevel, comment }) {
+    async createRating({ ratingId, sosRequestId, victimId, rescuerId, rating, responseSpeed, attitude, supportLevel, comment, cancelledUnreasonably = false }) {
         const query = `
-            INSERT INTO rescuer_ratings (rating_id, sos_request_id, victim_id, rescuer_id, rating, response_speed, attitude, support_level, comment)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            INSERT INTO rescuer_ratings (rating_id, sos_request_id, victim_id, rescuer_id, rating, response_speed, attitude, support_level, comment, cancelled_unreasonably)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *
         `;
         const result = await pool.query(query, [
@@ -38,7 +38,8 @@ class RatingRepository {
             responseSpeed || null,
             attitude || null,
             supportLevel || null,
-            comment || null
+            comment || null,
+            !!cancelledUnreasonably
         ]);
         return result.rows[0];
     }

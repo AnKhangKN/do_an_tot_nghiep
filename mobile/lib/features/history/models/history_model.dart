@@ -15,6 +15,7 @@ class HistoryModel {
   
   // Chi tiết thêm
   final String? cancelReason;
+  final String? cancelledBy; // 'VICTIM' | 'RESCUER' | 'SYSTEM'
   final String? action; // Dành riêng cho Rescuer
 
   HistoryModel({
@@ -30,6 +31,7 @@ class HistoryModel {
     this.partnerPhone,
     this.partnerAvatarUrl,
     this.cancelReason,
+    this.cancelledBy,
     this.action,
   });
 
@@ -68,6 +70,7 @@ class HistoryModel {
         partnerPhone: json['rescuer_phone'],
         partnerAvatarUrl: json['rescuer_avatar_url'],
         cancelReason: json['cancel_reason'],
+        cancelledBy: json['cancelled_by'],
         action: null,
       );
     }

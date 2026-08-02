@@ -3,7 +3,7 @@ const ratingService = require("../service/rating.service");
 class RatingController {
     async submitRating(req, res, next) {
         try {
-            const { sosRequestId, rating, responseSpeed, attitude, supportLevel, comment } = req.body;
+            const { sosRequestId, rating, responseSpeed, attitude, supportLevel, comment, cancelledUnreasonably } = req.body;
             const victimId = req.userId;
 
             const result = await ratingService.submitRating({
@@ -13,7 +13,8 @@ class RatingController {
                 responseSpeed,
                 attitude,
                 supportLevel,
-                comment
+                comment,
+                cancelledUnreasonably: cancelledUnreasonably === true
             });
 
             return res.status(201).json({

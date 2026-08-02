@@ -19,6 +19,7 @@ class VictimSocket {
     socket.off("rescue:accepted");
     socket.off("rescuer:location:updated");
     socket.off("rescue:cancelled");
+    socket.off(SocketEvents.victimCancelBlocked);
 
     socket.on(SocketEvents.sosNotFound, (data) {
       debugPrint('🔴 [VICTIM SOCKET] Nhận sos:not_found: $data');
@@ -71,6 +72,16 @@ class VictimSocket {
         reason ?? "Cứu hộ viên đã hủy ca cứu hộ.",
       );
     });
+
+    socket.on(SocketEvents.victimCancelBlocked, (data) {
+      debugPrint('🚫 [VICTIM SOCKET] Nhận victim:cancel_blocked: $data');
+      final String? reason = data != null
+          ? (data['reason'] ?? data['message'])?.toString()
+          : null;
+      sessionController.setCancelBlockedMessage(
+        reason ?? "Bạn đã hủy quá nhiều ca cứu hộ liên tiếp. Tạm khóa gửi yêu cầu cứu hộ mới.",
+      );
+    });
   }
 
   /// Hủy lắng nghe
@@ -80,5 +91,6 @@ class VictimSocket {
     socket.off("rescuer:location:updated");
     socket.off("rescue:completed");
     socket.off("rescue:cancelled");
+    socket.off(SocketEvents.victimCancelBlocked);
   }
 }

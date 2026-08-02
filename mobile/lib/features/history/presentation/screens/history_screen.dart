@@ -458,7 +458,7 @@ class _HistoryCard extends StatelessWidget {
               ),
             ],
 
-            if (!isRescuer && (item.status.toUpperCase() == "DONE" || item.status.toUpperCase() == "COMPLETED")) ...[
+            if (!isRescuer && _canRateItem(item)) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
@@ -468,6 +468,9 @@ class _HistoryCard extends StatelessWidget {
                     final ratingData = snapshot.data;
                     final ratingValue = _extractRatingValue(ratingData);
                     final hasRated = ratingValue != null;
+                    final isCancelledByRescuer =
+                        item.status.toUpperCase() == "CANCELLED" &&
+                        item.cancelledBy == 'RESCUER';
 
                     return OutlinedButton.icon(
                       onPressed: snapshot.connectionState == ConnectionState.waiting
@@ -490,6 +493,8 @@ class _HistoryCard extends StatelessWidget {
                                   context,
                                   sosRequestId: item.id,
                                   rescuerName: item.partnerName,
+                                  isCancelledRescue: isCancelledByRescuer,
+                                  cancelReason: isCancelledByRescuer ? item.cancelReason : null,
                                 );
                               }
                             },
@@ -524,6 +529,16 @@ class _HistoryCard extends StatelessWidget {
       ),
     );
   }
+  /// Victim có thể đánh giá khi ca HOÀN THÀNH hoặc ca bị CHÍNH CỨU HỘ VIÊN hủy
+  bool _canRateItem(HistoryModel item) {
+    final status = item.status.toUpperCase();
+    if (status == "DONE" || status == "COMPLETED") return true;
+    if (status == "CANCELLED") {
+      return item.cancelledBy == 'RESCUER';
+    }
+    return false;
+  }
+
   int? _extractRatingValue(dynamic ratingData) {
     if (ratingData == null) return null;
     if (ratingData is Map<String, dynamic>) {

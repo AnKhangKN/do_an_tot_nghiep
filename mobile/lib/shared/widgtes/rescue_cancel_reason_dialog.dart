@@ -97,7 +97,8 @@ class _RescueCancelReasonSheetState extends State<_RescueCancelReasonSheet> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Vui lòng chọn lý do hủy. Hủy ca nhiều lần liên tiếp có thể bị tạm khóa tài khoản 2 giờ.',
+                'Vui lòng chọn lý do hủy. Hủy ca liên tiếp sẽ bị tạm khóa nhận ca cứu hộ mới: '
+                'lần 2 → 2 giờ, lần 4 → 12 giờ, lần 6 → 24 giờ, lần 8 → cấm vĩnh viễn.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: ColorConstants.textMuted),
               ),

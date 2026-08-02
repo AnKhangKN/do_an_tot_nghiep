@@ -12,6 +12,7 @@ class RatingRepository {
     int? attitude,
     int? supportLevel,
     String? comment,
+    bool? cancelledUnreasonably,
   }) async {
     final response = await ratingService.submitRating(
       sosRequestId: sosRequestId,
@@ -20,6 +21,7 @@ class RatingRepository {
       attitude: attitude,
       supportLevel: supportLevel,
       comment: comment,
+      cancelledUnreasonably: cancelledUnreasonably,
     );
     return response.data;
   }

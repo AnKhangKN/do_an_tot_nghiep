@@ -11,6 +11,8 @@ class RatingDialogWidget extends StatefulWidget {
   final VoidCallback? onSubmitted;
   final Map<String, dynamic>? existingRating;
   final bool readOnly;
+  final bool isCancelledRescue;
+  final String? cancelReason;
 
   const RatingDialogWidget({
     super.key,
@@ -19,6 +21,8 @@ class RatingDialogWidget extends StatefulWidget {
     this.onSubmitted,
     this.existingRating,
     this.readOnly = false,
+    this.isCancelledRescue = false,
+    this.cancelReason,
   });
 
   static Future<void> show(
@@ -28,6 +32,8 @@ class RatingDialogWidget extends StatefulWidget {
     VoidCallback? onSubmitted,
     Map<String, dynamic>? existingRating,
     bool readOnly = false,
+    bool isCancelledRescue = false,
+    String? cancelReason,
   }) {
     return showDialog(
       context: context,
@@ -38,6 +44,8 @@ class RatingDialogWidget extends StatefulWidget {
         onSubmitted: onSubmitted,
         existingRating: existingRating,
         readOnly: readOnly,
+        isCancelledRescue: isCancelledRescue,
+        cancelReason: cancelReason,
       ),
     );
   }
@@ -51,6 +59,7 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
   int _responseSpeed = 5;
   int _attitude = 5;
   int _supportLevel = 5;
+  bool _cancelledUnreasonably = false;
   final TextEditingController _commentController = TextEditingController();
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -78,6 +87,14 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
     _responseSpeed = _parseAspect(responseSpeed);
     _attitude = _parseAspect(attitude);
     _supportLevel = _parseAspect(supportLevel);
+
+    final unreasonably =
+        widget.existingRating?['cancelled_unreasonably'] ?? widget.existingRating?['cancelledUnreasonably'];
+    if (unreasonably is bool) {
+      _cancelledUnreasonably = unreasonably;
+    } else if (unreasonably != null) {
+      _cancelledUnreasonably = unreasonably.toString() == 'true';
+    }
 
     if (commentValue != null) {
       _commentController.text = commentValue.toString();
@@ -114,6 +131,7 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
         attitude: _attitude,
         supportLevel: _supportLevel,
         comment: _commentController.text.trim(),
+        cancelledUnreasonably: _cancelledUnreasonably,
       );
 
       if (mounted) {
@@ -227,6 +245,46 @@ class _RatingDialogWidgetState extends State<RatingDialogWidget> {
               ),
             ),
             const SizedBox(height: 12),
+            if (widget.isCancelledRescue && !_isReadOnly) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Text(
+                  '⚠️ Ca cứu hộ đã bị Cứu hộ viên hủy bỏ.'
+                  '${widget.cancelReason != null && widget.cancelReason!.isNotEmpty ? '\nLý do: ${widget.cancelReason}' : ''}',
+                  style: const TextStyle(fontSize: 12, color: Colors.deepOrange),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: ColorConstants.bgCanvas,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: _cancelledUnreasonably,
+                      onChanged: _isSubmitting ? null : (v) => setState(() => _cancelledUnreasonably = v ?? false),
+                    ),
+                    const Expanded(
+                      child: Text(
+                        'Lý do hủy không thỏa đáng (sẽ áp dụng phạt cho cứu hộ viên)',
+                        style: TextStyle(fontSize: 12.5, color: Colors.black87),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             _buildAspectRow(
               label: '⚡ Tốc độ phản ứng',
               value: _responseSpeed,

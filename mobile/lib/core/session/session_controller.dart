@@ -76,6 +76,9 @@ class SessionController with ChangeNotifier {
   String? _rescueCancelledMessage;
   String? get rescueCancelledMessage => _rescueCancelledMessage;
 
+  String? _cancelBlockedMessage;
+  String? get cancelBlockedMessage => _cancelBlockedMessage;
+
   void setRescueCancelledMessage(String? message) {
     _rescueCancelledMessage = message;
     notifyListeners();
@@ -83,6 +86,16 @@ class SessionController with ChangeNotifier {
 
   void clearRescueCancelledMessage() {
     _rescueCancelledMessage = null;
+    notifyListeners();
+  }
+
+  void setCancelBlockedMessage(String? message) {
+    _cancelBlockedMessage = message;
+    notifyListeners();
+  }
+
+  void clearCancelBlockedMessage() {
+    _cancelBlockedMessage = null;
     notifyListeners();
   }
 
@@ -145,6 +158,7 @@ class SessionController with ChangeNotifier {
     _isBanned = false;
     _banReason = null;
     _rescueCancelledMessage = null;
+    _cancelBlockedMessage = null;
     GetIt.instance<StorageService>().clearBanState();
     notifyListeners();
   }

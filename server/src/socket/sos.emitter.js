@@ -200,8 +200,9 @@ const handleRescueCancelled = (io, data) => {
 const handleRescuerSuspended = (io, data) => {
     try {
         const payload = {
-            reason: data.reason || "Bạn đã hủy ca cứu hộ 2 lần liên tiếp. Tài khoản bị tạm khóa nhận ca cứu hộ mới trong 2 giờ.",
+            reason: data.reason || "Bạn đã hủy ca cứu hộ liên tiếp. Tài khoản bị tạm khóa nhận ca cứu hộ mới.",
             suspendedUntil: data.suspendedUntil,
+            level: data.level,
         };
 
         if (data.rescuerId) {
@@ -214,6 +215,29 @@ const handleRescuerSuspended = (io, data) => {
     }
 };
 
+/**
+ * Emit sự kiện victim:cancel_blocked tới Victim khi tài khoản bị tạm khóa gửi yêu cầu cứu hộ do hủy ca nhiều lần
+ * @param {Object} io - Socket.IO Server
+ * @param {Object} data - Dữ liệu parse từ Redis PubSub
+ */
+const handleVictimCancelBlocked = (io, data) => {
+    try {
+        const payload = {
+            reason: data.reason || "Bạn đã hủy quá nhiều ca cứu hộ liên tiếp. Tạm khóa gửi yêu cầu cứu hộ mới.",
+            blockedUntil: data.blockedUntil,
+            level: data.level,
+        };
+
+        if (data.victimId) {
+            io.to(`victim:${data.victimId}`).emit("victim:cancel_blocked", payload);
+            io.to(`user:${data.victimId}`).emit("victim:cancel_blocked", payload);
+        }
+        console.log(`[SOS EMITTER] Emitted 'victim:cancel_blocked' for Victim: ${data.victimId}`);
+    } catch (err) {
+        console.error(`[SOS EMITTER] Error emitting victim:cancel_blocked:`, err);
+    }
+};
+
 module.exports = {
     handleSosOffer,
     handleSosNotFound,
@@ -223,4 +247,5 @@ module.exports = {
     handleSosCompleted,
     handleRescueCancelled,
     handleRescuerSuspended,
+    handleVictimCancelBlocked,
 };

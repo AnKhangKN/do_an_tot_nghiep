@@ -12,6 +12,7 @@ const ratingModel = {
         sentiment: "sentiment",
         sentimentConfidence: "sentiment_confidence",
         isFlagged: "is_flagged",
+        cancelledUnreasonably: "cancelled_unreasonably",
         comment: "comment",
         createdAt: "created_at"
     }
