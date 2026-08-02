@@ -421,21 +421,22 @@ const MapControls = ({ onLocate }) => {
   );
 };
 
-// ================= AUTO FIT HEATMAP BOUNDS =================
-const AutoFitHeatmap = ({ points }) => {
+// ================= AUTO FIT MAP BOUNDS =================
+const AutoFitMapBounds = ({ dangerPoints = [], amenities = [] }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (!map || !points || points.length === 0) return;
-    const validPoints = points
-      .filter((p) => p.lat && p.lng && !isNaN(p.lat) && !isNaN(p.lng))
-      .map((p) => [p.lat, p.lng]);
+    if (!map) return;
+    const allCoords = [
+      ...dangerPoints.map((d) => d.position),
+      ...amenities.map((a) => a.position),
+    ].filter((pos) => pos && pos[0] && pos[1] && !isNaN(pos[0]) && !isNaN(pos[1]));
 
-    if (validPoints.length > 0) {
-      const bounds = L.latLngBounds(validPoints);
+    if (allCoords.length > 0) {
+      const bounds = L.latLngBounds(allCoords);
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     }
-  }, [map, points]);
+  }, [map, dangerPoints, amenities]);
 
   return null;
 };
@@ -575,27 +576,19 @@ const MapPage = () => {
 
         <FlyToLocation location={location} />
         <MyLocationMarker position={myLocation} />
-        <AutoFitHeatmap points={heatmapPoints} />
+        <AutoFitMapBounds dangerPoints={dangerPoints} amenities={amenities} />
         <MapControls onLocate={setMyLocation} />
 
         <LayersControl position="topright">
-          <LayersControl.Overlay checked name="🔥 Điểm nóng tai nạn (Heatmap)">
-            <HeatmapLayer points={heatmapPoints} />
-          </LayersControl.Overlay>
-
-          <LayersControl.Overlay name="📍 Vị trí SOS Cứu hộ">
-            <SosMarkerLayer points={heatmapPoints} />
-          </LayersControl.Overlay>
-
           <LayersControl.Overlay checked name="⚠️ Điểm nguy hiểm">
             <DangerLayer data={dangerPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name="⭕ Vùng nguy hiểm">
+          <LayersControl.Overlay checked name="⭕ Vùng nguy hiểm">
             <DangerZoneLayer data={dangerPoints} />
           </LayersControl.Overlay>
 
-          <LayersControl.Overlay name="🏥 Tiện ích khẩn cấp">
+          <LayersControl.Overlay checked name="🏥 Tiện ích khẩn cấp">
             <AmenityLayer data={amenities} />
           </LayersControl.Overlay>
 
@@ -605,25 +598,20 @@ const MapPage = () => {
         </LayersControl>
       </MapContainer>
 
-      {/* Thẻ thống kê điểm nóng trực quan */}
+      {/* Thẻ thống kê điểm nguy hiểm & tiện ích */}
       <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 dark:bg-gray-100/90 backdrop-blur-md border border-gray-200 shadow-sm rounded-2xl p-3 flex items-center gap-4 text-xs font-medium text-gray-700">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+          <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
           <span>
-            Tổng số điểm SOS: <b className="text-gray-900">{heatmapPoints.length}</b>
+            Điểm nguy hiểm: <b className="text-red-600">{dangerPoints.length}</b>
           </span>
         </div>
         <div className="h-4 w-px bg-gray-200" />
-        <div>
-          Đang xử lý: <b className="text-amber-600">{activeHotspotCount}</b>
-        </div>
-        <div className="h-4 w-px bg-gray-200" />
-        <div>
-          Điểm nguy hiểm đã duyệt: <b className="text-red-600">{dangerPoints.length}</b>
-        </div>
-        <div className="h-4 w-px bg-gray-200" />
-        <div>
-          Tiện ích khẩn cấp: <b className="text-emerald-600">{amenities.length}</b>
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <span>
+            Tiện ích khẩn cấp: <b className="text-emerald-600">{amenities.length}</b>
+          </span>
         </div>
       </div>
     </div>
