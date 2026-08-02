@@ -12,6 +12,7 @@ Run all commands in `web/`:
 | Production build | `npm run build` |
 | Preview build | `npm run preview` |
 | Lint | `npm run lint` |
+| Smoke test | `npm run test:smoke` |
 
 ## Stack
 - CSS: TailwindCSS v4 (`@tailwindcss/vite`)

@@ -13,7 +13,7 @@ import {
   PiXBold,
 } from 'react-icons/pi';
 
-const columns = ({ onApprove, onReject, onOpenFeedbacks, loading }) => [
+const columns = () => [
   {
     key: 'index',
     title: 'STT',

@@ -14,6 +14,7 @@ Run all commands in `server/`:
 | Start (API only) | `npm start` |
 | Start (API + Worker cùng tiến trình) | `npm run start:all` |
 | Start (Worker only) | `npm run worker` |
+| Smoke test | `npm run test:smoke` |
 
 ## Authentication
 - JWT Bearer Authentication

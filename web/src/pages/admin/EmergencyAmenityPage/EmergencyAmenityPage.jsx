@@ -9,7 +9,6 @@ import {
   updateAmenityStatusAdmin,
   deleteAmenityAdmin,
   getFeedbacksAdmin,
-  updateFeedbackStatusAdmin,
   getDuplicateAmenitiesAdmin,
   mergeAmenitiesAdmin
 } from '@/api/admin/EmergencyAmenityApi';
@@ -162,19 +161,6 @@ export default function EmergencyAmenityPage() {
     }
   }, [activeTab, pointsPage, statusFilter, feedbacksPage, feedbackStatusFilter]);
 
-  const handleResolveFeedback = async (feedbackId, status, action, amenityId) => {
-    try {
-      const res = await updateFeedbackStatusAdmin(feedbackId, { status, action, amenityId });
-      if (res.success) {
-        fetchFeedbacks(feedbacksPage, feedbackStatusFilter);
-        fetchPoints(pointsPage, statusFilter);
-      }
-    } catch (err) {
-      console.error('Error resolving feedback:', err);
-    }
-  };
-
-
   // Points Actions
   const handleUpdateStatus = async (id, newStatus) => {
     try {
@@ -221,14 +207,6 @@ export default function EmergencyAmenityPage() {
     }
   };
 
-  const handleOpenEditCategory = (category) => {
-    setEditingCategory(category);
-    setEditCategoryName(category.categoryName || '');
-    setEditIconName(category.iconName || 'wrench');
-    setEditStatus(category.status || 'ACTIVE');
-    setShowEditCategoryModal(true);
-  };
-
   const handleUpdateCategory = async (e) => {
     e.preventDefault();
     if (!editingCategory || !editCategoryName.trim()) return;
@@ -245,22 +223,6 @@ export default function EmergencyAmenityPage() {
       }
     } catch (err) {
       console.error('Error updating category:', err);
-    }
-  };
-
-  const handleToggleCategoryStatus = async (category) => {
-    const nextStatus = category.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    try {
-      const res = await updateCategoryAdmin(category.amenityCategoryId, {
-        categoryName: category.categoryName,
-        iconName: category.iconName,
-        status: nextStatus
-      });
-      if (res.success) {
-        fetchCategories();
-      }
-    } catch (err) {
-      console.error('Error toggling category:', err);
     }
   };
 

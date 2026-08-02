@@ -22,6 +22,8 @@ Monorepo gồm:
 | Dev server (API only) | `npm run dev` | `server/` |
 | Dev mobile | `flutter run` | `mobile/` |
 | Lint frontend | `npm run lint` | `web/` |
+| Smoke test server | `npm run test:smoke` | `server/` |
+| Smoke test web | `npm run test:smoke` | `web/` |
 | Run mobile tests | `flutter test` | `mobile/` |
 
 ## Git & PR

@@ -555,10 +555,6 @@ const MapPage = () => {
     fetchMapData();
   }, []);
 
-  const activeHotspotCount = heatmapPoints.filter((p) =>
-    ["PENDING", "SEARCHING", "ASSIGNED", "IN_PROGRESS"].includes(p.status)
-  ).length;
-
   return (
     <div className="w-full h-146 relative">
       <SearchBox setLocation={setLocation} />
@@ -580,6 +576,10 @@ const MapPage = () => {
         <MapControls onLocate={setMyLocation} />
 
         <LayersControl position="topright">
+          <LayersControl.Overlay checked name="🔥 Heatmap điểm nóng">
+            <HeatmapLayer points={heatmapPoints} />
+          </LayersControl.Overlay>
+
           <LayersControl.Overlay checked name="⚠️ Điểm nguy hiểm">
             <DangerLayer data={dangerPoints} />
           </LayersControl.Overlay>
