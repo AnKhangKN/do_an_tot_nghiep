@@ -15,10 +15,10 @@ const HeroSectionComponent = ({ data = {} }) => {
   const supervisor = data.thesis_supervisor || "";
 
   return (
-    <section className="relative flex min-h-dvh flex-col justify-center overflow-hidden bg-gray-950 text-white will-change-transform">
-      <div className="absolute -right-32 top-24 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />
-      <div className="absolute -left-24 bottom-10 h-72 w-72 rounded-full bg-red-500/15 blur-3xl" />
-      <div className="absolute left-1/2 top-0 h-40 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
+    <section className="relative flex min-h-dvh flex-col justify-center overflow-hidden bg-gray-950 text-white will-change-transform dark:bg-[#05060a]">
+      <div className="absolute -right-32 top-24 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl dark:bg-blue-500/30" />
+      <div className="absolute -left-24 bottom-10 h-72 w-72 rounded-full bg-red-500/15 blur-3xl dark:bg-red-500/25" />
+      <div className="absolute left-1/2 top-0 h-40 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl dark:bg-cyan-400/20" />
 
       <div className="relative mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
         <div>
@@ -95,8 +95,8 @@ const HeroMockup = () => {
       <div className="absolute -inset-8 rounded-full bg-blue-500/10 blur-3xl" />
 
       {/* Phone frame */}
-      <div className="relative w-[220px] rounded-[2.2rem] border border-white/15 bg-gray-900 p-3 shadow-2xl sm:w-[270px] sm:rounded-[2.6rem] lg:w-[290px]">
-        <div className="overflow-hidden rounded-[1.7rem] bg-gray-950 sm:rounded-[2.1rem]">
+      <div className="relative w-[220px] rounded-[2.2rem] border border-white/15 bg-gray-900 p-3 shadow-2xl sm:w-[270px] sm:rounded-[2.6rem] lg:w-[290px] dark:border-white/25 dark:bg-gray-800">
+        <div className="overflow-hidden rounded-[1.7rem] bg-gray-950 sm:rounded-[2.1rem] dark:bg-black">
           <div className="flex items-center justify-between px-6 pb-2 pt-5">
             <span className="text-[11px] font-semibold text-gray-300">9:41</span>
             <div className="h-2.5 w-14 rounded-full bg-gray-800" />
@@ -142,7 +142,7 @@ const HeroMockup = () => {
       </div>
 
       {/* Floating rescue card */}
-      <div className="absolute -left-2 top-8 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-left-6">
+      <div className="absolute -left-2 top-8 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-left-6 dark:border-white/15 dark:bg-gray-900/95">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">
             <PiNavigationArrowFill size={18} />
@@ -155,7 +155,7 @@ const HeroMockup = () => {
       </div>
 
       {/* Floating danger zone card */}
-      <div className="absolute -right-2 bottom-16 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-right-8">
+      <div className="absolute -right-2 bottom-16 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-right-8 dark:border-white/15 dark:bg-gray-900/95">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
             <PiWarningFill size={18} />
@@ -168,7 +168,7 @@ const HeroMockup = () => {
       </div>
 
       {/* Floating amenity card */}
-      <div className="absolute -bottom-4 left-6 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl">
+      <div className="absolute -bottom-4 left-6 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl dark:border-white/15 dark:bg-gray-900/95">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 text-blue-300">
             <PiMapPinFill size={18} />
