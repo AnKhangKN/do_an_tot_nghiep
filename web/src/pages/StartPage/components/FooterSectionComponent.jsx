@@ -31,7 +31,22 @@ const FooterSectionComponent = ({ data = {} }) => {
   const phone = data.thesis_contact_phone || "";
 
   return (
-    <footer className="flex min-h-dvh flex-col justify-center bg-gray-950 text-white">
+    <footer
+      className="flex min-h-dvh flex-col justify-center bg-gray-950 text-white"
+      style={{
+        "--color-gray-50": "#f9fafb",
+        "--color-gray-100": "#f3f4f6",
+        "--color-gray-200": "#e5e7eb",
+        "--color-gray-300": "#d1d5db",
+        "--color-gray-400": "#9ca3af",
+        "--color-gray-500": "#6b7280",
+        "--color-gray-600": "#4b5563",
+        "--color-gray-700": "#374151",
+        "--color-gray-800": "#1f2937",
+        "--color-gray-900": "#111827",
+        "--color-gray-950": "#030712",
+      }}
+    >
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr] lg:gap-12">
           {/* Brand & emergency */}
