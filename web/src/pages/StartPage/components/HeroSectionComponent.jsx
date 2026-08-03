@@ -23,23 +23,23 @@ const HeroSectionComponent = ({ data = {} }) => {
       <div className="relative mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
         <div>
           <div className="mb-5 flex flex-wrap items-center gap-3 lg:mb-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:bg-white dark:text-gray-900">
               <PiGraduationCapFill className="text-amber-300" size={17} />
               Đồ án tốt nghiệp
             </div>
-            <div className="hidden items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-gray-200 sm:inline-flex">
+            <div className="hidden items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-gray-200 sm:inline-flex dark:bg-white dark:text-gray-900">
               <PiShieldCheckFill className="text-emerald-300" size={18} />
               Trung tâm điều phối cứu hộ
             </div>
           </div>
 
-          <h1 className="max-w-3xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl xl:text-6xl">
+          <h1 className="max-w-3xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl xl:text-6xl dark:text-white">
             Hệ thống Cứu hộ Khẩn cấp{" "}
             <span className="text-red-400">Thời gian thực</span> & Định vị
             Cảnh báo Nhanh chóng
           </h1>
 
-          <p className="mt-4 max-w-xl text-sm leading-7 text-gray-300 sm:mt-6 sm:text-base">
+          <p className="mt-4 max-w-xl text-sm leading-7 text-gray-300 sm:mt-6 sm:text-base dark:text-gray-400">
             Kết nối tức thì người cần trợ giúp với đội ngũ cứu hộ và trung tâm
             điều phối chuyên nghiệp — trên Mobile App và Web Admin.
           </p>
@@ -69,11 +69,11 @@ const HeroSectionComponent = ({ data = {} }) => {
           {(school || supervisor) && (
             <p className="mt-7 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-400">
               <PiGraduationCapFill className="text-amber-300" size={17} />
-              {school && <span>{school}</span>}
-              {school && supervisor && <span className="text-gray-600">•</span>}
+              {school && <span className="dark:text-gray-400">{school}</span>}
+              {school && supervisor && <span className="text-gray-600 dark:text-gray-400">•</span>}
               {supervisor && (
                 <span>
-                  Giảng viên hướng dẫn: <span className="text-gray-300">{supervisor}</span>
+                  Giảng viên hướng dẫn: <span className="text-gray-300 dark:text-gray-400">{supervisor}</span>
                 </span>
               )}
             </p>
@@ -148,8 +148,8 @@ const HeroMockup = () => {
             <PiNavigationArrowFill size={18} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-white">Cứu hộ viên đang tới</p>
-            <p className="text-[10px] text-gray-400">Cách hiện trường 1.2 km</p>
+            <p className="text-[11px] font-bold text-white dark:text-gray-900">Cứu hộ viên đang tới</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-900">Cách hiện trường 1.2 km</p>
           </div>
         </div>
       </div>
@@ -161,8 +161,8 @@ const HeroMockup = () => {
             <PiWarningFill size={18} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-white">Vùng nguy hiểm</p>
-            <p className="text-[10px] text-gray-400">Cảnh báo ngập lụt trong 500m</p>
+            <p className="text-[11px] font-bold text-white dark:text-gray-900">Vùng nguy hiểm</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-900">Cảnh báo ngập lụt trong 500m</p>
           </div>
         </div>
       </div>
@@ -174,8 +174,8 @@ const HeroMockup = () => {
             <PiMapPinFill size={18} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-white">Tiện ích gần nhất</p>
-            <p className="text-[10px] text-gray-400">Bệnh viện Đa khoa • 350m</p>
+            <p className="text-[11px] font-bold text-white dark:text-gray-900">Tiện ích gần nhất</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-900">Bệnh viện Đa khoa • 350m</p>
           </div>
         </div>
       </div>
