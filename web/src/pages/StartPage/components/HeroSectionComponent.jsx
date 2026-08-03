@@ -27,7 +27,7 @@ const HeroSectionComponent = ({ data = {} }) => {
               <PiGraduationCapFill className="text-amber-300" size={17} />
               Đồ án tốt nghiệp
             </div>
-            <div className="hidden items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-gray-200 sm:inline-flex">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:text-gray-900">
               <PiShieldCheckFill className="text-emerald-300" size={18} />
               Trung tâm điều phối cứu hộ
             </div>
@@ -142,8 +142,8 @@ const HeroMockup = () => {
       </div>
 
       {/* Floating rescue card */}
-      <div className="absolute -left-2 top-8 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-left-6 dark:border-white/15 dark:bg-gray-900/95">
-        <div className="flex items-center gap-2.5">
+      <div className="absolute -left-2 top-8 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-left-6">
+        <div className="flex items-center gap-2.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:text-gray-900">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">
             <PiNavigationArrowFill size={18} />
           </div>
@@ -155,8 +155,8 @@ const HeroMockup = () => {
       </div>
 
       {/* Floating danger zone card */}
-      <div className="absolute -right-2 bottom-16 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-right-8 dark:border-white/15 dark:bg-gray-900/95">
-        <div className="flex items-center gap-2.5">
+      <div className="absolute -right-2 bottom-16 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-right-8">
+        <div className="flex items-center gap-2.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:text-gray-900">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
             <PiWarningFill size={18} />
           </div>
@@ -168,8 +168,8 @@ const HeroMockup = () => {
       </div>
 
       {/* Floating amenity card */}
-      <div className="absolute -bottom-4 left-6 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl dark:border-white/15 dark:bg-gray-900/95">
-        <div className="flex items-center gap-2.5">
+      <div className="absolute -bottom-4 left-6 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl">
+        <div className="flex items-center gap-2.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:text-gray-900">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 text-blue-300">
             <PiMapPinFill size={18} />
           </div>
