@@ -15,7 +15,22 @@ const HeroSectionComponent = ({ data = {} }) => {
   const supervisor = data.thesis_supervisor || "";
 
   return (
-    <section className="relative flex min-h-dvh flex-col justify-center overflow-hidden bg-gray-950 text-white dark:text-white will-change-transform">
+    <section
+      className="relative flex min-h-dvh flex-col justify-center overflow-hidden bg-gray-950 text-white will-change-transform"
+      style={{
+        "--color-gray-50": "#f9fafb",
+        "--color-gray-100": "#f3f4f6",
+        "--color-gray-200": "#e5e7eb",
+        "--color-gray-300": "#d1d5db",
+        "--color-gray-400": "#9ca3af",
+        "--color-gray-500": "#6b7280",
+        "--color-gray-600": "#4b5563",
+        "--color-gray-700": "#374151",
+        "--color-gray-800": "#1f2937",
+        "--color-gray-900": "#111827",
+        "--color-gray-950": "#030712",
+      }}
+    >
       <div className="absolute -right-32 top-24 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />
       <div className="absolute -left-24 bottom-10 h-72 w-72 rounded-full bg-red-500/15 blur-3xl" />
       <div className="absolute left-1/2 top-0 h-40 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
@@ -39,7 +54,7 @@ const HeroSectionComponent = ({ data = {} }) => {
             Cảnh báo Nhanh chóng
           </h1>
 
-          <p className="mt-4 max-w-xl text-sm leading-7 dark:text-gray-300 text-gray-300 sm:mt-6 sm:text-base">
+          <p className="mt-4 max-w-xl text-sm leading-7 text-gray-300 sm:mt-6 sm:text-base">
             Kết nối tức thì người cần trợ giúp với đội ngũ cứu hộ và trung tâm
             điều phối chuyên nghiệp — trên Mobile App và Web Admin.
           </p>
@@ -142,7 +157,7 @@ const HeroMockup = () => {
       </div>
 
       {/* Floating rescue card */}
-      <div className="absolute -left-2 top-8 rounded-2xl border border-white/10 dark:bg-gray-800/95 bg-gray-800/95 p-3 shadow-xl sm:-left-6">
+      <div className="absolute -left-2 top-8 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-left-6">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">
             <PiNavigationArrowFill size={18} />
@@ -155,7 +170,7 @@ const HeroMockup = () => {
       </div>
 
       {/* Floating danger zone card */}
-      <div className="absolute -right-2 bottom-16 rounded-2xl border border-white/10 dark:bg-gray-800/95 bg-gray-800/95 p-3 shadow-xl sm:-right-8">
+      <div className="absolute -right-2 bottom-16 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-right-8">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
             <PiWarningFill size={18} />
@@ -168,7 +183,7 @@ const HeroMockup = () => {
       </div>
 
       {/* Floating amenity card */}
-      <div className="absolute -bottom-4 left-6 rounded-2xl border border-white/10 dark:bg-gray-800/95 bg-gray-800/95 p-3 shadow-xl">
+      <div className="absolute -bottom-4 left-6 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 text-blue-300">
             <PiMapPinFill size={18} />
