@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { PiArrowCircleUpFill } from "react-icons/pi";
+import { useDispatch, useSelector } from "react-redux";
+import { PiArrowCircleUpFill, PiMoonLight, PiSunLight } from "react-icons/pi";
+import { setThemeMode } from "@/store/theme/themeSlice";
 import { getPublicThesisInfo } from "@/api/public/PublicApi";
 import HeroSectionComponent from "./components/HeroSectionComponent";
 import StatsSectionComponent from "./components/StatsSectionComponent";
@@ -14,6 +16,8 @@ import FooterSectionComponent from "./components/FooterSectionComponent";
 const TOTAL = 9;
 
 const StartPage = () => {
+  const theme = useSelector((state) => state.theme);
+  const dispatch = useDispatch();
   const [thesisInfo, setThesisInfo] = useState({});
   const [showBackToTop, setShowBackToTop] = useState(false);
   const scrollRef = useRef(null);
@@ -128,6 +132,16 @@ const StartPage = () => {
       <div className="h-auto lg:h-dvh lg:overflow-hidden">
         <FooterSectionComponent data={thesisInfo} />
       </div>
+
+      <button
+        type="button"
+        aria-label={theme.isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+        title={theme.isDark ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+        onClick={() => dispatch(setThemeMode(theme.isDark ? "light" : "dark"))}
+        className="fixed right-6 top-6 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white/80 text-gray-600 shadow-lg shadow-gray-900/10 backdrop-blur transition-all duration-300 hover:bg-gray-100 dark:bg-gray-100/80 dark:text-gray-700 dark:hover:bg-gray-200"
+      >
+        {theme.isDark ? <PiSunLight size={22} /> : <PiMoonLight size={22} />}
+      </button>
 
       <button
         type="button"
