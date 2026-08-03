@@ -15,31 +15,31 @@ const HeroSectionComponent = ({ data = {} }) => {
   const supervisor = data.thesis_supervisor || "";
 
   return (
-    <section className="relative flex min-h-dvh flex-col justify-center overflow-hidden bg-gray-950 text-white will-change-transform dark:bg-[#05060a]">
-      <div className="absolute -right-32 top-24 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl dark:bg-blue-500/30" />
-      <div className="absolute -left-24 bottom-10 h-72 w-72 rounded-full bg-red-500/15 blur-3xl dark:bg-red-500/25" />
-      <div className="absolute left-1/2 top-0 h-40 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl dark:bg-cyan-400/20" />
+    <section className="relative flex min-h-dvh flex-col justify-center overflow-hidden bg-gray-950 text-white will-change-transform">
+      <div className="absolute -right-32 top-24 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />
+      <div className="absolute -left-24 bottom-10 h-72 w-72 rounded-full bg-red-500/15 blur-3xl" />
+      <div className="absolute left-1/2 top-0 h-40 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
 
       <div className="relative mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
         <div>
           <div className="mb-5 flex flex-wrap items-center gap-3 lg:mb-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:text-gray-900">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm">
               <PiGraduationCapFill className="text-amber-300" size={17} />
               Đồ án tốt nghiệp
             </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:text-gray-900">
+            <div className="hidden items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-gray-200 sm:inline-flex">
               <PiShieldCheckFill className="text-emerald-300" size={18} />
               Trung tâm điều phối cứu hộ
             </div>
           </div>
 
-          <h1 className="max-w-3xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl xl:text-6xl dark:text-white">
+          <h1 className="max-w-3xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl xl:text-6xl">
             Hệ thống Cứu hộ Khẩn cấp{" "}
             <span className="text-red-400">Thời gian thực</span> & Định vị
             Cảnh báo Nhanh chóng
           </h1>
 
-          <p className="mt-4 max-w-xl text-sm leading-7 text-gray-300 sm:mt-6 sm:text-base dark:text-gray-400">
+          <p className="mt-4 max-w-xl text-sm leading-7 text-gray-300 sm:mt-6 sm:text-base">
             Kết nối tức thì người cần trợ giúp với đội ngũ cứu hộ và trung tâm
             điều phối chuyên nghiệp — trên Mobile App và Web Admin.
           </p>
@@ -69,11 +69,11 @@ const HeroSectionComponent = ({ data = {} }) => {
           {(school || supervisor) && (
             <p className="mt-7 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-400">
               <PiGraduationCapFill className="text-amber-300" size={17} />
-              {school && <span className="dark:text-gray-400">{school}</span>}
-              {school && supervisor && <span className="text-gray-600 dark:text-gray-400">•</span>}
+              {school && <span>{school}</span>}
+              {school && supervisor && <span className="text-gray-600">•</span>}
               {supervisor && (
                 <span>
-                  Giảng viên hướng dẫn: <span className="text-gray-300 dark:text-gray-400">{supervisor}</span>
+                  Giảng viên hướng dẫn: <span className="text-gray-300">{supervisor}</span>
                 </span>
               )}
             </p>
@@ -95,8 +95,8 @@ const HeroMockup = () => {
       <div className="absolute -inset-8 rounded-full bg-blue-500/10 blur-3xl" />
 
       {/* Phone frame */}
-      <div className="relative w-[220px] rounded-[2.2rem] border border-white/15 bg-gray-900 p-3 shadow-2xl sm:w-[270px] sm:rounded-[2.6rem] lg:w-[290px] dark:border-white/25 dark:bg-gray-800">
-        <div className="overflow-hidden rounded-[1.7rem] bg-gray-950 sm:rounded-[2.1rem] dark:bg-black">
+      <div className="relative w-[220px] rounded-[2.2rem] border border-white/15 bg-gray-900 p-3 shadow-2xl sm:w-[270px] sm:rounded-[2.6rem] lg:w-[290px]">
+        <div className="overflow-hidden rounded-[1.7rem] bg-gray-950 sm:rounded-[2.1rem]">
           <div className="flex items-center justify-between px-6 pb-2 pt-5">
             <span className="text-[11px] font-semibold text-gray-300">9:41</span>
             <div className="h-2.5 w-14 rounded-full bg-gray-800" />
@@ -143,12 +143,12 @@ const HeroMockup = () => {
 
       {/* Floating rescue card */}
       <div className="absolute -left-2 top-8 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-left-6">
-        <div className="flex items-center gap-2.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:text-gray-900">
+        <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300">
             <PiNavigationArrowFill size={18} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-gray-900">Cứu hộ viên đang tới</p>
+            <p className="text-[11px] font-bold text-white">Cứu hộ viên đang tới</p>
             <p className="text-[10px] text-gray-400">Cách hiện trường 1.2 km</p>
           </div>
         </div>
@@ -156,12 +156,12 @@ const HeroMockup = () => {
 
       {/* Floating danger zone card */}
       <div className="absolute -right-2 bottom-16 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl sm:-right-8">
-        <div className="flex items-center gap-2.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:text-gray-900">
+        <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
             <PiWarningFill size={18} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-gray-900">Vùng nguy hiểm</p>
+            <p className="text-[11px] font-bold text-white">Vùng nguy hiểm</p>
             <p className="text-[10px] text-gray-400">Cảnh báo ngập lụt trong 500m</p>
           </div>
         </div>
@@ -169,12 +169,12 @@ const HeroMockup = () => {
 
       {/* Floating amenity card */}
       <div className="absolute -bottom-4 left-6 rounded-2xl border border-white/10 bg-gray-800/95 p-3 shadow-xl">
-        <div className="flex items-center gap-2.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-medium text-gray-200 sm:px-4 sm:py-2 sm:text-sm dark:text-gray-900">
+        <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 text-blue-300">
             <PiMapPinFill size={18} />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-gray-900">Tiện ích gần nhất</p>
+            <p className="text-[11px] font-bold text-white">Tiện ích gần nhất</p>
             <p className="text-[10px] text-gray-400">Bệnh viện Đa khoa • 350m</p>
           </div>
         </div>
