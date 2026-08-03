@@ -142,7 +142,11 @@ const FooterSectionComponent = ({ data = {} }) => {
               {email && (
                 <li>
                   <a
-                    href={`mailto:${email}`}
+                    href={`mailto:${email}?subject=${encodeURIComponent(
+                      "Liên hệ - Hệ thống Cứu hộ Khẩn cấp Thời gian thực",
+                    )}&body=${encodeURIComponent(
+                      "Xin chào,\n\nTôi muốn tìm hiểu thêm về hệ thống cứu hộ khẩn cấp thời gian thực.\n\nTrân trọng.",
+                    )}`}
                     className="flex items-center gap-2.5 transition hover:text-white"
                   >
                     <PiEnvelopeFill className="shrink-0 text-gray-500" size={17} />
