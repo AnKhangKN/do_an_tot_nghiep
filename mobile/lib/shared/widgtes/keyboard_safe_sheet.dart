@@ -12,7 +12,7 @@ class KeyboardSafeSheet extends StatelessWidget {
       context: context,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+          maxHeight: MediaQuery.sizeOf(context).height,
         ),
         child: RepaintBoundary(child: child),
       ),

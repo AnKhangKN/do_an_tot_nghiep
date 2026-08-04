@@ -34,7 +34,7 @@
     </queries>
 
     <application
-        android:label="mobile"
+        android:label="Cứu Hộ Khẩn Cấp"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">

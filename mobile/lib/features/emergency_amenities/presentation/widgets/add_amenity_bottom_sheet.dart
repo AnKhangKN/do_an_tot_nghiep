@@ -188,6 +188,8 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return KeyboardSafeSheet(
       child: Container(
         padding: const EdgeInsets.only(
@@ -214,6 +216,7 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
                   return SingleChildScrollView(
                     controller: scrollController,
                     physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.only(bottom: bottomInset),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,

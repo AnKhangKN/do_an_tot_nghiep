@@ -173,6 +173,8 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.78,
@@ -267,10 +269,10 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
                   _buildHotlineTab(),
 
                   // Tab 2: Phát SMS GPS
-                  _buildSmsGpsTab(),
+                  _buildSmsGpsTab(bottomInset),
 
                   // Tab 3: Người thân khẩn cấp
-                  _buildPersonalContactTab(),
+                  _buildPersonalContactTab(bottomInset),
                 ],
               ),
             ),
@@ -356,9 +358,9 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
     );
   }
 
-  Widget _buildSmsGpsTab() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
+  Widget _buildSmsGpsTab(double bottomInset) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -407,9 +409,9 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
     );
   }
 
-  Widget _buildPersonalContactTab() {
+  Widget _buildPersonalContactTab(double bottomInset) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

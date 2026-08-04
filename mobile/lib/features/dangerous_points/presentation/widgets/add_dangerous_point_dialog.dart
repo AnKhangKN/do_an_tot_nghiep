@@ -221,6 +221,8 @@ class _AddDangerousPointDialogState extends State<AddDangerousPointDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return KeyboardSafeSheet(
       child: Container(
         decoration: BoxDecoration(
@@ -245,6 +247,7 @@ class _AddDangerousPointDialogState extends State<AddDangerousPointDialog> {
               return SingleChildScrollView(
                 controller: scrollController,
                 physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(bottom: bottomInset),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,

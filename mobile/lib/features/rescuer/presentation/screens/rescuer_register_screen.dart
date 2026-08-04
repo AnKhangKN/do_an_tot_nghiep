@@ -109,7 +109,7 @@ class _RescuerRegisterScreenState extends State<RescuerRegisterScreen> {
     final provider = context.watch<RescuerRegisterProvider>();
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: ColorConstants.backgroundLight,
       appBar: AppBar(
         backgroundColor: ColorConstants.surfaceWhite,
@@ -136,10 +136,12 @@ class _RescuerRegisterScreenState extends State<RescuerRegisterScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildPreviewPanel(provider),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+                ),
                 child: Column(
                   children: [
                     // Header Illustration
@@ -398,129 +400,7 @@ class _RescuerRegisterScreenState extends State<RescuerRegisterScreen> {
     );
   }
 
-  Widget _buildPreviewPanel(RescuerRegisterProvider provider) {
-    final phone = _phoneController.text.trim();
-    final area = _areaController.text.trim();
-    final gender = _genderLabel(_gender);
-    final specialty = _specialtyLabel(_incidentTypeId, provider);
-    final hasData =
-        phone.isNotEmpty ||
-        gender != null ||
-        specialty != null ||
-        area.isNotEmpty;
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: ColorConstants.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: ColorConstants.redRescue.withValues(alpha: 0.25),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: hasData
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.visibility_outlined,
-                      size: 16,
-                      color: ColorConstants.redRescue,
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Xem trước thông tin đăng ký',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: ColorConstants.redRescue,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (phone.isNotEmpty)
-                  _previewRow(
-                    'Số điện thoại',
-                    phone,
-                    Icons.phone_android_rounded,
-                  ),
-                if (gender != null)
-                  _previewRow('Giới tính', gender, Icons.wc_rounded),
-                if (specialty != null)
-                  _previewRow(
-                    'Chuyên môn cứu hộ',
-                    specialty,
-                    Icons.medical_services_rounded,
-                  ),
-                if (area.isNotEmpty)
-                  _previewRow(
-                    'Khu vực hoạt động',
-                    area,
-                    Icons.location_on_rounded,
-                  ),
-              ],
-            )
-          : Row(
-              children: [
-                Icon(
-                  Icons.visibility_outlined,
-                  size: 16,
-                  color: ColorConstants.textMuted,
-                ),
-                SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Thông tin bạn nhập sẽ hiển thị trước tại đây',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: ColorConstants.textMuted,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-    );
-  }
-
-  Widget _previewRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 15, color: ColorConstants.redRescue),
-          const SizedBox(width: 8),
-          Text(
-            '$label: ',
-            style: TextStyle(fontSize: 12, color: ColorConstants.textSecondary),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: ColorConstants.textPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   String? _genderLabel(String? value) {
     switch (value) {

@@ -82,7 +82,8 @@ class _MainShellState extends State<MainShell> {
           getIt<SOSProvider>(),
         ]),
         builder: (context, _) {
-          if (_isInRescue()) {
+          final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+          if (_isInRescue() || isKeyboardOpen) {
             return const SizedBox.shrink();
           }
           return RepaintBoundary(
