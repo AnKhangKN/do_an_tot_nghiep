@@ -56,6 +56,10 @@ module.exports = (socket, io) => {
                 messageType,
             });
 
+            if (data?.tempId) {
+                message.temp_id = data.tempId;
+            }
+
             if (resolvedConversationId) {
                 const convRoom = `conversation:${resolvedConversationId}`;
                 socket.join(convRoom);

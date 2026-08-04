@@ -92,12 +92,31 @@ const AdminEmergencyChatComponent = () => {
         return updatedList;
       });
 
-      // Nếu đang mở đúng hội thoại đó -> Thêm tin nhắn trực tiếp
+      // Nếu đang mở đúng hội thoại đó -> Cập nhật/Thêm tin nhắn trực tiếp
       if (selectedConversation && (message.conversation_id === selectedConversation.conversation_id || conversation?.conversation_id === selectedConversation.conversation_id)) {
         setMessages((prev) => {
-          if (prev.some((m) => m.message_id === message.message_id || m.id === message.message_id)) {
+          // 1. Kiểm tra xem tin nhắn chính thức đã tồn tại trong mảng chưa
+          if (prev.some((m) => (m.message_id && m.message_id === message.message_id) || (m.id && m.id === message.message_id))) {
             return prev;
           }
+
+          // 2. Tìm tin nhắn tạm tương ứng để thay thế
+          const tempIndex = prev.findIndex((m) => {
+            if (message.temp_id && (m.message_id === message.temp_id || m.temp_id === message.temp_id)) {
+              return true;
+            }
+            const isTempMsg = m.message_id?.toString().startsWith("temp_") || m.sender_id === "me" || m.is_me;
+            const isMyMsg = m.sender_id === "me" || (selectedConversation && m.sender_id !== selectedConversation.partner_id);
+            return isTempMsg && isMyMsg && m.content === message.content;
+          });
+
+          if (tempIndex !== -1) {
+            const updated = [...prev];
+            updated[tempIndex] = message;
+            return updated;
+          }
+
+          // 3. Nếu không phải tin nhắn tạm -> thêm mới vào danh sách
           return [...prev, message];
         });
       } else {
