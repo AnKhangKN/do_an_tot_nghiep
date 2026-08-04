@@ -57,11 +57,6 @@ class _AppReportScreenState extends State<AppReportScreen> {
       _titleController.clear();
       _contentController.clear();
       setState(() => _selectedCategory = 'BUG');
-      AppSnackBar.show(
-        context,
-        'Gửi báo cáo ứng dụng thành công!',
-        type: AppSnackBarType.success,
-      );
       context.push(RouterConstants.appReportHistory);
     } else {
       AppSnackBar.show(

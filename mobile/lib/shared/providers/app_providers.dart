@@ -22,6 +22,7 @@ import '../../features/chat/presentation/providers/chat_provider.dart';
 import '../../features/emergency_amenities/presentation/providers/amenity_provider.dart';
 import '../../features/dangerous_points/presentation/providers/geofence_provider.dart';
 import '../../features/settings/presentation/providers/settings_provider.dart';
+import '../../features/app_report/presentation/providers/app_report_provider.dart';
 import 'map_layer_provider.dart';
 
 class AppProviders extends StatelessWidget {
@@ -64,6 +65,10 @@ class AppProviders extends StatelessWidget {
         // SettingsProvider
         ChangeNotifierProvider(
           create: (_) => getIt<SettingsProvider>(),
+        ),
+        // AppReportProvider
+        ChangeNotifierProvider(
+          create: (_) => getIt<AppReportProvider>(),
         ),
         // MapLayerProvider
         ChangeNotifierProvider(

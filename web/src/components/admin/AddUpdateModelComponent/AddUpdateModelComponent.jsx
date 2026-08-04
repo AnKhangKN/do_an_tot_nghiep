@@ -39,7 +39,13 @@ const AddUpdateModelComponent = ({
         className={`bg-white dark:bg-gray-100 rounded-3xl ${maxWidth} w-full border border-gray-100 shadow-2xl flex flex-col overflow-hidden max-h-screen animate-in fade-in zoom-in-95 duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
-        <form onSubmit={onSubmit} className="flex flex-col overflow-hidden">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit?.(e);
+          }}
+          className="flex flex-col overflow-hidden"
+        >
           <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {headerIcon}
