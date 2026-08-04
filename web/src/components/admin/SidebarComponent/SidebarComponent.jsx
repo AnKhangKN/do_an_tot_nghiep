@@ -8,7 +8,6 @@ import {
   PiMapPinFill,
   PiChatCircleFill,
   PiGearFill,
-  PiTrophyFill,
   PiStorefrontFill,
   PiCaretLeftBold,
   PiRobotFill,
@@ -39,11 +38,6 @@ const SidebarComponent = () => {
       name: "Đơn kháng cáo",
       path: "/admin/appeal",
       icon: <PiHandsPrayingFill />,
-    },
-    {
-      name: "Hiệu suất Cứu hộ",
-      path: "/admin/rescuer-analytics",
-      icon: <PiTrophyFill />,
     },
     {
       name: "Kiểm duyệt AI",
