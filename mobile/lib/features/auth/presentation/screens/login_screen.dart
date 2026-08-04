@@ -48,13 +48,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _onKickedStateChanged() {
     final controller = getIt<SessionController>();
-    if (controller.kickedMessage != null && !_kickedDialogShown && mounted) {
+    final message = controller.kickedMessage;
+    if (message != null && !_kickedDialogShown && mounted) {
       _kickedDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (_) => KickedDialogWidget(message: controller.kickedMessage!),
+          builder: (_) => KickedDialogWidget(message: message),
         ).then((_) => _kickedDialogShown = false);
       });
     }
@@ -62,13 +63,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _checkKickedMessage() {
     final controller = getIt<SessionController>();
-    if (controller.kickedMessage != null && mounted) {
+    final message = controller.kickedMessage;
+    if (message != null && mounted) {
       _kickedDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (_) => KickedDialogWidget(message: controller.kickedMessage!),
+          builder: (_) => KickedDialogWidget(message: message),
         ).then((_) => _kickedDialogShown = false);
       });
     }
