@@ -22,9 +22,15 @@ class SessionController with ChangeNotifier {
   Position? get position => _state.position;
   bool get isProcessing => _state.isProcessing;
   bool get isSearchingRescuer => _state.isSearchingRescuer;
+  bool get isGuest => _state.isGuest;
 
   void setProcessing(bool value) {
     _state = _state.copyWith(isProcessing: value);
+    notifyListeners();
+  }
+
+  void setIsGuest(bool value) {
+    _state = _state.copyWith(isGuest: value);
     notifyListeners();
   }
 

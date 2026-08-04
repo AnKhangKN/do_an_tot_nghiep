@@ -2,13 +2,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/color_constants.dart';
+import '../../../../core/constants/router_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/storage/storage_service.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../shared/widgtes/image_picker_helper.dart';
 import '../../../auth/data/auth_repository.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/victim_map_provider.dart';
 import 'victim_searching_widget.dart';
 
@@ -76,9 +79,24 @@ class _VictimSosButtonWidgetState extends State<VictimSosButtonWidget>
     super.dispose();
   }
 
+  bool _isGuestPhoneSaved = false;
+
   Future<void> _loadSavedPhone() async {
     try {
       final storage = getIt<StorageService>();
+      final session = getIt<SessionController>();
+
+      if (session.isGuest) {
+        final guestPhone = await storage.getGuestPhone();
+        if (guestPhone != null && guestPhone.trim().isNotEmpty && mounted) {
+          phoneController.text = guestPhone.trim();
+          setState(() {
+            _isGuestPhoneSaved = true;
+          });
+          return;
+        }
+      }
+
       final savedPhone = await storage.getSavedPhone();
       if (savedPhone != null && savedPhone.trim().isNotEmpty && mounted) {
         phoneController.text = savedPhone.trim();
@@ -97,7 +115,7 @@ class _VictimSosButtonWidgetState extends State<VictimSosButtonWidget>
     }
   }
 
-  void _showSosForm() {
+  Future<void> _showSosForm() async {
     final session = getIt<SessionController>();
     final blocked = session.cancelBlockedMessage;
     if (blocked != null && blocked.isNotEmpty) {
@@ -110,6 +128,19 @@ class _VictimSosButtonWidgetState extends State<VictimSosButtonWidget>
       return;
     }
 
+    // 0. Kiểm tra giới hạn SOS cho tài khoản Guest (dựa vào isGuest hoặc phone đã lưu trên thiết bị)
+    final storageService = getIt<StorageService>();
+    final guestPhone = await storageService.getGuestPhone();
+    final bool isGuestDevice = session.isGuest || guestPhone != null;
+    if (isGuestDevice) {
+      final countToday = await storageService.getGuestSosCountToday();
+      if (countToday >= 2) {
+        if (!mounted) return;
+        _showGuestLimitDialog();
+        return;
+      }
+    }
+
     String? selectedSosImagePath;
 
     // Nếu danh sách loại sự cố chưa load thì mới fetch
@@ -117,6 +148,8 @@ class _VictimSosButtonWidgetState extends State<VictimSosButtonWidget>
     if (provider.incidentTypes.isEmpty) {
       provider.loadIncidentTypes();
     }
+
+    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -183,14 +216,33 @@ class _VictimSosButtonWidgetState extends State<VictimSosButtonWidget>
 
                             TextField(
                               controller: phoneController,
+                              readOnly: _isGuestPhoneSaved,
                               keyboardType: TextInputType.phone,
                               decoration: InputDecoration(
                                 labelText: "Số điện thoại",
+                                suffixIcon: _isGuestPhoneSaved
+                                    ? const Icon(Icons.lock_rounded, color: Colors.amber, size: 18)
+                                    : null,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                             ),
+                            if (_isGuestPhoneSaved) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.info_outline_rounded, size: 13, color: Colors.amber.shade900),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      'Số điện thoại đã được cố định cho tài khoản Khách trên thiết bị này.',
+                                      style: TextStyle(fontSize: 11, color: Colors.amber.shade900, fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
 
                             const SizedBox(height: 16),
 
@@ -366,6 +418,21 @@ class _VictimSosButtonWidgetState extends State<VictimSosButtonWidget>
                                               return;
                                             }
 
+                                            // 0. Kiểm tra giới hạn SOS cho tài khoản Guest (dựa vào isGuest hoặc phone đã lưu trên thiết bị)
+                                            final session = getIt<SessionController>();
+                                            final storageService = getIt<StorageService>();
+                                            final guestPhoneInner = await storageService.getGuestPhone();
+                                            final bool isGuestDeviceInner = session.isGuest || guestPhoneInner != null;
+
+                                            if (isGuestDeviceInner) {
+                                              final countToday = await storageService.getGuestSosCountToday();
+                                              if (countToday >= 2) {
+                                                if (!mounted) return;
+                                                _showGuestLimitDialog();
+                                                return;
+                                              }
+                                            }
+
                                             final success = await provider
                                                 .sendSos(
                                                   phoneController.text.trim(),
@@ -386,8 +453,14 @@ class _VictimSosButtonWidgetState extends State<VictimSosButtonWidget>
                                             if (!mounted) return;
 
                                             if (success) {
+                                              // Nếu là Guest thì tăng đếm số lần gửi SOS trong ngày & lưu SĐT cố định
+                                              if (isGuestDeviceInner) {
+                                                await storageService.incrementGuestSosCount();
+                                                await storageService.saveGuestPhone(phoneController.text.trim());
+                                              }
+
                                               // Lưu số điện thoại vừa gửi thành công vào Storage
-                                              await getIt<StorageService>()
+                                              await storageService
                                                   .saveSavedPhone(
                                                     phoneController.text.trim(),
                                                   );
@@ -620,6 +693,52 @@ class _VictimSosButtonWidgetState extends State<VictimSosButtonWidget>
           ),
         );
       },
+    );
+  }
+
+  void _showGuestLimitDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Giới Hạn Lượt Gửi SOS',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Tài khoản khách chỉ được gửi tối đa 2 yêu cầu cứu hộ khẩn cấp trong ngày.\n\nVui lòng đăng ký tài khoản chính thức để tiếp tục gửi cứu hộ không giới hạn!',
+          style: TextStyle(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Đóng', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await context.read<AuthProvider>().logout();
+              if (context.mounted) {
+                context.go(RouterConstants.register);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorConstants.redRescue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Đăng ký ngay', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 }

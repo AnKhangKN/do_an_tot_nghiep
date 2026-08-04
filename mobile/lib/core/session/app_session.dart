@@ -83,17 +83,21 @@ class AppSession {
     return _deviceId ??= await storageService.getOrCreateDeviceId();
   }
 
-  /// Xóa sạch storage (token, theme, settings, ban state...) NHƯNG GIỮ LẠI deviceId.
-  /// deviceId nhận diện VẬT LÝ thiết bị nên phải ổn định qua mọi lần logout/login
-  /// khác tài khoản trên cùng máy. Nếu để `clearAll()` xóa deviceId, lần login sau
-  /// sẽ sinh deviceId MỚI -> server tưởng là "thiết bị mới" và kick ngược chính
-  /// thiết bị đang dùng (single active session bị kick oan dù chỉ thao tác trên 1 máy).
+  /// Xóa sạch storage (token, theme, settings, ban state...) NHƯNG GIỮ LẠI deviceId và thông tin Guest của máy này.
   Future<void> _clearAllKeepDeviceId() async {
     final deviceId = await _ensureDeviceId();
+    final guestPhone = await storageService.getGuestPhone();
+    final guestSosCount = await storageService.getGuestSosCountToday();
+
     await storageService.clearAll();
     await storageService.clearToken();
     await storageService.saveDeviceId(deviceId);
     _deviceId = deviceId;
+
+    if (guestPhone != null && guestPhone.trim().isNotEmpty) {
+      await storageService.saveGuestPhone(guestPhone.trim());
+      await storageService.restoreGuestSosCount(guestSosCount);
+    }
   }
 
   // =========================
@@ -161,8 +165,11 @@ class AppSession {
             ? UserRole.rescuer
             : UserRole.victim;
 
+        final bool isGuest = profileResponse.email?.endsWith('@sos.guest') ?? false;
+
         _isInitialized = true;
         controller.setRole(userRole);
+        controller.setIsGuest(isGuest);
         controller.setLoggedIn(true);
 
         if (userRole == UserRole.rescuer) {
@@ -209,8 +216,11 @@ class AppSession {
                 ? UserRole.rescuer
                 : UserRole.victim;
 
+            final bool isGuest = profileResponse.email?.endsWith('@sos.guest') ?? false;
+
             _isInitialized = true;
             controller.setRole(userRole);
+            controller.setIsGuest(isGuest);
             controller.setLoggedIn(true);
 
             if (userRole == UserRole.rescuer) {

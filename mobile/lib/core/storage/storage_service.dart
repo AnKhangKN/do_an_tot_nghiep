@@ -116,4 +116,51 @@ class StorageService {
       'notifyHazard': notifyHazard == null ? true : notifyHazard == 'true',
     };
   }
+
+  // Quản lý giới hạn 2 lượt gửi SOS/ngày cho tài khoản khách (Guest)
+  static const String _guestSosDateKey = 'guest_sos_date';
+  static const String _guestSosCountKey = 'guest_sos_count';
+
+  /// Kiểm tra số lần gửi SOS trong ngày của Guest.
+  /// Nếu ngày lưu khác hôm nay thì tự động reset về 0.
+  Future<int> getGuestSosCountToday() async {
+    final nowStr = DateTime.now().toIso8601String().split('T')[0];
+    final lastDate = await _storage.read(key: _guestSosDateKey);
+
+    if (lastDate != nowStr) {
+      await _storage.write(key: _guestSosDateKey, value: nowStr);
+      await _storage.write(key: _guestSosCountKey, value: '0');
+      return 0;
+    }
+
+    final countStr = await _storage.read(key: _guestSosCountKey);
+    return int.tryParse(countStr ?? '0') ?? 0;
+  }
+
+  /// Tăng số lần gửi SOS trong ngày của Guest lên +1.
+  Future<void> incrementGuestSosCount() async {
+    final nowStr = DateTime.now().toIso8601String().split('T')[0];
+    final currentCount = await getGuestSosCountToday();
+    final newCount = currentCount + 1;
+    await _storage.write(key: _guestSosDateKey, value: nowStr);
+    await _storage.write(key: _guestSosCountKey, value: newCount.toString());
+  }
+
+  // Quản lý cố định 1 số điện thoại cho tài khoản Guest trên chiếc máy này
+  static const String _guestPhoneKey = 'guest_saved_phone';
+
+  Future<void> saveGuestPhone(String phone) async {
+    await _storage.write(key: _guestPhoneKey, value: phone);
+  }
+
+  Future<String?> getGuestPhone() async {
+    return _storage.read(key: _guestPhoneKey);
+  }
+
+  /// Khôi phục số lượt SOS Guest trong ngày (dùng khi dọn dẹp storage sau logout)
+  Future<void> restoreGuestSosCount(int count) async {
+    final nowStr = DateTime.now().toIso8601String().split('T')[0];
+    await _storage.write(key: _guestSosDateKey, value: nowStr);
+    await _storage.write(key: _guestSosCountKey, value: count.toString());
+  }
 }

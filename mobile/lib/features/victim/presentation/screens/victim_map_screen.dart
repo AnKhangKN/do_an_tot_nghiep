@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/color_constants.dart';
+import '../../../../core/constants/router_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/location/data/location_service.dart';
 import '../../../../core/location/data/location_repository.dart';
@@ -667,6 +669,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
 
               final sosId = sessionController.completedSosRequestId;
               final rName = sessionController.completedRescuerName;
+              final isGuest = sessionController.isGuest;
 
               return Positioned(
                 left: 16,
@@ -680,46 +683,97 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
                     border: Border.all(color: ColorConstants.success, width: 1.5),
                     boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
                   ),
-                  child: Row(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.check_circle, color: ColorConstants.success, size: 28),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Text(
-                          "Đã cứu hộ thành công!",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: ColorConstants.success,
-                            fontSize: 14,
+                      Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: ColorConstants.success, size: 28),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text(
+                              "Đã cứu hộ thành công!",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: ColorConstants.success,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
-                        ),
+                          if (sosId != null)
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                sessionController.dismissSuccessAlert();
+                                PostRescueCheckinDialog.show(
+                                  context,
+                                  sosRequestId: sosId,
+                                  rescuerName: rName,
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber.shade700,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const Icon(Icons.star, size: 16),
+                              label: const Text('Đánh giá', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: ColorConstants.success, size: 20),
+                            onPressed: () => sessionController.dismissSuccessAlert(),
+                          )
+                        ],
                       ),
-                      if (sosId != null)
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            sessionController.dismissSuccessAlert();
-                            PostRescueCheckinDialog.show(
-                              context,
-                              sosRequestId: sosId,
-                              rescuerName: rName,
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber.shade700,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      if (isGuest) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.amber.shade300),
                           ),
-                          icon: const Icon(Icons.star, size: 16),
-                          label: const Text('Đánh giá', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          child: Row(
+                            children: [
+                              Icon(Icons.person_add_rounded, color: Colors.amber.shade900, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  "Bạn đang dùng tài khoản khách. Hãy đăng ký tài khoản để lưu lịch sử cứu hộ!",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.amber.shade900,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              ElevatedButton(
+                                onPressed: () {
+                                  sessionController.dismissSuccessAlert();
+                                  context.push(RouterConstants.register);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber.shade800,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Text(
+                                  'Đăng ký',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: ColorConstants.success, size: 20),
-                        onPressed: () => sessionController.dismissSuccessAlert(),
-                      )
+                      ],
                     ],
                   ),
                 ),

@@ -3,11 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/di/di.dart';
+import '../../../../core/session/app_session.dart';
 import '../../../../core/session/session_controller.dart';
-import '../../../../core/socket/modules/victim_socket.dart';
 import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
 import '../../../../core/location/data/location_service.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../../../../shared/widgtes/image_picker_helper.dart';
 import '../../../../shared/widgtes/keyboard_safe_sheet.dart';
@@ -39,16 +40,94 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
   String? _selectedIncidentTypeId;
   XFile? _selectedImage;
   bool _isSubmitting = false;
+  bool _isPhoneSaved = false;
 
   @override
   void initState() {
     super.initState();
+    _loadSavedGuestPhone();
+    _checkGuestSosLimit();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<VictimMapProvider>();
       if (provider.incidentTypes.isEmpty) {
         provider.loadIncidentTypes();
       }
     });
+  }
+
+  Future<void> _checkGuestSosLimit() async {
+    try {
+      final storageService = getIt<StorageService>();
+      final countToday = await storageService.getGuestSosCountToday();
+      if (countToday >= 2 && mounted) {
+        // Đóng dialog nhập thông tin ngay lập tức
+        Navigator.of(context).pop();
+        _showLimitReachedDialog(context);
+      }
+    } catch (e) {
+      debugPrint("⚠️ Lỗi kiểm tra giới hạn lượt SOS guest: $e");
+    }
+  }
+
+  static void _showLimitReachedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Giới Hạn Lượt Gửi SOS',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Tài khoản khách chỉ được gửi tối đa 2 yêu cầu cứu hộ khẩn cấp trong ngày.\n\nVui lòng đăng ký tài khoản chính thức để tiếp tục gửi cứu hộ không giới hạn!',
+          style: TextStyle(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Đóng', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await context.read<AuthProvider>().logout();
+              if (context.mounted) {
+                context.go(RouterConstants.register);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorConstants.redRescue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Đăng ký ngay', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _loadSavedGuestPhone() async {
+    try {
+      final storage = getIt<StorageService>();
+      final savedPhone = await storage.getGuestPhone();
+      if (savedPhone != null && savedPhone.trim().isNotEmpty && mounted) {
+        setState(() {
+          _phoneController.text = savedPhone.trim();
+          _isPhoneSaved = true;
+        });
+      }
+    } catch (e) {
+      debugPrint("⚠️ Lỗi đọc số điện thoại guest đã lưu: $e");
+    }
   }
 
   @override
@@ -82,6 +161,16 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
       return;
     }
 
+    // 0. Kiểm tra giới hạn 2 lượt gửi SOS trong ngày cho tài khoản Guest
+    final storageService = getIt<StorageService>();
+    final countToday = await storageService.getGuestSosCountToday();
+
+    if (countToday >= 2) {
+      if (!mounted) return;
+      _showLimitReachedDialog(context);
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
@@ -92,8 +181,8 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
 
     final authProvider = context.read<AuthProvider>();
 
-    // 1. Thực hiện Đăng nhập ngầm dạng Guest
-    final success = await authProvider.guestLogin(phone, name);
+    // 1. Thực hiện Đăng nhập ngầm dạng Guest (chỉ lấy & lưu token, chưa kích hoạt appSession.init để ngắt GoRouter redirect sớm)
+    final success = await authProvider.guestLoginOnly(phone, name);
 
     if (!success || !mounted) {
       setState(() {
@@ -107,14 +196,7 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
       return;
     }
 
-    // 2. Kích hoạt listener socket của Victim để nhận phản hồi tìm cứu hộ
-    try {
-      getIt<VictimSocket>().listenSosNotFound();
-    } catch (e) {
-      debugPrint("⚠️ [GUEST SOS] Lỗi khi đăng ký socket listener: $e");
-    }
-
-    // 3. Lấy vị trí GPS (Ưu tiên lấy vị trí đã có trong SessionController)
+    // 2. Lấy vị trí GPS (Ưu tiên lấy vị trí đã có trong SessionController)
     final sessionController = getIt<SessionController>();
     var position = sessionController.state.position;
     position ??= await LocationService().getCurrentPosition();
@@ -133,36 +215,55 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
 
     if (!mounted) return;
 
-    // 4. Đặt trạng thái đang tìm kiếm cứu hộ NGAY LẬP TỨC để VictimSearchingWidget hiển thị khi vào map
-    sessionController.setSearchingRescuer(true);
+    // 3. Gửi yêu cầu SOS lên server TRƯỚC KHI chuyển màn hình
+    try {
+      final victimProvider = context.read<VictimMapProvider>();
+      final desc = description.isNotEmpty ? description : 'Cứu hộ khẩn cấp từ nạn nhân chưa có tài khoản';
 
-    // 5. Lấy reference provider trước khi pop (sau pop context có thể không còn hợp lệ)
-    final victimProvider = context.read<VictimMapProvider>();
-    final desc = description.isNotEmpty ? description : 'Cứu hộ khẩn cấp từ nạn nhân chưa có tài khoản';
-    final capturedPhone = phone;
-    final capturedIncidentTypeId = _selectedIncidentTypeId!;
-    final capturedImagePath = _selectedImage?.path;
-    final capturedLat = position.latitude;
-    final capturedLng = position.longitude;
+      final sosSuccess = await victimProvider.sendSos(
+        phone,
+        _selectedIncidentTypeId!,
+        desc,
+        position.latitude,
+        position.longitude,
+        imagePath: _selectedImage?.path,
+      );
 
-    // 6. Đóng dialog và navigate vào map ngay lập tức
-    Navigator.of(context).pop();
-    context.go(RouterConstants.map);
+      if (!mounted) return;
 
-    // 7. Gửi SOS lên server bất đồng bộ sau khi đã vào map
-    final sosSuccess = await victimProvider.sendSos(
-      capturedPhone,
-      capturedIncidentTypeId,
-      desc,
-      capturedLat,
-      capturedLng,
-      imagePath: capturedImagePath,
-    );
+      if (sosSuccess) {
+        // Tăng số lần gửi SOS trong ngày và lưu SĐT cố định cho thiết bị
+        await storageService.incrementGuestSosCount();
+        await storageService.saveGuestPhone(phone);
 
-    if (!sosSuccess) {
-      // Nếu gửi thất bại thì tắt trạng thái đang tìm kiếm
-      sessionController.setSearchingRescuer(false);
-      debugPrint("❌ [GUEST SOS] Gửi SOS thất bại: ${victimProvider.errorMessage}");
+        // 4. Khởi tạo session và kích hoạt GoRouter chuyển sang màn hình bản đồ
+        final appSession = getIt<AppSession>();
+        await appSession.init();
+        appSession.controller.setIsGuest(true);
+
+        if (mounted) {
+          context.go(RouterConstants.map);
+        }
+      } else {
+        setState(() {
+          _isSubmitting = false;
+        });
+        AppSnackBar.show(
+          context,
+          victimProvider.errorMessage ?? 'Gửi yêu cầu cứu hộ thất bại. Vui lòng thử lại!',
+          type: AppSnackBarType.error,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+      AppSnackBar.show(
+        context,
+        'Lỗi gửi cứu hộ: $e',
+        type: AppSnackBarType.error,
+      );
     }
   }
 
@@ -272,13 +373,19 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _phoneController,
+                      readOnly: _isPhoneSaved,
                       keyboardType: TextInputType.phone,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _isPhoneSaved ? ColorConstants.textMuted : ColorConstants.slateDark,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'Nhập SĐT của bạn (VD: 0912345678)',
                         prefixIcon: const Icon(Icons.phone_rounded, color: ColorConstants.dangerHigh, size: 20),
+                        suffixIcon: _isPhoneSaved ? const Icon(Icons.lock_rounded, color: Colors.amber, size: 18) : null,
                         filled: true,
-                        fillColor: ColorConstants.bgCanvas,
+                        fillColor: _isPhoneSaved ? Colors.grey.shade100 : ColorConstants.bgCanvas,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -305,6 +412,21 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
                         return null;
                       },
                     ),
+                    if (_isPhoneSaved) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, size: 13, color: Colors.amber.shade900),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Số điện thoại đã cố định cho tài khoản Khách trên thiết bị này.',
+                              style: TextStyle(fontSize: 11, color: Colors.amber.shade900, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
 
                     const SizedBox(height: 14),
 

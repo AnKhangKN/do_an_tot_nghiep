@@ -10,6 +10,8 @@ class SessionState {
   final bool isProcessing;
   // Trạng thái đang tìm cứu hộ viên (dành cho Victim)
   final bool isSearchingRescuer;
+  // Cờ nhận biết người dùng hiện tại là tài khoản khách (Guest)
+  final bool isGuest;
 
   const SessionState({
     required this.isLoggedIn,
@@ -18,6 +20,7 @@ class SessionState {
     this.position,
     required this.isProcessing,
     this.isSearchingRescuer = false,
+    this.isGuest = false,
   });
 
   factory SessionState.initial() {
@@ -28,6 +31,7 @@ class SessionState {
       position: null,
       isProcessing: false,
       isSearchingRescuer: false,
+      isGuest: false,
     );
   }
 
@@ -38,6 +42,7 @@ class SessionState {
     Position? position,
     bool? isProcessing,
     bool? isSearchingRescuer,
+    bool? isGuest,
   }) {
     return SessionState(
       isLoggedIn: isLoggedIn ?? this.isLoggedIn,
@@ -46,6 +51,7 @@ class SessionState {
       position: position ?? this.position,
       isProcessing: isProcessing ?? this.isProcessing,
       isSearchingRescuer: isSearchingRescuer ?? this.isSearchingRescuer,
+      isGuest: isGuest ?? this.isGuest,
     );
   }
 }

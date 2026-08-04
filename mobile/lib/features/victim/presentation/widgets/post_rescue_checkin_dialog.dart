@@ -2,8 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
+import 'package:mobile/core/session/session_controller.dart';
 import 'package:mobile/core/utils/app_snackbar.dart';
 import 'package:mobile/features/victim/data/victim_repository.dart';
+import 'package:mobile/shared/widgtes/keyboard_safe_sheet.dart';
 
 class PostRescueCheckinDialog extends StatefulWidget {
   final String sosRequestId;
@@ -67,11 +69,21 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        AppSnackBar.show(
-          context,
-          'Cảm ơn bạn! Đã ghi nhận xác nhận an toàn sau cứu hộ.',
-          type: AppSnackBarType.success,
-        );
+        final sessionController = getIt<SessionController>();
+        if (sessionController.isGuest) {
+          AppSnackBar.show(
+            context,
+            'Cảm ơn bạn! Hãy tạo tài khoản ngay để lưu lịch sử cứu hộ và bảo vệ tài khoản.',
+            type: AppSnackBarType.success,
+            duration: const Duration(seconds: 6),
+          );
+        } else {
+          AppSnackBar.show(
+            context,
+            'Cảm ơn bạn! Đã ghi nhận xác nhận an toàn sau cứu hộ.',
+            type: AppSnackBarType.success,
+          );
+        }
       }
     } catch (e) {
       debugPrint('Lỗi gửi post-rescue checkin: $e');
@@ -102,206 +114,231 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorConstants.surfaceWhite,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return KeyboardSafeSheet(
+      child: Container(
+        decoration: BoxDecoration(
+          color: ColorConstants.surfaceWhite,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
-      ),
-      child: SafeArea(
-        child: MediaQuery.removeViewInsets(
-          removeBottom: true,
-          context: context,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 16,
+          bottom: 16,
+        ),
+        child: DraggableScrollableSheet(
+          expand: false,
+          minChildSize: 0.3,
+          initialChildSize: 0.9,
+          maxChildSize: 1.0,
+          shouldCloseOnMinExtent: true,
+          builder: (context, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.only(bottom: bottomInset),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: ColorConstants.amenityGreen.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      Icons.health_and_safety_rounded,
-                      color: ColorConstants.amenityGreen,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Theo Dõi Sau Cứu Hộ',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: ColorConstants.slateDark,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.rescuerName != null
-                              ? 'Ca hỗ trợ của ${widget.rescuerName} đã hoàn thành'
-                              : 'Ca cứu hộ của bạn đã hoàn thành',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorConstants.textMuted,
-                          ),
-                        ),
-                      ],
+                  // Thanh gạch ngang nhỏ
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: ColorConstants.borderDark,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: Icon(Icons.close, color: ColorConstants.textMuted),
+
+                  // Header
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: ColorConstants.amenityGreen.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.health_and_safety_rounded,
+                          color: ColorConstants.amenityGreen,
+                          size: 26,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Theo Dõi Sau Cứu Hộ',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: ColorConstants.slateDark,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.rescuerName != null
+                                  ? 'Ca hỗ trợ của ${widget.rescuerName} đã hoàn thành'
+                                  : 'Ca cứu hộ của bạn đã hoàn thành',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: ColorConstants.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(Icons.close, color: ColorConstants.textMuted),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Trạng thái Sức khỏe (Health Status Selection)
+                  Text(
+                    'Tình trạng sức khỏe hiện tại của bạn:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: ColorConstants.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildHealthChip(
+                        label: '✅ Tôi Đã An Toàn',
+                        value: 'SAFE',
+                        color: ColorConstants.amenityGreen,
+                      ),
+                      _buildHealthChip(
+                        label: '🏥 Cần Kiểm Tra Y Tế',
+                        value: 'NEEDS_MEDICAL_CHECK',
+                        color: ColorConstants.dangerHigh,
+                      ),
+                      _buildHealthChip(
+                        label: '🩹 Đang Hồi Phục',
+                        value: 'RECOVERING',
+                        color: ColorConstants.dangerMedium,
+                      ),
+                      _buildHealthChip(
+                        label: '💬 Khác / Ý Kiến Khác',
+                        value: 'OTHER',
+                        color: ColorConstants.purpleQR,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Đánh giá Cứu hộ viên (Overall + 3 khía cạnh)
+                  Text(
+                    'Đánh giá chất lượng hỗ trợ:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: ColorConstants.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      final starIndex = index + 1;
+                      return IconButton(
+                        onPressed: () => setState(() => _selectedRating = starIndex),
+                        icon: Icon(
+                          starIndex <= _selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
+                          color: Colors.amber.shade600,
+                          size: 36,
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 8),
+
+                  _buildAspectStarRow(
+                    label: '⚡ Tốc độ phản ứng',
+                    value: _responseSpeed,
+                    onChanged: (v) => setState(() => _responseSpeed = v),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildAspectStarRow(
+                    label: '🤝 Thái độ phục vụ',
+                    value: _attitude,
+                    onChanged: (v) => setState(() => _attitude = v),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildAspectStarRow(
+                    label: '🛟 Mức độ hỗ trợ',
+                    value: _supportLevel,
+                    onChanged: (v) => setState(() => _supportLevel = v),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Ô nhập Ghi chú / Phản hồi
+                  TextField(
+                    controller: _notesController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: 'Nhập phản hồi hoặc ghi chú sức khỏe bổ sung...',
+                      hintStyle: TextStyle(fontSize: 12, color: ColorConstants.textMuted),
+                      filled: true,
+                      fillColor: ColorConstants.bgCanvas,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: ColorConstants.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: ColorConstants.border),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Submit Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: _isSubmitting ? null : _handleSubmit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ColorConstants.amenityGreen,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                      ),
+                      icon: _isSubmitting
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.check_circle_rounded),
+                      label: Text(
+                        _isSubmitting ? 'Đang gửi...' : 'Gửi Xác Nhận An Toàn',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-
-              // Trạng thái Sức khỏe (Health Status Selection)
-              Text(
-                'Tình trạng sức khỏe hiện tại của bạn:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: ColorConstants.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildHealthChip(
-                    label: '✅ Tôi Đã An Toàn',
-                    value: 'SAFE',
-                    color: ColorConstants.amenityGreen,
-                  ),
-                  _buildHealthChip(
-                    label: '🏥 Cần Kiểm Tra Y Tế',
-                    value: 'NEEDS_MEDICAL_CHECK',
-                    color: ColorConstants.dangerHigh,
-                  ),
-                  _buildHealthChip(
-                    label: '🩹 Đang Hồi Phục',
-                    value: 'RECOVERING',
-                    color: ColorConstants.dangerMedium,
-                  ),
-                  _buildHealthChip(
-                    label: '💬 Khác / Ý Kiến Khác',
-                    value: 'OTHER',
-                    color: ColorConstants.purpleQR,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Đánh giá Cứu hộ viên (Overall + 3 khía cạnh)
-              Text(
-                'Đánh giá chất lượng hỗ trợ:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: ColorConstants.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  final starIndex = index + 1;
-                  return IconButton(
-                    onPressed: () => setState(() => _selectedRating = starIndex),
-                    icon: Icon(
-                      starIndex <= _selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
-                      color: Colors.amber.shade600,
-                      size: 36,
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 8),
-
-              _buildAspectStarRow(
-                label: '⚡ Tốc độ phản ứng',
-                value: _responseSpeed,
-                onChanged: (v) => setState(() => _responseSpeed = v),
-              ),
-              const SizedBox(height: 8),
-              _buildAspectStarRow(
-                label: '🤝 Thái độ phục vụ',
-                value: _attitude,
-                onChanged: (v) => setState(() => _attitude = v),
-              ),
-              const SizedBox(height: 8),
-              _buildAspectStarRow(
-                label: '🛟 Mức độ hỗ trợ',
-                value: _supportLevel,
-                onChanged: (v) => setState(() => _supportLevel = v),
-              ),
-              const SizedBox(height: 16),
-
-              // Ô nhập Ghi chú / Phản hồi
-              TextField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Nhập phản hồi hoặc ghi chú sức khỏe bổ sung...',
-                  hintStyle: TextStyle(fontSize: 12, color: ColorConstants.textMuted),
-                  filled: true,
-                  fillColor: ColorConstants.bgCanvas,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: ColorConstants.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: ColorConstants.border),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Submit Button
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: _isSubmitting ? null : _handleSubmit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorConstants.amenityGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 2,
-                  ),
-                  icon: _isSubmitting
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.check_circle_rounded),
-                  label: Text(
-                    _isSubmitting ? 'Đang gửi...' : 'Gửi Xác Nhận An Toàn',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
-      ),
       ),
     );
   }

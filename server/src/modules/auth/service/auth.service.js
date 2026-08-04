@@ -214,7 +214,12 @@ class AuthService {
 
             let user = await this.userService.findUserByPhone(client, { phone: cleanPhone });
 
-            if (!user) {
+            if (user) {
+                const isGuestUser = user.email && user.email.endsWith('@sos.guest');
+                if (!isGuestUser) {
+                    throwError("Số điện thoại này đã được đăng ký tài khoản chính thức. Vui lòng đăng nhập để gửi yêu cầu cứu hộ!", 400);
+                }
+            } else {
                 user = await this.userService.createUser(client, {
                     email,
                     fullName: fullName || "Nạn nhân Khách",

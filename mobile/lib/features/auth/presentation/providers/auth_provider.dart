@@ -150,6 +150,38 @@ class AuthProvider extends ChangeNotifier {
       if (accessToken.isNotEmpty && refreshToken.isNotEmpty) {
         await storageService.saveToken(accessToken, refreshToken);
         await appSession.init();
+        appSession.controller.setIsGuest(true);
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      error = _parseError(e);
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Thực hiện đăng nhập Guest, lưu token nhưng CHƯA gọi appSession.init()
+  /// để tránh GoRouter kích hoạt redirect trước khi gửi xong SOS.
+  Future<bool> guestLoginOnly(String phone, String fullName) async {
+    try {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+
+      final result = await authRepository.guestLogin(
+        phone: phone,
+        fullName: fullName,
+      );
+
+      final accessToken = result.accessToken;
+      final refreshToken = result.refreshToken;
+
+      if (accessToken.isNotEmpty && refreshToken.isNotEmpty) {
+        await storageService.saveToken(accessToken, refreshToken);
         return true;
       }
 
