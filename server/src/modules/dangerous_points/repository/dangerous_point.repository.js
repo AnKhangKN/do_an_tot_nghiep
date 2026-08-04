@@ -44,7 +44,12 @@ class DangerousPointRepository {
             u_reporter.full_name as reporter_name,
             u_approver.full_name as approver_name
         FROM ${this.dangerousPointModel.table} dp
-        LEFT JOIN images img ON img.entity_type = 'DANGEROUS_POINT' AND img.entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+        LEFT JOIN LATERAL (
+            SELECT url FROM images
+            WHERE entity_type = 'DANGEROUS_POINT' AND entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) img ON true
         LEFT JOIN users u_reporter ON dp.${this.dangerousPointModel.field.reportedBy} = u_reporter.user_id
         LEFT JOIN users u_approver ON dp.${this.dangerousPointModel.field.approvedBy} = u_approver.user_id
         ORDER BY dp.${this.dangerousPointModel.field.createdAt} DESC
@@ -80,7 +85,12 @@ class DangerousPointRepository {
         const query = `
         SELECT dp.*, img.url AS image_url
         FROM ${this.dangerousPointModel.table} dp
-        LEFT JOIN images img ON img.entity_type = 'DANGEROUS_POINT' AND img.entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+        LEFT JOIN LATERAL (
+            SELECT url FROM images
+            WHERE entity_type = 'DANGEROUS_POINT' AND entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) img ON true
         WHERE dp.${this.dangerousPointModel.field.status} = 'APPROVED'
         ORDER BY dp.${this.dangerousPointModel.field.createdAt} DESC
         `;
@@ -97,7 +107,12 @@ class DangerousPointRepository {
         const query = `
         SELECT dp.*, img.url AS image_url
         FROM ${this.dangerousPointModel.table} dp
-        LEFT JOIN images img ON img.entity_type = 'DANGEROUS_POINT' AND img.entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+        LEFT JOIN LATERAL (
+            SELECT url FROM images
+            WHERE entity_type = 'DANGEROUS_POINT' AND entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) img ON true
         WHERE dp.${this.dangerousPointModel.field.reportedBy} = $1
         ORDER BY dp.${this.dangerousPointModel.field.createdAt} DESC
         `;
@@ -114,7 +129,12 @@ class DangerousPointRepository {
         const query = `
         SELECT dp.*, img.url AS image_url
         FROM ${this.dangerousPointModel.table} dp
-        LEFT JOIN images img ON img.entity_type = 'DANGEROUS_POINT' AND img.entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+        LEFT JOIN LATERAL (
+            SELECT url FROM images
+            WHERE entity_type = 'DANGEROUS_POINT' AND entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) img ON true
         WHERE dp.${this.dangerousPointModel.field.dangerousPointId} = $1
         `;
 
@@ -350,8 +370,18 @@ class DangerousPointRepository {
                 ))) AS distance_meters
             FROM dangerous_points dp1
             JOIN dangerous_points dp2 ON dp1.dangerous_point_id < dp2.dangerous_point_id
-            LEFT JOIN images img1 ON img1.entity_id = dp1.dangerous_point_id AND img1.entity_type = 'DANGEROUS_POINT'
-            LEFT JOIN images img2 ON img2.entity_id = dp2.dangerous_point_id AND img2.entity_type = 'DANGEROUS_POINT'
+            LEFT JOIN LATERAL (
+                SELECT url FROM images
+                WHERE entity_type = 'DANGEROUS_POINT' AND entity_id = dp1.dangerous_point_id
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) img1 ON true
+            LEFT JOIN LATERAL (
+                SELECT url FROM images
+                WHERE entity_type = 'DANGEROUS_POINT' AND entity_id = dp2.dangerous_point_id
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) img2 ON true
             WHERE dp1.status <> 'REJECTED'
               AND dp2.status <> 'REJECTED'
               AND (6371000 * 2 * ASIN(SQRT(
