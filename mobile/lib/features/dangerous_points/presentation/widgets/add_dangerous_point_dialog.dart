@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile/core/constants/color_constants.dart';
 import 'package:mobile/core/di/di.dart';
 import 'package:mobile/core/dangerous_points/data/dangerous_point_repository.dart';
 import 'package:mobile/core/utils/app_snackbar.dart';
+import 'package:mobile/shared/widgtes/image_picker_helper.dart';
 import 'package:mobile/shared/widgtes/keyboard_safe_sheet.dart';
 
 class AddDangerousPointDialog extends StatefulWidget {
@@ -37,9 +40,9 @@ class AddDangerousPointDialog extends StatefulWidget {
 class _AddDangerousPointDialogState extends State<AddDangerousPointDialog> {
   final _formKey = GlobalKey<FormState>();
   final _zoneNameController = TextEditingController();
-  final _addressController = TextEditingController();
   final _descriptionController = TextEditingController();
   String _selectedDangerLevel = 'MEDIUM';
+  XFile? _selectedImage;
   bool _isLoading = false;
 
   final List<String> _dangerLevels = ['LOW', 'MEDIUM', 'HIGH'];
@@ -47,56 +50,182 @@ class _AddDangerousPointDialogState extends State<AddDangerousPointDialog> {
   @override
   void dispose() {
     _zoneNameController.dispose();
-    _addressController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    if (_formKey.currentState?.validate() ?? false) {
+  Future<void> _pickImage() async {
+    final image = await ImagePickerHelper.pickImage(context);
+    if (image != null) {
       setState(() {
-        _isLoading = true;
+        _selectedImage = image;
       });
+    }
+  }
 
-      try {
-        final repository = getIt<DangerousPointRepository>();
-        await repository.createDangerousPoint(
-          zoneName: _zoneNameController.text.trim(),
-          address: _addressController.text.trim().isEmpty
-              ? null
-              : _addressController.text.trim(),
-          description: _descriptionController.text.trim().isEmpty
-              ? null
-              : _descriptionController.text.trim(),
-          latitude: widget.latitude,
-          longitude: widget.longitude,
-          dangerLevel: _selectedDangerLevel,
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    if (_selectedImage == null) {
+      AppSnackBar.show(
+        context,
+        'Vui lòng chụp hoặc tải lên hình ảnh điểm nguy hiểm (*)',
+        type: AppSnackBarType.warning,
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final repository = getIt<DangerousPointRepository>();
+      await repository.createDangerousPoint(
+        zoneName: _zoneNameController.text.trim(),
+        description: _descriptionController.text.trim().isEmpty
+            ? null
+            : _descriptionController.text.trim(),
+        latitude: widget.latitude,
+        longitude: widget.longitude,
+        dangerLevel: _selectedDangerLevel,
+        imagePath: _selectedImage?.path,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        AppSnackBar.show(
+          context,
+          'Báo cáo điểm nguy hiểm thành công!',
+          type: AppSnackBarType.success,
         );
-
-        if (mounted) {
-          Navigator.of(context).pop();
-          AppSnackBar.show(
-            context,
-            'Báo cáo điểm nguy hiểm thành công!',
-            type: AppSnackBarType.success,
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          AppSnackBar.show(
-            context,
-            'Đã xảy ra lỗi. Vui lòng thử lại!',
-            type: AppSnackBarType.error,
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          'Đã xảy ra lỗi. Vui lòng thử lại!',
+          type: AppSnackBarType.error,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
+  }
+
+  Widget _buildImagePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Hình ảnh điểm nguy hiểm *',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: ColorConstants.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '(Bắt buộc)',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: ColorConstants.redRescue,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (_selectedImage == null)
+          GestureDetector(
+            onTap: _isLoading ? null : _pickImage,
+            child: Container(
+              height: 100,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: ColorConstants.bgCanvas,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: ColorConstants.border,
+                  width: 1.5,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: ColorConstants.redRescue.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.add_a_photo_rounded,
+                      color: ColorConstants.redRescue,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Chụp hoặc chọn ảnh thực tế (*)',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: ColorConstants.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.file(
+                  File(_selectedImage!.path),
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: GestureDetector(
+                  onTap: _isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            _selectedImage = null;
+                          });
+                        },
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Colors.black60,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
   }
 
   @override
@@ -172,7 +301,7 @@ class _AddDangerousPointDialogState extends State<AddDangerousPointDialog> {
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Vui lòng cung cấp thông tin chi tiết',
+                                'Vui lòng cung cấp thông tin và hình ảnh thực tế',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: ColorConstants.textSecondary,
@@ -233,44 +362,8 @@ class _AddDangerousPointDialogState extends State<AddDangerousPointDialog> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Địa chỉ
-                    Text(
-                      'Địa chỉ (tùy chọn)',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: ColorConstants.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _addressController,
-                      decoration: InputDecoration(
-                        hintText: 'Ví dụ: Đường ABC, Quận 1',
-                        filled: true,
-                        fillColor: ColorConstants.bgCanvas,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: ColorConstants.border),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(color: ColorConstants.border),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(
-                            color: ColorConstants.slateDark,
-                            width: 1.5,
-                          ),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                      ),
-                      enabled: !_isLoading,
-                    ),
+                    // Hình ảnh chứng minh (*)
+                    _buildImagePicker(),
                     const SizedBox(height: 16),
 
                     // Mức độ nguy hiểm

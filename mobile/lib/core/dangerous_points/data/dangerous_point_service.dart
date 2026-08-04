@@ -7,11 +7,39 @@ class DangerousPointService {
   DangerousPointService(this.dio);
 
   Future<Response> createDangerousPoint(Map<String, dynamic> data) async {
-    final res = await dio.post(
-      ApiEndpoints.dangerousPoints,
-      data: data,
-    );
-    return res;
+    final String? imagePath = data['imagePath']?.toString();
+
+    if (imagePath != null && imagePath.isNotEmpty && !imagePath.startsWith('http')) {
+      final formDataMap = <String, dynamic>{
+        'zoneName': data['zoneName'],
+        'latitude': data['latitude'].toString(),
+        'longitude': data['longitude'].toString(),
+        'dangerLevel': data['dangerLevel'],
+        'image': await MultipartFile.fromFile(
+          imagePath,
+          filename: imagePath.split('/').last,
+        ),
+      };
+
+      if (data['address'] != null && data['address'].toString().isNotEmpty) {
+        formDataMap['address'] = data['address'];
+      }
+      if (data['description'] != null && data['description'].toString().isNotEmpty) {
+        formDataMap['description'] = data['description'];
+      }
+
+      final formData = FormData.fromMap(formDataMap);
+
+      return await dio.post(
+        ApiEndpoints.dangerousPoints,
+        data: formData,
+      );
+    } else {
+      return await dio.post(
+        ApiEndpoints.dangerousPoints,
+        data: data,
+      );
+    }
   }
 
   Future<Response> getApprovedDangerousPoints() async {

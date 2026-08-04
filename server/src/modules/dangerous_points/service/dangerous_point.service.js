@@ -10,7 +10,7 @@ class DangerousPointService {
         this.dangerousPointModel = dangerousPointModel
     }
 
-    async createDangerousPoint({ zoneName, address, description, latitude, longitude, dangerLevel, reportedBy }) {
+    async createDangerousPoint({ zoneName, address, description, latitude, longitude, dangerLevel, reportedBy, imageUrl }) {
         const textContent = [zoneName, address, description].filter(Boolean).join(" - ");
         if (textContent) {
             const aiModerationService = require("@modules/ai_moderation/service/ai_moderation.service");
@@ -23,7 +23,7 @@ class DangerousPointService {
         const dangerousPointId = generateUUID()
 
         const row = await transaction(async (client) => {
-            return await this.dangerousPointRepository.createDangerousPoint(client, {
+            const createdRow = await this.dangerousPointRepository.createDangerousPoint(client, {
                 dangerousPointId,
                 zoneName,
                 address,
@@ -32,7 +32,18 @@ class DangerousPointService {
                 longitude,
                 dangerLevel,
                 reportedBy
-            })
+            });
+
+            if (imageUrl) {
+                const imageService = require("@modules/image/service/image.service");
+                await imageService.createImage(client, {
+                    url: imageUrl,
+                    entityType: 'DANGEROUS_POINT',
+                    entityId: dangerousPointId
+                });
+            }
+
+            return createdRow;
         })
 
         if (textContent) {
@@ -40,7 +51,10 @@ class DangerousPointService {
             aiModerationService.processModerationAsync("DANGEROUS_POINT", dangerousPointId, textContent);
         }
 
-        return mapFields(row, this.dangerousPointModel)
+        return {
+            ...mapFields(row, this.dangerousPointModel),
+            imageUrl: imageUrl || null
+        }
     }
 
     async getDangerousPointsAdmin({ page, limit }) {

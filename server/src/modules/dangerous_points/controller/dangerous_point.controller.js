@@ -5,6 +5,7 @@ class DangerousPointController {
         try {
             const { zoneName, address, description, latitude, longitude, dangerLevel } = req.body;
             const reportedBy = req.userId;
+            const imageUrl = req.file?.path || req.body.imageUrl || req.body.image_url || req.body.imagePath || null;
 
             const result = await dangerousPointService.createDangerousPoint({
                 zoneName,
@@ -13,7 +14,8 @@ class DangerousPointController {
                 latitude,
                 longitude,
                 dangerLevel,
-                reportedBy
+                reportedBy,
+                imageUrl
             });
 
             return res.status(201).json({

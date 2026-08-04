@@ -2,11 +2,12 @@ const express = require('express');
 const { validatorCreateDangerousPoint } = require('../validator/dangerous_point.validator');
 const adminDangerousPointController = require('../controller/admin_dangerous_point.controller');
 const dangerousPointController = require('../controller/dangerous_point.controller');
+const { uploadDangerousPointSingle } = require('@/middlewares/uploads/dangerous_point.middleware');
 const { verifyToken, isAdmin } = require('@/middlewares/auth.middleware');
 const route = express.Router();
 
 // Routes for regular users & rescuers
-route.post('/', verifyToken, validatorCreateDangerousPoint, dangerousPointController.createDangerousPoint);
+route.post('/', verifyToken, uploadDangerousPointSingle, validatorCreateDangerousPoint, dangerousPointController.createDangerousPoint);
 route.get('/approved', dangerousPointController.getApprovedDangerousPoints);
 route.get('/my', verifyToken, dangerousPointController.getMyDangerousPoints);
 route.post('/:id/feedbacks', verifyToken, dangerousPointController.createFeedback);

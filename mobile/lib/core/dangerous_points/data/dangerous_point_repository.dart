@@ -13,6 +13,7 @@ class DangerousPointRepository {
     required double latitude,
     required double longitude,
     required String dangerLevel,
+    String? imagePath,
   }) async {
     final res = await dangerousPointService.createDangerousPoint({
       'zoneName': zoneName,
@@ -21,6 +22,7 @@ class DangerousPointRepository {
       'latitude': latitude,
       'longitude': longitude,
       'dangerLevel': dangerLevel,
+      if (imagePath != null) 'imagePath': imagePath,
     });
 
     return DangerousPointModel.fromJson(res.data['data']);

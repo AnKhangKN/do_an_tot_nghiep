@@ -42,9 +42,11 @@ class DangerousPointRepository {
         const query = `
         SELECT 
             dp.*,
+            img.url AS image_url,
             u_reporter.full_name as reporter_name,
             u_approver.full_name as approver_name
         FROM ${this.dangerousPointModel.table} dp
+        LEFT JOIN images img ON img.entity_type = 'DANGEROUS_POINT' AND img.entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
         LEFT JOIN users u_reporter ON dp.${this.dangerousPointModel.field.reportedBy} = u_reporter.user_id
         LEFT JOIN users u_approver ON dp.${this.dangerousPointModel.field.approvedBy} = u_approver.user_id
         ORDER BY dp.${this.dangerousPointModel.field.createdAt} DESC
@@ -66,6 +68,7 @@ class DangerousPointRepository {
         return {
             data: dataResult.rows.map(row => ({
                 ...mapFields(row, this.dangerousPointModel),
+                imageUrl: row.image_url || null,
                 reporterName: row.reporter_name || (row.reported_by === null ? 'Hệ thống' : '--'),
                 approverName: row.approver_name
             })),
@@ -77,39 +80,52 @@ class DangerousPointRepository {
 
     async getApprovedDangerousPoints() {
         const query = `
-        SELECT *
-        FROM ${this.dangerousPointModel.table}
-        WHERE ${this.dangerousPointModel.field.status} = 'APPROVED'
-        ORDER BY ${this.dangerousPointModel.field.createdAt} DESC
+        SELECT dp.*, img.url AS image_url
+        FROM ${this.dangerousPointModel.table} dp
+        LEFT JOIN images img ON img.entity_type = 'DANGEROUS_POINT' AND img.entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+        WHERE dp.${this.dangerousPointModel.field.status} = 'APPROVED'
+        ORDER BY dp.${this.dangerousPointModel.field.createdAt} DESC
         `;
 
         const { rows } = await pool.query(query);
 
-        return rows.map(row => mapFields(row, this.dangerousPointModel));
+        return rows.map(row => ({
+            ...mapFields(row, this.dangerousPointModel),
+            imageUrl: row.image_url || null
+        }));
     }
 
     async getDangerousPointsByReporter(userId) {
         const query = `
-        SELECT *
-        FROM ${this.dangerousPointModel.table}
-        WHERE ${this.dangerousPointModel.field.reportedBy} = $1
-        ORDER BY ${this.dangerousPointModel.field.createdAt} DESC
+        SELECT dp.*, img.url AS image_url
+        FROM ${this.dangerousPointModel.table} dp
+        LEFT JOIN images img ON img.entity_type = 'DANGEROUS_POINT' AND img.entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+        WHERE dp.${this.dangerousPointModel.field.reportedBy} = $1
+        ORDER BY dp.${this.dangerousPointModel.field.createdAt} DESC
         `;
 
         const { rows } = await pool.query(query, [userId]);
 
-        return rows.map(row => mapFields(row, this.dangerousPointModel));
+        return rows.map(row => ({
+            ...mapFields(row, this.dangerousPointModel),
+            imageUrl: row.image_url || null
+        }));
     }
 
     async getDangerousPointById(dangerousPointId) {
         const query = `
-        SELECT *
-        FROM ${this.dangerousPointModel.table}
-        WHERE ${this.dangerousPointModel.field.dangerousPointId} = $1
+        SELECT dp.*, img.url AS image_url
+        FROM ${this.dangerousPointModel.table} dp
+        LEFT JOIN images img ON img.entity_type = 'DANGEROUS_POINT' AND img.entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
+        WHERE dp.${this.dangerousPointModel.field.dangerousPointId} = $1
         `;
 
         const { rows } = await pool.query(query, [dangerousPointId]);
-        return rows[0] ? mapFields(rows[0], this.dangerousPointModel) : null;
+        if (!rows[0]) return null;
+        return {
+            ...mapFields(rows[0], this.dangerousPointModel),
+            imageUrl: rows[0].image_url || null
+        };
     }
 
     async updateStatus(client, { dangerousPointId, status, approvedBy }) {

@@ -169,6 +169,50 @@ const AIModerationPage = () => {
         <span className="text-xs text-gray-500 whitespace-nowrap">{formatTime(row.createdAt)}</span>
       )
     },
+    {
+      key: 'actions',
+      title: 'Thao tác',
+      render: (row) => {
+        const logId = row.logId || row.log_id;
+        const isUpdating = updatingId === logId;
+
+        return (
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
+            {/* Nút Xem Chi tiết */}
+            <button
+              onClick={() => setSelectedLog(row)}
+              className="p-1.5 px-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition-all cursor-pointer border border-gray-200 flex items-center gap-1"
+              title="Xem chi tiết phân tích AI"
+            >
+              <PiEyeFill size={14} />
+              <span>Chi tiết</span>
+            </button>
+
+            {/* Nút Đánh dấu An toàn (Bỏ qua cờ) */}
+            <button
+              disabled={isUpdating || row.actionTaken === 'DISMISSED'}
+              onClick={() => handleReview(logId, 'DISMISSED')}
+              className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-all cursor-pointer border border-emerald-200 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Đánh dấu nội dung An toàn (Bỏ qua vi phạm)"
+            >
+              <PiCheckCircleFill size={14} />
+              <span>Bỏ qua / An toàn</span>
+            </button>
+
+            {/* Nút Xác nhận Vi phạm (Duyệt vi phạm) */}
+            <button
+              disabled={isUpdating || row.actionTaken === 'APPROVED'}
+              onClick={() => handleReview(logId, 'APPROVED')}
+              className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition-all cursor-pointer border border-rose-200 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Xác nhận vi phạm và tự động xử lý thực thể gốc"
+            >
+              <PiWarningFill size={14} />
+              <span>Duyệt vi phạm</span>
+            </button>
+          </div>
+        );
+      }
+    }
   ];
 
   return (
@@ -243,9 +287,9 @@ const AIModerationPage = () => {
             >
               <option value="">Tất cả trạng thái</option>
               <option value="NONE">Chưa xử lý</option>
-              <option value="APPROVED">Đã duyệt</option>
+              <option value="APPROVED">Đã duyệt vi phạm</option>
               <option value="REQUIRES_ADMIN_REVIEW">Chờ xem xét</option>
-              <option value="DISMISSED">Đã bác bỏ cờ</option>
+              <option value="DISMISSED">Đã bỏ qua / an toàn</option>
             </select>
           </div>
         </div>
@@ -272,25 +316,25 @@ const AIModerationPage = () => {
         open={!!selectedLog}
         onClose={() => setSelectedLog(null)}
         title="Chi tiết Phân tích & Kiểm duyệt AI"
-        subtitle={selectedLog ? `Log ID: ${selectedLog.logId}` : undefined}
+        subtitle={selectedLog ? `Log ID: ${selectedLog.logId || selectedLog.log_id}` : undefined}
         actions={[
           {
             key: 'dismiss',
-            label: 'An toàn',
-            variant: 'warning',
+            label: 'Đánh dấu An toàn (Bỏ qua)',
+            variant: 'secondary',
             disabled:
-              updatingId === selectedLog?.logId || selectedLog?.actionTaken === 'DISMISSED',
-            loading: updatingId === selectedLog?.logId,
-            onClick: () => handleReview(selectedLog.logId, 'DISMISSED'),
+              updatingId === (selectedLog?.logId || selectedLog?.log_id) || selectedLog?.actionTaken === 'DISMISSED',
+            loading: updatingId === (selectedLog?.logId || selectedLog?.log_id),
+            onClick: () => handleReview(selectedLog?.logId || selectedLog?.log_id, 'DISMISSED'),
           },
           {
             key: 'approve',
-            label: 'Vi phạm',
+            label: 'Xác nhận Vi phạm (Duyệt)',
             variant: 'danger',
             disabled:
-              updatingId === selectedLog?.logId || selectedLog?.actionTaken === 'APPROVED',
-            loading: updatingId === selectedLog?.logId,
-            onClick: () => handleReview(selectedLog.logId, 'APPROVED'),
+              updatingId === (selectedLog?.logId || selectedLog?.log_id) || selectedLog?.actionTaken === 'APPROVED',
+            loading: updatingId === (selectedLog?.logId || selectedLog?.log_id),
+            onClick: () => handleReview(selectedLog?.logId || selectedLog?.log_id, 'APPROVED'),
           },
         ]}
       >

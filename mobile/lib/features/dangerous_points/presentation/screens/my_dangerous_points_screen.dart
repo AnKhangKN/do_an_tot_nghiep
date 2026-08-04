@@ -289,12 +289,14 @@ class _MyDangerousPointsScreenState extends State<MyDangerousPointsScreen> {
                 ],
               ),
               const Divider(height: 32),
-              _buildDetailItem(
-                icon: Icons.location_on_outlined,
-                title: 'Địa chỉ',
-                content: point.address ?? 'Chưa cập nhật địa chỉ',
-              ),
-              const SizedBox(height: 14),
+              if (point.address != null && point.address!.isNotEmpty) ...[
+                _buildDetailItem(
+                  icon: Icons.location_on_outlined,
+                  title: 'Địa chỉ',
+                  content: point.address!,
+                ),
+                const SizedBox(height: 14),
+              ],
               _buildDetailItem(
                 icon: Icons.my_location_rounded,
                 title: 'Tọa độ GPS',
@@ -314,6 +316,35 @@ class _MyDangerousPointsScreenState extends State<MyDangerousPointsScreen> {
                 title: 'Thời gian đóng góp',
                 content: _formatFullDate(point.createdAt),
               ),
+              if (point.imageUrl != null && point.imageUrl!.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text(
+                  'Hình ảnh chứng minh thực tế',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: ColorConstants.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    point.imageUrl!,
+                    height: 160,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(child: Icon(Icons.broken_image_rounded, color: Colors.grey)),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
