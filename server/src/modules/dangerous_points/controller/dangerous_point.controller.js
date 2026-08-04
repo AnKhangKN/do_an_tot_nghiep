@@ -3,13 +3,12 @@ const dangerousPointService = require("../service/dangerous_point.service");
 class DangerousPointController {
     async createDangerousPoint(req, res, next) {
         try {
-            const { zoneName, address, description, latitude, longitude, dangerLevel } = req.body;
+            const { zoneName, description, latitude, longitude, dangerLevel } = req.body;
             const reportedBy = req.userId;
             const imageUrl = req.file?.path || req.body.imageUrl || req.body.image_url || req.body.imagePath || null;
 
             const result = await dangerousPointService.createDangerousPoint({
                 zoneName,
-                address,
                 description,
                 latitude,
                 longitude,

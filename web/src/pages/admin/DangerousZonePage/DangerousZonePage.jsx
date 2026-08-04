@@ -12,9 +12,16 @@ import {
   PiCheckCircleFill,
   PiFireFill,
   PiXBold,
+  PiXCircleFill,
+  PiWarningBold,
+  PiCheckCircleBold,
 } from 'react-icons/pi';
 
-const columns = () => [
+const getErrorMessage = (error) => {
+  return error?.response?.data?.message || "Đã có lỗi xảy ra. Vui lòng thử lại!";
+};
+
+const columns = ({ onApprove, onReject, loading }) => [
   {
     key: 'index',
     title: 'STT',
@@ -29,15 +36,6 @@ const columns = () => [
       <span className="font-semibold text-gray-900 text-sm leading-snug block max-w-[180px]">
         {row.zoneName || '--'}
       </span>
-    ),
-  },
-  {
-    key: 'address',
-    title: 'Địa chỉ',
-    render: (row) => (
-      <p className="text-xs text-gray-600 leading-relaxed max-w-[200px] line-clamp-2 overflow-hidden">
-        {row.address || '--'}
-      </p>
     ),
   },
   {
@@ -124,7 +122,34 @@ const columns = () => [
         {formatTime(row.createdAt)}
       </span>
     ),
-  }
+  },
+  {
+    key: 'action',
+    title: 'Thao tác',
+    render: (row) => {
+      if (row.status !== 'PENDING') return null;
+      return (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); onApprove(row.dangerousPointId); }}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition-all border border-emerald-200 disabled:opacity-50 cursor-pointer"
+          >
+            <PiCheckCircleFill size={14} />
+            Duyệt
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onReject(row.dangerousPointId); }}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold transition-all border border-rose-200 disabled:opacity-50 cursor-pointer"
+          >
+            <PiXCircleFill size={14} />
+            Từ chối
+          </button>
+        </div>
+      );
+    },
+  },
 ];
 
 const DangerousZonePage = () => {
@@ -136,6 +161,12 @@ const DangerousZonePage = () => {
   const [autoDetecting, setAutoDetecting] = useState(false);
   const [detectMsg, setDetectMsg] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (msg, type = "success") => {
+    setToastMessage({ msg, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   const toggleExpandRow = (key) => {
     setExpandedRows((prev) => ({
@@ -166,6 +197,7 @@ const DangerousZonePage = () => {
     try {
       setActionLoading(true);
       await approveDangerousZone(dangerousPointId);
+      showToast("Đã duyệt điểm nguy hiểm thành công!");
       if (page === 1) {
         fetchDangerousZones();
       } else {
@@ -173,6 +205,7 @@ const DangerousZonePage = () => {
       }
     } catch (error) {
       console.error(error);
+      showToast(getErrorMessage(error), "error");
     } finally {
       setActionLoading(false);
     }
@@ -182,6 +215,7 @@ const DangerousZonePage = () => {
     try {
       setActionLoading(true);
       await rejectDangerousZone(dangerousPointId);
+      showToast("Đã từ chối điểm nguy hiểm!");
       if (page === 1) {
         fetchDangerousZones();
       } else {
@@ -189,6 +223,7 @@ const DangerousZonePage = () => {
       }
     } catch (error) {
       console.error(error);
+      showToast(getErrorMessage(error), "error");
     } finally {
       setActionLoading(false);
     }
@@ -252,6 +287,23 @@ const DangerousZonePage = () => {
 
   return (
     <div className="space-y-4">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div
+          className={`fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-xl border transition-all animate-bounce ${toastMessage.type === "error"
+            ? "bg-red-900 text-white border-red-800"
+            : "bg-gray-900 text-white border-gray-800"
+            }`}
+        >
+          {toastMessage.type === "error" ? (
+            <PiWarningBold className="text-xl text-red-400 shrink-0" />
+          ) : (
+            <PiCheckCircleBold className="text-xl text-emerald-400 shrink-0" />
+          )}
+          <span className="text-sm font-medium">{toastMessage.msg}</span>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Quản lý điểm nguy hiểm</h1>
@@ -371,7 +423,7 @@ const DangerousZonePage = () => {
                           {finalType.text}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 font-medium">Vùng nguy hiểm: <strong className="text-gray-900">{fb.zoneName}</strong> ({fb.address})</p>
+                      <p className="text-xs text-gray-600 font-medium">Vùng nguy hiểm: <strong className="text-gray-900">{fb.zoneName}</strong></p>
                       {fb.comment && <p className="text-xs text-gray-700 bg-white dark:bg-gray-100 p-2 rounded-xl border border-gray-200 mt-1">"{fb.comment}"</p>}
                     </div>
                     <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{formatTime(fb.createdAt)}</span>

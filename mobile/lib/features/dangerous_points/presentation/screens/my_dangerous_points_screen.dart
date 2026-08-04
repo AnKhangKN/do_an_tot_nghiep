@@ -173,26 +173,6 @@ class _MyDangerousPointsScreenState extends State<MyDangerousPointsScreen> {
                     ),
                   ],
                 ),
-                if (point.address != null && point.address!.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined, size: 16, color: ColorConstants.textSecondary),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          point.address!,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: ColorConstants.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -289,14 +269,6 @@ class _MyDangerousPointsScreenState extends State<MyDangerousPointsScreen> {
                 ],
               ),
               const Divider(height: 32),
-              if (point.address != null && point.address!.isNotEmpty) ...[
-                _buildDetailItem(
-                  icon: Icons.location_on_outlined,
-                  title: 'Địa chỉ',
-                  content: point.address!,
-                ),
-                const SizedBox(height: 14),
-              ],
               _buildDetailItem(
                 icon: Icons.my_location_rounded,
                 title: 'Tọa độ GPS',

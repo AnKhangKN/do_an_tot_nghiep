@@ -12,20 +12,18 @@ class DangerousPointRepository {
         INSERT INTO ${this.dangerousPointModel.table}
             (${this.dangerousPointModel.field.dangerousPointId},
              ${this.dangerousPointModel.field.zoneName},
-             ${this.dangerousPointModel.field.address},
              ${this.dangerousPointModel.field.description},
              ${this.dangerousPointModel.field.latitude},
              ${this.dangerousPointModel.field.longitude},
              ${this.dangerousPointModel.field.dangerLevel},
              ${this.dangerousPointModel.field.reportedBy})
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
     `;
 
         const result = await client.query(query, [
             data.dangerousPointId,
             data.zoneName,
-            data.address,
             data.description,
             data.latitude,
             data.longitude,
@@ -199,17 +197,16 @@ class DangerousPointRepository {
     async createSystemDangerousPoint(client, data) {
         const query = `
         INSERT INTO dangerous_points (
-            dangerous_point_id, zone_name, address, description,
+            dangerous_point_id, zone_name, description,
             latitude, longitude, danger_level, status, reported_by
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING', NULL)
+        VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', NULL)
         RETURNING *
         `;
 
         const result = await client.query(query, [
             data.dangerousPointId,
             data.zoneName,
-            data.address,
             data.description,
             data.latitude,
             data.longitude,
@@ -291,7 +288,7 @@ class DangerousPointRepository {
     async getFeedbacksAdmin({ page = 1, limit = 20 } = {}) {
         const offset = (page - 1) * limit;
         const query = `
-            SELECT f.*, dp.zone_name, dp.address, u.full_name AS user_name, u.role AS user_role
+            SELECT f.*, dp.zone_name, u.full_name AS user_name, u.role AS user_role
             FROM dangerous_point_feedbacks f
             JOIN dangerous_points dp ON f.dangerous_point_id = dp.dangerous_point_id
             LEFT JOIN users u ON f.user_id = u.user_id
@@ -309,7 +306,6 @@ class DangerousPointRepository {
                 feedbackId: r.feedback_id,
                 dangerousPointId: r.dangerous_point_id,
                 zoneName: r.zone_name,
-                address: r.address,
                 userId: r.user_id,
                 userName: r.user_name || 'Người dùng',
                 userRole: r.user_role || 'VICTIM',

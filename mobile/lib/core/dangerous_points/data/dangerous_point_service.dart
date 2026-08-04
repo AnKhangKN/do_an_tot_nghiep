@@ -21,9 +21,6 @@ class DangerousPointService {
         ),
       };
 
-      if (data['address'] != null && data['address'].toString().isNotEmpty) {
-        formDataMap['address'] = data['address'];
-      }
       if (data['description'] != null && data['description'].toString().isNotEmpty) {
         formDataMap['description'] = data['description'];
       }

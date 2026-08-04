@@ -178,16 +178,6 @@ const AIModerationPage = () => {
 
         return (
           <div className="flex items-center gap-1.5 whitespace-nowrap">
-            {/* Nút Xem Chi tiết */}
-            <button
-              onClick={() => setSelectedLog(row)}
-              className="p-1.5 px-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition-all cursor-pointer border border-gray-200 flex items-center gap-1"
-              title="Xem chi tiết phân tích AI"
-            >
-              <PiEyeFill size={14} />
-              <span>Chi tiết</span>
-            </button>
-
             {/* Nút Đánh dấu An toàn (Bỏ qua cờ) */}
             <button
               disabled={isUpdating || row.actionTaken === 'DISMISSED'}

@@ -131,15 +131,6 @@ class _AddDangerousPointDialogState extends State<AddDangerousPointDialog> {
                 color: ColorConstants.textPrimary,
               ),
             ),
-            const SizedBox(width: 6),
-            Text(
-              '(Bắt buộc)',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: ColorConstants.redRescue,
-              ),
-            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -210,8 +201,8 @@ class _AddDangerousPointDialogState extends State<AddDangerousPointDialog> {
                         },
                   child: Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Colors.black60,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

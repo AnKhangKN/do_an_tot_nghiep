@@ -10,8 +10,8 @@ class DangerousPointService {
         this.dangerousPointModel = dangerousPointModel
     }
 
-    async createDangerousPoint({ zoneName, address, description, latitude, longitude, dangerLevel, reportedBy, imageUrl }) {
-        const textContent = [zoneName, address, description].filter(Boolean).join(" - ");
+    async createDangerousPoint({ zoneName, description, latitude, longitude, dangerLevel, reportedBy, imageUrl }) {
+        const textContent = [zoneName, description].filter(Boolean).join(" - ");
         if (textContent) {
             const aiModerationService = require("@modules/ai_moderation/service/ai_moderation.service");
             const spamCheck = await aiModerationService.checkKnownSpamText(textContent);
@@ -26,7 +26,6 @@ class DangerousPointService {
             const createdRow = await this.dangerousPointRepository.createDangerousPoint(client, {
                 dangerousPointId,
                 zoneName,
-                address,
                 description,
                 latitude,
                 longitude,
@@ -108,14 +107,12 @@ class DangerousPointService {
                 const dangerousPointId = generateUUID();
                 const dangerLevel = cluster.sosCount >= 5 ? 'HIGH' : 'MEDIUM';
                 const zoneName = `Điểm nóng SOS (Tự động phát hiện ${cluster.sosCount} ca)`;
-                const address = `Khu vực có mật độ cứu hộ cao (${cluster.avgLat.toFixed(4)}, ${cluster.avgLng.toFixed(4)})`;
                 const description = `Hệ thống phân tích dữ liệu tự động ghi nhận ${cluster.sosCount} ca SOS phát sinh trong bán kính 200m. Cần Admin kiểm duyệt.`;
 
                 await transaction(async (client) => {
                     await this.dangerousPointRepository.createSystemDangerousPoint(client, {
                         dangerousPointId,
                         zoneName,
-                        address,
                         description,
                         latitude: cluster.avgLat,
                         longitude: cluster.avgLng,

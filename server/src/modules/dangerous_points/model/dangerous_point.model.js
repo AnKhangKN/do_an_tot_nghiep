@@ -4,7 +4,6 @@ const dangerousPointModel = {
     field: {
         dangerousPointId: 'dangerous_point_id',
         zoneName: 'zone_name',
-        address: 'address',
         description: 'description',
         latitude: 'latitude',
         longitude: 'longitude',

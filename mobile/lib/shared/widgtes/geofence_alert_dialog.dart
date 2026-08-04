@@ -140,13 +140,6 @@ class GeofenceAlertDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (point.address != null && point.address!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      point.address!,
-                      style: TextStyle(fontSize: 13, color: ColorConstants.textSecondary),
-                    ),
-                  ],
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,

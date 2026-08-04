@@ -708,7 +708,7 @@ const MapPage = () => {
                 position: [parseFloat(item.latitude), parseFloat(item.longitude)],
                 dangerLevel,
                 type: dangerLevel === "HIGH" ? "fire" : "accident",
-                name: item.zoneName || item.address || "Điểm nguy hiểm",
+                name: item.zoneName || "Điểm nguy hiểm",
                 radius: dangerLevelRadius[dangerLevel] || 200,
                 color: dangerLevelColor[dangerLevel] || "#dc2626",
               };

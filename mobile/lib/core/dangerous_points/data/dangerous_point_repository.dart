@@ -8,7 +8,6 @@ class DangerousPointRepository {
 
   Future<DangerousPointModel> createDangerousPoint({
     required String zoneName,
-    String? address,
     String? description,
     required double latitude,
     required double longitude,
@@ -17,7 +16,6 @@ class DangerousPointRepository {
   }) async {
     final res = await dangerousPointService.createDangerousPoint({
       'zoneName': zoneName,
-      'address': address,
       'description': description,
       'latitude': latitude,
       'longitude': longitude,

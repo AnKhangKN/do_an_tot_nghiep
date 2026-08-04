@@ -1,7 +1,6 @@
 class DangerousPointModel {
   final String dangerousPointId;
   final String zoneName;
-  final String? address;
   final String? description;
   final double latitude;
   final double longitude;
@@ -16,7 +15,6 @@ class DangerousPointModel {
   DangerousPointModel({
     required this.dangerousPointId,
     required this.zoneName,
-    this.address,
     this.description,
     required this.latitude,
     required this.longitude,
@@ -33,7 +31,6 @@ class DangerousPointModel {
     return DangerousPointModel(
       dangerousPointId: json['dangerousPointId']?.toString() ?? json['dangerous_point_id']?.toString() ?? '',
       zoneName: json['zoneName']?.toString() ?? json['zone_name']?.toString() ?? '',
-      address: json['address']?.toString(),
       description: json['description']?.toString(),
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
