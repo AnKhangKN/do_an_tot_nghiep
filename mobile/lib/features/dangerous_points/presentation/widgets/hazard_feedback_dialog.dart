@@ -150,21 +150,22 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets;
-
     return Container(
       decoration: BoxDecoration(
         color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.only(
-        bottom: viewInsets.bottom + 16,
+      padding: const EdgeInsets.only(
+        bottom: 16,
         top: 12,
         left: 20,
         right: 20,
       ),
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+      child: MediaQuery.removeViewInsets(
+        removeBottom: true,
+        context: context,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,6 +341,7 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

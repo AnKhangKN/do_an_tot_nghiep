@@ -109,7 +109,7 @@ class _RescuerRegisterScreenState extends State<RescuerRegisterScreen> {
     final provider = context.watch<RescuerRegisterProvider>();
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: ColorConstants.backgroundLight,
       appBar: AppBar(
         backgroundColor: ColorConstants.surfaceWhite,

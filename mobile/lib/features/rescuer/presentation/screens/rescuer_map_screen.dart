@@ -393,31 +393,33 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
           ListenableBuilder(
             listenable: getIt<GeofenceProvider>(),
             builder: (context, _) {
-              return MapWidget(
-                mapController: _mapController,
-                position: position,
-                partnerPosition: isRescuing && activeRescue != null
-                    ? LatLng(activeRescue.victimLat, activeRescue.victimLng)
-                    : null,
-                partnerMarkerChild: const Icon(Icons.location_on, color: ColorConstants.redRescue, size: 40),
-                additionalMarkers: [
-                  if (mapLayerProvider.showDangerousPoints) ..._buildDangerousPointMarkers(position),
-                  if (mapLayerProvider.showAmenities) ..._buildAmenityMarkers(context),
-                ],
-                polylines: [
-                  if (context.watch<AmenityProvider>().isNavigating && context.watch<AmenityProvider>().routePoints.isNotEmpty)
-                    Polyline(
-                      points: context.watch<AmenityProvider>().routePoints,
-                      strokeWidth: 5.0,
-                      color: ColorConstants.secondary,
-                    ),
-                  if (isRescuing && _routePoints.isNotEmpty)
-                    Polyline(
-                      points: _routePoints,
-                      strokeWidth: 5.0,
-                      color: ColorConstants.primary,
-                    ),
-                ],
+              return RepaintBoundary(
+                child: MapWidget(
+                  mapController: _mapController,
+                  position: position,
+                  partnerPosition: isRescuing && activeRescue != null
+                      ? LatLng(activeRescue.victimLat, activeRescue.victimLng)
+                      : null,
+                  partnerMarkerChild: const Icon(Icons.location_on, color: ColorConstants.redRescue, size: 40),
+                  additionalMarkers: [
+                    if (mapLayerProvider.showDangerousPoints) ..._buildDangerousPointMarkers(position),
+                    if (mapLayerProvider.showAmenities) ..._buildAmenityMarkers(context),
+                  ],
+                  polylines: [
+                    if (context.watch<AmenityProvider>().isNavigating && context.watch<AmenityProvider>().routePoints.isNotEmpty)
+                      Polyline(
+                        points: context.watch<AmenityProvider>().routePoints,
+                        strokeWidth: 5.0,
+                        color: ColorConstants.secondary,
+                      ),
+                    if (isRescuing && _routePoints.isNotEmpty)
+                      Polyline(
+                        points: _routePoints,
+                        strokeWidth: 5.0,
+                        color: ColorConstants.primary,
+                      ),
+                  ],
+                ),
               );
             },
           ),

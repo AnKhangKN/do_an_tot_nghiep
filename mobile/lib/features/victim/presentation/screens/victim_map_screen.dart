@@ -423,29 +423,31 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
               final currentRescuerPos = sessionController.rescuerPosition;
               final mapLayerProvider = context.read<MapLayerProvider>();
 
-              return MapWidget(
-                mapController: _mapController,
-                position: currentPosition,
-                partnerPosition: isBeingRescued ? currentRescuerPos : null,
-                partnerMarkerChild: const Icon(Icons.airport_shuttle, color: ColorConstants.amenityGreen, size: 40),
-                additionalMarkers: [
-                  if (mapLayerProvider.showDangerousPoints) ..._buildDangerousPointMarkers(currentPosition),
-                  if (mapLayerProvider.showAmenities) ..._buildAmenityMarkers(context),
-                ],
-                polylines: [
-                  if (context.watch<AmenityProvider>().isNavigating && context.watch<AmenityProvider>().routePoints.isNotEmpty)
-                    Polyline(
-                      points: context.watch<AmenityProvider>().routePoints,
-                      strokeWidth: 5.0,
-                      color: ColorConstants.secondary,
-                    ),
-                  if (isBeingRescued && _routePoints.isNotEmpty)
-                    Polyline(
-                      points: _routePoints,
-                      strokeWidth: 5.0,
-                      color: ColorConstants.primary,
-                    ),
-                ],
+              return RepaintBoundary(
+                child: MapWidget(
+                  mapController: _mapController,
+                  position: currentPosition,
+                  partnerPosition: isBeingRescued ? currentRescuerPos : null,
+                  partnerMarkerChild: const Icon(Icons.airport_shuttle, color: ColorConstants.amenityGreen, size: 40),
+                  additionalMarkers: [
+                    if (mapLayerProvider.showDangerousPoints) ..._buildDangerousPointMarkers(currentPosition),
+                    if (mapLayerProvider.showAmenities) ..._buildAmenityMarkers(context),
+                  ],
+                  polylines: [
+                    if (context.watch<AmenityProvider>().isNavigating && context.watch<AmenityProvider>().routePoints.isNotEmpty)
+                      Polyline(
+                        points: context.watch<AmenityProvider>().routePoints,
+                        strokeWidth: 5.0,
+                        color: ColorConstants.secondary,
+                      ),
+                    if (isBeingRescued && _routePoints.isNotEmpty)
+                      Polyline(
+                        points: _routePoints,
+                        strokeWidth: 5.0,
+                        color: ColorConstants.primary,
+                      ),
+                  ],
+                ),
               );
             },
           ),

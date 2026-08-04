@@ -16,7 +16,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   void _openMessengerDetail(ConversationModel conversation) {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (context) => MessengerScreen(conversation: conversation),
       ),
@@ -278,4 +278,3 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
-

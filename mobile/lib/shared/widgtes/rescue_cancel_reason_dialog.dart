@@ -61,7 +61,6 @@ class _RescueCancelReasonSheetState extends State<_RescueCancelReasonSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
     return Material(
       color: ColorConstants.surfaceWhite,
       borderRadius: const BorderRadius.only(
@@ -75,8 +74,12 @@ class _RescueCancelReasonSheetState extends State<_RescueCancelReasonSheet> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(20, 18, 20, 16 + viewInsets),
-            child: Column(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+            child: MediaQuery.removeViewInsets(
+              removeBottom: true,
+              context: context,
+              child: SingleChildScrollView(
+                child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -106,9 +109,9 @@ class _RescueCancelReasonSheetState extends State<_RescueCancelReasonSheet> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                     itemCount: RescueCancelReasonDialog._presetReasons.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 4),
                     itemBuilder: (context, index) {
@@ -127,7 +130,6 @@ class _RescueCancelReasonSheetState extends State<_RescueCancelReasonSheet> {
                         activeColor: ColorConstants.danger,
                       );
                     },
-                  ),
                 ),
                 if (_selected == 'Lý do khác') ...[
                   const SizedBox(height: 8),
@@ -196,7 +198,9 @@ class _RescueCancelReasonSheetState extends State<_RescueCancelReasonSheet> {
                   child: const Text('Quay lại', style: TextStyle(fontSize: 13)),
                 ),
               ],
+              ),
             ),
+          ),
           ),
         ),
       ),

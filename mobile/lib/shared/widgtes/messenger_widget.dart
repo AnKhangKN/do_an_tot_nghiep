@@ -44,7 +44,7 @@ class MessengerWidget extends StatelessWidget {
           sosRequestId: sosRequestId,
         );
         if (context.mounted) {
-          await Navigator.of(context).push(
+          await Navigator.of(context, rootNavigator: true).push(
             MaterialPageRoute(
               builder: (context) => MessengerScreen(conversation: conv),
             ),

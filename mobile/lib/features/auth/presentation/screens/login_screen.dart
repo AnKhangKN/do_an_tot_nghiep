@@ -190,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: ColorConstants.backgroundLight,
       body: SafeArea(
         child: SingleChildScrollView(

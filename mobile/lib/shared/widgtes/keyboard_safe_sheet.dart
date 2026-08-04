@@ -7,19 +7,14 @@ class KeyboardSafeSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 100),
-      curve: Curves.decelerate,
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: MediaQuery.removeViewInsets(
-        removeBottom: true,
-        context: context,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-          ),
-          child: child,
+    return MediaQuery.removeViewInsets(
+      removeBottom: true,
+      context: context,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
         ),
+        child: RepaintBoundary(child: child),
       ),
     );
   }

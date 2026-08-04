@@ -74,6 +74,7 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: widget.navigationShell,
       bottomNavigationBar: ListenableBuilder(
         listenable: Listenable.merge([

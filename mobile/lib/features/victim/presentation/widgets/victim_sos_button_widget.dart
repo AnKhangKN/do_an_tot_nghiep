@@ -12,7 +12,6 @@ import '../../../auth/data/auth_repository.dart';
 import '../providers/victim_map_provider.dart';
 import 'victim_searching_widget.dart';
 
-
 class VictimSosButtonWidget extends StatefulWidget {
   final double? victimLat;
   final double? victimLng;
@@ -24,17 +23,14 @@ class VictimSosButtonWidget extends StatefulWidget {
   });
 
   @override
-  State<VictimSosButtonWidget> createState() =>
-      _VictimSosButtonWidgetState();
+  State<VictimSosButtonWidget> createState() => _VictimSosButtonWidgetState();
 }
 
-class _VictimSosButtonWidgetState
-    extends State<VictimSosButtonWidget> with SingleTickerProviderStateMixin {
-  final TextEditingController phoneController =
-  TextEditingController();
+class _VictimSosButtonWidgetState extends State<VictimSosButtonWidget>
+    with SingleTickerProviderStateMixin {
+  final TextEditingController phoneController = TextEditingController();
 
-  final TextEditingController descriptionController =
-  TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
 
   String? selectedIncidentTypeId;
 
@@ -143,292 +139,311 @@ class _VictimSosButtonWidgetState
                       top: Radius.circular(24),
                     ),
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: 20,
-                      right: 20,
-                      top: 12,
-                      bottom:
-                      MediaQuery.of(context).viewInsets.bottom +
-                          20,
-                    ),
-                    child: ListView(
-                      controller: scrollController,
-                      children: [
-                        Center(
-                          child: Container(
-                            width: 50,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.grey.shade700
-                                  : Colors.grey.shade300,
-                              borderRadius:
-                              BorderRadius.circular(10),
+                  child: MediaQuery.removeViewInsets(
+                    removeBottom: true,
+                    context: context,
+                    child: RepaintBoundary(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          left: 20,
+                          right: 20,
+                          top: 12,
+                          bottom: 20,
+                        ),
+                        child: ListView(
+                          controller: scrollController,
+                          children: [
+                            Center(
+                              child: Container(
+                                width: 50,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade700
+                                      : Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
 
-                        const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-                        const Text(
-                          "Yêu cầu cứu hộ",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        TextField(
-                          controller: phoneController,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            labelText: "Số điện thoại",
-                            border: OutlineInputBorder(
-                              borderRadius:
-                              BorderRadius.circular(12),
+                            const Text(
+                              "Yêu cầu cứu hộ",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ),
 
-                        const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                        Consumer<VictimMapProvider>(
-                          builder: (context, provider, child) {
-                            if (provider.loadingIncidentTypes) {
-                              return const Center(
-                                child:
-                                CircularProgressIndicator(),
-                              );
-                            }
-
-                            return DropdownButtonFormField<
-                                String>(
-                              value: selectedIncidentTypeId,
+                            TextField(
+                              controller: phoneController,
+                              keyboardType: TextInputType.phone,
                               decoration: InputDecoration(
-                                labelText: "Loại sự cố",
+                                labelText: "Số điện thoại",
                                 border: OutlineInputBorder(
-                                  borderRadius:
-                                  BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              items: provider.incidentTypes
-                                  .map(
-                                    (item) =>
-                                    DropdownMenuItem<String>(
-                                      value:
-                                      item.incidentTypeId,
-                                      child: Text(item.incidentType),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            Consumer<VictimMapProvider>(
+                              builder: (context, provider, child) {
+                                if (provider.loadingIncidentTypes) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+
+                                return DropdownButtonFormField<String>(
+                                  value: selectedIncidentTypeId,
+                                  decoration: InputDecoration(
+                                    labelText: "Loại sự cố",
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                              )
-                                  .toList(),
-                              onChanged: (value) {
-                                setBottomSheetState(() {
-                                  selectedIncidentTypeId =
-                                      value;
-                                });
-                              },
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        TextField(
-                          controller: descriptionController,
-                          maxLines: 3,
-                          decoration: InputDecoration(
-                            labelText: "Mô tả chi tiết",
-                            border: OutlineInputBorder(
-                              borderRadius:
-                              BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        Text(
-                          "Ảnh hiện trường (Không bắt buộc)",
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
-                        ),
-                        const SizedBox(height: 8),
-
-                        if (selectedSosImagePath == null)
-                          OutlinedButton.icon(
-                            onPressed: () async {
-                              final xfile = await ImagePickerHelper.pickImage(context);
-                              if (xfile != null) {
-                                setBottomSheetState(() {
-                                  selectedSosImagePath = xfile.path;
-                                });
-                              }
-                            },
-                            icon: const Icon(Icons.add_a_photo_outlined, color: Colors.redAccent),
-                            label: const Text('Chụp / Chọn ảnh hiện trường', style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.w600)),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.red.shade200),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                          )
-                        else
-                          Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.file(
-                                  File(selectedSosImagePath!),
-                                  height: 140,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Positioned(
-                                top: 6,
-                                right: 6,
-                                child: GestureDetector(
-                                  onTap: () {
+                                  ),
+                                  items: provider.incidentTypes
+                                      .map(
+                                        (item) => DropdownMenuItem<String>(
+                                          value: item.incidentTypeId,
+                                          child: Text(item.incidentType),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (value) {
                                     setBottomSheetState(() {
-                                      selectedSosImagePath = null;
+                                      selectedIncidentTypeId = value;
                                     });
                                   },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.6),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.close, color: Colors.white, size: 18),
-                                  ),
+                                );
+                              },
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            TextField(
+                              controller: descriptionController,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                labelText: "Mô tả chi tiết",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
 
+                            const SizedBox(height: 16),
 
-                        const SizedBox(height: 24),
+                            Text(
+                              "Ảnh hiện trường (Không bắt buộc)",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
 
-                        Consumer<VictimMapProvider>(
-                          builder: (context, provider, child) {
-                            return SizedBox(
-                              height: 55,
-                              child: ElevatedButton(
-                                onPressed: provider.loading
-                                    ? null
-                                    : () async {
-                                  if (phoneController.text.trim().isEmpty) {
-                                    AppSnackBar.show(
-                                      context,
-                                      "Vui lòng nhập số điện thoại liên hệ để gửi cứu hộ!",
-                                      type: AppSnackBarType.error,
-                                    );
-                                    return;
-                                  }
-
-                                  if (selectedIncidentTypeId ==
-                                      null) {
-                                    AppSnackBar.show(
-                                      context,
-                                      "Vui lòng chọn loại sự cố",
-                                    );
-                                    return;
-                                  }
-
-                                  if (widget.victimLat == null || widget.victimLng == null) {
-                                    AppSnackBar.show(
-                                      context,
-                                      "Không thể xác định vị trí hiện tại của bạn. Vui lòng bật định vị GPS!",
-                                    );
-                                    return;
-                                  }
-
-                                  final success =
-                                  await provider.sendSos(
-                                    phoneController.text
-                                        .trim(),
-                                    selectedIncidentTypeId!,
-                                    descriptionController
-                                        .text
-                                        .trim()
-                                        .isEmpty
-                                        ? null
-                                        : descriptionController
-                                        .text
-                                        .trim(),
-                                    widget.victimLat!,
-                                    widget.victimLng!,
-                                    imagePath: selectedSosImagePath,
-                                  );
-
-
-                                  if (!mounted) return;
-
-                                  if (success) {
-                                    // Lưu số điện thoại vừa gửi thành công vào Storage
-                                    await getIt<StorageService>().saveSavedPhone(
-                                      phoneController.text.trim(),
-                                    );
-
-                                    Navigator.pop(
-                                        context);
-
-                                    AppSnackBar.show(
-                                      context,
-                                      "Đã gửi yêu cầu cứu hộ",
-                                      type: AppSnackBarType.success,
-                                    );
-                                  } else {
-                                    final errorMsg = provider.errorMessage ?? "Gửi yêu cầu thất bại!";
-                                    AppSnackBar.show(
-                                      context,
-                                      errorMsg,
-                                      type: AppSnackBarType.error,
-                                      duration: const Duration(seconds: 5),
-                                    );
+                            if (selectedSosImagePath == null)
+                              OutlinedButton.icon(
+                                onPressed: () async {
+                                  final xfile =
+                                      await ImagePickerHelper.pickImage(
+                                        context,
+                                      );
+                                  if (xfile != null) {
+                                    setBottomSheetState(() {
+                                      selectedSosImagePath = xfile.path;
+                                    });
                                   }
                                 },
-                                style:
-                                ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                  const Color(
-                                      0xFFDC2626),
-                                  shape:
-                                  RoundedRectangleBorder(
-                                    borderRadius:
-                                    BorderRadius.circular(
-                                        12),
-                                  ),
+                                icon: const Icon(
+                                  Icons.add_a_photo_outlined,
+                                  color: Colors.redAccent,
                                 ),
-                                child: provider.loading
-                                    ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child:
-                                  CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                                    : const Text(
-                                  "GỬI YÊU CẦU",
+                                label: const Text(
+                                  'Chụp / Chọn ảnh hiện trường',
                                   style: TextStyle(
-                                    color:
-                                    Colors.white,
-                                    fontWeight:
-                                    FontWeight.bold,
+                                    color: Colors.redAccent,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: Colors.red.shade200),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              )
+                            else
+                              Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.file(
+                                      File(selectedSosImagePath!),
+                                      height: 140,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 6,
+                                    right: 6,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setBottomSheetState(() {
+                                          selectedSosImagePath = null;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.6,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
 
-                        const SizedBox(height: 20),
-                      ],
+                            const SizedBox(height: 24),
+
+                            Consumer<VictimMapProvider>(
+                              builder: (context, provider, child) {
+                                return SizedBox(
+                                  height: 55,
+                                  child: ElevatedButton(
+                                    onPressed: provider.loading
+                                        ? null
+                                        : () async {
+                                            if (phoneController.text
+                                                .trim()
+                                                .isEmpty) {
+                                              AppSnackBar.show(
+                                                context,
+                                                "Vui lòng nhập số điện thoại liên hệ để gửi cứu hộ!",
+                                                type: AppSnackBarType.error,
+                                              );
+                                              return;
+                                            }
+
+                                            if (selectedIncidentTypeId ==
+                                                null) {
+                                              AppSnackBar.show(
+                                                context,
+                                                "Vui lòng chọn loại sự cố",
+                                              );
+                                              return;
+                                            }
+
+                                            if (widget.victimLat == null ||
+                                                widget.victimLng == null) {
+                                              AppSnackBar.show(
+                                                context,
+                                                "Không thể xác định vị trí hiện tại của bạn. Vui lòng bật định vị GPS!",
+                                              );
+                                              return;
+                                            }
+
+                                            final success = await provider
+                                                .sendSos(
+                                                  phoneController.text.trim(),
+                                                  selectedIncidentTypeId!,
+                                                  descriptionController.text
+                                                          .trim()
+                                                          .isEmpty
+                                                      ? null
+                                                      : descriptionController
+                                                            .text
+                                                            .trim(),
+                                                  widget.victimLat!,
+                                                  widget.victimLng!,
+                                                  imagePath:
+                                                      selectedSosImagePath,
+                                                );
+
+                                            if (!mounted) return;
+
+                                            if (success) {
+                                              // Lưu số điện thoại vừa gửi thành công vào Storage
+                                              await getIt<StorageService>()
+                                                  .saveSavedPhone(
+                                                    phoneController.text.trim(),
+                                                  );
+
+                                              Navigator.pop(context);
+
+                                              AppSnackBar.show(
+                                                context,
+                                                "Đã gửi yêu cầu cứu hộ",
+                                                type: AppSnackBarType.success,
+                                              );
+                                            } else {
+                                              final errorMsg =
+                                                  provider.errorMessage ??
+                                                  "Gửi yêu cầu thất bại!";
+                                              AppSnackBar.show(
+                                                context,
+                                                errorMsg,
+                                                type: AppSnackBarType.error,
+                                                duration: const Duration(
+                                                  seconds: 5,
+                                                ),
+                                              );
+                                            }
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFDC2626),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: provider.loading
+                                        ? const SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text(
+                                            "GỬI YÊU CẦU",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                  ),
+                                );
+                              },
+                            ),
+
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -452,10 +467,7 @@ class _VictimSosButtonWidgetState
       decoration: BoxDecoration(
         color: isDark ? theme.colorScheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: const Color(0xFFDC2626),
-          width: 1.4,
-        ),
+        border: Border.all(color: const Color(0xFFDC2626), width: 1.4),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.12),
@@ -539,7 +551,9 @@ class _VictimSosButtonWidgetState
               color: isDark ? theme.colorScheme.surface : Colors.white,
               borderRadius: BorderRadius.circular(26),
               border: Border.all(
-                color: _isPressing ? const Color(0xFFB91C1C) : const Color(0xFFDC2626),
+                color: _isPressing
+                    ? const Color(0xFFB91C1C)
+                    : const Color(0xFFDC2626),
                 width: 1.4,
               ),
               boxShadow: [
@@ -596,7 +610,9 @@ class _VictimSosButtonWidgetState
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: _isPressing ? const Color(0xFFB91C1C) : (isDark ? Colors.white : Colors.black87),
+                    color: _isPressing
+                        ? const Color(0xFFB91C1C)
+                        : (isDark ? Colors.white : Colors.black87),
                   ),
                 ),
               ],

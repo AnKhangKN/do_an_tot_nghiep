@@ -209,11 +209,6 @@ class AuthRepository {
     return UserModel.fromJson(res.data['data']);
   }
 
-  Future<void> logout() async {
-
-    await storage.clearAll();
-  }
-
   Future<RegisterResponse> register(RegisterRequest request) async {
     final res = await service.register(request.toJson());
 

@@ -93,7 +93,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final user = userProvider.user;
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: ColorConstants.backgroundLight,
       appBar: AppBar(
         title: const Text(

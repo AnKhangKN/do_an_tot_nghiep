@@ -150,7 +150,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: ColorConstants.backgroundLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,

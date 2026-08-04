@@ -102,10 +102,7 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
-
     return Container(
-      padding: EdgeInsets.only(bottom: bottomPadding),
       decoration: BoxDecoration(
         color: ColorConstants.surfaceWhite,
         borderRadius: BorderRadius.only(
@@ -114,8 +111,11 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
         ),
       ),
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+        child: MediaQuery.removeViewInsets(
+          removeBottom: true,
+          context: context,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,6 +301,7 @@ class _PostRescueCheckinDialogState extends State<PostRescueCheckinDialog> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/constants/color_constants.dart';
 import '../../../../shared/widgtes/phone_call_widget.dart';
 import '../../models/conversation_model.dart';
@@ -9,10 +10,7 @@ import '../widgets/message_bubble_widget.dart';
 class MessengerScreen extends StatefulWidget {
   final ConversationModel conversation;
 
-  const MessengerScreen({
-    super.key,
-    required this.conversation,
-  });
+  const MessengerScreen({super.key, required this.conversation});
 
   @override
   State<MessengerScreen> createState() => _MessengerScreenState();
@@ -23,7 +21,8 @@ class _MessengerScreenState extends State<MessengerScreen> {
   final ScrollController _scrollController = ScrollController();
   String? _resolvedConversationId;
 
-  String get _conversationKey => _resolvedConversationId ?? widget.conversation.id;
+  String get _conversationKey =>
+      _resolvedConversationId ?? widget.conversation.id;
   String? get _partnerId => widget.conversation.partnerId;
 
   @override
@@ -65,13 +64,16 @@ class _MessengerScreenState extends State<MessengerScreen> {
     final text = quickText ?? _textController.text.trim();
     if (text.isEmpty) return;
 
-    context.read<ChatProvider>().sendMessage(_conversationKey, text, partnerId: _partnerId);
+    context.read<ChatProvider>().sendMessage(
+      _conversationKey,
+      text,
+      partnerId: _partnerId,
+    );
 
     if (quickText == null) {
       _textController.clear();
     }
 
-    // Cuộn xuống tin nhắn mới nhất
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -92,18 +94,28 @@ class _MessengerScreenState extends State<MessengerScreen> {
       (c) => c.id == _conversationKey || c.id == widget.conversation.id,
       orElse: () => widget.conversation,
     );
-    final String? sosStatus = matchingConv.sosStatus ?? widget.conversation.sosStatus;
+    final String? sosStatus =
+        matchingConv.sosStatus ?? widget.conversation.sosStatus;
     final bool isClosed = widget.conversation.isClosed || matchingConv.isClosed;
-    final bool isGracePeriod = !isClosed && (sosStatus == 'DONE' || sosStatus == 'COMPLETED' || sosStatus == 'CANCELLED');
+    final bool isGracePeriod =
+        !isClosed &&
+        (sosStatus == 'DONE' ||
+            sosStatus == 'COMPLETED' ||
+            sosStatus == 'CANCELLED');
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: ColorConstants.surfaceWhite,
       appBar: AppBar(
         backgroundColor: ColorConstants.surfaceWhite,
         elevation: 1,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: ColorConstants.textPrimary, size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: ColorConstants.textPrimary,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Row(
@@ -163,27 +175,41 @@ class _MessengerScreenState extends State<MessengerScreen> {
                       if (isClosed) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: ColorConstants.bgCanvas,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             'Đã đóng',
-                            style: TextStyle(fontSize: 10, color: ColorConstants.textSecondary, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: ColorConstants.textSecondary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ] else if (isGracePeriod) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.blue[50],
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(
                             'Gia hạn 15p',
-                            style: TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -194,10 +220,18 @@ class _MessengerScreenState extends State<MessengerScreen> {
                         ? 'Kênh trò chuyện đã khóa'
                         : isGracePeriod
                             ? 'Thời gian gia hạn 15 phút'
-                            : (widget.conversation.isOnline ? 'Đang hoạt động' : 'Ngoại tuyến'),
+                            : (widget.conversation.isOnline
+                                ? 'Đang hoạt động'
+                                : 'Ngoại tuyến'),
                     style: TextStyle(
                       fontSize: 11,
-                      color: isClosed ? Colors.orange[800] : (isGracePeriod ? Colors.blue[700] : (widget.conversation.isOnline ? Colors.green : ColorConstants.textSecondary)),
+                      color: isClosed
+                          ? Colors.orange[800]
+                          : (isGracePeriod
+                              ? Colors.blue[700]
+                              : (widget.conversation.isOnline
+                                  ? Colors.green
+                                  : ColorConstants.textSecondary)),
                     ),
                   ),
                 ],
@@ -206,7 +240,8 @@ class _MessengerScreenState extends State<MessengerScreen> {
           ],
         ),
         actions: [
-          if (widget.conversation.phone != null && widget.conversation.phone!.isNotEmpty)
+          if (widget.conversation.phone != null &&
+              widget.conversation.phone!.isNotEmpty)
             PhoneCallWidget(
               phoneNumber: widget.conversation.phone!,
               color: Colors.green,
@@ -215,128 +250,191 @@ class _MessengerScreenState extends State<MessengerScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // List tin nhắn
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  return MessageBubbleWidget(message: messages[index]);
-                },
-              ),
-            ),
-
-            // Banner thông báo kênh chat đã đóng hoặc gia hạn 15 phút
-            if (isClosed)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                color: const Color(0xFFFEF3C7),
-                child: const Row(
-                  children: [
-                    Icon(Icons.lock_rounded, color: Color(0xFFD97706), size: 18),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Kênh chat này đã tự động đóng do ca cứu hộ đã hoàn thành hoặc bị hủy.',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF92400E), fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else if (isGracePeriod)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                color: const Color(0xFFE0F2FE),
-                child: const Row(
-                  children: [
-                    Icon(Icons.timer_outlined, color: Color(0xFF0284C7), size: 18),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Ca cứu hộ đã kết thúc. Kênh trò chuyện đang trong thời gian gia hạn 15 phút để hỗ trợ phát sinh.',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF0369A1), fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ],
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    return MessageBubbleWidget(message: messages[index]);
+                  },
                 ),
               ),
-
-            // Gợi ý tin nhắn nhanh (chỉ hiển thị khi kênh còn mở)
-            if (!isClosed)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: Row(
-                  children: [
-                    _buildQuickChip('📍 Chia sẻ vị trí hiện tại'),
-                    _buildQuickChip('🚨 Tôi cần hỗ trợ gấp'),
-                    _buildQuickChip('🚗 Đang di chuyển đến nơi'),
-                    _buildQuickChip('✅ Đã an toàn'),
-                  ],
-                ),
-              ),
-
-            // Ô nhập liệu
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: ColorConstants.surfaceWhite,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 6,
-                    offset: Offset(0, -2),
+              SafeArea(
+                top: false,
+                child: Container(
+                  padding: const EdgeInsets.only(
+                    left: 12,
+                    right: 12,
+                    top: 8,
+                    bottom: 8,
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.add_circle_outline_rounded, color: isClosed ? ColorConstants.textMuted : ColorConstants.textSecondary),
-                    onPressed: isClosed ? null : () {},
-                    tooltip: 'Đính kèm',
+                  decoration: BoxDecoration(
+                    color: ColorConstants.surfaceWhite,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      enabled: !isClosed,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        hintText: isClosed ? 'Kênh trò chuyện đã bị khóa...' : 'Nhập tin nhắn...',
-                        hintStyle: TextStyle(fontSize: 14, color: ColorConstants.textMuted),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isClosed)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          color: const Color(0xFFFEF3C7),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.lock_rounded,
+                                color: Color(0xFFD97706),
+                                size: 18,
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Kênh chat này đã tự động đóng do ca cứu hộ đã hoàn thành hoặc bị hủy.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF92400E),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (isGracePeriod)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          color: const Color(0xFFE0F2FE),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.timer_outlined,
+                                color: Color(0xFF0284C7),
+                                size: 18,
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Ca cứu hộ đã kết thúc. Kênh trò chuyện đang trong thời gian gia hạn 15 phút để hỗ trợ phát sinh.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF0369A1),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        filled: true,
-                        fillColor: ColorConstants.bgCanvas,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+
+                      if (!isClosed)
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          child: Row(
+                            children: [
+                              _buildQuickChip('📍 Chia sẻ vị trí hiện tại'),
+                              _buildQuickChip('🚨 Tôi cần hỗ trợ gấp'),
+                              _buildQuickChip('🚗 Đang di chuyển đến nơi'),
+                              _buildQuickChip('✅ Đã an toàn'),
+                            ],
+                          ),
+                        ),
+
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: isClosed
+                                  ? ColorConstants.textMuted
+                                  : ColorConstants.textSecondary,
+                            ),
+                            onPressed: isClosed ? null : () {},
+                            tooltip: 'Đính kèm',
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: _textController,
+                              enabled: !isClosed,
+                              textCapitalization: TextCapitalization.sentences,
+                              keyboardType: TextInputType.multiline,
+                              minLines: 1,
+                              maxLines: 3,
+                              textInputAction: TextInputAction.newline,
+                              decoration: InputDecoration(
+                                hintText: isClosed
+                                    ? 'Kênh trò chuyện đã bị khóa...'
+                                    : 'Nhập tin nhắn...',
+                                hintStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: ColorConstants.textMuted,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: ColorConstants.bgCanvas,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                              ),
+                              onSubmitted: isClosed ? null : (_) => _sendMessage(),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Material(
+                            color: isClosed
+                                ? ColorConstants.textMuted
+                                : ColorConstants.redRescue,
+                            shape: const CircleBorder(),
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.send_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              onPressed: isClosed ? null : () => _sendMessage(),
+                            ),
+                          ),
+                        ],
                       ),
-                      onSubmitted: isClosed ? null : (_) => _sendMessage(),
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Material(
-                    color: isClosed ? ColorConstants.textMuted : ColorConstants.redRescue,
-                    shape: const CircleBorder(),
-                    child: IconButton(
-                      icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-                      onPressed: isClosed ? null : () => _sendMessage(),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+      bottomNavigationBar: null,
     );
   }
 
