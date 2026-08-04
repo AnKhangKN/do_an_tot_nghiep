@@ -115,6 +115,49 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
     );
   }
 
+  void _showPhoneExistsDialog(BuildContext context, String errorMsg) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.phone_android_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Số Điện Thoại Đã Tồn Tại',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          errorMsg,
+          style: const TextStyle(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Đóng', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ColorConstants.redRescue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Đăng nhập ngay', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _loadSavedGuestPhone() async {
     try {
       final storage = getIt<StorageService>();
@@ -188,11 +231,18 @@ class _GuestSOSDialogState extends State<GuestSOSDialog> {
       setState(() {
         _isSubmitting = false;
       });
-      AppSnackBar.show(
-        context,
-        authProvider.error ?? 'Đã xảy ra lỗi khi xác thực vị trí khẩn cấp!',
-        type: AppSnackBarType.error,
-      );
+      final errorMsg = authProvider.error ?? 'Đã xảy ra lỗi khi xác thực vị trí khẩn cấp!';
+
+      // Nếu là lỗi liên quan tới Số điện thoại đã được đăng ký -> Bật BoxUp Popup AlertDialog ngay trên Box Khẩn Cấp
+      if (errorMsg.contains('đã được') || errorMsg.contains('tồn tại') || errorMsg.contains('chính thức')) {
+        _showPhoneExistsDialog(context, errorMsg);
+      } else {
+        AppSnackBar.show(
+          context,
+          errorMsg,
+          type: AppSnackBarType.error,
+        );
+      }
       return;
     }
 
