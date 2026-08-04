@@ -4,6 +4,7 @@ import { formatTime } from '@/utils/format_date.util';
 import ButtonComponent from '@/components/shared/ButtonComponent/ButtonComponent';
 import { getAllRatingsAdmin } from '@/api/admin/RatingApi';
 import TrendChartComponent from './components/TrendChartComponent';
+import AppReportTab from './components/AppReportTab';
 import {
   PiStarFill,
   PiStar,
@@ -299,6 +300,8 @@ const FeedbackPage = () => {
 
   const renderTrendTab = () => <TrendChartComponent />;
 
+  const renderReportTab = () => <AppReportTab />;
+
   const renderContent = () => {
     switch (activeTab) {
       case 'rating':
@@ -306,6 +309,9 @@ const FeedbackPage = () => {
 
       case 'trend':
         return renderTrendTab();
+
+      case 'report':
+        return renderReportTab();
 
       default:
         return null;
@@ -343,6 +349,18 @@ const FeedbackPage = () => {
         >
           <span className="flex items-center gap-1.5">
             <PiChartLineUpFill className="text-emerald-500" /> Xu hướng chất lượng
+          </span>
+        </ButtonComponent>
+
+        <ButtonComponent
+          onClick={() => setActiveTab('report')}
+          className={`${activeTab === 'report'
+            ? 'bg-gray-900 text-white dark:bg-gray-200 dark:text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <PiFlagFill className="text-red-500" /> Báo cáo ứng dụng
           </span>
         </ButtonComponent>
       </div>

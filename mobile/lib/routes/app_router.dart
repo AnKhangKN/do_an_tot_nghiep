@@ -20,6 +20,8 @@ import '../features/emergency_amenities/presentation/screens/my_amenities_screen
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/help_center/presentation/screens/help_center_screen.dart';
 import '../features/app_info/presentation/screens/app_info_screen.dart';
+import '../features/app_report/presentation/screens/app_report_screen.dart';
+import '../features/app_report/presentation/screens/app_report_history_screen.dart';
 import '../features/404/screens/not_found_screen.dart';
 
 import '../features/victim/presentation/screens/victim_map_screen.dart';
@@ -165,6 +167,14 @@ class AppRouter {
               GoRoute(
                 path: RouterConstants.appInfo,
                 builder: (context, state) => const AppInfoScreen(),
+              ),
+              GoRoute(
+                path: RouterConstants.appReport,
+                builder: (context, state) => const AppReportScreen(),
+              ),
+              GoRoute(
+                path: RouterConstants.appReportHistory,
+                builder: (context, state) => const AppReportHistoryScreen(),
               ),
             ],
           ),

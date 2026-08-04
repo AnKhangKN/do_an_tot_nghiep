@@ -105,6 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _menuItem(Icons.settings_outlined, "Cấu hình ứng dụng", RouterConstants.setting),
                       _menuItem(Icons.help_outline, "Trung tâm trợ giúp", RouterConstants.helpCenter),
                       _menuItem(Icons.info_outline, "Thông tin ứng dụng", RouterConstants.appInfo),
+                      _menuItem(Icons.flag_outlined, "Báo cáo ứng dụng", RouterConstants.appReport),
                     ],
                   ),
 

@@ -27,6 +27,10 @@ class RouterConstants {
   static const String helpCenter = '/help-center';
   static const String appInfo = '/app-info';
 
+  // Báo cáo ứng dụng
+  static const String appReport = '/app-report';
+  static const String appReportHistory = '/app-report-history';
+
   // Điểm đã tạo
   static const String myDangerousPoints = '/my-dangerous-points';
   static const String myAmenities = '/my-amenities';

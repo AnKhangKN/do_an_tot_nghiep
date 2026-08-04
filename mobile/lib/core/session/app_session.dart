@@ -29,6 +29,7 @@ import 'package:mobile/features/dangerous_points/presentation/providers/geofence
 import 'package:mobile/features/emergency_amenities/presentation/providers/amenity_provider.dart';
 import 'package:mobile/features/notification/presentation/providers/notification_provider.dart';
 import 'package:mobile/features/settings/presentation/providers/settings_provider.dart';
+import 'package:mobile/features/app_report/presentation/providers/app_report_provider.dart';
 
 class AppSession {
   final SessionController controller;
@@ -327,6 +328,9 @@ class AppSession {
     }
     if (getIt.isRegistered<SettingsProvider>()) {
       getIt<SettingsProvider>().reset();
+    }
+    if (getIt.isRegistered<AppReportProvider>()) {
+      getIt<AppReportProvider>().reset();
     }
     if (getIt.isRegistered<ThemeController>()) {
       getIt<ThemeController>().reset();

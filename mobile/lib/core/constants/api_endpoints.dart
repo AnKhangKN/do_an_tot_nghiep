@@ -39,4 +39,8 @@ class ApiEndpoints {
   static const String dangerousPoints = '/api/dangerous_points';
   static const String dangerousPointsApproved = '/api/dangerous_points/approved';
   static const String myDangerousPoints = '/api/dangerous_points/my';
+
+  // Báo cáo ứng dụng (App Feedback)
+  static const String appFeedbacks = '/api/app-feedbacks';
+  static const String myAppFeedbacks = '/api/app-feedbacks/my';
 }
