@@ -318,6 +318,99 @@ class DangerousPointRepository {
             totalPages: Math.ceil(total / limit)
         };
     }
+
+    /// Quét phát hiện các cặp điểm nguy hiểm nghi ngờ trùng lặp (cùng vị trí GPS trong bán kính radiusMeters)
+    async findDuplicatePairs(radiusMeters = 200) {
+        const query = `
+            SELECT
+                dp1.dangerous_point_id as primary_id,
+                dp1.zone_name as primary_zone_name,
+                dp1.description as primary_description,
+                dp1.latitude as primary_lat,
+                dp1.longitude as primary_lng,
+                dp1.danger_level as primary_danger_level,
+                dp1.status as primary_status,
+                dp1.created_at as primary_created_at,
+                img1.url as primary_image_url,
+
+                dp2.dangerous_point_id as duplicate_id,
+                dp2.zone_name as duplicate_zone_name,
+                dp2.description as duplicate_description,
+                dp2.latitude as duplicate_lat,
+                dp2.longitude as duplicate_lng,
+                dp2.danger_level as duplicate_danger_level,
+                dp2.status as duplicate_status,
+                dp2.created_at as duplicate_created_at,
+                img2.url as duplicate_image_url,
+
+                (6371000 * 2 * ASIN(SQRT(
+                    POWER(SIN(RADIANS(dp2.latitude - dp1.latitude) / 2), 2) +
+                    COS(RADIANS(dp1.latitude)) * COS(RADIANS(dp2.latitude)) *
+                    POWER(SIN(RADIANS(dp2.longitude - dp1.longitude) / 2), 2)
+                ))) AS distance_meters
+            FROM dangerous_points dp1
+            JOIN dangerous_points dp2 ON dp1.dangerous_point_id < dp2.dangerous_point_id
+            LEFT JOIN images img1 ON img1.entity_id = dp1.dangerous_point_id AND img1.entity_type = 'DANGEROUS_POINT'
+            LEFT JOIN images img2 ON img2.entity_id = dp2.dangerous_point_id AND img2.entity_type = 'DANGEROUS_POINT'
+            WHERE dp1.status <> 'REJECTED'
+              AND dp2.status <> 'REJECTED'
+              AND (6371000 * 2 * ASIN(SQRT(
+                    POWER(SIN(RADIANS(dp2.latitude - dp1.latitude) / 2), 2) +
+                    COS(RADIANS(dp1.latitude)) * COS(RADIANS(dp2.latitude)) *
+                    POWER(SIN(RADIANS(dp2.longitude - dp1.longitude) / 2), 2)
+                ))) <= $1
+            ORDER BY distance_meters ASC
+            LIMIT 50
+        `;
+
+        const { rows } = await pool.query(query, [radiusMeters]);
+        return rows.map(r => ({
+            primary: {
+                dangerousPointId: r.primary_id,
+                zoneName: r.primary_zone_name,
+                description: r.primary_description,
+                latitude: parseFloat(r.primary_lat),
+                longitude: parseFloat(r.primary_lng),
+                dangerLevel: r.primary_danger_level,
+                status: r.primary_status,
+                createdAt: r.primary_created_at,
+                imageUrl: r.primary_image_url || null
+            },
+            duplicate: {
+                dangerousPointId: r.duplicate_id,
+                zoneName: r.duplicate_zone_name,
+                description: r.duplicate_description,
+                latitude: parseFloat(r.duplicate_lat),
+                longitude: parseFloat(r.duplicate_lng),
+                dangerLevel: r.duplicate_danger_level,
+                status: r.duplicate_status,
+                createdAt: r.duplicate_created_at,
+                imageUrl: r.duplicate_image_url || null
+            },
+            distanceMeters: Math.round(parseFloat(r.distance_meters)),
+            matchReason: `Vị trí lân cận ${Math.round(parseFloat(r.distance_meters))}m`
+        }));
+    }
+
+    /// Gộp 2 điểm nguy hiểm: Chuyển ảnh & feedback sang primaryId, sau đó xóa duplicateId
+    async mergeDangerousPoints(client, primaryId, duplicateId) {
+        await client.query(
+            `UPDATE images SET entity_id = $1 WHERE entity_id = $2 AND entity_type = 'DANGEROUS_POINT'`,
+            [primaryId, duplicateId]
+        );
+
+        await client.query(
+            `UPDATE dangerous_point_feedbacks SET dangerous_point_id = $1 WHERE dangerous_point_id = $2`,
+            [primaryId, duplicateId]
+        );
+
+        await client.query(
+            `DELETE FROM dangerous_points WHERE dangerous_point_id = $1`,
+            [duplicateId]
+        );
+
+        return true;
+    }
 }
 
 module.exports = new DangerousPointRepository()

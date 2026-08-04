@@ -16,6 +16,8 @@ route.get('/:id/feedbacks', dangerousPointController.getFeedbacksByPointId);
 // Routes for admin
 route.get('/admin', verifyToken, isAdmin, adminDangerousPointController.getDangerousPointsAdmin);
 route.get('/admin/feedbacks', verifyToken, isAdmin, dangerousPointController.getFeedbacksAdmin);
+route.get('/admin/duplicates', verifyToken, isAdmin, adminDangerousPointController.getDuplicateDangerousPoints);
+route.post('/admin/merge', verifyToken, isAdmin, adminDangerousPointController.mergeDangerousPoints);
 route.post('/admin/auto-detect', verifyToken, isAdmin, adminDangerousPointController.autoDetectDangerousPoints);
 route.put('/admin/:dangerousPointId/approve', verifyToken, isAdmin, adminDangerousPointController.approveDangerousPoint);
 route.put('/admin/:dangerousPointId/reject', verifyToken, isAdmin, adminDangerousPointController.rejectDangerousPoint);

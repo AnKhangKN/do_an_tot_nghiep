@@ -1,8 +1,20 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
+import '../../session/app_session.dart';
 import '../../session/session_controller.dart';
 import '../../storage/storage_service.dart';
+
+/// Đưa người dùng về màn hình Login khi phiên đăng nhập không thể phục hồi
+/// (không còn refresh token hoặc refresh token bị từ chối). Tránh trạng thái
+/// "đăng nhập giả" gửi request không có token và nhận 401 mãi mãi.
+Future<void> _forceLogoutForExpiredSession() async {
+  GetIt.instance<SessionController>().setKickedFromOtherDevice(
+    'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!',
+  );
+  await GetIt.instance<AppSession>().logout();
+}
 
 class RefreshInterceptor extends Interceptor {
   final Dio dio;
@@ -45,7 +57,7 @@ class RefreshInterceptor extends Interceptor {
 
         if (refreshToken == null || refreshToken.isEmpty) {
           isRefreshing = false;
-          await storageService.clearToken();
+          await _forceLogoutForExpiredSession();
           return handler.next(err);
         }
 
@@ -67,7 +79,7 @@ class RefreshInterceptor extends Interceptor {
 
         if (newAccessToken == null || newAccessToken.isEmpty) {
           isRefreshing = false;
-          await storageService.clearToken();
+          await _forceLogoutForExpiredSession();
           return handler.next(err);
         }
 
@@ -82,9 +94,20 @@ class RefreshInterceptor extends Interceptor {
         final retryResponse = await dio.fetch(opts);
 
         return handler.resolve(retryResponse);
+      } on DioException catch (e) {
+        isRefreshing = false;
+        // Server từ chối chính thức (401) → refresh token đã hết hạn/bị vô hiệu
+        // → phiên thực sự chết, tự đăng xuất để về màn hình Login.
+        // Lỗi mạng/timeout/5xx chỉ là nhất thời → GIỮ token để request sau tự refresh lại.
+        if (e.response?.statusCode == 401) {
+          await _forceLogoutForExpiredSession();
+        } else {
+          debugPrint("⚠️ [RefreshInterceptor] Refresh thất bại (lỗi tạm thời, giữ token): $e");
+        }
+        return handler.next(err);
       } catch (e) {
         isRefreshing = false;
-        await storageService.clearToken();
+        debugPrint("⚠️ [RefreshInterceptor] Lỗi không xác định khi refresh (giữ token): $e");
         return handler.next(err);
       }
     }

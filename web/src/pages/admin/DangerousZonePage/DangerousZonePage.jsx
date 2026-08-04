@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import CellDetailComponent from '@/components/admin/TableComponent/CellDetailComponent/CellDetailComponent';
 import { formatTime } from '@/utils/format_date.util';
-import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones, getDangerousZoneFeedbacks, getPointFeedbacks } from '@/api/admin/DangerousZoneApi';
+import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones, getDangerousZoneFeedbacks, getPointFeedbacks, getDuplicateDangerousZones, mergeDangerousZones } from '@/api/admin/DangerousZoneApi';
 import {
   PiLightningFill,
   PiHourglassFill,
@@ -15,11 +15,31 @@ import {
   PiXCircleFill,
   PiWarningBold,
   PiCheckCircleBold,
+  PiCopyBold,
+  PiGitMergeBold,
+  PiCheckBold,
 } from 'react-icons/pi';
 
 const getErrorMessage = (error) => {
   return error?.response?.data?.message || "Đã có lỗi xảy ra. Vui lòng thử lại!";
 };
+
+const dangerLevelLabel = (level) =>
+  level === 'HIGH' ? 'Cao' : level === 'MEDIUM' ? 'Trung bình' : 'Thấp';
+
+const statusLabel = (status) =>
+  status === 'PENDING' ? 'Chờ duyệt' : status === 'APPROVED' ? 'Đã duyệt' : 'Đã từ chối';
+
+const dangerLevelBadge = (level) => (
+  <span className={`inline-flex items-center justify-center whitespace-nowrap px-2.5 py-0.5 text-[11px] rounded-full font-semibold ${level === 'HIGH'
+    ? 'bg-rose-50 text-rose-700 border border-rose-200'
+    : level === 'MEDIUM'
+      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+    }`}>
+    {dangerLevelLabel(level)}
+  </span>
+);
 
 const columns = ({ onApprove, onReject, loading }) => [
   {
@@ -244,10 +264,12 @@ const DangerousZonePage = () => {
     }
   };
 
-  const [activeTab, setActiveTab] = useState('points'); // 'points' | 'feedbacks'
+  const [activeTab, setActiveTab] = useState('points'); // 'points' | 'feedbacks' | 'duplicates'
   const [feedbacks, setFeedbacks] = useState([]);
   const [selectedPointFeedbacks, setSelectedPointFeedbacks] = useState(null); // { point, stats, list }
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
+  const [duplicates, setDuplicates] = useState([]);
+  const [duplicatesLoading, setDuplicatesLoading] = useState(false);
 
   const fetchFeedbacks = useCallback(async () => {
     try {
@@ -261,11 +283,42 @@ const DangerousZonePage = () => {
     }
   }, []);
 
+  const fetchDuplicates = useCallback(async () => {
+    try {
+      setDuplicatesLoading(true);
+      const res = await getDuplicateDangerousZones();
+      setDuplicates(res?.data || []);
+    } catch (error) {
+      console.error(error);
+      showToast(getErrorMessage(error), "error");
+    } finally {
+      setDuplicatesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (activeTab === 'feedbacks') {
       fetchFeedbacks();
     }
-  }, [activeTab, fetchFeedbacks]);
+    if (activeTab === 'duplicates') {
+      fetchDuplicates();
+    }
+  }, [activeTab, fetchFeedbacks, fetchDuplicates]);
+
+  const handleMerge = async (primaryId, duplicateId) => {
+    try {
+      setActionLoading(true);
+      await mergeDangerousZones(primaryId, duplicateId);
+      showToast("Gộp điểm nguy hiểm trùng lặp thành công!");
+      fetchDuplicates();
+      fetchDangerousZones();
+    } catch (error) {
+      console.error(error);
+      showToast(getErrorMessage(error), "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleOpenPointFeedbacks = async (point) => {
     try {
@@ -323,6 +376,18 @@ const DangerousZonePage = () => {
               className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'feedbacks' ? 'bg-gray-900 text-white shadow-sm dark:bg-gray-200 dark:text-white' : 'text-gray-600 hover:text-gray-900'}`}
             >
               Phản hồi & Xác minh Cộng đồng
+            </button>
+            <button
+              onClick={() => setActiveTab('duplicates')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'duplicates' ? 'bg-gray-900 text-white shadow-sm dark:bg-gray-200 dark:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+              <PiCopyBold />
+              Nghi Ngờ Trùng Lặp
+              {duplicates.length > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700">
+                  {duplicates.length}
+                </span>
+              )}
             </button>
           </div>
 
@@ -394,6 +459,132 @@ const DangerousZonePage = () => {
           onPageChange={setPage}
           loading={loading}
         />
+      ) : activeTab === 'duplicates' ? (
+        <div className="bg-white dark:bg-gray-100 rounded-3xl border border-gray-200 p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+            <div>
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <PiCopyBold className="text-amber-600 text-lg" />
+                Danh sách Cụm Điểm Nguy hiểm Nghi ngờ Trùng lặp ({duplicates.length})
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Tự động phân tích theo khoảng cách GPS (bán kính 200m) để tránh trùng lặp địa điểm
+              </p>
+            </div>
+            <button
+              onClick={fetchDuplicates}
+              disabled={duplicatesLoading}
+              className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-xl transition cursor-pointer"
+            >
+              {duplicatesLoading ? 'Đang quét...' : 'Quét lại trùng lặp'}
+            </button>
+          </div>
+
+          {duplicatesLoading ? (
+            <div className="py-12 text-center text-xs text-gray-500 font-medium">
+              Đang phân tích không gian & quét dữ liệu trùng lặp...
+            </div>
+          ) : duplicates.length === 0 ? (
+            <div className="py-12 text-center text-gray-400 space-y-2">
+              <PiCheckBold className="w-10 h-10 text-emerald-500 mx-auto" />
+              <p className="text-sm font-semibold text-gray-800">Không phát hiện điểm nguy hiểm nào nghi ngờ trùng lặp!</p>
+              <p className="text-xs text-gray-500">Toàn bộ dữ liệu bản đồ khu vực nguy hiểm hiện tại đều duy nhất và sạch.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {duplicates.map((pair, index) => (
+                <div
+                  key={index}
+                  className="p-4 bg-gray-50/80 rounded-2xl border border-gray-200 shadow-xs space-y-4"
+                >
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200">
+                      <PiWarningBold className="text-amber-600" />
+                      {pair.matchReason}
+                    </span>
+                    <span className="text-xs font-mono text-gray-500">
+                      Khoảng cách: {pair.distanceMeters} m
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white dark:bg-gray-100 p-3.5 rounded-xl border border-emerald-200/80 space-y-2 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                          Bản ghi A (Gốc)
+                        </span>
+                        <span className="text-[11px] text-gray-400">
+                          {statusLabel(pair.primary.status)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-gray-900 flex-1">{pair.primary.zoneName || '--'}</p>
+                        {dangerLevelBadge(pair.primary.dangerLevel)}
+                      </div>
+                      <p className="text-xs text-gray-600 font-mono">
+                        GPS: {pair.primary.latitude.toFixed(4)}, {pair.primary.longitude.toFixed(4)}
+                      </p>
+                      {pair.primary.description && (
+                        <p className="text-xs text-gray-500 line-clamp-2">{pair.primary.description}</p>
+                      )}
+                      {pair.primary.imageUrl && (
+                        <img
+                          src={pair.primary.imageUrl}
+                          alt="Ảnh A"
+                          className="h-20 w-full object-cover rounded-lg border border-gray-200"
+                        />
+                      )}
+                      <button
+                        onClick={() => handleMerge(pair.primary.dangerousPointId, pair.duplicate.dangerousPointId)}
+                        disabled={actionLoading}
+                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-2xs transition active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                      >
+                        <PiGitMergeBold className="text-sm" />
+                        Giữ A & Gộp B vào A
+                      </button>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-100 p-3.5 rounded-xl border border-rose-200/80 space-y-2 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-200">
+                          Bản ghi B (Nghi trùng)
+                        </span>
+                        <span className="text-[11px] text-gray-400">
+                          {statusLabel(pair.duplicate.status)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-gray-900 flex-1">{pair.duplicate.zoneName || '--'}</p>
+                        {dangerLevelBadge(pair.duplicate.dangerLevel)}
+                      </div>
+                      <p className="text-xs text-gray-600 font-mono">
+                        GPS: {pair.duplicate.latitude.toFixed(4)}, {pair.duplicate.longitude.toFixed(4)}
+                      </p>
+                      {pair.duplicate.description && (
+                        <p className="text-xs text-gray-500 line-clamp-2">{pair.duplicate.description}</p>
+                      )}
+                      {pair.duplicate.imageUrl && (
+                        <img
+                          src={pair.duplicate.imageUrl}
+                          alt="Ảnh B"
+                          className="h-20 w-full object-cover rounded-lg border border-gray-200"
+                        />
+                      )}
+                      <button
+                        onClick={() => handleMerge(pair.duplicate.dangerousPointId, pair.primary.dangerousPointId)}
+                        disabled={actionLoading}
+                        className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-2xs transition active:scale-98 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                      >
+                        <PiGitMergeBold className="text-sm" />
+                        Giữ B & Gộp A vào B
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="bg-white dark:bg-gray-100 rounded-3xl border border-gray-200 p-5 shadow-sm space-y-4">
           <h2 className="text-lg font-bold text-gray-900">Danh sách Phản hồi Xác minh từ Người dùng & Cứu hộ viên</h2>

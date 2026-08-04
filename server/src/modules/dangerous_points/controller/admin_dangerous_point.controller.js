@@ -67,6 +67,51 @@ class AdminDangerousPointController {
             next(error)
         }
     }
+
+    async getDuplicateDangerousPoints(req, res, next) {
+        try {
+            const duplicates = await dangerousPointService.getDuplicateDangerousPointsAdmin();
+            return res.status(200).json({
+                success: true,
+                message: "Lấy danh sách điểm nguy hiểm nghi ngờ trùng lặp thành công",
+                data: duplicates
+            })
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async mergeDangerousPoints(req, res, next) {
+        try {
+            const { primaryDangerousPointId, duplicateDangerousPointId } = req.body;
+
+            if (!primaryDangerousPointId || !duplicateDangerousPointId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Thiếu mã điểm chính hoặc mã điểm bị trùng"
+                })
+            }
+
+            if (primaryDangerousPointId === duplicateDangerousPointId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Không thể gộp một điểm với chính nó"
+                })
+            }
+
+            await dangerousPointService.mergeDangerousPointsAdmin({
+                primaryDangerousPointId,
+                duplicateDangerousPointId
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Gộp điểm nguy hiểm trùng lặp thành công!"
+            })
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 module.exports = new AdminDangerousPointController()

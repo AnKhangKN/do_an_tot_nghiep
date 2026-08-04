@@ -60,6 +60,16 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedImage == null) {
+      AppSnackBar.show(
+        context,
+        'Vui lòng chụp hoặc tải lên hình ảnh minh họa tiện ích (*)',
+        type: AppSnackBarType.warning,
+      );
+      return;
+    }
+
     if (_selectedCategoryId == null) {
       AppSnackBar.show(context, 'Vui lòng chọn loại tiện ích');
       return;
@@ -99,7 +109,7 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Hình ảnh minh họa (Không bắt buộc)',
+          'Hình ảnh minh họa (*)',
           style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
@@ -124,7 +134,7 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Chọn ảnh tiện ích (mục phụ)',
+                    'Chọn ảnh tiện ích (*)',
                     style: TextStyle(
                       fontSize: 13,
                       color: ColorConstants.textSecondary,
@@ -331,7 +341,7 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
                         ),
                         const SizedBox(height: 14),
 
-                        // Ảnh minh họa (Không bắt buộc)
+                        // Ảnh minh họa (Bắt buộc)
                         _buildImagePicker(),
 
                         const SizedBox(height: 24),

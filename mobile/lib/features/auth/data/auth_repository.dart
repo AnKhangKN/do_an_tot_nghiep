@@ -122,8 +122,19 @@ class AuthRepository {
       print("🟢 [AuthRepository] Đã âm thầm gia hạn Token thành công!");
       return tokenResponse.accessToken;
 
+    } on dio_package.DioException catch (e) {
+      // Server từ chối chính thức (401) → refresh token đã hết hạn/bị vô hiệu → xóa phiên.
+      // Lỗi mạng/timeout/5xx chỉ là nhất thời → GIỮ token để lần sau tự refresh lại.
+      if (e.response?.statusCode == 401) {
+        debugPrint("🚨 [AuthRepository] Refresh token bị từ chối (401). Xóa phiên đăng nhập.");
+        await storage.clearToken();
+      } else {
+        debugPrint("⚠️ [AuthRepository] Refresh thất bại (lỗi tạm thời, giữ token): $e");
+      }
+      return null;
     } catch (e) {
-      debugPrint("🚨 Lỗi khi đang cố refresh token: $e");
+      // Phản hồi 2xx nhưng không parse được (data thiếu/không đúng dạng) → không thể phục hồi
+      debugPrint("🚨 [AuthRepository] Phản hồi refresh không hợp lệ: $e");
       await storage.clearToken();
       return null;
     }

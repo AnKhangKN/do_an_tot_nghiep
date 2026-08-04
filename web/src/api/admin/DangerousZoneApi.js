@@ -74,3 +74,26 @@ export const getApprovedDangerousZones = async () => {
     }
 };
 
+export const getDuplicateDangerousZones = async () => {
+    try {
+        const response = await axiosJWT.get('/api/dangerous_points/admin/duplicates');
+        return response.data;
+    } catch (error) {
+        console.error("Get duplicate dangerous zones error:", error);
+        throw error;
+    }
+};
+
+export const mergeDangerousZones = async (primaryDangerousPointId, duplicateDangerousPointId) => {
+    try {
+        const response = await axiosJWT.post('/api/dangerous_points/admin/merge', {
+            primaryDangerousPointId,
+            duplicateDangerousPointId
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Merge dangerous zones error:", error);
+        throw error;
+    }
+};
+

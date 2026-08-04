@@ -187,6 +187,18 @@ class DangerousPointService {
             limit: parseInt(limit, 10) || 20
         });
     }
+
+    /// Lấy danh sách điểm nguy hiểm nghi ngờ trùng lặp cho Admin
+    async getDuplicateDangerousPointsAdmin() {
+        return await this.dangerousPointRepository.findDuplicatePairs(200);
+    }
+
+    /// Gộp 2 điểm nguy hiểm trùng lặp (chuyển ảnh & feedback sang bản chính, xóa bản trùng)
+    async mergeDangerousPointsAdmin({ primaryDangerousPointId, duplicateDangerousPointId }) {
+        return await transaction(async (client) => {
+            return await this.dangerousPointRepository.mergeDangerousPoints(client, primaryDangerousPointId, duplicateDangerousPointId);
+        });
+    }
 }
 
 module.exports = new DangerousPointService()
