@@ -2,8 +2,8 @@ const penaltyModel = {
     streakKey: (userId) => `cancel_streak:${userId}`,
     rescuerLockKey: (userId) => `rescuer:suspended:${userId}`,
     victimLockKey: (userId) => `victim:cancel_blocked:${userId}`,
-    // Cửa sổ trượt 24h: 2 lần hủy liên tiếp trong 24h sẽ kích hoạt hình phạt
-    streakTtlSeconds: 24 * 60 * 60,
+    // Cửa sổ trượt 7 ngày: số lần hủy/từ chối liên tiếp sẽ tự động reset nếu không vi phạm trong 7 ngày
+    streakTtlSeconds: 7 * 24 * 60 * 60,
     // Thang phạt: 2 → khóa 2h, 4 → 12h, 6 → 24h, 8 → cấm vĩnh viễn
     ladder: [
         { streak: 2, hours: 2 },

@@ -33,6 +33,31 @@ class PenaltyService {
 
             const hours = lockHoursByStreak(streak);
             if (hours === null) {
+                // Tới lần 3 trở lên (streak >= 3) chưa đụng mốc phạt khóa giờ -> Tự động chuyển về OFFLINE
+                if (streak >= 3) {
+                    const reason = role === 'RESCUER'
+                        ? `Bạn đã hủy hoặc từ chối ${streak} lần liên tiếp. Trạng thái của bạn đã tự động chuyển về OFFLINE.`
+                        : `Bạn đã hủy ${streak} ca cứu hộ liên tiếp. Vui lòng chú ý tránh bị phạt tạm khóa tài khoản.`;
+
+                    if (role === 'RESCUER') {
+                        const rescuerService = require("@modules/rescuer/service/rescuer.service");
+                        await rescuerService.suspendRescuer({ userId });
+                        await redis.publish("rescuer:suspended", JSON.stringify({
+                            rescuerId: userId,
+                            reason,
+                            level: null,
+                            blockedUntil: null
+                        }));
+                    } else {
+                        await redis.publish("victim:cancel_blocked", JSON.stringify({
+                            victimId: userId,
+                            reason,
+                            level: null,
+                            blockedUntil: null
+                        }));
+                    }
+                    console.log(`[PENALTY] ${role} ${userId} bị tự động chuyển về OFFLINE do hủy/từ chối lần thứ ${streak}`);
+                }
                 return { streak, level: null, banned: false, reason: null, blockedUntil: null };
             }
 

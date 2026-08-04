@@ -119,6 +119,7 @@ class SOSProvider extends ChangeNotifier {
   void handleRescuerSuspended({String? message}) {
     _suspendedNotice = message ?? "Bạn đã hủy ca cứu hộ 2 lần liên tiếp. Tài khoản bị tạm khóa nhận ca cứu hộ mới trong 2 giờ.";
     endRescue();
+    getIt<AppSession>().goOffline();
     notifyListeners();
   }
 
