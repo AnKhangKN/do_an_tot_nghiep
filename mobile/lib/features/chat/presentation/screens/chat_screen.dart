@@ -207,24 +207,34 @@ class _ChatScreenState extends State<ChatScreen> {
 
             // Chat list
             Expanded(
-              child: chats.isEmpty
-                  ? Center(
-                      child: Text(
-                        "Chưa có cuộc hội thoại nào",
-                        style: TextStyle(color: ColorConstants.textSecondary),
+              child: RefreshIndicator(
+                onRefresh: () => chatProvider.fetchUserConversations(),
+                child: chats.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          const SizedBox(height: 120),
+                          Center(
+                            child: Text(
+                              "Chưa có cuộc hội thoại nào",
+                              style: TextStyle(color: ColorConstants.textSecondary),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: chats.length,
+                        itemBuilder: (context, index) {
+                          final chat = chats[index];
+                          return ChatTileWidget(
+                            conversation: chat,
+                            onTap: () => _openMessengerDetail(chat),
+                          );
+                        },
                       ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: chats.length,
-                      itemBuilder: (context, index) {
-                        final chat = chats[index];
-                        return ChatTileWidget(
-                          conversation: chat,
-                          onTap: () => _openMessengerDetail(chat),
-                        );
-                      },
-                    ),
+              ),
             ),
           ],
         ),

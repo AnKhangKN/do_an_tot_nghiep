@@ -40,6 +40,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (email.isEmpty) return;
 
     final auth = context.read<AuthProvider>();
+    if (auth.isLoading) return;
+
     final success = await auth.forgotPassword(email);
 
     if (!mounted) return;
@@ -93,6 +95,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
 
     final auth = context.read<AuthProvider>();
+    if (auth.isLoading) return;
+
     final success = await auth.resetPassword(
       email: email,
       otpCode: otp,

@@ -203,6 +203,24 @@ const handleSessionTakeover = async (io, socket) => {
     return "ok";
 };
 
+const clearKickedDevice = async (userId, deviceId) => {
+    if (!userId || !deviceId) return;
+    try {
+        await redis.del(`kicked_device:${userId}:${deviceId}`);
+    } catch (error) {
+        console.warn(`[SESSION] Lỗi xóa kicked_device: ${error.message}`);
+    }
+};
+
+const clearUserActiveSession = async (userId) => {
+    if (!userId) return;
+    try {
+        await redis.del(`active_session:${userId}`);
+    } catch (error) {
+        console.warn(`[SESSION] Lỗi xóa active_session user: ${error.message}`);
+    }
+};
+
 // Đăng ký dọn dẹp active_session khi socket ngắt kết nối
 module.exports = (socket, io) => {
     socket.on("disconnect", async () => {
@@ -215,3 +233,5 @@ module.exports = (socket, io) => {
 };
 
 module.exports.handleSessionTakeover = handleSessionTakeover;
+module.exports.clearKickedDevice = clearKickedDevice;
+module.exports.clearUserActiveSession = clearUserActiveSession;

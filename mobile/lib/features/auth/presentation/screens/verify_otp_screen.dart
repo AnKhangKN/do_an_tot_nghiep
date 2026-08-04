@@ -100,6 +100,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     final code = _otpCode.trim();
     final authProvider = context.read<AuthProvider>();
 
+    if (authProvider.isLoading) return;
+
     if (code.length < 6) {
       authProvider.setError("Vui lòng nhập đủ 6 chữ số mã OTP!");
       return;
@@ -129,6 +131,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     if (!_canResend) return;
 
     final authProvider = context.read<AuthProvider>();
+    if (authProvider.isLoading) return;
+
     final success = await authProvider.resendOtp(widget.email);
 
     if (success && mounted) {

@@ -53,8 +53,21 @@ const isNotBanned = async (req, res, next) => {
     }
 };
 
+const optionalVerifyToken = (req, res, next) => {
+    const token = extractToken(req);
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, ACCESS_TOKEN);
+            req.userId = decoded.userId;
+            req.role = decoded.role;
+        } catch (_) {}
+    }
+    next();
+};
+
 module.exports = {
     verifyToken,
+    optionalVerifyToken,
     isAdmin,
     isRescuer,
     isNotBanned

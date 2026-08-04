@@ -82,6 +82,7 @@ class _AppReportHistoryScreenState extends State<AppReportHistoryScreen> {
 
     return ListView.builder(
       controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: provider.reports.length + 1,
       itemBuilder: (context, index) {

@@ -516,6 +516,17 @@ class AuthService {
             return result;
         });
     };
+
+    logout = async ({ userId, deviceId }) => {
+        const { clearKickedDevice, clearUserActiveSession } = require("@/socket/session.socket");
+        if (userId) {
+            await clearUserActiveSession(userId);
+            if (deviceId) {
+                await clearKickedDevice(userId, deviceId);
+            }
+        }
+        return { success: true };
+    };
 }
 
 module.exports = new AuthService();

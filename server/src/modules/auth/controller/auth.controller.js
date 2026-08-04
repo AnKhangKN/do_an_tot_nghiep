@@ -112,13 +112,13 @@ class AuthController {
             const { accessToken, refreshToken } = result;
 
             if (platform === "WEB") {
-            res.cookie("refreshToken", refreshToken, {
-                httpOnly: true,
-                secure: COOKIE_SECURE,
-                sameSite: COOKIE_SAMESITE,
-                maxAge: 365 * 24 * 60 * 60 * 1000,
-                path: "/",
-            });
+                res.cookie("refreshToken", refreshToken, {
+                    httpOnly: true,
+                    secure: COOKIE_SECURE,
+                    sameSite: COOKIE_SAMESITE,
+                    maxAge: 365 * 24 * 60 * 60 * 1000,
+                    path: "/",
+                });
 
                 return res.status(200).json({
                     success: true,
@@ -168,6 +168,13 @@ class AuthController {
 
     logout = async (req, res, next) => {
         try {
+            const userId = req.userId;
+            const deviceId = req.body?.deviceId || req.headers?.['x-device-id'] || req.query?.deviceId;
+
+            if (userId) {
+                await authService.logout({ userId, deviceId });
+            }
+
             res.clearCookie("refreshToken", {
                 httpOnly: true,
                 secure: COOKIE_SECURE,
@@ -179,7 +186,6 @@ class AuthController {
                 success: true,
                 message: "Đăng xuất thành công",
             });
-
         } catch (error) {
             next(error);
         }
@@ -199,10 +205,7 @@ class AuthController {
         } catch (error) {
             next(error);
         }
-
-    }
-
-    // TODO: Xử lý sau
+    };
 
     loginWithGoogle = async (req, res, next) => {
         try {

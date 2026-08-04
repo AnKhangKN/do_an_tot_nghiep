@@ -109,6 +109,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = passwordController.text;
     final authProvider = context.read<AuthProvider>();
 
+    if (authProvider.isLoading) return;
+
     if (email.isEmpty && password.isEmpty) {
       authProvider.setError("Vui lòng nhập đầy đủ Email và Mật khẩu!");
       return;
@@ -146,6 +148,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _loginGoogle() async {
     final authProvider = context.read<AuthProvider>();
+    if (authProvider.isLoading) return;
+
     final success = await authProvider.loginWithGoogle();
 
     if (success && mounted) {
@@ -409,7 +413,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Google button
                     OutlinedButton.icon(
-                      onPressed: _loginGoogle,
+                      onPressed: auth.isLoading ? null : _loginGoogle,
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(color: ColorConstants.border),

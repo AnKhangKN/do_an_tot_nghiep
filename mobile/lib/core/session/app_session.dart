@@ -381,6 +381,16 @@ class AppSession {
       debugPrint("⚠️ [AppSession] Lỗi/quá thời gian dọn dẹp FCM khi logout: $e");
     }
 
+    // 2.5. Gửi yêu cầu Logout lên Server dọn dẹp Redis active_session và kicked_device
+    try {
+      final deviceId = await _ensureDeviceId();
+      await authRepository
+          .logout(deviceId: deviceId)
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      debugPrint("⚠️ [AppSession] Lỗi dọn dẹp Redis session khi logout: $e");
+    }
+
     // 3. Xóa sạch toàn bộ storage: token, refreshToken, theme, settings, saved
     //    phone... ("app như mới") nhưng GIỮ deviceId để thiết bị không bị server
     //    coi là "thiết bị mới" khi đăng nhập lại (tránh kick oan single active session).

@@ -68,4 +68,8 @@ class AuthService {
   Future<Response> checkAppealStatus(Map<String, dynamic> data) async {
     return await dio.post('/api/auth/appeal-status', data: data);
   }
+
+  Future<Response> logout(Map<String, dynamic> data) async {
+    return await dio.delete('/api/auth/logout', data: data);
+  }
 }

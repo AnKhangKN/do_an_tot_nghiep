@@ -344,4 +344,13 @@ class AuthRepository {
       return null;
     }
   }
+
+  Future<void> logout({String? deviceId}) async {
+    try {
+      await service.logout({'deviceId': deviceId});
+      debugPrint("🟢 [AuthRepository] Đã gửi yêu cầu logout thành công tới Server.");
+    } catch (e) {
+      debugPrint("⚠️ [AuthRepository] Gửi yêu cầu logout tới Server thất bại: $e");
+    }
+  }
 }

@@ -105,34 +105,40 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     child: provider.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : provider.errorMessage != null
-                            ? Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(32),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        provider.errorMessage!,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(color: ColorConstants.textSecondary),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      ElevatedButton(
-                                        onPressed: () => provider.fetchHistory(roleStr),
-                                        child: const Text("Tải lại"),
-                                      )
-                                    ],
+                            ? ListView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.all(32),
+                                children: [
+                                  const SizedBox(height: 80),
+                                  Text(
+                                    provider.errorMessage!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: ColorConstants.textSecondary),
                                   ),
-                                ),
+                                  const SizedBox(height: 16),
+                                  Center(
+                                    child: ElevatedButton(
+                                      onPressed: () => provider.fetchHistory(roleStr),
+                                      child: const Text("Tải lại"),
+                                    ),
+                                  ),
+                                ],
                               )
                             : filteredList.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      "Không tìm thấy lịch sử phù hợp.",
-                                      style: TextStyle(color: ColorConstants.textSecondary),
-                                    ),
+                                ? ListView(
+                                    physics: const AlwaysScrollableScrollPhysics(),
+                                    children: [
+                                      const SizedBox(height: 120),
+                                      Center(
+                                        child: Text(
+                                          "Không tìm thấy lịch sử phù hợp.",
+                                          style: TextStyle(color: ColorConstants.textSecondary),
+                                        ),
+                                      ),
+                                    ],
                                   )
                                 : ListView.builder(
+                                    physics: const AlwaysScrollableScrollPhysics(),
                                     padding: const EdgeInsets.symmetric(horizontal: 16),
                                     itemCount: filteredList.length,
                                     itemBuilder: (context, index) {
