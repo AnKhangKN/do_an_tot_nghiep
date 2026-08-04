@@ -18,7 +18,12 @@ class EmergencyAmenityRepository {
                 img.url as image_url
             FROM ${this.model.table} ea
             JOIN ${this.categoryModel.table} ac ON ea.${this.model.field.amenityCategoryId} = ac.${this.categoryModel.field.amenityCategoryId}
-            LEFT JOIN images img ON img.entity_id = ea.${this.model.field.amenityId} AND img.entity_type = 'EMERGENCY_AMENITY'
+            LEFT JOIN LATERAL (
+                SELECT url FROM images
+                WHERE entity_type = 'EMERGENCY_AMENITY' AND entity_id = ea.${this.model.field.amenityId}
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) img ON true
             WHERE ea.${this.model.field.status} = 'APPROVED'
               AND ac.${this.categoryModel.field.status} = 'ACTIVE'
         `;
@@ -47,7 +52,12 @@ class EmergencyAmenityRepository {
                 img.url as image_url
             FROM ${this.model.table} ea
             JOIN ${this.categoryModel.table} ac ON ea.${this.model.field.amenityCategoryId} = ac.${this.categoryModel.field.amenityCategoryId}
-            LEFT JOIN images img ON img.entity_id = ea.${this.model.field.amenityId} AND img.entity_type = 'EMERGENCY_AMENITY'
+            LEFT JOIN LATERAL (
+                SELECT url FROM images
+                WHERE entity_type = 'EMERGENCY_AMENITY' AND entity_id = ea.${this.model.field.amenityId}
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) img ON true
             WHERE ea.${this.model.field.reportedBy} = $1
             ORDER BY ea.${this.model.field.createdAt} DESC
         `;
@@ -117,7 +127,12 @@ class EmergencyAmenityRepository {
                 u_reporter.full_name as reporter_name
             FROM ${this.model.table} ea
             JOIN ${this.categoryModel.table} ac ON ea.${this.model.field.amenityCategoryId} = ac.${this.categoryModel.field.amenityCategoryId}
-            LEFT JOIN images img ON img.entity_id = ea.${this.model.field.amenityId} AND img.entity_type = 'EMERGENCY_AMENITY'
+            LEFT JOIN LATERAL (
+                SELECT url FROM images
+                WHERE entity_type = 'EMERGENCY_AMENITY' AND entity_id = ea.${this.model.field.amenityId}
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) img ON true
             LEFT JOIN users u_reporter ON ea.${this.model.field.reportedBy} = u_reporter.user_id
             ${whereClause}
             ORDER BY ea.${this.model.field.createdAt} DESC
@@ -213,8 +228,18 @@ class EmergencyAmenityRepository {
             JOIN emergency_amenities ea2 ON ea1.amenity_id < ea2.amenity_id
             JOIN amenity_categories ac1 ON ea1.amenity_category_id = ac1.amenity_category_id
             JOIN amenity_categories ac2 ON ea2.amenity_category_id = ac2.amenity_category_id
-            LEFT JOIN images img1 ON img1.entity_id = ea1.amenity_id AND img1.entity_type = 'EMERGENCY_AMENITY'
-            LEFT JOIN images img2 ON img2.entity_id = ea2.amenity_id AND img2.entity_type = 'EMERGENCY_AMENITY'
+            LEFT JOIN LATERAL (
+                SELECT url FROM images
+                WHERE entity_type = 'EMERGENCY_AMENITY' AND entity_id = ea1.amenity_id
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) img1 ON true
+            LEFT JOIN LATERAL (
+                SELECT url FROM images
+                WHERE entity_type = 'EMERGENCY_AMENITY' AND entity_id = ea2.amenity_id
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) img2 ON true
             WHERE (
                 (ea1.phone IS NOT NULL AND ea1.phone = ea2.phone)
                 OR (
