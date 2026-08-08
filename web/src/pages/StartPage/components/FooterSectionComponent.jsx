@@ -64,7 +64,7 @@ const FooterSectionComponent = ({ data = {} }) => {
                   Rescue System
                 </h3>
                 <p className="mt-0.5 text-xs font-medium text-gray-400">
-                  Hệ thống cứu hộ khẩn cấp dựa trên định vị GPS và cơ chế thông báo tức thời
+                  Hệ thống Cứu hộ Khẩn cấp dựa trên định vị GPS và cơ chế thông báo tức thời
                 </p>
               </div>
             </div>
