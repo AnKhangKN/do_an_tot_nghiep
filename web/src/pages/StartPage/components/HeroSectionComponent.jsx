@@ -50,8 +50,7 @@ const HeroSectionComponent = ({ data = {} }) => {
 
           <h1 className="max-w-3xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl xl:text-6xl">
             Hệ thống Cứu hộ Khẩn cấp{" "}
-            <span className="text-red-400">Thời gian thực</span> & Định vị
-            Cảnh báo Nhanh chóng
+            <span className="text-red-400">Thời gian thực</span> dựa trên <span className="text-red-400">Định vị GPS</span> và <span className="text-red-400">cơ chế thông báo tức thời</span>
           </h1>
 
           <p className="mt-4 max-w-xl text-sm leading-7 text-gray-300 sm:mt-6 sm:text-base">

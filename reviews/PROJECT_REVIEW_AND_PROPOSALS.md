@@ -1,8 +1,8 @@
 # BÁO CÁO REVIEW VÀ TỔNG KẾT DỰ ÁN TỐT NGHIỆP
 
-> **Tên dự án:** Xây dựng hệ thống cứu hộ khẩn cấp thời gian thực  
-> **Kiến trúc:** Monorepo gồm `server/` (Express.js), `web/` (React + Vite), `mobile/` (Flutter)  
-> **Trạng thái:** 🔥 **Đã hoàn thiện 100% tất cả các nền tảng & sẵn sàng vận hành**  
+> **Tên dự án:** Xây dựng hệ thống cứu hộ khẩn cấp thời gian thực dựa trên định vị GPS và cơ chế thông báo tức thời
+> **Kiến trúc:** Monorepo gồm `server/` (Express.js), `web/` (React + Vite), `mobile/` (Flutter)
+> **Trạng thái:** 🔥 **Đã hoàn thiện 100% tất cả các nền tảng & sẵn sàng vận hành**
 > **Cập nhật:** 08/2026
 
 ---
@@ -346,4 +346,4 @@ sequenceDiagram
 
 ## X. Kết luận
 
-Nói ngắn gọn: **Dự án tốt nghiệp "Xây dựng hệ thống cứu hộ khẩn cấp thời gian thực" đã hoàn thành 100% tất cả các mục tiêu đề ra, đạt chuẩn kiến trúc phần mềm hiện đại, vận hành ổn định mượt mà trên cả 3 nền tảng (Server, Mobile App, Web Admin) và sẵn sàng đưa vào ứng dụng thực tế để hỗ trợ cộng đồng.**
+Nói ngắn gọn: **Dự án tốt nghiệp "Xây dựng hệ thống cứu hộ khẩn cấp thời gian thực dựa trên định vị GPS và cơ chế thông báo tức thời" đã hoàn thành 100% tất cả các mục tiêu đề ra, đạt chuẩn kiến trúc phần mềm hiện đại, vận hành ổn định mượt mà trên cả 3 nền tảng (Server, Mobile App, Web Admin) và sẵn sàng đưa vào ứng dụng thực tế để hỗ trợ cộng đồng.**
