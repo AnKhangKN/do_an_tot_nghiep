@@ -52,11 +52,6 @@ const HeroSectionComponent = ({ data = {} }) => {
             Hệ thống cứu hộ Khẩn cấp <span className="text-red-400">thời gian thực</span> dự trên <span className="text-red-400">định vị GPS</span> và cơ chế <span className="text-red-400">thông báo tức thời</span>.
           </h1>
 
-          <p className="mt-4 max-w-xl text-sm leading-7 text-gray-300 sm:mt-6 sm:text-base">
-            Kết nối tức thì người cần trợ giúp với đội ngũ cứu hộ và trung tâm
-            điều phối chuyên nghiệp — trên Mobile App và Web Admin.
-          </p>
-
           <div className="mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row">
             {apkUrl ? (
               <a
