@@ -15,6 +15,11 @@ class CoreSocket {
   bool _isConnected = false;
   bool get isConnected => _isConnected;
 
+  // Các callback phải chạy lại MỖI lần socket (kết nối) mới được tạo. Đăng ký
+  // listener của feature module ở đây để không bị mất khi socket reconnect/force
+  // (connect() gọi clearListeners() khi tạo socket mới).
+  final Set<void Function()> _onConnectedHooks = {};
+
   String? _currentToken;
   String? _currentUserId;
   String? _currentRole;
@@ -67,6 +72,13 @@ class CoreSocket {
       ..onConnect((_) {
         debugPrint("🟢 [SOCKET] Connected thành công (User: $userId, Role: $role)");
         _isConnected = true;
+        for (final cb in _onConnectedHooks) {
+          try {
+            cb();
+          } catch (e) {
+            debugPrint("⚠️ [SOCKET] Lỗi chạy onConnectedHook: $e");
+          }
+        }
         if (_connectCompleter != null && !_connectCompleter!.isCompleted) {
           _connectCompleter!.complete();
         }
@@ -145,5 +157,12 @@ class CoreSocket {
 
   void off(String event) {
     _socket?.off(event);
+  }
+
+  /// Đăng ký callback được chạy lại mỗi lần socket kết nối/reconnect.
+  /// Dùng để re-register các listener feature (chat, rescuer, victim...) khi
+  /// `connect()` tạo socket mới (clearListeners xóa hết handler cũ).
+  void addOnConnectedHook(void Function() cb) {
+    _onConnectedHooks.add(cb);
   }
 }

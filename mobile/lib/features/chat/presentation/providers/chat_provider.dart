@@ -26,7 +26,11 @@ class ChatProvider extends ChangeNotifier {
     this.storageService,
   }) {
     resolveCurrentUserId();
-    _initSocketListeners();
+    // Đăng ký listener chat qua onConnectedHook: socket chưa kết nối tại thời điểm
+    // ChatProvider được khởi tạo (AppProviders build trước AppSession.init), và
+    // connect() sẽ clearListeners khi tạo socket mới. Hook này đảm bảo listener
+    // luôn được (re)register mỗi lần socket kết nối/reconnect.
+    chatSocket?.addOnConnectedHook(_initSocketListeners);
     fetchUserConversations();
   }
 
@@ -74,10 +78,12 @@ class ChatProvider extends ChangeNotifier {
 
           if (_messagesMap.containsKey(conversationId)) {
             final list = _messagesMap[conversationId]!;
-            // Kiểm tra trùng lặp: ưu tiên so sánh theo id tin nhắn chính xác
-            final tempIndex = list.indexWhere((m) => m.isMe && isMe && m.text == text && m.id != msgId && !m.isFailed);
-            if (tempIndex != -1 && msgId.length < 20) {
-              // Thay thế tin nhắn tạm bằng tin nhắn có id thực từ server
+            // Thay thế tin nhắn tạm (id timestamp ngắn) bằng tin nhắn có id thực
+            // từ server. Server luôn trả về UUID 36 ký tự nên kiểm tra id THẬT.
+            final tempIndex = list.indexWhere(
+              (m) => m.isMe && isMe && m.text == text && m.id != msgId && !m.isFailed && m.id.length < 20,
+            );
+            if (tempIndex != -1) {
               list[tempIndex] = list[tempIndex].copyWith(id: msgId);
             } else {
               final exists = list.any((m) => m.id == msgId);
@@ -341,6 +347,7 @@ class ChatProvider extends ChangeNotifier {
       phone: phone,
       isEmergency: isEmergency,
       partnerId: partnerId,
+      sosRequestId: sosRequestId,
     );
     _conversations.insert(0, newConv);
     notifyListeners();

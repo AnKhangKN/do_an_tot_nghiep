@@ -27,6 +27,17 @@ class ChatService {
             conversation = await this.chatRepository.findConversationByUsers(userId, realPartnerId, null);
         }
 
+        // Khi có sosRequestId nhưng chưa có hội thoại của ca SOS: nếu đã tồn tại hội
+        // thoại giữa 2 người (chưa gắn SOS) thì gắn luôn vào ca SOS thay vì tạo bản
+        // thứ 2 — đảm bảo mỗi ca SOS chỉ có đúng 1 cuộc hội thoại.
+        if (!conversation && sosRequestId && userId && realPartnerId && this.isUuidLike(realPartnerId)) {
+            const pairConversation = await this.chatRepository.findConversationByUsers(userId, realPartnerId, null);
+            if (pairConversation) {
+                await this.chatRepository.updateConversationSosRequestId(pairConversation.conversation_id, sosRequestId);
+                conversation = await this.chatRepository.findConversationById(pairConversation.conversation_id);
+            }
+        }
+
         if (!conversation && userId && realPartnerId && this.isUuidLike(realPartnerId)) {
             const conversationId = generateUUID();
             await transaction(async (client) => {

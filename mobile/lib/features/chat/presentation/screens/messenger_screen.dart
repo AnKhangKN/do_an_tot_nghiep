@@ -40,6 +40,7 @@ class _MessengerScreenState extends State<MessengerScreen> {
           partnerId: _partnerId,
           phone: widget.conversation.phone,
           isEmergency: widget.conversation.isEmergency,
+          sosRequestId: widget.conversation.sosRequestId,
         );
         _resolvedConversationId = resolved.id;
       } else {

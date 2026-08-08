@@ -11,6 +11,7 @@ class ConversationModel {
   final String? partnerId;
   final bool isClosed;
   final String? sosStatus;
+  final String? sosRequestId;
 
   const ConversationModel({
     required this.id,
@@ -25,5 +26,6 @@ class ConversationModel {
     this.partnerId,
     this.isClosed = false,
     this.sosStatus,
+    this.sosRequestId,
   });
 }

@@ -96,6 +96,7 @@ class ChatRepository {
       avatarUrl: item['partner_avatar']?.toString(),
       isClosed: isClosed,
       sosStatus: item['sos_status']?.toString(),
+      sosRequestId: item['sos_request_id']?.toString() ?? item['sosRequestId']?.toString(),
     );
   }
 
