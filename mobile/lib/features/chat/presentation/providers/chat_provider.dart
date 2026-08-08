@@ -74,9 +74,16 @@ class ChatProvider extends ChangeNotifier {
 
           if (_messagesMap.containsKey(conversationId)) {
             final list = _messagesMap[conversationId]!;
-            final exists = list.any((m) => m.id == msgId || (m.isMe && isMe && m.text == text && (m.id.length > 10 || msgId.length > 10)));
-            if (!exists) {
-              list.add(newMsg);
+            // Kiểm tra trùng lặp: ưu tiên so sánh theo id tin nhắn chính xác
+            final tempIndex = list.indexWhere((m) => m.isMe && isMe && m.text == text && m.id != msgId && !m.isFailed);
+            if (tempIndex != -1 && msgId.length < 20) {
+              // Thay thế tin nhắn tạm bằng tin nhắn có id thực từ server
+              list[tempIndex] = list[tempIndex].copyWith(id: msgId);
+            } else {
+              final exists = list.any((m) => m.id == msgId);
+              if (!exists) {
+                list.add(newMsg);
+              }
             }
           } else {
             _messagesMap[conversationId] = [newMsg];
@@ -228,6 +235,9 @@ class ChatProvider extends ChangeNotifier {
       return;
     }
 
+    // Lấy partnerId TRƯỚC khi thay đổi danh sách để tránh index bị lệch sau removeAt+insert
+    final resolvedPartnerId = partnerId ?? (convIndex != -1 ? _conversations[convIndex].partnerId : null);
+
     await resolveCurrentUserId();
 
     final now = TimeOfDay.now();
@@ -271,7 +281,6 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
 
     // Gửi tin nhắn qua Socket.IO thuần túy (Socket sẽ gọi ChatService lưu DB và broadcast)
-    final resolvedPartnerId = partnerId ?? (convIndex != -1 ? _conversations[convIndex].partnerId : null);
     chatSocket?.sendSocketMessage(conversationId, cleanText, partnerId: resolvedPartnerId, tempId: tempMsgId);
   }
 
