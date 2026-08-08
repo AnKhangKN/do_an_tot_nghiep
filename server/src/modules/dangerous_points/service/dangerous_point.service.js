@@ -3,6 +3,7 @@ const dangerousPointRepository = require('../repository/dangerous_point.reposito
 const { mapFields } = require('@utils/mapper.util')
 const dangerousPointModel = require("../model/dangerous_point.model")
 const { transaction } = require("@/config/database.config")
+const settingsUtil = require("@/utils/settings.util")
 
 class DangerousPointService {
     constructor() {
@@ -93,21 +94,30 @@ class DangerousPointService {
 
     /// Tự động quét và phát hiện các điểm nguy hiểm từ cụm dữ liệu SOS (Crowd-Sourced)
     async autoDetectAndCreateCrowdSourcedZones() {
-        const clusters = await this.dangerousPointRepository.detectSosClusters(200, 3);
+        const settingsMap = await settingsUtil.getSettingsMap();
+        const clusterRadiusMeters = Number(settingsMap.cluster_sos_radius) || 200;
+        const clusterMinSosCount = Number(settingsMap.cluster_sos_threshold) || 3;
+        const geofenceHighRadius = Number(settingsMap.geofence_high_radius) || 500;
+        const geofenceMediumRadius = Number(settingsMap.geofence_medium_radius) || 350;
+        const geofenceLowRadius = Number(settingsMap.geofence_low_radius) || 200;
+
+        const clusters = await this.dangerousPointRepository.detectSosClusters(clusterRadiusMeters, clusterMinSosCount);
         let createdCount = 0;
 
         for (const cluster of clusters) {
             const exists = await this.dangerousPointRepository.findNearbyDangerousPoint(
                 cluster.avgLat,
                 cluster.avgLng,
-                300
+                geofenceLowRadius
             );
 
             if (!exists) {
                 const dangerousPointId = generateUUID();
-                const dangerLevel = cluster.sosCount >= 5 ? 'HIGH' : 'MEDIUM';
+                const dangerLevel =
+                    cluster.sosCount >= clusterMinSosCount * 2 ? 'HIGH' :
+                        cluster.sosCount >= clusterMinSosCount ? 'MEDIUM' : 'LOW';
                 const zoneName = `Điểm nóng SOS (Tự động phát hiện ${cluster.sosCount} ca)`;
-                const description = `Hệ thống phân tích dữ liệu tự động ghi nhận ${cluster.sosCount} ca SOS phát sinh trong bán kính 200m. Cần Admin kiểm duyệt.`;
+                const description = `Hệ thống phân tích dữ liệu tự động ghi nhận ${cluster.sosCount} ca SOS phát sinh trong bán kính ${clusterRadiusMeters}m. Cần Admin kiểm duyệt.`;
 
                 await transaction(async (client) => {
                     await this.dangerousPointRepository.createSystemDangerousPoint(client, {
@@ -190,7 +200,9 @@ class DangerousPointService {
 
     /// Lấy danh sách điểm nguy hiểm nghi ngờ trùng lặp cho Admin
     async getDuplicateDangerousPointsAdmin() {
-        return await this.dangerousPointRepository.findDuplicatePairs(200);
+        const settingsMap = await settingsUtil.getSettingsMap();
+        const clusterRadiusMeters = Number(settingsMap.cluster_sos_radius) || 200;
+        return await this.dangerousPointRepository.findDuplicatePairs(clusterRadiusMeters);
     }
 
     /// Gộp 2 điểm nguy hiểm trùng lặp (chuyển ảnh & feedback sang bản chính, xóa bản trùng)
