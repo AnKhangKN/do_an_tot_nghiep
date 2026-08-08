@@ -26,6 +26,7 @@ const PUBLIC_KEYS = [
     "hotline_fire",
     "hotline_police",
     "hotline_emergency",
+    "hotlines_custom_list",
 ];
 
 class SettingsService {

@@ -7,10 +7,24 @@ import {
 } from "react-icons/pi";
 
 const FooterSectionComponent = ({ data = {} }) => {
+  let customHotlinesList = [];
+  try {
+    if (data.hotlines_custom_list) {
+      const parsed = JSON.parse(data.hotlines_custom_list);
+      if (Array.isArray(parsed)) {
+        customHotlinesList = parsed.filter(
+          (item) => item.phoneNumber && item.phoneNumber.trim().length > 0
+        );
+      }
+    }
+  } catch {
+    // Suppress parse error for custom hotlines
+  }
+
   const hotlines = [
     {
       number: data.hotline_medical || "115",
-      label: "Cấp cứu y tế",
+      label: "Cấp cứu Y tế",
     },
     {
       number: data.hotline_fire || "114",
@@ -20,6 +34,14 @@ const FooterSectionComponent = ({ data = {} }) => {
       number: data.hotline_police || "113",
       label: "Cảnh sát",
     },
+    {
+      number: data.hotline_emergency || "112",
+      label: "Cứu nạn Quốc gia",
+    },
+    ...customHotlinesList.map((item) => ({
+      number: item.phoneNumber,
+      label: item.title || "Hotline bổ sung",
+    })),
   ];
 
   const school = data.thesis_school || "";

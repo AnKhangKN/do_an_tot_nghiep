@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS = [
     { key: "hotline_fire", value: "114", label: "Hotline chữa cháy", group: "hotline", type: "string" },
     { key: "hotline_police", value: "113", label: "Hotline cảnh sát", group: "hotline", type: "string" },
     { key: "hotline_emergency", value: "112", label: "Số khẩn cấp quốc gia", group: "hotline", type: "string" },
+    { key: "hotlines_custom_list", value: "[]", label: "Danh sách Hotline bổ sung / địa phương (JSON)", group: "hotline", type: "string" },
 
     { key: "thesis_author_name", value: "", label: "Tên sinh viên thực hiện", group: "thesis", type: "string" },
     { key: "thesis_student_id", value: "", label: "Mã số sinh viên", group: "thesis", type: "string" },

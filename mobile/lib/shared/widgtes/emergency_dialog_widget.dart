@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/color_constants.dart';
 import '../../core/di/di.dart';
 import '../../core/location/data/location_service.dart';
+import '../../core/network/dio_client.dart';
 import '../../core/session/session_controller.dart';
 import '../../core/utils/app_snackbar.dart';
 
@@ -26,7 +28,7 @@ class EmergencyContactItem {
 class EmergencyDialogWidget extends StatefulWidget {
   const EmergencyDialogWidget({super.key});
 
-  static const List<EmergencyContactItem> _contacts = [
+  static const List<EmergencyContactItem> _defaultContacts = [
     EmergencyContactItem(
       title: '115 - Cấp cứu Y tế',
       phoneNumber: '115',
@@ -75,6 +77,7 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
   final TextEditingController _customPhoneController = TextEditingController();
   
   late TabController _tabController;
+  List<EmergencyContactItem> _contactsList = EmergencyDialogWidget._defaultContacts;
   String? _savedEmergencyPhone;
   bool _isSavingPhone = false;
   bool _isLocating = false;
@@ -84,6 +87,91 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _loadCustomPhone();
+    _fetchSystemHotlines();
+  }
+
+  Future<void> _fetchSystemHotlines() async {
+    try {
+      final dio = getIt<DioClient>().dio;
+      final response = await dio.get('/api/public/settings/thesis-info');
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data['data'] ?? response.data;
+        if (data is Map) {
+          final String med = data['hotline_medical']?.toString() ?? '115';
+          final String fire = data['hotline_fire']?.toString() ?? '114';
+          final String pol = data['hotline_police']?.toString() ?? '113';
+          final String emg = data['hotline_emergency']?.toString() ?? '112';
+
+          final List<EmergencyContactItem> updated = [
+            EmergencyContactItem(
+              title: '$med - Cấp cứu Y tế',
+              phoneNumber: med,
+              description: 'Gọi cấp cứu y tế khẩn cấp, xe thương bệnh nhân',
+              icon: Icons.medical_services_rounded,
+              color: ColorConstants.danger,
+            ),
+            EmergencyContactItem(
+              title: '$fire - Cứu hộ & Cứu hỏa',
+              phoneNumber: fire,
+              description: 'Phòng cháy chữa cháy, cứu hộ cứu nạn thiên tai',
+              icon: Icons.local_fire_department_rounded,
+              color: ColorConstants.dangerMedium,
+            ),
+            EmergencyContactItem(
+              title: '$pol - Cảnh sát phản ứng nhanh',
+              phoneNumber: pol,
+              description: 'Cảnh sát trật tự, sự cố an ninh trật tự giao thông',
+              icon: Icons.local_police_rounded,
+              color: ColorConstants.primary,
+            ),
+            EmergencyContactItem(
+              title: '$emg - Tìm kiếm Cứu nạn Quốc gia',
+              phoneNumber: emg,
+              description: 'Yêu cầu trợ giúp tìm kiếm cứu nạn trên toàn quốc',
+              icon: Icons.sos_rounded,
+              color: ColorConstants.dangerHigh,
+            ),
+          ];
+
+          final customRaw = data['hotlines_custom_list']?.toString();
+          if (customRaw != null && customRaw.isNotEmpty) {
+            try {
+              final parsed = jsonDecode(customRaw);
+              if (parsed is List) {
+                for (var item in parsed) {
+                  if (item is Map) {
+                    final phone = item['phoneNumber']?.toString() ?? '';
+                    if (phone.trim().isNotEmpty) {
+                      final title = item['title']?.toString() ?? 'Hotline cứu hộ';
+                      final desc = item['description']?.toString() ?? 'Đường dây nóng hỗ trợ khẩn cấp';
+                      updated.add(
+                        EmergencyContactItem(
+                          title: title,
+                          phoneNumber: phone,
+                          description: desc,
+                          icon: Icons.phone_in_talk_rounded,
+                          color: const Color(0xFF16A34A),
+                        ),
+                      );
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              debugPrint('Error parsing custom hotlines: $e');
+            }
+          }
+
+          if (mounted) {
+            setState(() {
+              _contactsList = updated;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching system hotlines: $e');
+    }
   }
 
   @override
@@ -311,10 +399,10 @@ class _EmergencyDialogWidgetState extends State<EmergencyDialogWidget> with Sing
   Widget _buildHotlineTab() {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: EmergencyDialogWidget._contacts.length,
+      itemCount: _contactsList.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
-        final item = EmergencyDialogWidget._contacts[index];
+        final item = _contactsList[index];
         return Container(
           decoration: BoxDecoration(
             color: ColorConstants.bgCanvas,

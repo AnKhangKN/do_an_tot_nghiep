@@ -18,6 +18,8 @@ import {
   PiListPlusFill,
   PiStudentFill,
   PiLinkSimple,
+  PiPlusBold,
+  PiTrashFill,
 } from "react-icons/pi";
 import { getSystemSettings, updateSystemSettings } from "@/api/admin/SettingApi";
 
@@ -52,6 +54,7 @@ const DEFAULT_FORM_VALUES = {
   hotline_fire: "114",
   hotline_police: "113",
   hotline_emergency: "112",
+  hotlines_custom_list: "[]",
 
   // Đồ án tốt nghiệp
   thesis_author_name: "",
@@ -128,6 +131,51 @@ const SettingPage = () => {
       setFormValues(DEFAULT_FORM_VALUES);
       showToast("Đã khôi phục biểu mẫu về giá trị mặc định. Hãy bấm 'Lưu Cấu Hình' để áp dụng.", "info");
     }
+  };
+
+  // Quản lý hotline bổ sung động
+  const getCustomHotlines = () => {
+    try {
+      const list = JSON.parse(formValues.hotlines_custom_list || "[]");
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const handleAddCustomHotline = () => {
+    const list = getCustomHotlines();
+    const newItem = {
+      id: Date.now().toString(),
+      title: "",
+      phoneNumber: "",
+      description: "",
+    };
+    const updated = [...list, newItem];
+    setFormValues((prev) => ({
+      ...prev,
+      hotlines_custom_list: JSON.stringify(updated),
+    }));
+  };
+
+  const handleUpdateCustomHotline = (id, field, value) => {
+    const list = getCustomHotlines();
+    const updated = list.map((item) =>
+      item.id === id ? { ...item, [field]: value } : item
+    );
+    setFormValues((prev) => ({
+      ...prev,
+      hotlines_custom_list: JSON.stringify(updated),
+    }));
+  };
+
+  const handleRemoveCustomHotline = (id) => {
+    const list = getCustomHotlines();
+    const updated = list.filter((item) => item.id !== id);
+    setFormValues((prev) => ({
+      ...prev,
+      hotlines_custom_list: JSON.stringify(updated),
+    }));
   };
 
   const renderToggle = (key, label, desc) => {
@@ -531,7 +579,7 @@ const SettingPage = () => {
                   <span>Hotline Khẩn cấp Quốc gia & Số Tổng đài</span>
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Cấu hình các số điện thoại gọi nhanh khẩn cấp hiển thị trên App Mobile Nạn nhân
+                  Cấu hình các số điện thoại gọi nhanh khẩn cấp hiển thị trên App Mobile Nạn nhân & Trang chủ
                 </p>
               </div>
 
@@ -566,6 +614,95 @@ const SettingPage = () => {
                   "Số điện thoại tổng đài cứu nạn khẩn cấp 24/7",
                   "",
                   "text"
+                )}
+              </div>
+
+              {/* SECTION: HOTLINE BỔ SUNG DÙNG CHO ĐỊA PHƯƠNG/KHU VỰC */}
+              <div className="pt-6 border-t border-gray-100 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <PiListPlusFill className="text-blue-500" />
+                      <span>Danh sách Hotline bổ sung / Địa phương (Không giới hạn)</span>
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Thêm các số điện thoại cứu hộ giao thông, cứu trợ bão lũ địa phương để người dân gọi trực tiếp trên App
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddCustomHotline}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm"
+                  >
+                    <PiPlusBold size={14} />
+                    <span>Thêm Hotline mới</span>
+                  </button>
+                </div>
+
+                {getCustomHotlines().length === 0 ? (
+                  <div className="p-6 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center">
+                    <p className="text-xs text-gray-500 font-medium">Chưa có hotline bổ sung nào được cấu hình.</p>
+                    <p className="text-[11px] text-gray-400 mt-1">Bấm nút "Thêm Hotline mới" ở trên để tạo thêm các số hotline cứu hộ khu vực.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {getCustomHotlines().map((item, index) => (
+                      <div
+                        key={item.id || index}
+                        className="p-4 rounded-2xl bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-700">Hotline bổ sung #{index + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCustomHotline(item.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all"
+                            title="Xóa hotline này"
+                          >
+                            <PiTrashFill size={16} />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-600 mb-1">
+                              Tên Hotline / Đơn vị
+                            </label>
+                            <input
+                              type="text"
+                              value={item.title || ""}
+                              onChange={(e) => handleUpdateCustomHotline(item.id, "title", e.target.value)}
+                              placeholder="Ví dụ: Cứu hộ giao thông Đã Nẵng"
+                              className="w-full px-3 py-2 rounded-xl text-xs border border-gray-200 bg-white focus:outline-none focus:border-blue-500 font-medium text-gray-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-600 mb-1">
+                              Số điện thoại
+                            </label>
+                            <input
+                              type="text"
+                              value={item.phoneNumber || ""}
+                              onChange={(e) => handleUpdateCustomHotline(item.id, "phoneNumber", e.target.value)}
+                              placeholder="Ví dụ: 02363114114"
+                              className="w-full px-3 py-2 rounded-xl text-xs border border-gray-200 bg-white focus:outline-none focus:border-blue-500 font-medium text-gray-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-600 mb-1">
+                              Mô tả ngắn
+                            </label>
+                            <input
+                              type="text"
+                              value={item.description || ""}
+                              onChange={(e) => handleUpdateCustomHotline(item.id, "description", e.target.value)}
+                              placeholder="Ví dụ: Đội xe kéo & ứng cứu 24/7"
+                              className="w-full px-3 py-2 rounded-xl text-xs border border-gray-200 bg-white focus:outline-none focus:border-blue-500 text-gray-700"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>

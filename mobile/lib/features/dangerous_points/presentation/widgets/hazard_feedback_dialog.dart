@@ -150,198 +150,195 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final maxHeight = MediaQuery.of(context).size.height * 0.85;
+
     return Container(
+      constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: BoxDecoration(
         color: ColorConstants.surfaceWhite,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: const EdgeInsets.only(
-        bottom: 16,
+      padding: EdgeInsets.only(
+        bottom: bottomInset + 16,
         top: 12,
         left: 20,
         right: 20,
       ),
-      child: MediaQuery.removeViewInsets(
-        removeBottom: true,
-        context: context,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thanh kéo drag handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 14),
+      child: ListView(
+        shrinkWrap: true,
+        physics: const BouncingScrollPhysics(),
+        children: [
+          // Thanh kéo drag handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: BoxDecoration(
+                color: ColorConstants.borderDark,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: ColorConstants.borderDark,
-                  borderRadius: BorderRadius.circular(2),
+                  color: Colors.orange.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.rate_review_rounded,
+                  color: Colors.orange,
+                  size: 24,
                 ),
               ),
-            ),
-
-            // Header
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.rate_review_rounded,
-                    color: Colors.orange,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Phản hồi & Xác minh',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: ColorConstants.slateDark,
-                        ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Phản hồi & Xác minh',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: ColorConstants.slateDark,
                       ),
-                      Text(
-                        widget.zoneName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorConstants.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      widget.zoneName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ColorConstants.textSecondary,
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Options List
-            _buildOptionTile(
-              type: 'VERIFY_REAL',
-              title: '👍 Xác nhận điểm này có thật',
-              subtitle: 'Điểm nguy hiểm/sự cố đúng với thực tế hiện trường',
-              icon: Icons.thumb_up_alt_rounded,
-              activeColor: const Color(0xFF16A34A),
-            ),
-            const SizedBox(height: 8),
-
-            _buildOptionTile(
-              type: 'REPORT_FAKE',
-              title: '⚠️ Báo cáo điểm giả mạo',
-              subtitle: 'Thông tin địa điểm sai sự thật hoặc bị cố ý đặt giả',
-              icon: Icons.report_problem_rounded,
-              activeColor: const Color(0xFFDC2626),
-            ),
-            const SizedBox(height: 8),
-
-            _buildOptionTile(
-              type: 'MARKED_RESOLVED',
-              title: '✅ Báo cáo đã an toàn / hết sự cố',
-              subtitle: 'Sự cố đã được giải quyết hoặc nước đã rút hoàn toàn',
-              icon: Icons.verified_user_rounded,
-              activeColor: const Color(0xFF2563EB),
-            ),
-            const SizedBox(height: 8),
-
-            _buildOptionTile(
-              type: 'STILL_DANGEROUS',
-              title: '🔥 Xác nhận vẫn còn nguy hiểm',
-              subtitle: 'Mức độ rủi ro vẫn còn cao, chưa an toàn cho di chuyển',
-              icon: Icons.warning_amber_rounded,
-              activeColor: const Color(0xFFD97706),
-            ),
-            const SizedBox(height: 14),
-
-            // Comment Field
-            Text(
-              'Ghi chú bổ sung (không bắt buộc):',
-              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: ColorConstants.textSecondary),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _commentController,
-              maxLines: 2,
-              style: const TextStyle(fontSize: 13),
-              decoration: InputDecoration(
-                hintText: 'Nhập chi tiết tình hình thực tế hiện tại...',
-                hintStyle: TextStyle(color: ColorConstants.textMuted, fontSize: 12),
-                contentPadding: const EdgeInsets.all(12),
-                filled: true,
-                fillColor: ColorConstants.bgCanvas,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: ColorConstants.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 18),
+            ],
+          ),
+          const SizedBox(height: 16),
 
-            // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: ColorConstants.borderDark),
-                      backgroundColor: ColorConstants.bgCanvas,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(false),
-                    child: Text(
-                      'Hủy',
-                      style: TextStyle(color: ColorConstants.textSecondary, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    onPressed: _isSubmitting ? null : _handleSubmit,
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text(
-                            'Gửi phản hồi',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                  ),
-                ),
-              ],
+          // Options List
+          _buildOptionTile(
+            type: 'VERIFY_REAL',
+            title: '👍 Xác nhận điểm này có thật',
+            subtitle: 'Điểm nguy hiểm/sự cố đúng với thực tế hiện trường',
+            icon: Icons.thumb_up_alt_rounded,
+            activeColor: const Color(0xFF16A34A),
+          ),
+          const SizedBox(height: 8),
+
+          _buildOptionTile(
+            type: 'REPORT_FAKE',
+            title: '⚠️ Báo cáo điểm giả mạo',
+            subtitle: 'Thông tin địa điểm sai sự thật hoặc bị cố ý đặt giả',
+            icon: Icons.report_problem_rounded,
+            activeColor: const Color(0xFFDC2626),
+          ),
+          const SizedBox(height: 8),
+
+          _buildOptionTile(
+            type: 'MARKED_RESOLVED',
+            title: '✅ Báo cáo đã an toàn / hết sự cố',
+            subtitle: 'Sự cố đã được giải quyết hoặc nước đã rút hoàn toàn',
+            icon: Icons.verified_user_rounded,
+            activeColor: const Color(0xFF2563EB),
+          ),
+          const SizedBox(height: 8),
+
+          _buildOptionTile(
+            type: 'STILL_DANGEROUS',
+            title: '🔥 Xác nhận vẫn còn nguy hiểm',
+            subtitle: 'Mức độ rủi ro vẫn còn cao, chưa an toàn cho di chuyển',
+            icon: Icons.warning_amber_rounded,
+            activeColor: const Color(0xFFD97706),
+          ),
+          const SizedBox(height: 14),
+
+          // Comment Field
+          Text(
+            'Ghi chú bổ sung (không bắt buộc):',
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: ColorConstants.textSecondary),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _commentController,
+            maxLines: 2,
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Nhập chi tiết tình hình thực tế hiện tại...',
+              hintStyle: TextStyle(color: ColorConstants.textMuted, fontSize: 12),
+              contentPadding: const EdgeInsets.all(12),
+              filled: true,
+              fillColor: ColorConstants.bgCanvas,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: ColorConstants.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+          const SizedBox(height: 18),
+
+          // Action Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: ColorConstants.borderDark),
+                    backgroundColor: ColorConstants.bgCanvas,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(false),
+                  child: Text(
+                    'Hủy',
+                    style: TextStyle(color: ColorConstants.textSecondary, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: _isSubmitting ? null : _handleSubmit,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text(
+                          'Gửi phản hồi',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
