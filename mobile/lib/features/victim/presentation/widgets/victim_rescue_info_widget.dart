@@ -131,8 +131,17 @@ class _VictimRescueInfoWidgetState extends State<VictimRescueInfoWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final name = widget.activeRescuer?['fullName'] ?? 'Không rõ';
-    final phone = widget.activeRescuer?['phone'];
+    final name = widget.activeRescuer?['fullName'] ??
+        widget.activeRescuer?['full_name'] ??
+        widget.activeRescuer?['name'] ??
+        widget.activeRescuer?['rescuerName'] ??
+        widget.activeRescuer?['rescuer_name'] ??
+        'Không rõ';
+    final phone = widget.activeRescuer?['phone'] ??
+        widget.activeRescuer?['phoneNumber'] ??
+        widget.activeRescuer?['phone_number'] ??
+        widget.activeRescuer?['rescuerPhone'] ??
+        widget.activeRescuer?['rescuer_phone'];
     final rescuerUserId = widget.activeRescuer?['userId'] ?? widget.activeRescuer?['user_id'] ?? widget.activeRescuer?['rescuerId'] ?? widget.activeRescuer?['rescuer_id'] ?? widget.activeRescuer?['id'];
     final sosRequestId = widget.activeRescuer?['sosRequestId'] ?? widget.activeRescuer?['sos_request_id'] ?? widget.activeRescuer?['sosId'] ?? widget.activeRescuer?['sos_id'];
 
@@ -245,37 +254,40 @@ class _VictimRescueInfoWidgetState extends State<VictimRescueInfoWidget> {
                 ),
               ),
 
-
-              if (phone != null && phone.toString().isNotEmpty) ...[
-                MessengerWidget(
-                  phoneNumber: phone.toString(),
-                  partnerId: rescuerUserId?.toString(),
-                  partnerName: '$name (Cứu hộ viên)',
-                  sosRequestId: sosRequestId?.toString(),
-                  onTap: () async {
-                    final chatProvider = context.read<ChatProvider>();
-                    final conv = await chatProvider.getOrCreateConversation(
-                      id: rescuerUserId?.toString() ?? 'rescuer_${phone ?? name}',
-                      partnerId: rescuerUserId?.toString(),
-                      name: '$name (Cứu hộ viên)',
-                      phone: phone?.toString(),
-                      sosRequestId: sosRequestId?.toString(),
-                    );
-                    if (context.mounted) {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => MessengerScreen(conversation: conv),
-                        ),
+              Row(
+                children: [
+                  MessengerWidget(
+                    phoneNumber: phone?.toString(),
+                    partnerId: rescuerUserId?.toString(),
+                    partnerName: '$name (Cứu hộ viên)',
+                    sosRequestId: sosRequestId?.toString(),
+                    onTap: () async {
+                      final chatProvider = context.read<ChatProvider>();
+                      final conv = await chatProvider.getOrCreateConversation(
+                        id: rescuerUserId?.toString() ?? 'rescuer_${phone ?? name}',
+                        partnerId: rescuerUserId?.toString(),
+                        name: '$name (Cứu hộ viên)',
+                        phone: phone?.toString(),
+                        sosRequestId: sosRequestId?.toString(),
                       );
-                      // Tự động đồng bộ lại trạng thái khi quay về màn hình bản đồ
-                      getIt<AppSession>().checkAndRestoreActiveRescue();
-                    }
-                  },
-                ),
-                PhoneCallWidget(
-                  phoneNumber: phone.toString(),
-                ),
-              ],
+                      if (context.mounted) {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => MessengerScreen(conversation: conv),
+                          ),
+                        );
+                        // Tự động đồng bộ lại trạng thái khi quay về màn hình bản đồ
+                        getIt<AppSession>().checkAndRestoreActiveRescue();
+                      }
+                    },
+                  ),
+                  if (phone != null && phone.toString().trim().isNotEmpty) ...[
+                    PhoneCallWidget(
+                      phoneNumber: phone.toString(),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 14),

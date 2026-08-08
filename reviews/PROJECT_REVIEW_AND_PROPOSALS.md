@@ -15,6 +15,18 @@ Dự án đã phát triển và hoàn thiện thành công hệ thống sinh th�
 2. **Mobile Application (`mobile/`)**: Ứng dụng Flutter dành riêng cho Nạn nhân (Victim) và Cứu hộ viên (Rescuer) với kiến trúc Feature-First Clean Architecture, tối ưu hóa giao diện cho các tình huống khẩn cấp ngoài hiện trường.
 3. **Web Admin Dashboard (`web/`)**: Trang quản trị React/Vite tích hợp TailwindCSS theo tone màu xám đen hiện đại, cung cấp bộ công cụ điều phối toàn diện bao gồm theo dõi Heatmap điểm nóng, kiểm duyệt AI, quản trị người dùng, phát thông báo đẩy và trích xuất báo cáo vận hành thời gian thực.
 
+### I.1 Giải trình Tên Đề tài & Phạm vi (Phản hồi Hội đồng)
+
+Tên đề tài **"Xây dựng hệ thống cứu hộ khẩn cấp thời gian thực dựa trên định vị GPS và cơ chế thông báo tức thời"** được xác lập dựa trên 3 yếu tố định phạm vi rõ ràng:
+
+| Yếu tố | Thể hiện trong tên | Minh chứng trong hệ thống |
+|---|---|---|
+| **Đối tượng** | *Hệ thống cứu hộ khẩn cấp* | 2 vai trò tương tác chính: Nạn nhân (Victim) & Cứu hộ viên (Rescuer); cùng đơn vị quản trị điều phối (Admin) |
+| **Công nghệ cốt lõi** | *Định vị GPS* + *Thông báo tức thời* | Redis Geo định vị đa bán kính, Socket.io thời gian thực, FCM Push Notification, OSRM routing dẫn đường |
+| **Phạm vi triển khai** | *Thời gian thực* | Sinh thái 3 nền tảng đồng bộ: Mobile App (Flutter), Web Admin Dashboard (React), Backend Server (Express.js) |
+
+Tên đề tài **giới hạn rõ ràng** trong phạm vi cứu hộ khẩn cấp và định vị thực địa, không kéo dài sang các bài toán ngoài phạm vi như thương mại dịch vụ hay quản lý giao thông đô thị tổng thể.
+
 ---
 
 ## II. Kiến trúc Kỹ thuật & Hạ tầng
@@ -333,6 +345,7 @@ sequenceDiagram
 - **Tính Thực tiễn ngoài Hiện trường**: Ứng dụng Mobile Flutter phản hồi mượt mà, hỗ trợ OSRM chỉ đường chính xác, tự nâng bán kính Geofence và tích hợp sẵn nút gọi 115/114/113/112 nhanh.
 - **Quản trị Toàn diện**: Web Admin cung cấp đầy đủ công cụ từ điều phối realtime, quản lý tài khoản, phân tích hiệu suất cứu hộ viên, xử lý kháng cáo đến broadcast thông báo đẩy.
 - **Tính Công bằng & Kỷ luật**: Hệ thống Penalty & Appeal đảm bảo cân bằng giữa kỷ luật người dùng vi phạm và cơ chế phản biện công bằng với giới hạn rõ ràng.
+- **Bảo mật Dữ liệu & Quyền riêng tư Vị trí GPS**: Toàn bộ luồng GPS được bảo vệ đa lớp — JWT xác thực mọi kết nối Socket.io trước khi nhận tọa độ; tọa độ GPS chỉ phát trong thời gian ca cứu hộ đang diễn ra (không lưu vĩnh viễn dữ liệu di chuyển thô); phân quyền truy cập nghiêm ngặt theo vai trò (Victim chỉ nhận GPS của Rescuer được ghép đôi đúng ca); kênh truyền SSL/TLS mã hóa HTTPS/WSS.
 
 ---
 
@@ -341,6 +354,62 @@ sequenceDiagram
 1. **Tích hợp Kênh Dịch tự động Đa ngôn ngữ (Multi-language Translate API)**: Hỗ trợ tự động dịch tin nhắn giữa Nạn nhân quốc tế và Cứu hộ viên địa phương trong tình huống cứu hộ du khách.
 2. **Hỗ trợ Thiết bị IoT & Nút bấm SOS Phần cứng (IoT Bluetooth SOS Beacon)**: Kết nối với các thiết bị đeo thông minh hoặc nút bấm Bluetooth ngoài hiện trường để tự động phát SOS khi xảy ra va chạm mạnh.
 3. **Mở rộng Widget Cứu hộ trên Màn hình khóa Mobile (iOS Live Activities & Android Lockscreen Widget)**: Hiển thị trực tiếp khoảng cách cứu hộ viên và thời gian ETA ngay trên màn hình khóa điện thoại mà không cần mở ứng dụng.
+
+---
+
+## XI. Làm rõ Mục tiêu Kỹ thuật Trọng tâm (Phản hồi Hội đồng)
+
+### XI.1 Cơ chế Đánh dấu & Quản lý Vị trí Nguy hiểm
+
+Hệ thống triển khai quy trình **Crowd-Sourced → AI Clustering → Admin Moderation → Geofence Alert** khép kín nhằm phát hiện và cảnh báo các khu vực rủi ro:
+
+```mermaid
+flowchart TD
+    A["Người dùng báo cáo điểm nguy hiểm\n(Tọa độ GPS, ảnh hiện trường, loại sự cố)"] --> B["Server lưu báo cáo vào DB\n(Trạng thái PENDING)"]
+    B --> C{"Thuật toán Auto-Clustering\n(≥ 3 SOS trong bán kính 200m)"}
+    C -->|Đủ ngưỡng| D["Gợi ý vùng nguy hiểm mới\ncho Admin kiểm duyệt"]
+    C -->|Chưa đủ| E["Lưu vết báo cáo đơn lẻ\ntiếp tục thu thập dữ liệu"]
+    D --> F{"Admin kiểm duyệt\ntrên Web Dashboard"}
+    F -->|Duyệt| G["Điểm nguy hiểm ACTIVE\nhiển thị trên bản đồ toàn hệ thống"]
+    F -->|Từ chối| H["Đánh dấu REJECTED\nkhông hiển thị"]
+    G --> I["Mobile App tự kích hoạt Geofence\nBán kính 200m / 350m / 500m\nCảnh báo âm thanh & rung"]
+    G --> J["Cộng đồng phản hồi xác minh\n(Xác nhận thật / Báo giả / Báo an toàn)"]
+    J -->|Đủ phản hồi an toàn| K["Admin xem xét chuyển\nsang trạng thái RESOLVED"]
+```
+
+**Phân định quyền hạn chuyên biệt:**
+- **Người dùng / Nạn nhân**: Đóng góp báo cáo vị trí nguy hiểm mới + Phản hồi xác minh cộng đồng (không thể tự kích hoạt điểm nguy hiểm trên toàn hệ thống).
+- **Trạm Điều phối (Admin)**: Toàn quyền kiểm duyệt (Duyệt / Từ chối / Gỡ bỏ / Gộp địa điểm trùng); Cấu hình động bán kính Geofence thời gian thực qua System Settings không cần dừng server.
+
+---
+
+### XI.2 Bảo mật Dữ liệu Vị trí GPS & Quyền Riêng tư
+
+Dữ liệu vị trí GPS là thông tin nhạy cảm nhất trong các ứng dụng cứu hộ. Hệ thống áp dụng nguyên tắc **Tối thiểu hóa Dữ liệu (Data Minimization)** và **Phân quyền Phạm vi Ca cứu hộ (Session-Scoped Access Control)**:
+
+| Lớp bảo vệ | Cơ chế Kỹ thuật | Phạm vi & Tác dụng |
+|---|---|---|
+| **Xác thực kết nối Realtime** | Socket.io Middleware thẩm định JWT Access Token | Chặn toàn bộ kết nối không hợp lệ trước khi được phép lắng nghe hoặc phát tọa độ GPS. |
+| **Phân quyền scoped theo ca** | Nạn nhân chỉ nhận sự kiện `sos:location_update` của Cứu hộ viên được hệ thống ghép đôi thành công | Ngăn chặn việc truy vết vị trí của cứu hộ viên hoặc người dùng khác ngoài phạm vi ca cứu hộ đang xử lý. |
+| **Không lưu trữ GPS thô vĩnh viễn** | Tọa độ GPS realtime chỉ được phát qua Socket.io & Redis Geo đệm tạm thời | Không ghi vết đường đi (tracking logs) vĩnh viễn vào DB; DB PostgreSQL chỉ lưu vị trí GPS tại thời điểm phát SOS và tọa độ điểm nguy hiểm được duyệt. |
+| **Mã hóa kênh truyền** | Toàn bộ API và kết nối WebSocket chạy qua HTTPS (TLS) và WSS (WebSocket Secure) | Chặn các cuộc tấn công nghe lén (Man-in-the-Middle) trên đường truyền mạng. |
+| **Tự động đóng Session GPS** | Ca cứu hộ chuyển trạng thái `COMPLETED` hoặc `CANCELLED` → Đóng kênh Socket | Tự động chấm dứt stream GPS ngay lập tức khi ca kết thúc. |
+| **Tự dọn dẹp Cache Redis** | Redis GEOADD vị trí sẵn sàng của cứu hộ viên tự hết hạn khi chuyển Offline | Không tồn tại vị trí cứu hộ viên trên bộ nhớ đệm khi họ không trong ca làm việc. |
+
+---
+
+### XI.3 Hạn chế Độ chính xác GPS Thực tế & Giải pháp Ứng phó
+
+Trong điều kiện thực tế ngoài hiện trường, định vị GPS luôn có sai số do môi trường vật lý. Hệ thống thiết kế sẵn các giải pháp kỹ thuật dự phòng (Fallback & Workaround):
+
+| Tình huống Thực tế | Hạn chế Kỹ thuật GPS | Giải pháp Ứng phó trong Hệ thống |
+|---|---|---|
+| **Trong nhà / Tầng hầm** | Tín hiệu vệ tinh bị che khuất, GPS drift sai số ±10–50m hoặc mất hẳn | **QR Fallback Mechanism**: Nạn nhân tạo mã QR chứa thông tin SOS ID; Cứu hộ viên quét mã QR trực tiếp tại hiện trường để xác nhận nhận ca không phụ thuộc GPS. |
+| **Tòa nhà nhiều tầng (Chung cư, Trung tâm thương mại)** | GPS chỉ cung cấp tọa độ 2D (Kinh độ/Vĩ độ), không nhận diện được độ cao/tầng | Nạn nhân bắt buộc có trường **Mô tả chi tiết vị trí** (số tầng, số phòng, ghi chú hiện trường) khi gửi SOS. |
+| **Mất sóng di động / Rừng núi / Đường hầm** | Không có kết nối mạng để phát tọa độ GPS realtime | **Offline Resiliency Queue**: Mobile App lưu trữ tạm tin nhắn và tọa độ vào hàng队列 local, tự động đồng bộ lại ngay khi thiết bị có lại kết nối Internet. |
+| **Khởi động ứng dụng (GPS Cold Start)** | Thiết bị cần 15–45 giây để định vị chính xác vị trí ban đầu | **Nút nhấn giữ SOS 2 giây**: Vừa chống bấm nhầm, vừa dành thời gian cho cảm biến GPS trên điện thoại khóa tọa độ (GPS Lock) chuẩn xác trước khi gửi API. |
+| **Nhiễu đô thị (Urban Canyon)** | Tín hiệu GPS bị phản xạ bởi các tòa nhà cao tầng, gây sai số bán kính ±20m | **Thuật toán ghép đôi linh hoạt (Tolerance Matching)**: Động mở rộng bán kính tìm kiếm trong Redis Geo (`2km → 5km → 10km → 20km`), không yêu cầu tọa độ trùng khớp tuyệt đối. |
+| **Độ trễ cập nhật khi di chuyển nhanh** | Vị trí GPS cập nhật lệch 1–3 giây so với thực tế di chuyển | **Tích hợp OSRM Navigation**: Tính toán lại lộ trình và cập nhật ETA tự động sau mỗi khoảng nhận tọa độ mới, đảm bảo ước tính thời gian chính xác. |
 
 ---
 

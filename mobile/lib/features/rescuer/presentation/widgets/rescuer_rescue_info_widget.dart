@@ -100,8 +100,17 @@ class RescuerRescueInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final victimName = activeVictim?['fullName'] ?? 'Không rõ';
-    final victimPhone = activeVictim?['phone'];
+    final victimName = activeVictim?['fullName'] ??
+        activeVictim?['full_name'] ??
+        activeVictim?['name'] ??
+        activeVictim?['victimName'] ??
+        activeVictim?['victim_name'] ??
+        'Không rõ';
+    final victimPhone = activeVictim?['phone'] ??
+        activeVictim?['phoneNumber'] ??
+        activeVictim?['phone_number'] ??
+        activeVictim?['victimPhone'] ??
+        activeVictim?['victim_phone'];
     final displayIncidentType = incidentTypeName ?? activeVictim?['incidentTypeName'] ?? activeVictim?['serviceType'];
     final victimUserId = activeVictim?['userId'] ?? activeVictim?['user_id'] ?? activeVictim?['victimId'] ?? activeVictim?['victim_id'] ?? activeVictim?['id'];
     final resolvedSosId = sosRequestId ?? activeVictim?['sosRequestId'] ?? activeVictim?['sos_request_id'] ?? activeVictim?['sosId'] ?? activeVictim?['sos_id'];
@@ -254,34 +263,38 @@ class RescuerRescueInfoWidget extends StatelessWidget {
               ),
 
               
-              if (victimPhone != null && victimPhone.toString().isNotEmpty) ...[
-                MessengerWidget(
-                  phoneNumber: victimPhone.toString(),
-                  partnerId: victimUserId?.toString(),
-                  partnerName: '$victimName (Nạn nhân)',
-                  sosRequestId: resolvedSosId?.toString(),
-                  onTap: () async {
-                    final chatProvider = context.read<ChatProvider>();
-                    final conv = await chatProvider.getOrCreateConversation(
-                      id: victimUserId?.toString() ?? 'victim_${victimPhone ?? victimName}',
-                      partnerId: victimUserId?.toString(),
-                      name: '$victimName (Nạn nhân)',
-                      phone: victimPhone?.toString(),
-                      sosRequestId: resolvedSosId?.toString(),
-                    );
-                    if (context.mounted) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => MessengerScreen(conversation: conv),
-                        ),
+              Row(
+                children: [
+                  MessengerWidget(
+                    phoneNumber: victimPhone?.toString(),
+                    partnerId: victimUserId?.toString(),
+                    partnerName: '$victimName (Nạn nhân)',
+                    sosRequestId: resolvedSosId?.toString(),
+                    onTap: () async {
+                      final chatProvider = context.read<ChatProvider>();
+                      final conv = await chatProvider.getOrCreateConversation(
+                        id: victimUserId?.toString() ?? 'victim_${victimPhone ?? victimName}',
+                        partnerId: victimUserId?.toString(),
+                        name: '$victimName (Nạn nhân)',
+                        phone: victimPhone?.toString(),
+                        sosRequestId: resolvedSosId?.toString(),
                       );
-                    }
-                  },
-                ),
-                PhoneCallWidget(
-                  phoneNumber: victimPhone.toString(),
-                ),
-              ],
+                      if (context.mounted) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => MessengerScreen(conversation: conv),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  if (victimPhone != null && victimPhone.toString().trim().isNotEmpty) ...[
+                    PhoneCallWidget(
+                      phoneNumber: victimPhone.toString(),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
           if (displayIncidentType != null && displayIncidentType.toString().isNotEmpty) ...[
