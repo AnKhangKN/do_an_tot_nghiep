@@ -23,18 +23,13 @@ class ChatService {
 
         if (sosRequestId) {
             conversation = await this.chatRepository.findConversationBySosRequestId(sosRequestId);
-        } else if (userId && realPartnerId && this.isUuidLike(realPartnerId)) {
-            conversation = await this.chatRepository.findConversationByUsers(userId, realPartnerId, null);
         }
 
-        // Khi có sosRequestId nhưng chưa có hội thoại của ca SOS: nếu đã tồn tại hội
-        // thoại giữa 2 người (chưa gắn SOS) thì gắn luôn vào ca SOS thay vì tạo bản
-        // thứ 2 — đảm bảo mỗi ca SOS chỉ có đúng 1 cuộc hội thoại.
-        if (!conversation && sosRequestId && userId && realPartnerId && this.isUuidLike(realPartnerId)) {
-            const pairConversation = await this.chatRepository.findConversationByUsers(userId, realPartnerId, null);
-            if (pairConversation) {
-                await this.chatRepository.updateConversationSosRequestId(pairConversation.conversation_id, sosRequestId);
-                conversation = await this.chatRepository.findConversationById(pairConversation.conversation_id);
+        if (!conversation && userId && realPartnerId && this.isUuidLike(realPartnerId)) {
+            conversation = await this.chatRepository.findConversationByUsers(userId, realPartnerId, null);
+            if (conversation && sosRequestId && !conversation.sos_request_id) {
+                await this.chatRepository.updateConversationSosRequestId(conversation.conversation_id, sosRequestId);
+                conversation.sos_request_id = sosRequestId;
             }
         }
 
@@ -118,6 +113,11 @@ class ChatService {
         }
 
         let conversation = await this.chatRepository.findConversationById(resolvedConversationId);
+        // Nếu không tìm thấy bằng conversation_id, kiểm tra xem resolvedConversationId có phải là partnerId hay không
+        if (!conversation && this.isUuidLike(resolvedConversationId)) {
+            conversation = await this.chatRepository.findConversationByUsers(userId, resolvedConversationId, null);
+        }
+
         if (!conversation) {
             const cleanId = this.stripRolePrefix(targetId);
             if (cleanId) {
@@ -159,12 +159,17 @@ class ChatService {
         const directPartnerId = this.resolveConversationOrPartnerId(partnerId);
         const fallbackPartnerId = this.stripRolePrefix(targetId);
 
-        // Chỉ truy vấn theo conversationId khi đúng định dạng UUID.
+        // 1. Thử tìm theo conversationId UUID
         if (targetId && this.isUuidLike(targetId)) {
             conversation = await this.chatRepository.findConversationById(targetId);
         }
 
-        // Nếu targetId là từ khóa admin/support
+        // 2. Nếu không tìm thấy bằng conversation_id, thử dùng targetId làm partnerId
+        if (!conversation && targetId && this.isUuidLike(targetId)) {
+            conversation = await this.chatRepository.findConversationByUsers(senderId, targetId, null);
+        }
+
+        // 3. Nếu targetId là từ khóa admin/support
         if (!conversation && targetId && (targetId.includes('admin') || targetId.includes('support'))) {
             conversation = await this.getOrCreateAdminSupportConversation(senderId);
             if (conversation) {
@@ -172,7 +177,7 @@ class ChatService {
             }
         }
 
-        // Nếu conversationId không hợp lệ hoặc không tồn tại, thử resolve theo partnerId.
+        // 4. Nếu vẫn chưa tìm thấy conversation, thử theo directPartnerId
         if (!conversation && directPartnerId) {
             const candidatePartnerId = this.stripRolePrefix(directPartnerId) || fallbackPartnerId;
             if (candidatePartnerId && this.isUuidLike(candidatePartnerId)) {

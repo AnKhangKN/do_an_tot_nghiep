@@ -76,27 +76,36 @@ class ChatProvider extends ChangeNotifier {
             isMe: isMe,
           );
 
-          if (_messagesMap.containsKey(conversationId)) {
-            final list = _messagesMap[conversationId]!;
-            // Thay thế tin nhắn tạm (id timestamp ngắn) bằng tin nhắn có id thực
-            // từ server. Server luôn trả về UUID 36 ký tự nên kiểm tra id THẬT.
-            final tempIndex = list.indexWhere(
-              (m) => m.isMe && isMe && m.text == text && m.id != msgId && !m.isFailed && m.id.length < 20,
-            );
-            if (tempIndex != -1) {
-              list[tempIndex] = list[tempIndex].copyWith(id: msgId);
-            } else {
-              final exists = list.any((m) => m.id == msgId);
-              if (!exists) {
-                list.add(newMsg);
+          void appendToMapKey(String key) {
+            if (_messagesMap.containsKey(key)) {
+              final list = _messagesMap[key]!;
+              final tempIndex = list.indexWhere(
+                (m) => m.isMe && isMe && m.text == text && m.id != msgId && !m.isFailed && m.id.length < 20,
+              );
+              if (tempIndex != -1) {
+                list[tempIndex] = list[tempIndex].copyWith(id: msgId);
+              } else {
+                final exists = list.any((m) => m.id == msgId);
+                if (!exists) {
+                  list.add(newMsg);
+                }
               }
+            } else {
+              _messagesMap[key] = [newMsg];
             }
-          } else {
-            _messagesMap[conversationId] = [newMsg];
+          }
+
+          appendToMapKey(conversationId);
+
+          // Cập nhật thêm key partnerId nếu có
+          final partnerIdFromConv = convData?['user1_id'] == _currentUserId ? convData?['user2_id'] : convData?['user1_id'];
+          final resolvedPartnerKey = partnerIdFromConv?.toString() ?? (isMe ? null : senderId);
+          if (resolvedPartnerKey != null && resolvedPartnerKey.isNotEmpty && resolvedPartnerKey != conversationId) {
+            appendToMapKey(resolvedPartnerKey);
           }
 
           // Cập nhật danh sách cuộc hội thoại
-          final index = _conversations.indexWhere((c) => c.id == conversationId);
+          final index = _conversations.indexWhere((c) => c.id == conversationId || (resolvedPartnerKey != null && c.partnerId == resolvedPartnerKey));
           if (index != -1) {
             final old = _conversations[index];
             final updated = ConversationModel(
@@ -109,7 +118,7 @@ class ChatProvider extends ChangeNotifier {
               isOnline: old.isOnline,
               avatarUrl: old.avatarUrl,
               phone: old.phone,
-              partnerId: old.partnerId,
+              partnerId: old.partnerId ?? resolvedPartnerKey,
               isClosed: old.isClosed,
             );
             _conversations.removeAt(index);
@@ -125,6 +134,7 @@ class ChatProvider extends ChangeNotifier {
                 unreadCount: isMe ? 0 : 1,
                 isOnline: true,
                 isClosed: convData['is_closed'] == true,
+                partnerId: resolvedPartnerKey,
               ),
             );
           }
