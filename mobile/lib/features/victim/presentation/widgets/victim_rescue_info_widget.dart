@@ -271,7 +271,7 @@ class _VictimRescueInfoWidgetState extends State<VictimRescueInfoWidget> {
                         sosRequestId: sosRequestId?.toString(),
                       );
                       if (context.mounted) {
-                        await Navigator.of(context).push(
+                        await Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
                             builder: (context) => MessengerScreen(conversation: conv),
                           ),

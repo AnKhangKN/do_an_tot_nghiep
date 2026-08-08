@@ -2,11 +2,29 @@ import 'package:mobile/core/socket/core_socket.dart';
 
 class ChatSocket {
   final CoreSocket coreSocket;
+  final Set<String> _joinedConversationIds = <String>{};
+  bool _rejoinHookRegistered = false;
 
   ChatSocket(this.coreSocket);
 
+  void _registerRejoinHook() {
+    if (_rejoinHookRegistered) return;
+    _rejoinHookRegistered = true;
+
+    coreSocket.addOnConnectedHook(() {
+      for (final conversationId in _joinedConversationIds) {
+        coreSocket.emit('chat:join', {'conversationId': conversationId});
+      }
+    });
+  }
+
   void joinConversation(String conversationId) {
-    if (conversationId.isNotEmpty) {
+    if (conversationId.isEmpty) return;
+
+    _registerRejoinHook();
+    _joinedConversationIds.add(conversationId);
+
+    if (coreSocket.isConnected) {
       coreSocket.emit('chat:join', {'conversationId': conversationId});
     }
   }
@@ -53,6 +71,7 @@ class ChatSocket {
     coreSocket.off('chat:new_message');
     coreSocket.off('chat:error');
     coreSocket.off('chat:conversation_closed');
+    _joinedConversationIds.clear();
   }
 
   /// Re-register các listener chat mỗi lần socket kết nối/reconnect để không bị

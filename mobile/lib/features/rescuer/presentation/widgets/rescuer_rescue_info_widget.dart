@@ -280,7 +280,7 @@ class RescuerRescueInfoWidget extends StatelessWidget {
                         sosRequestId: resolvedSosId?.toString(),
                       );
                       if (context.mounted) {
-                        Navigator.of(context).push(
+                        await Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
                             builder: (context) => MessengerScreen(conversation: conv),
                           ),

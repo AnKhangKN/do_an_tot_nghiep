@@ -162,7 +162,16 @@ class CoreSocket {
   /// Đăng ký callback được chạy lại mỗi lần socket kết nối/reconnect.
   /// Dùng để re-register các listener feature (chat, rescuer, victim...) khi
   /// `connect()` tạo socket mới (clearListeners xóa hết handler cũ).
+  /// Nếu socket đã connected thì chạy ngay để không bỏ lỡ listener ở lần khởi tạo đầu tiên.
   void addOnConnectedHook(void Function() cb) {
     _onConnectedHooks.add(cb);
+
+    if (_socket != null && _socket!.connected) {
+      try {
+        cb();
+      } catch (e) {
+        debugPrint("⚠️ [SOCKET] Lỗi chạy onConnectedHook ngay lập tức: $e");
+      }
+    }
   }
-}
+}
