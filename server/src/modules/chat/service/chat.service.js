@@ -23,14 +23,8 @@ class ChatService {
 
         if (sosRequestId) {
             conversation = await this.chatRepository.findConversationBySosRequestId(sosRequestId);
-        }
-
-        if (!conversation && userId && realPartnerId && this.isUuidLike(realPartnerId)) {
+        } else if (userId && realPartnerId && this.isUuidLike(realPartnerId)) {
             conversation = await this.chatRepository.findConversationByUsers(userId, realPartnerId, null);
-            if (conversation && sosRequestId && !conversation.sos_request_id) {
-                await this.chatRepository.updateConversationSosRequestId(conversation.conversation_id, sosRequestId);
-                conversation.sos_request_id = sosRequestId;
-            }
         }
 
         if (!conversation && userId && realPartnerId && this.isUuidLike(realPartnerId)) {

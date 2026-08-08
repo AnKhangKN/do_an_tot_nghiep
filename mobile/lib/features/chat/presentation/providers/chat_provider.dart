@@ -98,7 +98,9 @@ class ChatProvider extends ChangeNotifier {
           appendToMapKey(conversationId);
 
           // Cập nhật thêm key partnerId nếu có
-          final partnerIdFromConv = convData?['user1_id'] == _currentUserId ? convData?['user2_id'] : convData?['user1_id'];
+          final userId1 = convData?['user1_id'];
+          final userId2 = convData?['user2_id'];
+          final partnerIdFromConv = userId1 == _currentUserId ? userId2 : userId1;
           final resolvedPartnerKey = partnerIdFromConv?.toString() ?? (isMe ? null : senderId);
           if (resolvedPartnerKey != null && resolvedPartnerKey.isNotEmpty && resolvedPartnerKey != conversationId) {
             appendToMapKey(resolvedPartnerKey);

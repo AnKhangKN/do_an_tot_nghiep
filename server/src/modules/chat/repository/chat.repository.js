@@ -59,7 +59,9 @@ class ChatRepository {
             LEFT JOIN sos_requests s ON c.${this.conversationModel.field.sosRequestId} = s.sos_request_id
             WHERE ((c.${this.conversationModel.field.user1Id} = $1 AND c.${this.conversationModel.field.user2Id} = $2)
                OR (c.${this.conversationModel.field.user1Id} = $2 AND c.${this.conversationModel.field.user2Id} = $1))
-            ORDER BY c.updated_at DESC, c.created_at DESC
+            ORDER BY 
+               CASE WHEN c.sos_request_id IS NOT NULL AND (c.is_closed = FALSE AND (s.status IS NULL OR s.status NOT IN ('DONE', 'COMPLETED', 'CANCELLED'))) THEN 0 ELSE 1 END ASC,
+               c.updated_at DESC, c.created_at DESC
         `;
         const result = await pool.query(query, [user1Id, user2Id]);
         return result.rows[0];
