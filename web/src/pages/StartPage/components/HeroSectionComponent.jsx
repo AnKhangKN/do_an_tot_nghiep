@@ -68,7 +68,7 @@ const HeroSectionComponent = ({ data = {} }) => {
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-red-600/25 transition hover:bg-red-500"
               >
                 <PiDownloadSimple size={19} />
-                Tải ứng dụng Mobile
+                Tải ứng dụng Mobile (Android - APK)
               </a>
             ) : (
               <button
@@ -76,7 +76,7 @@ const HeroSectionComponent = ({ data = {} }) => {
                 className="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-2xl bg-red-600 px-6 py-3.5 text-sm font-semibold text-white opacity-70"
               >
                 <PiDownloadSimple size={19} />
-                Tải ứng dụng Mobile
+                Tải ứng dụng Mobile (Android - APK)
               </button>
             )}
           </div>
