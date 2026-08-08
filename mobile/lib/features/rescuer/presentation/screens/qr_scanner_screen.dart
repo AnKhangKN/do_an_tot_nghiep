@@ -53,24 +53,46 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     }
   }
 
-  // Hàm hiển thị debug dialog trực tiếp trên màn hình (dùng khi không có debugger)
-  void _showDebugDialog(String title, String content) {
+  // Hàm hiển thị thông báo lỗi giao diện đẹp, thân thiện với người dùng
+  void _showErrorDialog({required String title, required String message}) {
     if (!mounted) return;
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView(
-          child: Text(content, style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              setState(() => _isProcessing = false);
-              _controller.start();
+              if (mounted) {
+                setState(() => _isProcessing = false);
+                _controller.start();
+              }
             },
-            child: const Text('Thử lại'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            child: const Text('Thử lại', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -103,9 +125,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         if (!mounted) return;
         AppSnackBar.show(
           context,
-          'Mã QR sai!\nRaw: ${cleanValue.length > 60 ? cleanValue.substring(0, 60) + "..." : cleanValue}',
+          'Mã QR không hợp lệ hoặc sai định dạng!',
           type: AppSnackBarType.error,
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 4),
         );
         return;
       }
@@ -147,32 +169,18 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     } catch (e) {
       if (!mounted) return;
 
+      String errorMessage = 'Không thể tiếp nhận ca cứu hộ. Vui lòng thử lại!';
       if (e is DioException) {
-        // Hiển thị dialog debug chi tiết trực tiếp trên màn hình máy thật
-        final status = e.response?.statusCode;
         final respData = e.response?.data;
-        final msg = (respData is Map && respData['message'] != null)
-            ? respData['message'].toString()
-            : null;
-
-        final debugInfo = '''
-SOS ID: $sosRequestId
-HTTP Status: $status
-Dio Type: ${e.type.name}
-Server message: $msg
-Full response: $respData''';
-
-        _showDebugDialog(
-          'Lỗi API (status $status)',
-          debugInfo,
-        );
-      } else {
-        // Lỗi không phải DioException
-        _showDebugDialog(
-          'Lỗi không xác định',
-          'SOS ID: $sosRequestId\nLỗi: ${e.runtimeType}\n$e',
-        );
+        if (respData is Map && respData['message'] != null && respData['message'].toString().trim().isNotEmpty) {
+          errorMessage = respData['message'].toString().trim();
+        }
       }
+
+      _showErrorDialog(
+        title: 'Thông báo cứu hộ',
+        message: errorMessage,
+      );
     }
   }
 

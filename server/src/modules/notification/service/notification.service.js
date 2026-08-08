@@ -4,12 +4,14 @@ const deviceTokenService = require("@modules/device_token/service/device_token.s
 const notificationRepository = require("../repository/notification.repository");
 const uuidUtil = require("@/utils/uuid.util");
 const { transaction } = require("@/config/database.config");
+const { getIO } = require("@/socket");
 
 class NotificationService {
     async saveNotification({ userId, title, content, type }) {
+        let createdNotif = null;
         await transaction(async (client) => {
             const notificationId = uuidUtil.generateUUID();
-            await notificationRepository.createNotification(client, {
+            createdNotif = await notificationRepository.createNotification(client, {
                 notificationId,
                 userId,
                 title,
@@ -17,6 +19,15 @@ class NotificationService {
                 type
             });
         });
+
+        try {
+            const io = getIO();
+            if (io && createdNotif) {
+                io.to(`user:${userId}`).emit("notification:new", createdNotif);
+            }
+        } catch (_) {}
+
+        return createdNotif;
     }
 
     sendPushNotification = async (userId, { title, body, data }) => {

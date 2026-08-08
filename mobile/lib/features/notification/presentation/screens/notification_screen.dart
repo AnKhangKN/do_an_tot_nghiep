@@ -25,11 +25,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
   String _mapType(String rawType) {
     switch (rawType.toUpperCase()) {
       case 'EMERGENCY':
+      case 'SOS_ALERT':
+      case 'SOS':
         return 'emergency';
       case 'WARNING':
         return 'warning';
       case 'SUCCESS':
         return 'success';
+      case 'INFO':
+      case 'MOVING':
+        return 'moving';
       case 'SYSTEM':
       default:
         return 'system';

@@ -3,12 +3,37 @@ import '../../../../core/di/di.dart';
 import '../../data/notification_service.dart';
 import '../../models/notification_model.dart';
 
+import 'package:mobile/core/socket/core_socket.dart';
+
 class NotificationProvider extends ChangeNotifier {
   final MobileNotificationService _notificationService = getIt<MobileNotificationService>();
 
   List<AppNotificationModel> _notifications = [];
   bool _isLoading = false;
   String? _errorMessage;
+
+  NotificationProvider() {
+    _initSocketListeners();
+  }
+
+  void _initSocketListeners() {
+    CoreSocket().addOnConnectedHook(() {
+      CoreSocket().on('notification:new', (data) {
+        if (data != null && data is Map) {
+          try {
+            final newNotif = AppNotificationModel.fromJson(Map<String, dynamic>.from(data));
+            final exists = _notifications.any((n) => n.notificationId == newNotif.notificationId);
+            if (!exists) {
+              _notifications.insert(0, newNotif);
+              notifyListeners();
+            }
+          } catch (e) {
+            debugPrint("Lỗi parse notification:new từ socket: $e");
+          }
+        }
+      });
+    });
+  }
 
   List<AppNotificationModel> get notifications => _notifications;
   bool get isLoading => _isLoading;
