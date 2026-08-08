@@ -2,19 +2,15 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   PiSirenFill,
   PiWarningFill,
-  PiRobotFill,
   PiPhoneCallFill,
   PiGearFill,
   PiCheckBold,
   PiArrowClockwiseBold,
   PiCheckCircleBold,
   PiWarningBold,
-  PiShieldCheckFill,
   PiMapPinFill,
   PiChatCircleTextFill,
   PiTimerFill,
-  PiToggleLeftFill,
-  PiToggleRightFill,
   PiListPlusFill,
   PiStudentFill,
   PiLinkSimple,
@@ -178,38 +174,6 @@ const SettingPage = () => {
     }));
   };
 
-  const renderToggle = (key, label, desc) => {
-    const isChecked = formValues[key] === "true" || formValues[key] === true;
-    return (
-      <div className="flex items-center justify-between p-5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all">
-        <div className="pr-4">
-          <p className="font-semibold text-gray-900 text-sm">{label}</p>
-          {desc && <p className="text-xs text-gray-500 mt-1 leading-relaxed">{desc}</p>}
-        </div>
-        <button
-          type="button"
-          onClick={() => handleChange(key, isChecked ? "false" : "true")}
-          className={` flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-xs transition-all ${isChecked
-            ? "dark:bg-gray-100 bg-gray-900 text-white shadow-sm dark:hover:bg-gray-200 hover:bg-gray-800"
-            : "dark:bg-gray-100 bg-gray-200 text-gray-700 dark:hover:bg-gray-200 hover:bg-gray-300"
-            }`}
-        >
-          {isChecked ? (
-            <>
-              <PiToggleRightFill size={22} className="text-emerald-400" />
-              <span className="text-gray-100 dark:text-white">Đang BẬT</span>
-            </>
-          ) : (
-            <>
-              <PiToggleLeftFill size={22} className="text-gray-400" />
-              <span className="text-gray-100 dark:text-white">Đang TẮT</span>
-            </>
-          )}
-        </button>
-      </div>
-    );
-  };
-
   const renderInputField = (key, label, desc, unit = "", type = "text") => {
     return (
       <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all flex flex-col justify-between">
@@ -231,22 +195,6 @@ const SettingPage = () => {
             </span>
           )}
         </div>
-      </div>
-    );
-  };
-
-  const renderTextareaField = (key, label, desc, placeholder = "") => {
-    return (
-      <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all col-span-full">
-        <label className="block font-semibold text-gray-900 text-sm mb-1">{label}</label>
-        {desc && <p className="text-xs text-gray-500 mb-3 leading-relaxed">{desc}</p>}
-        <textarea
-          rows={3}
-          value={formValues[key] ?? ""}
-          onChange={(e) => handleChange(key, e.target.value)}
-          placeholder={placeholder}
-          className="dark:bg-gray-200 dark:border-gray-100 dark:text-white w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all leading-relaxed font-medium"
-        />
       </div>
     );
   };
@@ -356,18 +304,6 @@ const SettingPage = () => {
 
         <button
           type="button"
-          onClick={() => setActiveTab("ai")}
-          className={`dark:hover:bg-gray-100 flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${activeTab === "ai"
-            ? "dark:bg-gray-100 bg-white text-gray-900 shadow-sm"
-            : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-            }`}
-        >
-          <PiRobotFill size={18} className={activeTab === "ai" ? "text-indigo-500" : "text-gray-400"} />
-          <span>3. AI & Kiểm duyệt</span>
-        </button>
-
-        <button
-          type="button"
           onClick={() => setActiveTab("hotline")}
           className={`dark:hover:bg-gray-100 flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${activeTab === "hotline"
             ? "dark:bg-gray-100 bg-white text-gray-900 shadow-sm"
@@ -375,7 +311,7 @@ const SettingPage = () => {
             }`}
         >
           <PiPhoneCallFill size={18} className={activeTab === "hotline" ? "text-emerald-500" : "text-gray-400"} />
-          <span>4. Hotline & Hệ thống</span>
+          <span>3. Hotline & Hệ thống</span>
         </button>
 
         <button
@@ -387,7 +323,7 @@ const SettingPage = () => {
             }`}
         >
           <PiStudentFill size={18} className={activeTab === "thesis" ? "text-blue-500" : "text-gray-400"} />
-          <span>5. Đồ án, Tác giả & Ứng dụng</span>
+          <span>4. Đồ án, Tác giả & Ứng dụng</span>
         </button>
       </div>
 
@@ -534,43 +470,7 @@ const SettingPage = () => {
             </div>
           )}
 
-          {/* TAB 3: AI & MODERATION */}
-          {activeTab === "ai" && (
-            <div className="space-y-6">
-              <div className="border-b border-gray-100 pb-4">
-                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <PiRobotFill className="text-indigo-500" />
-                  <span>Cấu hình Trí tuệ Nhân tạo (AI) & Kiểm duyệt Nội dung</span>
-                </h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Quản lý tính năng tự động kiểm duyệt tin nhắn/nội dung vi phạm tiêu chuẩn và phân tích cảm xúc đánh giá
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {renderToggle(
-                  "ai_moderation_enabled",
-                  "Bật/Tắt Kiểm duyệt Nội dung AI (Groq Cloud API)",
-                  "Tự động quét và phát hiện từ cấm, bạo lực, xúc phạm trong tin nhắn chat, mô tả SOS và ghi chú đánh giá."
-                )}
-
-                {renderToggle(
-                  "ai_sentiment_enabled",
-                  "Bật/Tắt Phân tích Cảm xúc Đánh giá 1-5 sao bằng AI",
-                  "Tự động gán nhãn Cảm xúc (POSITIVE, NEUTRAL, NEGATIVE) cho các nhận xét phục vụ báo cáo chất lượng."
-                )}
-
-                {renderTextareaField(
-                  "blacklisted_phrases_list",
-                  "Từ điển Từ cấm Nhạy cảm Local (Chặn sớm 0-token)",
-                  "Nhập các cụm từ nhạy cảm local ngăn cách bởi dấu phẩy (,). Hệ thống sẽ chặn ngay lập tức mà không cần tốn token AI.",
-                  "Ví dụ: lừa đảo, cướp giật, xúc phạm, từ cấm 1, từ cấm 2..."
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: HOTLINE & SYSTEM */}
+          {/* TAB 3: HOTLINE & SYSTEM */}
           {activeTab === "hotline" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-4">
