@@ -1,4 +1,5 @@
 const redis = require("../../../config/redis.config");
+const settingsUtil = require("../../../utils/settings.util");
 
 class DispatchService {
     constructor() {
@@ -13,6 +14,7 @@ class DispatchService {
 
         const sosId = sos.sos_request_id;
         const pipeline = redis.pipeline();
+        const offerAcceptSeconds = await settingsUtil.getSettingNumber("offer_accept_seconds", 30);
 
         // Xóa tập hợp offered cũ nếu có
         pipeline.del(`sos:${sosId}:offered_rescuers`);
@@ -20,8 +22,8 @@ class DispatchService {
         for (let i = 0; i < rescuers.length; i++) {
             const rescuer = rescuers[i];
 
-            // Đánh dấu cứu hộ viên đang bận xem xét SOS offer này trong 30 giây
-            pipeline.set(`sos:offer:rescuer:${rescuer.userId}`, sosId, "EX", 30);
+            // Đánh dấu cứu hộ viên đang bận xem xét SOS offer này trong offerAcceptSeconds giây
+            pipeline.set(`sos:offer:rescuer:${rescuer.userId}`, sosId, "EX", offerAcceptSeconds);
 
             // Lưu cứu hộ viên vào Redis Set offered_rescuers
             pipeline.sadd(`sos:${sosId}:offered_rescuers`, rescuer.userId);
@@ -44,8 +46,8 @@ class DispatchService {
             }
         }
 
-        // Tự động dọn dẹp key này sau 120 giây đề phòng job timeout không chạy
-        pipeline.expire(`sos:${sosId}:offered_rescuers`, 120);
+        // Tự động dọn dẹp key này sau thời gian chờ nhận offer để tránh key bị giữ lâu
+        pipeline.expire(`sos:${sosId}:offered_rescuers`, offerAcceptSeconds);
 
         await pipeline.exec();
     }
