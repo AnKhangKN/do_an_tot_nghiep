@@ -107,7 +107,7 @@ class EmergencyAmenityController {
 
             return res.status(201).json({
                 success: true,
-                message: "Gửi báo cáo phản hồi thành công. Admin sẽ kiểm tra và xử lý!",
+                message: "Báo cáo của bạn đã được ghi nhận và đang được Admin xử lý!",
                 data: feedback
             });
         } catch (error) {

@@ -194,20 +194,20 @@ class AmenityDetailBottomSheet extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 final provider = context.read<AmenityProvider>();
-                final success = await provider.sendFeedback(
+                final resultMsg = await provider.sendFeedback(
                   amenityId: amenity.amenityId,
                   reason: selectedReason,
                   comment: commentController.text.trim(),
                 );
 
+                final bool isSuccess = !resultMsg.contains('thất bại') && !resultMsg.contains('đang được Admin xử lý. Vui lòng chờ');
+
                 if (dialogCtx.mounted) {
                   Navigator.pop(dialogCtx);
                   AppSnackBar.show(
                     context,
-                    success
-                        ? 'Cảm ơn phản hồi của bạn! Admin sẽ kiểm tra điểm tiện ích này.'
-                        : 'Gửi báo cáo thất bại. Vui lòng thử lại sau!',
-                    type: success
+                    resultMsg,
+                    type: isSuccess
                         ? AppSnackBarType.success
                         : AppSnackBarType.error,
                   );

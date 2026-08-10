@@ -97,6 +97,19 @@ class EmergencyAmenityService {
 
     // Feedback & Report methods
     async createFeedback({ amenityId, userId, reason, comment }) {
+        const amenity = await emergencyAmenityRepository.getAmenityById(amenityId);
+        if (!amenity) {
+            throw new Error("Không tìm thấy điểm tiện ích khẩn cấp yêu cầu.");
+        }
+        if (amenity.status !== 'APPROVED') {
+            throw new Error("Điểm tiện ích này không còn khả dụng để gửi báo cáo.");
+        }
+
+        const isPending = await amenityFeedbackRepository.hasPendingFeedback({ amenityId, userId });
+        if (isPending) {
+            throw new Error("Báo cáo cho địa điểm này đang được Admin xử lý. Vui lòng chờ kết quả!");
+        }
+
         const textContent = [reason, comment].filter(Boolean).join(" - ");
         if (textContent) {
             const spamCheck = await aiModerationService.checkKnownSpamText(textContent);

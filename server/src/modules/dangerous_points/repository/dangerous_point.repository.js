@@ -238,6 +238,17 @@ class DangerousPointRepository {
         return result.rows[0];
     }
 
+    /// Kiểm tra người dùng có phản hồi đang chờ xử lý cho điểm nguy hiểm này hay không
+    async hasPendingFeedback({ dangerousPointId, userId }) {
+        const query = `
+            SELECT 1 FROM dangerous_point_feedbacks
+            WHERE dangerous_point_id = $1 AND user_id = $2 AND COALESCE(status, 'PENDING') = 'PENDING'
+            LIMIT 1;
+        `;
+        const { rows } = await pool.query(query, [dangerousPointId, userId]);
+        return rows.length > 0;
+    }
+
     /// Tạo bản ghi phản hồi xác minh cho điểm nguy hiểm
     async createFeedback(client, { feedbackId, dangerousPointId, userId, feedbackType, comment }) {
         const query = `

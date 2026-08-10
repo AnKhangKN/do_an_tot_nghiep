@@ -7,6 +7,16 @@ class AmenityFeedbackRepository {
         this.model = amenityFeedbackModel;
     }
 
+    async hasPendingFeedback({ amenityId, userId }) {
+        const query = `
+            SELECT 1 FROM ${this.model.table}
+            WHERE ${this.model.field.amenityId} = $1 AND ${this.model.field.userId} = $2 AND COALESCE(status, 'PENDING') = 'PENDING'
+            LIMIT 1
+        `;
+        const result = await pool.query(query, [amenityId, userId]);
+        return result.rows.length > 0;
+    }
+
     async createFeedback({ feedbackId, amenityId, userId, reason, comment }) {
         const query = `
             INSERT INTO ${this.model.table} (

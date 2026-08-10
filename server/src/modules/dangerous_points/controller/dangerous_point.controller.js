@@ -69,7 +69,7 @@ class DangerousPointController {
 
             return res.status(201).json({
                 success: true,
-                message: "Gửi phản hồi xác minh điểm nguy hiểm thành công!",
+                message: "Báo cáo của bạn đã được ghi nhận và đang được Admin xử lý!",
                 data: result
             });
         } catch (error) {

@@ -147,6 +147,14 @@ class DangerousPointService {
         if (!point) {
             throw new Error("Không tìm thấy điểm cảnh báo/nguy hiểm yêu cầu.");
         }
+        if (point.status !== 'APPROVED') {
+            throw new Error("Điểm nguy hiểm này không còn khả dụng để gửi phản hồi.");
+        }
+
+        const isPending = await this.dangerousPointRepository.hasPendingFeedback({ dangerousPointId, userId });
+        if (isPending) {
+            throw new Error("Báo cáo cho địa điểm này đang được Admin xử lý. Vui lòng chờ kết quả!");
+        }
 
         if (comment && comment.trim()) {
             const aiModerationService = require("@modules/ai_moderation/service/ai_moderation.service");

@@ -69,21 +69,20 @@ class EmergencyAmenityRepository {
     }
   }
 
-  Future<bool> sendFeedback({
+  Future<String?> sendFeedback({
     required String amenityId,
     required String reason,
     String? comment,
   }) async {
-    try {
-      final response = await service.sendFeedback(
-        amenityId: amenityId,
-        reason: reason,
-        comment: comment,
-      );
-      return response.data != null && response.data['success'] == true;
-    } catch (e) {
-      return false;
+    final response = await service.sendFeedback(
+      amenityId: amenityId,
+      reason: reason,
+      comment: comment,
+    );
+    if (response.data != null && response.data['success'] == true) {
+      return response.data['message']?.toString() ?? 'Báo cáo của bạn đã được ghi nhận và đang được Admin xử lý!';
     }
+    return null;
   }
 }
 

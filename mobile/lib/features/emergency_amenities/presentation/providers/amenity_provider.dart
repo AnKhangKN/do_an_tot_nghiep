@@ -183,19 +183,25 @@ class AmenityProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> sendFeedback({
+  Future<String> sendFeedback({
     required String amenityId,
     required String reason,
     String? comment,
   }) async {
     try {
-      return await repository.sendFeedback(
+      final msg = await repository.sendFeedback(
         amenityId: amenityId,
         reason: reason,
         comment: comment,
       );
+      return msg ?? 'Báo cáo của bạn đã được ghi nhận và đang được Admin xử lý!';
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response!.data is Map && e.response!.data['message'] != null) {
+        return e.response!.data['message'].toString();
+      }
+      return 'Gửi báo cáo thất bại. Vui lòng thử lại!';
     } catch (e) {
-      return false;
+      return 'Gửi báo cáo thất bại. Vui lòng thử lại!';
     }
   }
 

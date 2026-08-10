@@ -62,7 +62,7 @@ class _HazardFeedbackDialogState extends State<HazardFeedbackDialog> {
         Navigator.of(context).pop(true);
         AppSnackBar.show(
           context,
-          'Cảm ơn bạn! Đã gửi phản hồi xác minh thành công.',
+          'Báo cáo của bạn đã được ghi nhận và đang được Admin xử lý!',
           type: AppSnackBarType.success,
         );
       }
