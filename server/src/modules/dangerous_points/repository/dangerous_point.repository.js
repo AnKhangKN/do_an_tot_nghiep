@@ -341,17 +341,7 @@ class DangerousPointRepository {
         };
     }
 
-    /// Cập nhật trạng thái của phản hồi điểm nguy hiểm (RESOLVED, DISMISSED)
-    async updateFeedbackStatus({ feedbackId, status }) {
-        const query = `
-            UPDATE dangerous_point_feedbacks
-            SET status = $1, updated_at = CURRENT_TIMESTAMP
-            WHERE feedback_id = $2
-            RETURNING *;
-        `;
-        const { rows } = await pool.query(query, [status, feedbackId]);
-        return rows[0] || null;
-    }
+
 
     /// Quét phát hiện các cặp điểm nguy hiểm nghi ngờ trùng lặp (cùng vị trí GPS trong bán kính radiusMeters)
     async findDuplicatePairs(radiusMeters = 200) {

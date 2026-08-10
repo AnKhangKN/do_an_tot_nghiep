@@ -57,7 +57,7 @@ class RefreshInterceptor extends Interceptor {
 
         if (refreshToken == null || refreshToken.isEmpty) {
           isRefreshing = false;
-          await _forceLogoutForExpiredSession();
+          await GetIt.instance<AppSession>().logout();
           return handler.next(err);
         }
 
