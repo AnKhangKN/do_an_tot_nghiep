@@ -308,13 +308,18 @@ class DangerousPointRepository {
 
     /// Lấy danh sách phản hồi điểm nguy hiểm cho Admin
     async getFeedbacksAdmin({ page = 1, limit = 20 } = {}) {
+        try {
+            await pool.query(`ALTER TABLE IF EXISTS dangerous_point_feedbacks ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'PENDING';`);
+        } catch (e) {
+            // Ignore if exists
+        }
         const offset = (page - 1) * limit;
         const query = `
             SELECT f.*, dp.zone_name, dp.status AS point_status, u.full_name AS user_name, u.role AS user_role
             FROM dangerous_point_feedbacks f
             LEFT JOIN dangerous_points dp ON f.dangerous_point_id = dp.dangerous_point_id
             LEFT JOIN users u ON f.user_id = u.user_id
-            ORDER BY CASE WHEN dp.status = 'PENDING' THEN 0 ELSE 1 END ASC, f.created_at DESC
+            ORDER BY CASE WHEN COALESCE(f.status, 'PENDING') = 'PENDING' THEN 0 ELSE 1 END ASC, f.created_at DESC
             LIMIT $1 OFFSET $2;
         `;
         const countQuery = `SELECT COUNT(*) FROM dangerous_point_feedbacks;`;
@@ -334,12 +339,30 @@ class DangerousPointRepository {
                 userRole: r.user_role || 'VICTIM',
                 feedbackType: r.feedback_type,
                 comment: r.comment,
+                status: r.status || 'PENDING',
                 createdAt: r.created_at
             })),
             total,
             page,
             totalPages: Math.ceil(total / limit)
         };
+    }
+
+    /// Cập nhật trạng thái của phản hồi điểm nguy hiểm (RESOLVED, DISMISSED)
+    async updateFeedbackStatus({ feedbackId, status }) {
+        try {
+            await pool.query(`ALTER TABLE IF EXISTS dangerous_point_feedbacks ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'PENDING';`);
+        } catch (e) {
+            // Ignore if exists
+        }
+        const query = `
+            UPDATE dangerous_point_feedbacks
+            SET status = $1
+            WHERE feedback_id = $2
+            RETURNING *;
+        `;
+        const { rows } = await pool.query(query, [status, feedbackId]);
+        return rows[0] || null;
     }
 
 

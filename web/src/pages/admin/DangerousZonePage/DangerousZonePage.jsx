@@ -636,7 +636,7 @@ const DangerousZonePage = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{formatTime(fb.createdAt)}</span>
                       <div className="flex items-center gap-1.5 ml-2">
-                        {fb.pointStatus === 'PENDING' ? (
+                        {fb.status === 'PENDING' ? (
                           <>
                             <button
                               onClick={() => handleResolveFeedback(fb.feedbackId, 'RESOLVED', 'REJECT_POINT', fb.dangerousPointId)}
@@ -655,7 +655,7 @@ const DangerousZonePage = () => {
                               Bác bỏ (Giữ điểm)
                             </button>
                           </>
-                        ) : fb.pointStatus === 'REJECTED' ? (
+                        ) : fb.status === 'RESOLVED' ? (
                           <span className="px-3 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold">
                             Đã xử lý (Đã ban điểm)
                           </span>
@@ -681,6 +681,75 @@ const DangerousZonePage = () => {
         title="Chi tiết Xác minh Cộng đồng"
         subtitle={selectedPointFeedbacks ? selectedPointFeedbacks.point.zoneName : undefined}
       >
+        {/* Khung Thao tác Admin trực tiếp trên điểm */}
+        {selectedPointFeedbacks?.point && (
+          <div className="p-3.5 bg-gray-50 dark:bg-gray-100/80 rounded-2xl border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div>
+              <span className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider block">Trạng thái điểm hiện tại</span>
+              <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full mt-0.5 ${
+                selectedPointFeedbacks.point.status === 'APPROVED'
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                  : selectedPointFeedbacks.point.status === 'PENDING'
+                  ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                  : 'bg-rose-100 text-rose-800 border border-rose-200'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  selectedPointFeedbacks.point.status === 'APPROVED' ? 'bg-emerald-500' : selectedPointFeedbacks.point.status === 'PENDING' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'
+                }`} />
+                {selectedPointFeedbacks.point.status === 'APPROVED' ? 'Đã duyệt (Đang hoạt động)' : selectedPointFeedbacks.point.status === 'PENDING' ? 'Chờ duyệt' : 'Đã từ chối / BAN'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedPointFeedbacks.point.status === 'PENDING' ? (
+                <>
+                  <button
+                    onClick={async () => {
+                      await handleApprove(selectedPointFeedbacks.point.dangerousPointId);
+                      setSelectedPointFeedbacks(null);
+                    }}
+                    disabled={actionLoading}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
+                  >
+                    Duyệt điểm
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await handleReject(selectedPointFeedbacks.point.dangerousPointId);
+                      setSelectedPointFeedbacks(null);
+                    }}
+                    disabled={actionLoading}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
+                  >
+                    Ban / Từ chối
+                  </button>
+                </>
+              ) : selectedPointFeedbacks.point.status === 'APPROVED' ? (
+                <button
+                  onClick={async () => {
+                    await handleReject(selectedPointFeedbacks.point.dangerousPointId);
+                    setSelectedPointFeedbacks(null);
+                  }}
+                  disabled={actionLoading}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
+                >
+                  Tạm gỡ (Ban điểm)
+                </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    await handleApprove(selectedPointFeedbacks.point.dangerousPointId);
+                    setSelectedPointFeedbacks(null);
+                  }}
+                  disabled={actionLoading}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
+                >
+                  Phục hồi (Duyệt lại điểm)
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Thống kê nhanh */}
         <div className="grid grid-cols-4 gap-2 text-center text-xs">
           <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-200">
@@ -707,19 +776,35 @@ const DangerousZonePage = () => {
           {selectedPointFeedbacks?.list.length === 0 ? (
             <p className="text-xs text-gray-400 text-center py-4">Chưa có phản hồi nào.</p>
           ) : (
-            selectedPointFeedbacks?.list.map((item) => (
-              <div key={item.feedbackId} className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-gray-900">{item.userName} ({item.userRole})</span>
-                  <span className="text-gray-400">{formatTime(item.createdAt)}</span>
+            selectedPointFeedbacks?.list.map((item) => {
+              const typeLabels = {
+                VERIFY_REAL: { text: 'Xác nhận có thật', icon: PiThumbsUpFill, style: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                REPORT_FAKE: { text: 'Báo cáo giả mạo', icon: PiFlagFill, style: 'bg-rose-50 text-rose-700 border-rose-200' },
+                MARKED_RESOLVED: { text: 'Báo đã an toàn', icon: PiCheckCircleFill, style: 'bg-blue-50 text-blue-700 border-blue-200' },
+                STILL_DANGEROUS: { text: 'Xác nhận nguy hiểm', icon: PiFireFill, style: 'bg-amber-50 text-amber-700 border-amber-200' },
+              };
+              const finalType = typeLabels[item.feedbackType] || { text: item.feedbackType, icon: null, style: 'bg-gray-50 text-gray-700 border-gray-200' };
+
+              return (
+                <div key={item.feedbackId} className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900">{item.userName} ({item.userRole})</span>
+                      <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-semibold border ${finalType.style}`}>
+                        {finalType.icon && <finalType.icon size={10} />}
+                        {finalType.text}
+                      </span>
+                    </div>
+                    <span className="text-gray-400 text-[11px] whitespace-nowrap">{formatTime(item.createdAt)}</span>
+                  </div>
+                  {item.comment ? (
+                    <p className="text-gray-700 bg-white p-2 rounded-lg border border-gray-200 italic">"{item.comment}"</p>
+                  ) : (
+                    <p className="text-gray-400 italic">(Không có ghi chú thêm)</p>
+                  )}
                 </div>
-                {item.comment ? (
-                  <p className="text-gray-700 italic">"{item.comment}"</p>
-                ) : (
-                  <p className="text-gray-400 italic">(Không có ghi chú thêm)</p>
-                )}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </CellDetailComponent>
