@@ -9,6 +9,17 @@ class EmergencyAmenityRepository {
         this.categoryModel = amenityCategoryModel;
     }
 
+    async getAmenityById(amenityId) {
+        const query = `
+            SELECT * FROM ${this.model.table}
+            WHERE ${this.model.field.amenityId} = $1
+            LIMIT 1;
+        `;
+        const { rows } = await pool.query(query, [amenityId]);
+        if (rows.length === 0) return null;
+        return mapFields(rows[0], this.model);
+    }
+
     async getApprovedAmenities({ amenityCategoryId }) {
         let query = `
             SELECT 
