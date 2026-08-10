@@ -11,6 +11,7 @@ import {
   updateAmenityStatusAdmin,
   deleteAmenityAdmin,
   getFeedbacksAdmin,
+  updateFeedbackStatusAdmin,
   getDuplicateAmenitiesAdmin,
   mergeAmenitiesAdmin
 } from '@/api/admin/EmergencyAmenityApi';
@@ -174,6 +175,20 @@ export default function EmergencyAmenityPage() {
       }
     } catch (err) {
       console.error('Error merging amenities:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResolveFeedback = async (feedbackId, status, action, amenityId) => {
+    try {
+      setActionLoading(true);
+      const res = await updateFeedbackStatusAdmin(feedbackId, { status, action, amenityId });
+      if (res.success) {
+        fetchFeedbacks(feedbacksPage, feedbackStatusFilter);
+      }
+    } catch (err) {
+      console.error('Error resolving feedback:', err);
     } finally {
       setActionLoading(false);
     }
@@ -518,8 +533,7 @@ export default function EmergencyAmenityPage() {
       title: 'Thời gian',
       render: (row) => <span className="text-xs text-gray-500 block">{formatTime(row.createdAt)}</span>,
     },
-    {/*
-      {
+    {
       key: 'actions',
       title: 'Hành động Admin',
       render: (row) => (
@@ -528,14 +542,14 @@ export default function EmergencyAmenityPage() {
             <>
               <button
                 onClick={() => handleResolveFeedback(row.feedbackId, 'RESOLVED', 'REJECT_AMENITY', row.amenityId)}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs transition"
+                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer"
                 title="Tạm dừng/Gỡ ngay địa điểm này khỏi hệ thống"
               >
                 Gỡ điểm vi phạm
               </button>
               <button
                 onClick={() => handleResolveFeedback(row.feedbackId, 'DISMISSED', 'DISMISS', row.amenityId)}
-                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition"
+                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition cursor-pointer"
                 title="Bác bỏ báo cáo này"
               >
                 Bác bỏ
@@ -547,7 +561,6 @@ export default function EmergencyAmenityPage() {
         </div>
       ),
     },
-  */}
   ];
 
   return (

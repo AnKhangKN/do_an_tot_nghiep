@@ -310,7 +310,7 @@ class DangerousPointRepository {
         const query = `
             SELECT f.*, dp.zone_name, u.full_name AS user_name, u.role AS user_role
             FROM dangerous_point_feedbacks f
-            JOIN dangerous_points dp ON f.dangerous_point_id = dp.dangerous_point_id
+            LEFT JOIN dangerous_points dp ON f.dangerous_point_id = dp.dangerous_point_id
             LEFT JOIN users u ON f.user_id = u.user_id
             ORDER BY f.created_at DESC
             LIMIT $1 OFFSET $2;
@@ -325,7 +325,7 @@ class DangerousPointRepository {
             data: dataRes.rows.map(r => ({
                 feedbackId: r.feedback_id,
                 dangerousPointId: r.dangerous_point_id,
-                zoneName: r.zone_name,
+                zoneName: r.zone_name || 'Điểm đã gỡ',
                 userId: r.user_id,
                 userName: r.user_name || 'Người dùng',
                 userRole: r.user_role || 'VICTIM',

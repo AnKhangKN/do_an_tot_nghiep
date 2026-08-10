@@ -275,7 +275,8 @@ const DangerousZonePage = () => {
     try {
       setLoadingFeedbacks(true);
       const res = await getDangerousZoneFeedbacks(1, 20);
-      setFeedbacks(res?.data?.data || []);
+      const list = Array.isArray(res?.data?.data) ? res.data.data : Array.isArray(res?.data) ? res.data : [];
+      setFeedbacks(list);
     } catch (error) {
       console.error(error);
     } finally {
