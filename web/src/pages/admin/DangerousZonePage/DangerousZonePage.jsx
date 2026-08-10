@@ -636,22 +636,34 @@ const DangerousZonePage = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{formatTime(fb.createdAt)}</span>
                       <div className="flex items-center gap-1.5 ml-2">
-                        <button
-                          onClick={() => handleResolveFeedback(fb.feedbackId, 'RESOLVED', 'REJECT_POINT', fb.dangerousPointId)}
-                          disabled={actionLoading}
-                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition cursor-pointer disabled:opacity-50"
-                          title="Duyệt báo cáo & BAN điểm nguy hiểm này"
-                        >
-                          Duyệt báo cáo (Ban điểm)
-                        </button>
-                        <button
-                          onClick={() => handleResolveFeedback(fb.feedbackId, 'DISMISSED', 'DISMISS', fb.dangerousPointId)}
-                          disabled={actionLoading}
-                          className="px-2.5 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-semibold transition cursor-pointer disabled:opacity-50"
-                          title="Bác bỏ báo cáo & giữ điểm hoạt động bình thường"
-                        >
-                          Bác bỏ (Giữ điểm)
-                        </button>
+                        {fb.pointStatus === 'PENDING' ? (
+                          <>
+                            <button
+                              onClick={() => handleResolveFeedback(fb.feedbackId, 'RESOLVED', 'REJECT_POINT', fb.dangerousPointId)}
+                              disabled={actionLoading}
+                              className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition cursor-pointer disabled:opacity-50"
+                              title="Duyệt báo cáo & BAN điểm nguy hiểm này"
+                            >
+                              Duyệt báo cáo (Ban điểm)
+                            </button>
+                            <button
+                              onClick={() => handleResolveFeedback(fb.feedbackId, 'DISMISSED', 'DISMISS', fb.dangerousPointId)}
+                              disabled={actionLoading}
+                              className="px-2.5 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+                              title="Bác bỏ báo cáo & giữ điểm hoạt động bình thường"
+                            >
+                              Bác bỏ (Giữ điểm)
+                            </button>
+                          </>
+                        ) : fb.pointStatus === 'REJECTED' ? (
+                          <span className="px-3 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold">
+                            Đã xử lý (Đã ban điểm)
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold">
+                            Đã xử lý (Đã bác bỏ)
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -310,7 +310,7 @@ class DangerousPointRepository {
     async getFeedbacksAdmin({ page = 1, limit = 20 } = {}) {
         const offset = (page - 1) * limit;
         const query = `
-            SELECT f.*, dp.zone_name, u.full_name AS user_name, u.role AS user_role
+            SELECT f.*, dp.zone_name, dp.status AS point_status, u.full_name AS user_name, u.role AS user_role
             FROM dangerous_point_feedbacks f
             LEFT JOIN dangerous_points dp ON f.dangerous_point_id = dp.dangerous_point_id
             LEFT JOIN users u ON f.user_id = u.user_id
@@ -328,6 +328,7 @@ class DangerousPointRepository {
                 feedbackId: r.feedback_id,
                 dangerousPointId: r.dangerous_point_id,
                 zoneName: r.zone_name || 'Điểm đã gỡ',
+                pointStatus: r.point_status || 'REJECTED',
                 userId: r.user_id,
                 userName: r.user_name || 'Người dùng',
                 userRole: r.user_role || 'VICTIM',
