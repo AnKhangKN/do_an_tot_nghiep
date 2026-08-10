@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/di/di.dart';
 import '../../data/models/amenity_category_model.dart';

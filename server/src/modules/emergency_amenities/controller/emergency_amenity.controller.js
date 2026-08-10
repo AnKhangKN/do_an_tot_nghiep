@@ -85,7 +85,7 @@ class EmergencyAmenityController {
         }
     }
 
-    async createFeedback(req, res) {
+    async createFeedback(req, res, next) {
         try {
             const amenityId = req.params.id;
             const userId = req.userId;
@@ -111,11 +111,7 @@ class EmergencyAmenityController {
                 data: feedback
             });
         } catch (error) {
-            console.error("Error in createFeedback:", error);
-            return res.status(500).json({
-                success: false,
-                message: "Lỗi máy chủ khi gửi báo cáo phản hồi"
-            });
+            next(error);
         }
     }
 
