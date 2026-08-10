@@ -90,7 +90,7 @@ class _AddAmenityBottomSheetState extends State<AddAmenityBottomSheet> {
         Navigator.pop(context);
         AppSnackBar.show(
           context,
-          'Đóng góp thành công! Tiện ích sẽ hiển thị sau khi Admin duyệt.',
+          'Đóng góp địa điểm tiện ích thành công! Địa điểm đang chờ Admin kiểm tra và duyệt.',
           type: AppSnackBarType.success,
           duration: const Duration(seconds: 4),
         );

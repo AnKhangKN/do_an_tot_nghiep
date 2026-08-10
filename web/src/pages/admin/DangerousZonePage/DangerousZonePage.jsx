@@ -359,7 +359,7 @@ const DangerousZonePage = () => {
       {/* Toast Notification */}
       {toastMessage && (
         <div
-          className={`fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-xl border transition-all animate-bounce ${toastMessage.type === "error"
+          className={`fixed top-6 right-6 z-[99999] flex items-center gap-3 rounded-2xl px-5 py-3.5 shadow-xl border transition-all animate-bounce ${toastMessage.type === "error"
             ? "bg-red-900 text-white border-red-800"
             : "bg-gray-900 text-white border-gray-800"
             }`}

@@ -96,7 +96,7 @@ class _AddDangerousPointDialogState extends State<AddDangerousPointDialog> {
         Navigator.of(context).pop();
         AppSnackBar.show(
           context,
-          'Báo cáo điểm nguy hiểm thành công!',
+          'Báo cáo điểm nguy hiểm thành công! Vị trí đang chờ Admin kiểm tra và duyệt.',
           type: AppSnackBarType.success,
         );
       }
