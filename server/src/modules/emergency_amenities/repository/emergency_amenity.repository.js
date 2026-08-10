@@ -137,7 +137,7 @@ class EmergencyAmenityRepository {
             ) img ON true
             LEFT JOIN users u_reporter ON ea.${this.model.field.reportedBy} = u_reporter.user_id
             ${whereClause}
-            ORDER BY ea.${this.model.field.createdAt} DESC
+            ORDER BY CASE WHEN ea.${this.model.field.status} = 'PENDING' THEN 0 ELSE 1 END ASC, ea.${this.model.field.createdAt} DESC
             LIMIT $${params.length + 1} OFFSET $${params.length + 2}
         `;
 

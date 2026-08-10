@@ -52,7 +52,7 @@ class DangerousPointRepository {
         ) img ON true
         LEFT JOIN users u_reporter ON dp.${this.dangerousPointModel.field.reportedBy} = u_reporter.user_id
         LEFT JOIN users u_approver ON dp.${this.dangerousPointModel.field.approvedBy} = u_approver.user_id
-        ORDER BY dp.${this.dangerousPointModel.field.createdAt} DESC
+        ORDER BY CASE WHEN dp.${this.dangerousPointModel.field.status} = 'PENDING' THEN 0 ELSE 1 END ASC, dp.${this.dangerousPointModel.field.createdAt} DESC
         LIMIT $1 OFFSET $2
         `;
 
@@ -314,7 +314,7 @@ class DangerousPointRepository {
             FROM dangerous_point_feedbacks f
             LEFT JOIN dangerous_points dp ON f.dangerous_point_id = dp.dangerous_point_id
             LEFT JOIN users u ON f.user_id = u.user_id
-            ORDER BY f.created_at DESC
+            ORDER BY CASE WHEN dp.status = 'PENDING' THEN 0 ELSE 1 END ASC, f.created_at DESC
             LIMIT $1 OFFSET $2;
         `;
         const countQuery = `SELECT COUNT(*) FROM dangerous_point_feedbacks;`;

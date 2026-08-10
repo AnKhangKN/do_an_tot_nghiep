@@ -56,7 +56,7 @@ class AmenityFeedbackRepository {
             JOIN emergency_amenities ea ON af.${this.model.field.amenityId} = ea.amenity_id
             JOIN amenity_categories ac ON ea.amenity_category_id = ac.amenity_category_id
             ${whereClause}
-            ORDER BY af.${this.model.field.createdAt} DESC
+            ORDER BY CASE WHEN af.${this.model.field.status} = 'PENDING' THEN 0 ELSE 1 END ASC, af.${this.model.field.createdAt} DESC
             LIMIT $${params.length + 1} OFFSET $${params.length + 2}
         `;
 
