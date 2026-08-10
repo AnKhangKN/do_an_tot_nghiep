@@ -11,6 +11,8 @@ class EmergencyAmenityModel {
   final String? reporterName;
   final String? imageUrl;
 
+  bool get isEligibleToShow => status.toUpperCase() == 'APPROVED';
+
   EmergencyAmenityModel({
     required this.amenityId,
     required this.amenityCategoryId,

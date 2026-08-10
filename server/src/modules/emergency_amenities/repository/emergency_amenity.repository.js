@@ -18,6 +18,7 @@ class EmergencyAmenityRepository {
                 img.url as image_url
             FROM ${this.model.table} ea
             JOIN ${this.categoryModel.table} ac ON ea.${this.model.field.amenityCategoryId} = ac.${this.categoryModel.field.amenityCategoryId}
+            LEFT JOIN users u ON ea.${this.model.field.reportedBy} = u.user_id
             LEFT JOIN LATERAL (
                 SELECT url FROM images
                 WHERE entity_type = 'EMERGENCY_AMENITY' AND entity_id = ea.${this.model.field.amenityId}
@@ -26,6 +27,7 @@ class EmergencyAmenityRepository {
             ) img ON true
             WHERE ea.${this.model.field.status} = 'APPROVED'
               AND ac.${this.categoryModel.field.status} = 'ACTIVE'
+              AND (u.status IS NULL OR u.status != 'BANNED')
         `;
         const params = [];
         if (amenityCategoryId) {

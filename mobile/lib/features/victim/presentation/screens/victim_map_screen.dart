@@ -271,7 +271,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
 
   List<Marker> _buildDangerousPointMarkers(Position? currentPos) {
     final geofenceProvider = getIt<GeofenceProvider>();
-    final points = geofenceProvider.approvedPoints;
+    final points = geofenceProvider.approvedPoints.where((pt) => pt.isEligibleToShow).toList();
 
     return points.map((pt) {
       final String level = pt.dangerLevel.toUpperCase();
@@ -333,7 +333,7 @@ class _VictimMapScreenState extends State<VictimMapScreen> with TickerProviderSt
 
   List<Marker> _buildAmenityMarkers(BuildContext context) {
     final amenityProvider = context.watch<AmenityProvider>();
-    final amenities = amenityProvider.amenities;
+    final amenities = amenityProvider.amenities.where((item) => item.isEligibleToShow).toList();
 
     return amenities.map((item) {
       final icon = AmenityIconHelper.iconFor(item.iconName, categoryName: item.categoryName);

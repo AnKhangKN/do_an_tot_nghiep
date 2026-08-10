@@ -375,7 +375,39 @@ export default function EmergencyAmenityPage() {
       key: 'createdAt',
       title: 'Ngày tạo',
       render: (row) => <span className="text-xs text-gray-500 block">{formatTime(row.createdAt)}</span>,
-    }
+    },
+    {
+      key: 'actions',
+      title: 'Thao tác',
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          {row.status === 'APPROVED' ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleUpdateStatus(row.amenityId, 'REJECTED'); }}
+              className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-200 transition cursor-pointer"
+              title="Tạm gỡ / Ban điểm này"
+            >
+              Tạm gỡ
+            </button>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleUpdateStatus(row.amenityId, 'APPROVED'); }}
+              className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-200 transition cursor-pointer"
+              title="Duyệt lại / Cho phép hiển thị điểm này trên bản đồ"
+            >
+              Duyệt lại
+            </button>
+          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleDeletePoint(row.amenityId); }}
+            className="p-1.5 text-gray-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+            title="Xóa vĩnh viễn"
+          >
+            <PiTrashBold className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   const categoryColumns = [
@@ -543,20 +575,31 @@ export default function EmergencyAmenityPage() {
               <button
                 onClick={() => handleResolveFeedback(row.feedbackId, 'RESOLVED', 'REJECT_AMENITY', row.amenityId)}
                 className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer"
-                title="Tạm dừng/Gỡ ngay địa điểm này khỏi hệ thống"
+                title="Duyệt báo cáo vi phạm & BAN/gỡ ngay địa điểm này"
               >
-                Gỡ điểm vi phạm
+                Duyệt báo cáo (Ban điểm)
               </button>
               <button
                 onClick={() => handleResolveFeedback(row.feedbackId, 'DISMISSED', 'DISMISS', row.amenityId)}
                 className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition cursor-pointer"
-                title="Bác bỏ báo cáo này"
+                title="Bác bỏ báo cáo & giữ điểm hoạt động bình thường"
               >
-                Bác bỏ
+                Bác bỏ (Giữ điểm)
               </button>
             </>
           ) : (
-            <span className="text-xs text-gray-400 font-medium">Đã hoàn thành</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400 font-medium">Đã xử lý</span>
+              {row.status === 'RESOLVED' && (
+                <button
+                  onClick={() => handleResolveFeedback(row.feedbackId, 'DISMISSED', 'APPROVE_AMENITY', row.amenityId)}
+                  className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold transition cursor-pointer"
+                  title="Phục hồi và duyệt lại điểm tiện ích trên bản đồ"
+                >
+                  Phục hồi điểm
+                </button>
+              )}
+            </div>
           )}
         </div>
       ),

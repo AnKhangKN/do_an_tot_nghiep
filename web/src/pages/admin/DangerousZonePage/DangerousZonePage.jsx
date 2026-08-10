@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import CellDetailComponent from '@/components/admin/TableComponent/CellDetailComponent/CellDetailComponent';
 import { formatTime } from '@/utils/format_date.util';
-import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones, getDangerousZoneFeedbacks, getPointFeedbacks, getDuplicateDangerousZones, mergeDangerousZones } from '@/api/admin/DangerousZoneApi';
+import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones, getDangerousZoneFeedbacks, updateDangerousZoneFeedbackStatusAdmin, getPointFeedbacks, getDuplicateDangerousZones, mergeDangerousZones } from '@/api/admin/DangerousZoneApi';
 import {
   PiLightningFill,
   PiHourglassFill,
@@ -283,6 +283,21 @@ const DangerousZonePage = () => {
       setLoadingFeedbacks(false);
     }
   }, []);
+
+  const handleResolveFeedback = async (feedbackId, status, action, dangerousPointId) => {
+    try {
+      setActionLoading(true);
+      await updateDangerousZoneFeedbackStatusAdmin(feedbackId, { status, action, dangerousPointId });
+      showToast(action === 'REJECT_POINT' ? 'Đã duyệt báo cáo & BAN điểm nguy hiểm!' : action === 'APPROVE_POINT' ? 'Đã phục hồi & duyệt lại điểm nguy hiểm!' : 'Đã bác bỏ báo cáo!');
+      fetchFeedbacks();
+      fetchDangerousZones();
+    } catch (error) {
+      console.error(error);
+      showToast(getErrorMessage(error), "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const fetchDuplicates = useCallback(async () => {
     try {
@@ -618,7 +633,27 @@ const DangerousZonePage = () => {
                       <p className="text-xs text-gray-600 font-medium">Vùng nguy hiểm: <strong className="text-gray-900">{fb.zoneName}</strong></p>
                       {fb.comment && <p className="text-xs text-gray-700 bg-white dark:bg-gray-100 p-2 rounded-xl border border-gray-200 mt-1">"{fb.comment}"</p>}
                     </div>
-                    <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{formatTime(fb.createdAt)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{formatTime(fb.createdAt)}</span>
+                      <div className="flex items-center gap-1.5 ml-2">
+                        <button
+                          onClick={() => handleResolveFeedback(fb.feedbackId, 'RESOLVED', 'REJECT_POINT', fb.dangerousPointId)}
+                          disabled={actionLoading}
+                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition cursor-pointer disabled:opacity-50"
+                          title="Duyệt báo cáo & BAN điểm nguy hiểm này"
+                        >
+                          Duyệt báo cáo (Ban điểm)
+                        </button>
+                        <button
+                          onClick={() => handleResolveFeedback(fb.feedbackId, 'DISMISSED', 'DISMISS', fb.dangerousPointId)}
+                          disabled={actionLoading}
+                          className="px-2.5 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+                          title="Bác bỏ báo cáo & giữ điểm hoạt động bình thường"
+                        >
+                          Bác bỏ (Giữ điểm)
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

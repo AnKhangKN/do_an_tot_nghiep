@@ -85,6 +85,7 @@ class DangerousPointRepository {
         const query = `
         SELECT dp.*, img.url AS image_url
         FROM ${this.dangerousPointModel.table} dp
+        LEFT JOIN users u ON dp.${this.dangerousPointModel.field.reportedBy} = u.user_id
         LEFT JOIN LATERAL (
             SELECT url FROM images
             WHERE entity_type = 'DANGEROUS_POINT' AND entity_id = dp.${this.dangerousPointModel.field.dangerousPointId}
@@ -92,6 +93,7 @@ class DangerousPointRepository {
             LIMIT 1
         ) img ON true
         WHERE dp.${this.dangerousPointModel.field.status} = 'APPROVED'
+          AND (u.status IS NULL OR u.status != 'BANNED')
         ORDER BY dp.${this.dangerousPointModel.field.createdAt} DESC
         `;
 
@@ -337,6 +339,18 @@ class DangerousPointRepository {
             page,
             totalPages: Math.ceil(total / limit)
         };
+    }
+
+    /// Cập nhật trạng thái của phản hồi điểm nguy hiểm (RESOLVED, DISMISSED)
+    async updateFeedbackStatus({ feedbackId, status }) {
+        const query = `
+            UPDATE dangerous_point_feedbacks
+            SET status = $1, updated_at = CURRENT_TIMESTAMP
+            WHERE feedback_id = $2
+            RETURNING *;
+        `;
+        const { rows } = await pool.query(query, [status, feedbackId]);
+        return rows[0] || null;
     }
 
     /// Quét phát hiện các cặp điểm nguy hiểm nghi ngờ trùng lặp (cùng vị trí GPS trong bán kính radiusMeters)

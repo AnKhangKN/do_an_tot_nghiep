@@ -113,6 +113,30 @@ class DangerousPointController {
             next(error);
         }
     }
+
+    async updateFeedbackStatusAdmin(req, res, next) {
+        try {
+            const feedbackId = req.params.id;
+            const { status, dangerousPointId, action } = req.body;
+            const adminId = req.userId;
+
+            const updated = await dangerousPointService.updateFeedbackStatusAdmin({
+                feedbackId,
+                status,
+                dangerousPointId,
+                action,
+                adminId
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Cập nhật trạng thái xử lý báo cáo điểm nguy hiểm thành công!",
+                data: updated
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new DangerousPointController()

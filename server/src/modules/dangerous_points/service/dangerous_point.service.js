@@ -198,6 +198,22 @@ class DangerousPointService {
         });
     }
 
+    /// Cập nhật trạng thái phản hồi/báo cáo điểm nguy hiểm từ Admin
+    async updateFeedbackStatusAdmin({ feedbackId, status, dangerousPointId, action, adminId }) {
+        const updatedFeedback = await this.dangerousPointRepository.updateFeedbackStatus({
+            feedbackId,
+            status
+        });
+
+        if (action === 'REJECT_POINT' && dangerousPointId) {
+            await this.rejectDangerousPoint({ dangerousPointId });
+        } else if (action === 'APPROVE_POINT' && dangerousPointId) {
+            await this.approveDangerousPoint({ dangerousPointId, approvedBy: adminId });
+        }
+
+        return updatedFeedback;
+    }
+
     /// Lấy danh sách điểm nguy hiểm nghi ngờ trùng lặp cho Admin
     async getDuplicateDangerousPointsAdmin() {
         const settingsMap = await settingsUtil.getSettingsMap();

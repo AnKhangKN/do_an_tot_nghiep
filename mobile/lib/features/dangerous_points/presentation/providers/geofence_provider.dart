@@ -54,7 +54,8 @@ class GeofenceProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _approvedPoints = await repository.getApprovedDangerousPoints();
+      final rawPoints = await repository.getApprovedDangerousPoints();
+      _approvedPoints = rawPoints.where((pt) => pt.isEligibleToShow).toList();
       debugPrint('🛡️ [GEOFENCE] Đã tải ${_approvedPoints.length} điểm nguy hiểm đã duyệt');
 
       if (userLat != null && userLng != null) {

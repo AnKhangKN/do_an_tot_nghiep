@@ -54,6 +54,16 @@ export const getDangerousZoneFeedbacks = async (page = 1, limit = 20) => {
     }
 };
 
+export const updateDangerousZoneFeedbackStatusAdmin = async (feedbackId, data) => {
+    try {
+        const response = await axiosJWT.put(`/api/dangerous_points/admin/feedbacks/${feedbackId}/status`, data);
+        return response.data;
+    } catch (error) {
+        console.error("Update dangerous zone feedback status error:", error);
+        throw error;
+    }
+};
+
 export const getPointFeedbacks = async (dangerousPointId) => {
     try {
         const response = await axiosJWT.get(`/api/dangerous_points/${dangerousPointId}/feedbacks`);

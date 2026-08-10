@@ -131,7 +131,8 @@ class AmenityProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _amenities = await repository.getApprovedAmenities(categoryId: categoryId);
+      final rawAmenities = await repository.getApprovedAmenities(categoryId: categoryId);
+      _amenities = rawAmenities.where((item) => item.isEligibleToShow).toList();
     } catch (e) {
       debugPrint('Error fetching amenities: $e');
     } finally {

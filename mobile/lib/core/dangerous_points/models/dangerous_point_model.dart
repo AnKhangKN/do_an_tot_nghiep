@@ -12,6 +12,8 @@ class DangerousPointModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  bool get isEligibleToShow => status.toUpperCase() == 'APPROVED';
+
   DangerousPointModel({
     required this.dangerousPointId,
     required this.zoneName,

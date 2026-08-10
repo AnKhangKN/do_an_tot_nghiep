@@ -141,6 +141,12 @@ class EmergencyAmenityService {
                 status: 'REJECTED',
                 approvedBy: adminId
             });
+        } else if (action === 'APPROVE_AMENITY' && amenityId) {
+            await emergencyAmenityRepository.updateStatus({
+                amenityId,
+                status: 'APPROVED',
+                approvedBy: adminId
+            });
         }
 
         return updatedFeedback;

@@ -263,7 +263,7 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
   }
 
   List<Marker> _buildDangerousPointMarkers(Position? currentPos) {
-    final points = getIt<GeofenceProvider>().approvedPoints;
+    final points = getIt<GeofenceProvider>().approvedPoints.where((pt) => pt.isEligibleToShow).toList();
 
     return points.map((pt) {
       final level = pt.dangerLevel;
@@ -324,7 +324,7 @@ class _RescuerMapScreenState extends State<RescuerMapScreen> with TickerProvider
 
   List<Marker> _buildAmenityMarkers(BuildContext context) {
     final amenityProvider = context.watch<AmenityProvider>();
-    final amenities = amenityProvider.amenities;
+    final amenities = amenityProvider.amenities.where((item) => item.isEligibleToShow).toList();
 
     return amenities.map((item) {
       final icon = AmenityIconHelper.iconFor(item.iconName, categoryName: item.categoryName);
