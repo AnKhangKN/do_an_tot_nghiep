@@ -129,6 +129,28 @@ const createAmenityIcon = (categoryName = "", iconName = "") => {
   });
 };
 
+const DANGER_LEVEL_CONFIG = {
+  HIGH: { label: "Cao", color: "#dc2626" },
+  MEDIUM: { label: "Trung bình", color: "#ea580c" },
+  LOW: { label: "Thấp", color: "#eab308" },
+};
+
+const createDangerIcon = (dangerLevel = "LOW") => {
+  const level = String(dangerLevel).toUpperCase();
+  const config = DANGER_LEVEL_CONFIG[level] || DANGER_LEVEL_CONFIG.LOW;
+
+  const svgMarkup = renderToStaticMarkup(<PiWarningFill className="w-4 h-4" />);
+
+  return L.divIcon({
+    className: "",
+    html: `<div style="width:32px;height:32px;border-radius:50%;background:${config.color};border:2px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);color:#fff" title="Điểm nguy hiểm (${config.label})">
+      ${svgMarkup}
+    </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+};
+
 const myLocationIcon = L.divIcon({
   className: "",
   html: `<div style="width:30px;height:30px;border-radius:50%;background:#2563eb;border:2px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.2);display:flex;align-items:center;justify-content:center">
@@ -264,7 +286,6 @@ const LayerControlPanel = ({
           {/* 2. Dangerous Points */}
           <label className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors cursor-pointer">
             <span className="flex items-center gap-2">
-              <PiWarningFill className="text-red-500 text-sm" />
               <span>Điểm nguy hiểm</span>
             </span>
             <input
@@ -608,18 +629,25 @@ const AutoFitMapBounds = ({ dangerPoints = [], amenities = [] }) => {
 // ================= LAYERS =================
 const DangerPointLayer = ({ data }) => (
   <>
-    {data.map((item) => (
-      <Marker key={item.id} position={item.position} icon={icons[item.type] || icons.accident}>
-        <Popup>
-          <div className="p-1">
-            <span className="flex items-center gap-1.5 font-bold text-gray-900 text-sm">
-              <PiWarningFill className="text-red-500" /> {item.name || "Điểm nguy hiểm"}
-            </span>
-            <p className="text-xs text-gray-600 mt-1">Mức độ: <b>{item.dangerLevel || "KHÔNG XÁC ĐỊNH"}</b></p>
-          </div>
-        </Popup>
-      </Marker>
-    ))}
+    {data.map((item) => {
+      const level = (item.dangerLevel || "LOW").toUpperCase();
+      const config = DANGER_LEVEL_CONFIG[level] || DANGER_LEVEL_CONFIG.LOW;
+      return (
+        <Marker key={item.id} position={item.position} icon={createDangerIcon(level)}>
+          <Popup>
+            <div className="p-1 min-w-[150px]">
+              <span className="flex items-center gap-1.5 font-bold text-gray-900 text-sm">
+                <PiWarningFill style={{ color: config.color }} className="shrink-0" />
+                {item.name || "Điểm nguy hiểm"}
+              </span>
+              <p className="text-xs text-gray-600 mt-1">
+                Mức độ nguy hiểm: <b style={{ color: config.color }}>{config.label}</b>
+              </p>
+            </div>
+          </Popup>
+        </Marker>
+      );
+    })}
   </>
 );
 
