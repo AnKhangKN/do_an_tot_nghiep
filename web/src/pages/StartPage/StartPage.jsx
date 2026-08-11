@@ -4,7 +4,6 @@ import { PiArrowCircleUpFill, PiMoonLight, PiSunLight } from "react-icons/pi";
 import { setThemeMode } from "@/store/theme/themeSlice";
 import { getPublicThesisInfo } from "@/api/public/PublicApi";
 import HeroSectionComponent from "./components/HeroSectionComponent";
-import StatsSectionComponent from "./components/StatsSectionComponent";
 import FeaturesSectionComponent from "./components/FeaturesSectionComponent";
 import HowItWorksSectionComponent from "./components/HowItWorksSectionComponent";
 import TechStackSectionComponent from "./components/TechStackSectionComponent";
@@ -13,7 +12,7 @@ import EcosystemSectionComponent from "./components/EcosystemSectionComponent";
 import DocumentationSectionComponent from "./components/DocumentationSectionComponent";
 import FooterSectionComponent from "./components/FooterSectionComponent";
 
-const TOTAL = 9;
+const TOTAL = 8;
 
 const StartPage = () => {
   const theme = useSelector((state) => state.theme);
@@ -107,9 +106,6 @@ const StartPage = () => {
 
       <div className="h-auto lg:h-dvh lg:overflow-hidden">
         <HeroSectionComponent data={thesisInfo} />
-      </div>
-      <div className="h-auto lg:h-dvh lg:overflow-hidden">
-        <StatsSectionComponent />
       </div>
       <div className="h-auto lg:h-dvh lg:overflow-hidden">
         <FeaturesSectionComponent />
