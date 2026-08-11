@@ -267,6 +267,10 @@ export default function EmergencyAmenityPage() {
   };
 
   useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
     if (activeTab === 'points') {
       fetchPoints(pointsPage, statusFilter);
     } else if (activeTab === 'categories') {
@@ -683,7 +687,10 @@ export default function EmergencyAmenityPage() {
         {/* Action Button */}
         {activeTab === 'points' && (
           <button
-            onClick={() => setShowAddPointModal(true)}
+            onClick={() => {
+              if (categories.length === 0) fetchCategories();
+              setShowAddPointModal(true);
+            }}
             className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm transition cursor-pointer"
           >
             <PiPlusBold className="w-4 h-4" />
