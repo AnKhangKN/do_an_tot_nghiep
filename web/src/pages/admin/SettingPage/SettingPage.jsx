@@ -255,7 +255,7 @@ const SettingPage = () => {
           <div>
             <h1 className="text-xl font-bold text-gray-900">Cấu hình Hệ thống Vận hành</h1>
             <p className="text-xs text-gray-500 mt-0.5">
-              Quản lý các tham số thời gian thực cho Cứu hộ khẩn cấp, Geofencing, AI & Thông báo
+              Quản lý các tham số thời gian thực cho Cứu hộ khẩn cấp
             </p>
           </div>
         </div>
@@ -304,7 +304,7 @@ const SettingPage = () => {
             }`}
         >
           <PiWarningFill size={18} className={activeTab === "geofence" ? "text-amber-500" : "text-gray-400"} />
-          <span>2. Cảnh báo & Geofencing</span>
+          <span>2. Cảnh báo</span>
         </button>
 
         <button
@@ -436,7 +436,7 @@ const SettingPage = () => {
               <div className="border-b border-gray-100 pb-4">
                 <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
                   <PiWarningFill className="text-amber-500" />
-                  <span>Cấu hình Cảnh báo Geofencing & Gom cụm Điểm nóng Tai nạn</span>
+                  <span>Cấu hình Cảnh báo & Gom cụm Điểm nóng Tai nạn</span>
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
                   Thiết lập bán kính cảnh báo rủi ro xung quanh nạn nhân và ngưỡng tự động phát hiện vùng nguy hiểm
@@ -446,7 +446,7 @@ const SettingPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {renderInputField(
                   "geofence_high_radius",
-                  "Bán kính Cảnh báo Geofencing cấp Cao (HIGH)",
+                  "Bán kính Cảnh báo cấp Cao (HIGH)",
                   "Khoảng cách geofence cảnh báo màu đỏ cho các vùng cực kỳ rủi ro",
                   "mét",
                   "number"
@@ -454,7 +454,7 @@ const SettingPage = () => {
 
                 {renderInputField(
                   "geofence_medium_radius",
-                  "Bán kính Cảnh báo Geofencing cấp Trung bình (MEDIUM)",
+                  "Bán kính Cảnh báo cấp Trung bình (MEDIUM)",
                   "Khoảng cách geofence cảnh báo màu cam cho các điểm rủi ro vừa",
                   "mét",
                   "number"
@@ -462,7 +462,7 @@ const SettingPage = () => {
 
                 {renderInputField(
                   "geofence_low_radius",
-                  "Bán kính Cảnh báo Geofencing cấp Thấp (LOW)",
+                  "Bán kính Cảnh báo cấp Thấp (LOW)",
                   "Khoảng cách geofence cảnh báo màu vàng cho các rủi ro chú ý",
                   "mét",
                   "number"
@@ -569,7 +569,7 @@ const SettingPage = () => {
                         className="p-4 rounded-2xl bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all space-y-3"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gray-700">Hotline bổ sung #{index + 1}</span>
+                          <span className="text-xs font-bold text-gray-700">Hotline {index + 1}</span>
                           <button
                             type="button"
                             onClick={() => handleRemoveCustomHotline(item.id)}

@@ -238,8 +238,6 @@ const RescuerLayer = ({ data }) => (
 const LayerControlPanel = ({
   showHeatmap,
   setShowHeatmap,
-  showDanger,
-  setShowDanger,
   showAmenities,
   setShowAmenities,
   categories,
@@ -285,7 +283,6 @@ const LayerControlPanel = ({
           {/* 1. Heatmap */}
           <label className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors cursor-pointer">
             <span className="flex items-center gap-2">
-              <span>🔥</span>
               <span>Heatmap điểm nóng SOS</span>
             </span>
             <input
@@ -295,21 +292,6 @@ const LayerControlPanel = ({
               className="w-4 h-4 rounded text-gray-900 focus:ring-0 cursor-pointer"
             />
           </label>
-
-          {/* 2. Danger Points */}
-          <label className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors cursor-pointer">
-            <span className="flex items-center gap-2">
-              <span>⚠️</span>
-              <span>Điểm & Vùng nguy hiểm</span>
-            </span>
-            <input
-              type="checkbox"
-              checked={showDanger}
-              onChange={(e) => setShowDanger(e.target.checked)}
-              className="w-4 h-4 rounded text-gray-900 focus:ring-0 cursor-pointer"
-            />
-          </label>
-
           {/* 3. Amenities (Bật/Tắt & Mở danh sách danh mục) */}
           <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50">
             <div className="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors">
@@ -324,7 +306,7 @@ const LayerControlPanel = ({
                   className="w-4 h-4 rounded text-gray-900 focus:ring-0 cursor-pointer"
                 />
                 <span className="truncate font-semibold flex items-center gap-1">
-                  <span>🏥</span> Tiện ích khẩn cấp
+                  Tiện ích khẩn cấp
                 </span>
               </label>
 

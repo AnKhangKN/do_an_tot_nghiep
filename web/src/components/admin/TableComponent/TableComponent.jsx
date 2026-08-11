@@ -50,7 +50,7 @@ const TableComponent = ({
   const calculatedTotalPages = directTotalPages ?? pagination?.totalPages ?? (pagination?.total && pagination?.limit ? Math.ceil(pagination.total / pagination.limit) : 1);
   const totalPages = Math.max(1, calculatedTotalPages);
   const totalItems = pagination?.total ?? data.length;
-  const pageChangeHandler = directOnPageChange || pagination?.onPageChange || pagination?.onChange || (() => {});
+  const pageChangeHandler = directOnPageChange || pagination?.onPageChange || pagination?.onChange || (() => { });
 
   const handlePageClick = (p) => {
     if (p >= 1 && p <= totalPages && p !== activePage) {
@@ -156,7 +156,7 @@ const TableComponent = ({
           <div className="text-xs text-gray-500 font-medium">
             {totalItems > 0 ? (
               <>
-                Hiển thị trang <span className="font-bold text-gray-900">{activePage}</span> / <span className="font-bold text-gray-900">{totalPages}</span> (Tổng số <span className="font-bold text-gray-900">{totalItems}</span> bản ghi)
+                Hiển thị trang <span className="font-bold text-gray-900">{activePage}</span> / <span className="font-bold text-gray-900">{totalPages}</span>
               </>
             ) : (
               <span>Trang {activePage} / {totalPages}</span>
@@ -209,11 +209,10 @@ const TableComponent = ({
                     key={p}
                     type="button"
                     onClick={() => handlePageClick(p)}
-                    className={`w-8 h-8 rounded-xl border text-xs font-semibold flex items-center justify-center transition-all duration-200 ${
-                      activePage === p
+                    className={`w-8 h-8 rounded-xl border text-xs font-semibold flex items-center justify-center transition-all duration-200 ${activePage === p
                         ? "bg-gray-900 text-white border-gray-900 shadow-sm dark:bg-gray-200 dark:text-white dark:border-gray-100"
                         : "bg-white dark:bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>

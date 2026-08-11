@@ -64,8 +64,6 @@ const AppReportTab = () => {
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
   const [stats, setStats] = useState({ total: 0, pending: 0, in_progress: 0, resolved: 0, rejected: 0 });
   const LIMIT = 10;
 
@@ -94,8 +92,7 @@ const AppReportTab = () => {
         page,
         LIMIT,
         statusFilter || undefined,
-        categoryFilter || undefined,
-        search || undefined
+        categoryFilter || undefined
       );
       if (response?.success) {
         setReports(response.data.data || []);
@@ -107,7 +104,7 @@ const AppReportTab = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, categoryFilter, search]);
+  }, [page, statusFilter, categoryFilter]);
 
   useEffect(() => {
     fetchStats();
@@ -248,18 +245,6 @@ const AppReportTab = () => {
       <div className="flex flex-wrap justify-between items-center gap-3 bg-white dark:bg-gray-100 p-3 rounded-2xl border border-gray-200 shadow-sm">
         <span className="text-xs font-semibold text-gray-700">Lọc:</span>
         <div className="flex flex-wrap gap-3 items-center">
-          <input
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                setSearch(searchInput.trim());
-                setPage(1);
-              }
-            }}
-            placeholder="Tìm kiếm tiêu đề, nội dung, người gửi..."
-            className="text-xs border border-gray-200 rounded-xl px-3 py-1.5 bg-gray-50 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 w-56"
-          />
           <select
             value={statusFilter}
             onChange={(e) => {

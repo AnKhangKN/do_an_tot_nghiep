@@ -161,7 +161,7 @@ const IncidentTypePage = () => {
     },
     {
       key: "name",
-      title: "Tên loại sự cố (Tự động In hoa)",
+      title: "Tên loại sự cố",
       render: (row) => (
         <span className="font-bold text-gray-900 text-sm tracking-wide">
           {row.incidentType}
@@ -181,12 +181,12 @@ const IncidentTypePage = () => {
           {row.status === "ACTIVE" ? (
             <span className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
               <PiToggleRightBold size={18} className="text-emerald-600" />
-              <span>ACTIVE (Đang hoạt động)</span>
+              <span>Đang hoạt động</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full font-semibold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
               <PiToggleLeftBold size={18} className="text-rose-500" />
-              <span>INACTIVE (Đã tắt)</span>
+              <span>Đã tắt</span>
             </span>
           )}
         </button>

@@ -376,7 +376,7 @@ const DangerousZonePage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Quản lý điểm nguy hiểm</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Duyệt các vị trí rủi ro báo cáo bởi người dùng hoặc hệ thống tự phát hiện (Crowd-Sourced)</p>
+          <p className="text-sm text-gray-500 mt-0.5">Duyệt các vị trí rủi ro báo cáo bởi người dùng hoặc hệ thống tự phát hiện</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -391,14 +391,13 @@ const DangerousZonePage = () => {
               onClick={() => setActiveTab('feedbacks')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'feedbacks' ? 'bg-gray-900 text-white shadow-sm dark:bg-gray-200 dark:text-white' : 'text-gray-600 hover:text-gray-900'}`}
             >
-              Phản hồi & Xác minh Cộng đồng
+              Phản hồi & Xác minh
             </button>
             <button
               onClick={() => setActiveTab('duplicates')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'duplicates' ? 'bg-gray-900 text-white shadow-sm dark:bg-gray-200 dark:text-white' : 'text-gray-600 hover:text-gray-900'}`}
             >
-              <PiCopyBold />
-              Nghi Ngờ Trùng Lặp
+              Điểm trùng lặp
               {duplicates.length > 0 && (
                 <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700">
                   {duplicates.length}
@@ -412,8 +411,7 @@ const DangerousZonePage = () => {
             disabled={autoDetecting}
             className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white rounded-2xl font-medium shadow-sm transition-all disabled:opacity-50 text-sm cursor-pointer"
           >
-            <PiLightningFill className="text-amber-400 text-base" />
-            {autoDetecting ? "Đang phân tích gom cụm..." : "Quét cụm SOS tự động"}
+            {autoDetecting ? "Đang phân tích gom cụm..." : "Cập nhật điểm nóng"}
           </button>
         </div>
       </div>
@@ -686,16 +684,14 @@ const DangerousZonePage = () => {
           <div className="p-3.5 bg-gray-50 dark:bg-gray-100/80 rounded-2xl border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <div>
               <span className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider block">Trạng thái điểm hiện tại</span>
-              <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full mt-0.5 ${
-                selectedPointFeedbacks.point.status === 'APPROVED'
-                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                  : selectedPointFeedbacks.point.status === 'PENDING'
+              <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full mt-0.5 ${selectedPointFeedbacks.point.status === 'APPROVED'
+                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                : selectedPointFeedbacks.point.status === 'PENDING'
                   ? 'bg-amber-100 text-amber-800 border border-amber-200'
                   : 'bg-rose-100 text-rose-800 border border-rose-200'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  selectedPointFeedbacks.point.status === 'APPROVED' ? 'bg-emerald-500' : selectedPointFeedbacks.point.status === 'PENDING' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'
-                }`} />
+                }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${selectedPointFeedbacks.point.status === 'APPROVED' ? 'bg-emerald-500' : selectedPointFeedbacks.point.status === 'PENDING' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'
+                  }`} />
                 {selectedPointFeedbacks.point.status === 'APPROVED' ? 'Đã duyệt (Đang hoạt động)' : selectedPointFeedbacks.point.status === 'PENDING' ? 'Chờ duyệt' : 'Đã từ chối / BAN'}
               </span>
             </div>

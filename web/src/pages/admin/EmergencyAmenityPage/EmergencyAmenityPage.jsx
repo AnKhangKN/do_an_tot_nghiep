@@ -309,15 +309,6 @@ export default function EmergencyAmenityPage() {
           <span className="font-semibold text-gray-900 text-sm block">
             {row.categoryName || 'Tiện ích khẩn cấp'}
           </span>
-          {row.imageUrl && (
-            <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-bold rounded-lg border border-blue-200 shadow-2xs"
-              title="Có ảnh thực tế đính kèm"
-            >
-              <PiImageBold className="w-3.5 h-3.5" />
-              Có ảnh
-            </span>
-          )}
         </div>
       ),
     },
@@ -366,7 +357,7 @@ export default function EmergencyAmenityPage() {
               }`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${isApproved ? 'bg-emerald-500' : isPending ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`} />
-            {isApproved ? 'Đã duyệt' : isPending ? 'Chờ duyệt' : 'Đã từ chối'}
+            {isApproved ? 'Đã duyệt' : isPending ? 'Chờ duyệt' : 'Từ chối'}
           </span>
         );
       },
@@ -387,7 +378,7 @@ export default function EmergencyAmenityPage() {
               className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-200 transition cursor-pointer"
               title="Tạm gỡ / Ban điểm này"
             >
-              Tạm gỡ
+              Gỡ
             </button>
           ) : (
             <button
@@ -395,7 +386,7 @@ export default function EmergencyAmenityPage() {
               className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold border border-emerald-200 transition cursor-pointer"
               title="Duyệt lại / Cho phép hiển thị điểm này trên bản đồ"
             >
-              Duyệt lại
+              Duyệt
             </button>
           )}
           <button
@@ -611,9 +602,9 @@ export default function EmergencyAmenityPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Bản Đồ Tiện Ích Cộng Đồng</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Quản lý tiện ích khẩn cấp</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Quản lý danh mục, xử lý báo cáo vi phạm và duyệt điểm tiện ích khẩn cấp trên toàn hệ thống.
+            Quản lý danh mục, xử lý báo cáo và duyệt điểm tiện ích trên toàn hệ thống.
           </p>
         </div>
 
@@ -670,7 +661,7 @@ export default function EmergencyAmenityPage() {
               }`}
           >
             <PiCopyBold className="w-4 h-4" />
-            Nghi Ngờ Trùng Lặp
+            Điểm trùng lặp
             {duplicates.length > 0 && (
               <span className="ml-1 px-2 py-0.5 text-xs bg-white dark:bg-gray-100 text-amber-700 font-bold rounded-full">
                 {duplicates.length}

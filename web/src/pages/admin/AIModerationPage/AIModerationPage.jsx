@@ -37,13 +37,12 @@ const actionLabels = {
   APPROVED: 'Đã duyệt',
   REQUIRES_ADMIN_REVIEW: 'Chờ xem xét',
   AUTO_BLOCKED: 'Đã tự động chặn',
-  DISMISSED: 'Bác bỏ cờ'
+  DISMISSED: 'Đã bác bỏ'
 };
 
 const AIModerationPage = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [entityType, setEntityType] = useState('');
   const [isFlagged, setIsFlagged] = useState('');
   const [actionTaken, setActionTaken] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
@@ -56,7 +55,6 @@ const AIModerationPage = () => {
       const params = {
         page,
         limit: pagination.limit,
-        entityType: entityType || undefined,
         isFlagged: isFlagged !== '' ? isFlagged : undefined,
         actionTaken: actionTaken || undefined
       };
@@ -72,7 +70,7 @@ const AIModerationPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination.limit, entityType, isFlagged, actionTaken]);
+  }, [pagination.limit, isFlagged, actionTaken]);
 
   useEffect(() => {
     fetchLogs(1);
@@ -186,7 +184,7 @@ const AIModerationPage = () => {
               title="Đánh dấu nội dung An toàn (Bỏ qua vi phạm)"
             >
               <PiCheckCircleFill size={14} />
-              <span>Bỏ qua / An toàn</span>
+              <span>An toàn</span>
             </button>
 
             {/* Nút Xác nhận Vi phạm (Duyệt vi phạm) */}
@@ -197,7 +195,7 @@ const AIModerationPage = () => {
               title="Xác nhận vi phạm và tự động xử lý thực thể gốc"
             >
               <PiWarningFill size={14} />
-              <span>Duyệt vi phạm</span>
+              <span>Vi phạm</span>
             </button>
           </div>
         );
@@ -239,22 +237,7 @@ const AIModerationPage = () => {
           <span>Bộ lọc thông minh</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Loại thực thể</label>
-            <select
-              value={entityType}
-              onChange={(e) => setEntityType(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2 text-xs text-gray-900 font-medium focus:outline-none focus:border-gray-900 transition-all"
-            >
-              <option value="">Tất cả thực thể</option>
-              <option value="SOS_REQUEST">Yêu cầu SOS (SOS_REQUEST)</option>
-              <option value="AMENITY_FEEDBACK">Phản hồi Tiện ích (AMENITY_FEEDBACK)</option>
-              <option value="DANGEROUS_POINT">Điểm nguy hiểm (DANGEROUS_POINT)</option>
-              <option value="MESSAGE">Tin nhắn (MESSAGE)</option>
-            </select>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1">Trạng thái Cắm cờ AI</label>
             <select
@@ -263,8 +246,8 @@ const AIModerationPage = () => {
               className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2 text-xs text-gray-900 font-medium focus:outline-none focus:border-gray-900 transition-all"
             >
               <option value="">Tất cả</option>
-              <option value="true">Chỉ xem nội dung bị Cắm cờ (Spam/Lừa đảo)</option>
-              <option value="false">Nội dung an toàn</option>
+              <option value="true">Vi phạm</option>
+              <option value="false">An toàn</option>
             </select>
           </div>
 
@@ -275,11 +258,10 @@ const AIModerationPage = () => {
               onChange={(e) => setActionTaken(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2 text-xs text-gray-900 font-medium focus:outline-none focus:border-gray-900 transition-all"
             >
-              <option value="">Tất cả trạng thái</option>
+              <option value="">Tất cả</option>
               <option value="NONE">Chưa xử lý</option>
-              <option value="APPROVED">Đã duyệt vi phạm</option>
-              <option value="REQUIRES_ADMIN_REVIEW">Chờ xem xét</option>
-              <option value="DISMISSED">Đã bỏ qua / an toàn</option>
+              <option value="APPROVED">Vi phạm</option>
+              <option value="DISMISSED">An toàn</option>
             </select>
           </div>
         </div>

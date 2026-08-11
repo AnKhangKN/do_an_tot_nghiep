@@ -93,7 +93,7 @@ const StatisticComponent = ({ summary }) => {
           <span className="flex items-center gap-1 text-gray-500">
             <PiXCircleBold className="text-sm text-gray-400" /> {cancelledSos} ca đã hủy
           </span>
-          <span className="font-semibold text-emerald-700">Thành công</span>
+
         </div>
       </div>
 
@@ -112,9 +112,6 @@ const StatisticComponent = ({ summary }) => {
             <h2 className="text-3xl font-extrabold text-gray-900">
               {matchingSuccessRate}%
             </h2>
-            <span className="text-xs text-gray-500 font-medium">
-              (Ghép đôi Rescuer - Victim)
-            </span>
           </div>
         </div>
         <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs text-gray-500">
