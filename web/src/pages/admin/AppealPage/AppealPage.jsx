@@ -3,7 +3,7 @@ import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import AddUpdateModelComponent from '@/components/admin/AddUpdateModelComponent/AddUpdateModelComponent';
 import { getAppeals, approveAppeal, rejectAppeal } from '@/api/admin/AppealApi';
 import { formatTime } from '@/utils/format_date.util';
-import { PiCheck, PiX, PiWarningCircle } from 'react-icons/pi';
+import { PiCheck, PiX, PiWarningCircle, PiLockOpen } from 'react-icons/pi';
 
 const STATUS_LABEL = {
   PENDING: { label: 'Chờ xử lý', class: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
@@ -153,7 +153,38 @@ const AppealPage = () => {
             <span className="text-xs text-gray-400">—</span>
           ),
       },
-
+      {
+        key: 'actions',
+        title: 'Thao tác',
+        render: (row) => (
+          <div className="flex items-center gap-2">
+            {row.status === 'PENDING' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActionModal({ ...row, action: 'approve' })}
+                  className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-semibold flex items-center gap-1 transition-colors"
+                  title="Mở khóa tài khoản"
+                >
+                  <PiLockOpen size={14} />
+                  <span>Mở khóa</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActionModal({ ...row, action: 'reject' })}
+                  className="px-2.5 py-1 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 text-xs font-semibold flex items-center gap-1 transition-colors"
+                  title="Bác bỏ đơn kháng cáo"
+                >
+                  <PiX size={14} />
+                  <span>Bác bỏ</span>
+                </button>
+              </>
+            ) : (
+              <span className="text-xs text-gray-400 font-medium italic">Đã xử lý</span>
+            )}
+          </div>
+        ),
+      },
     ],
     [page]
   );
