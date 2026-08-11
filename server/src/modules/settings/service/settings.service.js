@@ -9,6 +9,7 @@ const GROUP_LABELS = {
     ai: "Trí tuệ Nhân tạo (AI)",
     hotline: "Hotline Khẩn cấp & Hệ thống",
     thesis: "Đồ án, Tác giả & Ứng dụng",
+    policy: "Điều khoản & Chính sách bảo mật",
 };
 
 const PUBLIC_KEYS = [
@@ -27,6 +28,8 @@ const PUBLIC_KEYS = [
     "hotline_police",
     "hotline_emergency",
     "hotlines_custom_list",
+    "terms_of_service_content",
+    "privacy_policy_content",
 ];
 
 class SettingsService {

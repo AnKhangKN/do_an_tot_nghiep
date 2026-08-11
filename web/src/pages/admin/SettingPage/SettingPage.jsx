@@ -16,6 +16,7 @@ import {
   PiLinkSimple,
   PiPlusBold,
   PiTrashFill,
+  PiFileTextFill,
 } from "react-icons/pi";
 import { getSystemSettings, updateSystemSettings } from "@/api/admin/SettingApi";
 
@@ -63,6 +64,10 @@ const DEFAULT_FORM_VALUES = {
   thesis_contact_email: "",
   thesis_contact_phone: "",
   app_apk_url: "",
+
+  // Policy & Terms
+  terms_of_service_content: "",
+  privacy_policy_content: "",
 };
 
 const SettingPage = () => {
@@ -324,6 +329,18 @@ const SettingPage = () => {
         >
           <PiStudentFill size={18} className={activeTab === "thesis" ? "text-blue-500" : "text-gray-400"} />
           <span>4. Đồ án, Tác giả & Ứng dụng</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("policy")}
+          className={`dark:hover:bg-gray-100 flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-xs transition-all ${activeTab === "policy"
+            ? "dark:bg-gray-100 bg-white text-gray-900 shadow-sm"
+            : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+            }`}
+        >
+          <PiFileTextFill size={18} className={activeTab === "policy" ? "text-purple-500" : "text-gray-400"} />
+          <span>5. Điều khoản & Chính sách</span>
         </button>
       </div>
 
@@ -707,6 +724,55 @@ const SettingPage = () => {
                   "Đường dẫn file APK tải về (Google Drive, Mediafire...). Được dùng cho nút 'Tải ứng dụng Mobile' trên trang giới thiệu",
                   "https://..."
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: POLICY & TERMS */}
+          {activeTab === "policy" && (
+            <div className="space-y-6">
+              <div className="border-b border-gray-100 pb-4">
+                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <PiFileTextFill className="text-purple-500" size={20} />
+                  <span>Quản lý Điều khoản dịch vụ & Chính sách bảo mật</span>
+                </h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  Nội dung được cập nhật tại đây sẽ tự động đồng bộ lên ứng dụng Mobile Flutter và Web Client.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100">
+                  <label className="block font-bold text-gray-900 text-sm mb-1">
+                    Nội dung Điều khoản sử dụng
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Quy định quyền và trách nhiệm của người dùng khi sử dụng hệ thống cứu hộ.
+                  </p>
+                  <textarea
+                    rows={8}
+                    value={formValues.terms_of_service_content ?? ""}
+                    onChange={(e) => handleChange("terms_of_service_content", e.target.value)}
+                    className="w-full p-4 rounded-xl dark:bg-gray-200 dark:border-gray-100 dark:text-white bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all resize-y font-medium leading-relaxed"
+                    placeholder="Nhập nội dung điều khoản sử dụng..."
+                  />
+                </div>
+
+                <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100">
+                  <label className="block font-bold text-gray-900 text-sm mb-1">
+                    Nội dung Chính sách bảo mật
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Cam kết thu thập, sử dụng và bảo mật dữ liệu cá nhân của người dùng.
+                  </p>
+                  <textarea
+                    rows={8}
+                    value={formValues.privacy_policy_content ?? ""}
+                    onChange={(e) => handleChange("privacy_policy_content", e.target.value)}
+                    className="w-full p-4 rounded-xl dark:bg-gray-200 dark:border-gray-100 dark:text-white bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all resize-y font-medium leading-relaxed"
+                    placeholder="Nhập nội dung chính sách bảo mật..."
+                  />
+                </div>
               </div>
             </div>
           )}

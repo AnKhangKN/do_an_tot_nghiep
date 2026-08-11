@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import '../../../../core/constants/router_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../shared/widgets/terms_policy_dialog.dart';
 import '../../../../shared/widgtes/banned_dialog_widget.dart';
 import '../../../../shared/widgtes/kicked_dialog_widget.dart';
 import '../providers/auth_provider.dart';
@@ -490,6 +492,47 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Terms and Policy caption
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorConstants.textMuted,
+                            height: 1.4,
+                          ),
+                          children: [
+                            const TextSpan(text: 'Bằng cách tiếp tục đăng nhập, bạn đồng ý với\n'),
+                            TextSpan(
+                              text: 'Điều khoản dịch vụ',
+                              style: const TextStyle(
+                                color: ColorConstants.redRescue,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => TermsPolicyDialog.show(context, TermsPolicyType.terms),
+                            ),
+                            const TextSpan(text: ' & '),
+                            TextSpan(
+                              text: 'Chính sách bảo mật',
+                              style: const TextStyle(
+                                color: ColorConstants.redRescue,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => TermsPolicyDialog.show(context, TermsPolicyType.privacy),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 16),

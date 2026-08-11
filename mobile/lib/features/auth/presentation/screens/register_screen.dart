@@ -5,6 +5,7 @@ import '../../../../core/constants/color_constants.dart';
 import '../../../../core/constants/router_constants.dart';
 import '../../../../core/utils/app_snackbar.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/terms_checkbox_widget.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _acceptedTerms = false;
   bool isLoading = false;
   String? error;
 
@@ -60,6 +62,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (password != confirmPassword) {
       setState(() => error = "Mật khẩu xác nhận không khớp");
+      return;
+    }
+
+    if (!_acceptedTerms) {
+      setState(() => error = "Vui lòng đọc và đồng ý với Điều khoản dịch vụ & Chính sách bảo mật!");
       return;
     }
 
@@ -252,7 +259,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 12),
+
+                    // Terms and policy checkbox
+                    TermsCheckboxWidget(
+                      value: _acceptedTerms,
+                      onChanged: (val) => setState(() => _acceptedTerms = val ?? false),
+                    ),
+
+                    const SizedBox(height: 16),
 
                     // Register button
                     SizedBox(

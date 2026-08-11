@@ -37,6 +37,9 @@ const DEFAULT_SETTINGS = [
     { key: "thesis_contact_email", value: "", label: "Email liên hệ", group: "thesis", type: "string" },
     { key: "thesis_contact_phone", value: "", label: "Số điện thoại liên hệ", group: "thesis", type: "string" },
     { key: "app_apk_url", value: "", label: "Link tải App (APK)", group: "thesis", type: "string" },
+
+    { key: "terms_of_service_content", value: "1. Quyền và Trách nhiệm Người dùng:\n- Người dùng chịu trách nhiệm về tính chính xác của các tín hiệu SOS phát ra.\n- Nghiêm cấm hành vi phát tín hiệu SOS giả hoặc tạo điểm cảnh báo giả làm sai lệch dữ liệu cứu hộ.\n\n2. Quyền riêng tư & Vị trí:\n- Ứng dụng thu thập dữ liệu vị trí GPS khi bạn kích hoạt tín hiệu SOS hoặc chế độ cứu hộ ngầm nhằm mục đích chỉ đường cho Đội cứu hộ.\n- Dữ liệu vị trí được bảo mật tuyệt đối và chỉ chia sẻ cho Cứu hộ viên trong thời gian xử lý sự cố.\n\n3. Giới hạn trách nhiệm:\n- Hệ thống hỗ trợ tối đa việc kết nối cứu hộ thời gian thực nhưng không thay thế hoàn toàn cho các cơ quan chức năng nhà nước (113, 114, 115).", label: "Nội dung Điều khoản sử dụng", group: "policy", type: "string" },
+    { key: "privacy_policy_content", value: "1. Dữ liệu chúng tôi thu thập:\n- Thông tin tài khoản: Họ tên, Số điện thoại, Email và Ảnh đại diện.\n- Dữ liệu vị trí GPS thời gian thực khi sử dụng tính năng cứu hộ hoặc báo cáo cảnh báo.\n\n2. Mục đích sử dụng dữ liệu:\n- Tìm kiếm và kết nối Nạn nhân với Cứu hộ viên gần nhất.\n- Phát cảnh báo vùng nguy hiểm cho người dùng trong bán kính nguy cơ.\n\n3. Cam kết bảo mật:\n- Mọi thông tin cá nhân đều được mã hóa và bảo vệ theo tiêu chuẩn an toàn thông tin. Chúng tôi cam kết không bán hoặc chia sẻ dữ liệu cho bên thứ ba vì mục đích thương mại.", label: "Nội dung Chính sách bảo mật", group: "policy", type: "string" },
 ];
 
 class SettingsRepository {
