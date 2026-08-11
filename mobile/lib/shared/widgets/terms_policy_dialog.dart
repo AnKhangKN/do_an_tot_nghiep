@@ -68,11 +68,14 @@ class _TermsPolicyDialogState extends State<TermsPolicyDialog> {
       ));
       final res = await cleanDio.get('/api/public/settings/thesis-info');
       if (res.data != null) {
-        final data = res.data;
+        final responseBody = res.data;
+        final payload = (responseBody is Map && responseBody['data'] is Map)
+            ? responseBody['data']
+            : responseBody;
         final key = widget.type == TermsPolicyType.terms
             ? 'terms_of_service_content'
             : 'privacy_policy_content';
-        final val = data[key];
+        final val = payload[key];
         if (val != null && val.toString().trim().isNotEmpty) {
           if (mounted) {
             setState(() {

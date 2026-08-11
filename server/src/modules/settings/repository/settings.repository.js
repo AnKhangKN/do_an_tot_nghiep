@@ -96,10 +96,13 @@ class SettingsRepository {
     async updateValues(values) {
         for (const key of Object.keys(values)) {
             await pool.query(
-                `UPDATE ${this.settings.table}
-                 SET ${this.settings.field.settingValue} = $2,
-                     ${this.settings.field.updatedAt} = CURRENT_TIMESTAMP
-                 WHERE ${this.settings.field.settingKey} = $1;`,
+                `INSERT INTO ${this.settings.table} 
+                    (${this.settings.field.settingKey}, ${this.settings.field.settingValue})
+                 VALUES ($1, $2)
+                 ON CONFLICT (${this.settings.field.settingKey}) 
+                 DO UPDATE SET 
+                     ${this.settings.field.settingValue} = EXCLUDED.${this.settings.field.settingValue},
+                     ${this.settings.field.updatedAt} = CURRENT_TIMESTAMP;`,
                 [key, String(values[key])]
             );
         }

@@ -7,6 +7,7 @@ import '../../../../core/constants/router_constants.dart';
 import '../../../../core/di/di.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/utils/app_snackbar.dart';
+import '../../../../shared/widgets/google_logo_widget.dart';
 import '../../../../shared/widgets/terms_policy_dialog.dart';
 import '../../../../shared/widgtes/banned_dialog_widget.dart';
 import '../../../../shared/widgtes/kicked_dialog_widget.dart';
@@ -425,11 +426,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         elevation: 0,
                       ),
-                      icon: const Icon(
-                        Icons.g_mobiledata_rounded,
-                        size: 28,
-                        color: Colors.redAccent,
-                      ),
+                      icon: const GoogleLogoWidget(size: 24),
                       label: Text(
                         'Đăng nhập với Google',
                         style: TextStyle(
