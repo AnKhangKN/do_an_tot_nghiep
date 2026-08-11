@@ -132,19 +132,16 @@ const DashboardPage = () => {
 
             {/* Live Socket Status Indicator */}
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs transition-colors ${
-                isConnected
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
-                  : "bg-amber-50 text-amber-700 border-amber-200/80"
-              }`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs transition-colors ${isConnected
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
+                : "bg-amber-50 text-amber-700 border-amber-200/80"
+                }`}
             >
               <span
-                className={`w-2 h-2 rounded-full ${
-                  isConnected ? "bg-emerald-500 animate-ping" : "bg-amber-500"
-                }`}
+                className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500 animate-ping" : "bg-amber-500"
+                  }`}
               />
-              <PiLightningFill className={isConnected ? "text-emerald-500" : "text-amber-500"} />
-              {isConnected ? "LIVE PUSH ACTIVE" : "RECONNECTING"}
+              {isConnected ? "Đang Hoạt Động" : "Mất Kết Nối"}
             </span>
           </div>
           <p className="mt-1 text-sm text-gray-500">
