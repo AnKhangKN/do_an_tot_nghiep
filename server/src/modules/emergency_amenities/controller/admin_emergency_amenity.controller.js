@@ -18,6 +18,37 @@ class AdminEmergencyAmenityController {
         }
     }
 
+    async createAmenityAdmin(req, res) {
+        try {
+            const { amenityCategoryId, phone, latitude, longitude, openingHours } = req.body;
+            const imageUrl = req.file ? req.file.path : (req.body.imageUrl || null);
+            const userId = req.userId;
+
+            const amenity = await emergencyAmenityService.createAmenity({
+                amenityCategoryId,
+                phone,
+                latitude,
+                longitude,
+                openingHours,
+                reportedBy: userId,
+                userRole: 'ADMIN',
+                imageUrl
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: "Tạo điểm tiện ích khẩn cấp thành công!",
+                data: amenity
+            });
+        } catch (error) {
+            console.error("Error in createAmenityAdmin:", error);
+            return res.status(500).json({
+                success: false,
+                message: error.message || "Lỗi máy chủ khi tạo điểm tiện ích"
+            });
+        }
+    }
+
     async createCategoryAdmin(req, res) {
         try {
             const { categoryName, iconName } = req.body;

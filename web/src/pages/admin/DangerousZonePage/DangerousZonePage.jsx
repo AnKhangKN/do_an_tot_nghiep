@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import TableComponent from '@/components/admin/TableComponent/TableComponent';
 import CellDetailComponent from '@/components/admin/TableComponent/CellDetailComponent/CellDetailComponent';
+import AddUpdateModelComponent from '@/components/admin/AddUpdateModelComponent/AddUpdateModelComponent';
 import { formatTime } from '@/utils/format_date.util';
-import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones, getDangerousZoneFeedbacks, updateDangerousZoneFeedbackStatusAdmin, getPointFeedbacks, getDuplicateDangerousZones, mergeDangerousZones } from '@/api/admin/DangerousZoneApi';
+import { getDangerousZones, approveDangerousZone, rejectDangerousZone, autoDetectDangerousZones, getDangerousZoneFeedbacks, updateDangerousZoneFeedbackStatusAdmin, getPointFeedbacks, getDuplicateDangerousZones, mergeDangerousZones, createDangerousZoneAdmin } from '@/api/admin/DangerousZoneApi';
 import {
   PiLightningFill,
   PiHourglassFill,
@@ -18,6 +19,8 @@ import {
   PiCopyBold,
   PiGitMergeBold,
   PiCheckBold,
+  PiPlusBold,
+  PiMapPinBold,
 } from 'react-icons/pi';
 
 const getErrorMessage = (error) => {
@@ -182,6 +185,77 @@ const DangerousZonePage = () => {
   const [detectMsg, setDetectMsg] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
   const [toastMessage, setToastMessage] = useState(null);
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [newPoint, setNewPoint] = useState({
+    zoneName: '',
+    description: '',
+    dangerLevel: 'HIGH',
+    latitude: '',
+    longitude: '',
+    image: null,
+  });
+
+  const handleGetCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setNewPoint((prev) => ({
+            ...prev,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }));
+          showToast("Đã lấy vị trí hiện tại thành công!");
+        },
+        () => {
+          showToast("Không thể lấy vị trí hiện tại. Vui lòng nhập thủ công!", "error");
+        }
+      );
+    } else {
+      showToast("Trình duyệt không hỗ trợ Geolocation!", "error");
+    }
+  };
+
+  const handleCreatePointSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPoint.zoneName.trim() || !newPoint.latitude || !newPoint.longitude) {
+      showToast("Vui lòng nhập đầy đủ tên khu vực và tọa độ!", "error");
+      return;
+    }
+
+    try {
+      setAddLoading(true);
+      const formData = new FormData();
+      formData.append('zoneName', newPoint.zoneName.trim());
+      formData.append('description', newPoint.description.trim());
+      formData.append('dangerLevel', newPoint.dangerLevel);
+      formData.append('latitude', newPoint.latitude);
+      formData.append('longitude', newPoint.longitude);
+      formData.append('status', 'APPROVED');
+      if (newPoint.image) {
+        formData.append('image', newPoint.image);
+      }
+
+      await createDangerousZoneAdmin(formData);
+      showToast("Tạo điểm nguy hiểm mới thành công!");
+      setShowAddModal(false);
+      setNewPoint({
+        zoneName: '',
+        description: '',
+        dangerLevel: 'HIGH',
+        latitude: '',
+        longitude: '',
+        image: null,
+      });
+      fetchDangerousZones();
+    } catch (error) {
+      console.error(error);
+      showToast(getErrorMessage(error), "error");
+    } finally {
+      setAddLoading(false);
+    }
+  };
 
   const showToast = (msg, type = "success") => {
     setToastMessage({ msg, type });
@@ -406,6 +480,15 @@ const DangerousZonePage = () => {
             </button>
           </div>
 
+          {activeTab === 'points' && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white rounded-2xl font-medium shadow-sm transition-all text-sm cursor-pointer"
+            >
+              <PiPlusBold size={16} />
+              <span>Thêm điểm nguy hiểm</span>
+            </button>
+          )}
           <button
             onClick={handleAutoDetect}
             disabled={autoDetecting}
@@ -804,6 +887,114 @@ const DangerousZonePage = () => {
           )}
         </div>
       </CellDetailComponent>
+
+      {/* Modal Thêm điểm nguy hiểm mới */}
+      <AddUpdateModelComponent
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Thêm Điểm Nguy Hiểm Mới"
+        subtitle="Khoanh vùng rủi ro trực tiếp lên bản đồ cứu hộ"
+        headerIcon={<PiWarningBold className="text-amber-500 text-xl" />}
+        onSubmit={handleCreatePointSubmit}
+        submitLabel="Tạo mới điểm nguy hiểm"
+        loading={addLoading}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">
+              Tên khu vực rủi ro / Điểm nguy hiểm (*)
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Ví dụ: Khu vực ngập sâu đường Nguyễn Văn Cừ, Sạt lở..."
+              value={newPoint.zoneName}
+              onChange={(e) => setNewPoint({ ...newPoint, zoneName: e.target.value })}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">
+              Mức độ nguy hiểm (*)
+            </label>
+            <select
+              value={newPoint.dangerLevel}
+              onChange={(e) => setNewPoint({ ...newPoint, dangerLevel: e.target.value })}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 font-semibold"
+            >
+              <option value="HIGH">🔴 Cao (HIGH - Cực kỳ rủi ro)</option>
+              <option value="MEDIUM">🟠 Trung bình (MEDIUM - Rủi ro vừa)</option>
+              <option value="LOW">🟡 Thấp (LOW - Cần chú ý)</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-gray-700">
+                Tọa độ địa lý (Vĩ độ & Kinh độ) (*)
+              </label>
+              <button
+                type="button"
+                onClick={handleGetCurrentLocation}
+                className="inline-flex items-center gap-1 text-xs text-blue-600 font-semibold hover:underline cursor-pointer"
+              >
+                <PiMapPinBold size={14} />
+                <span>Lấy vị trí hiện tại</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  placeholder="Vĩ độ (Latitude)"
+                  value={newPoint.latitude}
+                  onChange={(e) => setNewPoint({ ...newPoint, latitude: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 font-mono"
+                />
+              </div>
+              <div>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  placeholder="Kinh độ (Longitude)"
+                  value={newPoint.longitude}
+                  onChange={(e) => setNewPoint({ ...newPoint, longitude: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">
+              Mô tả chi tiết
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Nhập ghi chú cảnh báo chi tiết về điểm nguy hiểm này..."
+              value={newPoint.description}
+              onChange={(e) => setNewPoint({ ...newPoint, description: e.target.value })}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 resize-none font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">
+              Ảnh minh họa đính kèm (Tùy chọn)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewPoint({ ...newPoint, image: e.target.files[0] || null })}
+              className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-800 cursor-pointer"
+            />
+          </div>
+        </div>
+      </AddUpdateModelComponent>
     </div>
   );
 };

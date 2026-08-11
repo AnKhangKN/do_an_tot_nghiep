@@ -42,6 +42,16 @@ export const getAmenitiesAdmin = async (page = 1, limit = 20, status = '', categ
     }
 };
 
+export const createAmenityAdmin = async (data) => {
+    try {
+        const response = await axiosJWT.post('/api/emergency-amenities/admin/points', data);
+        return response.data;
+    } catch (error) {
+        console.error("Create amenity admin error:", error);
+        throw error;
+    }
+};
+
 export const updateAmenityStatusAdmin = async (id, status) => {
     try {
         const response = await axiosJWT.put(`/api/emergency-amenities/admin/points/${id}/status`, { status });

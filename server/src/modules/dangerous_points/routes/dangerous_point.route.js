@@ -8,6 +8,7 @@ const route = express.Router();
 
 // Routes for admin (must come before /:id routes)
 route.get('/admin', verifyToken, isAdmin, adminDangerousPointController.getDangerousPointsAdmin);
+route.post('/admin', verifyToken, isAdmin, uploadDangerousPointSingle, validatorCreateDangerousPoint, adminDangerousPointController.createDangerousPointAdmin);
 route.get('/admin/feedbacks', verifyToken, isAdmin, dangerousPointController.getFeedbacksAdmin);
 route.put('/admin/feedbacks/:id/status', verifyToken, isAdmin, dangerousPointController.updateFeedbackStatusAdmin);
 route.get('/admin/duplicates', verifyToken, isAdmin, adminDangerousPointController.getDuplicateDangerousPoints);

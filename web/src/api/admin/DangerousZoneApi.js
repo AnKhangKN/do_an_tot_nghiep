@@ -12,6 +12,16 @@ export const getDangerousZones = async (page, limit) => {
     }
 };
 
+export const createDangerousZoneAdmin = async (data) => {
+    try {
+        const response = await axiosJWT.post('/api/dangerous_points/admin', data);
+        return response.data;
+    } catch (error) {
+        console.error("Create dangerous zone admin error:", error);
+        throw error;
+    }
+};
+
 export const approveDangerousZone = async (dangerousPointId) => {
     try {
         const response = await axiosJWT.put(`/api/dangerous_points/admin/${dangerousPointId}/approve`);

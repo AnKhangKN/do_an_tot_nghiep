@@ -57,6 +57,40 @@ class DangerousPointService {
         }
     }
 
+    async createDangerousPointAdmin({ zoneName, description, latitude, longitude, dangerLevel, reportedBy, imageUrl, status = 'APPROVED' }) {
+        const dangerousPointId = generateUUID();
+
+        const row = await transaction(async (client) => {
+            const createdRow = await this.dangerousPointRepository.createDangerousPoint(client, {
+                dangerousPointId,
+                zoneName,
+                description,
+                latitude,
+                longitude,
+                dangerLevel,
+                reportedBy,
+                status,
+                approvedBy: status === 'APPROVED' ? reportedBy : null
+            });
+
+            if (imageUrl) {
+                const imageService = require("@modules/image/service/image.service");
+                await imageService.createImage(client, {
+                    url: imageUrl,
+                    entityType: 'DANGEROUS_POINT',
+                    entityId: dangerousPointId
+                });
+            }
+
+            return createdRow;
+        });
+
+        return {
+            ...mapFields(row, this.dangerousPointModel),
+            imageUrl: imageUrl || null
+        };
+    }
+
     async getDangerousPointsAdmin({ page, limit }) {
         return await this.dangerousPointRepository.getDangerousPointsAdmin({ page, limit })
     }

@@ -8,6 +8,7 @@ import {
   createCategoryAdmin,
   updateCategoryAdmin,
   getAmenitiesAdmin,
+  createAmenityAdmin,
   updateAmenityStatusAdmin,
   deleteAmenityAdmin,
   getFeedbacksAdmin,
@@ -89,6 +90,77 @@ export default function EmergencyAmenityPage() {
   const [duplicatesLoading, setDuplicatesLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+
+  // Add Amenity Point State
+  const [showAddPointModal, setShowAddPointModal] = useState(false);
+  const [addPointLoading, setAddPointLoading] = useState(false);
+  const [newPoint, setNewPoint] = useState({
+    amenityCategoryId: '',
+    phone: '',
+    latitude: '',
+    longitude: '',
+    openingHours: '24/7',
+    image: null,
+  });
+
+  const handleGetCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setNewPoint((prev) => ({
+            ...prev,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }));
+        },
+        () => {
+          alert("Không thể lấy vị trí hiện tại. Vui lòng nhập thủ công!");
+        }
+      );
+    } else {
+      alert("Trình duyệt không hỗ trợ Geolocation!");
+    }
+  };
+
+  const handleCreatePointSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPoint.amenityCategoryId || !newPoint.latitude || !newPoint.longitude) {
+      alert("Vui lòng chọn danh mục tiện ích và nhập đầy đủ tọa độ!");
+      return;
+    }
+
+    try {
+      setAddPointLoading(true);
+      const formData = new FormData();
+      formData.append('amenityCategoryId', newPoint.amenityCategoryId);
+      formData.append('phone', newPoint.phone.trim());
+      formData.append('latitude', newPoint.latitude);
+      formData.append('longitude', newPoint.longitude);
+      formData.append('openingHours', newPoint.openingHours.trim());
+      if (newPoint.image) {
+        formData.append('image', newPoint.image);
+      }
+
+      const res = await createAmenityAdmin(formData);
+      if (res.success) {
+        setShowAddPointModal(false);
+        setNewPoint({
+          amenityCategoryId: '',
+          phone: '',
+          latitude: '',
+          longitude: '',
+          openingHours: '24/7',
+          image: null,
+        });
+        fetchPoints(pointsPage, statusFilter);
+      }
+    } catch (err) {
+      console.error("Error creating amenity point:", err);
+      alert(err?.response?.data?.message || "Lỗi máy chủ khi tạo điểm tiện ích!");
+    } finally {
+      setAddPointLoading(false);
+    }
+  };
 
   // Categories State
   const [categories, setCategories] = useState([]);
@@ -609,10 +681,19 @@ export default function EmergencyAmenityPage() {
         </div>
 
         {/* Action Button */}
+        {activeTab === 'points' && (
+          <button
+            onClick={() => setShowAddPointModal(true)}
+            className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm transition cursor-pointer"
+          >
+            <PiPlusBold className="w-4 h-4" />
+            Thêm Điểm Tiện Ích Mới
+          </button>
+        )}
         {activeTab === 'categories' && (
           <button
             onClick={() => setShowAddCategoryModal(true)}
-            className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm transition"
+            className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-gray-200 dark:hover:bg-gray-300 text-white px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm transition cursor-pointer"
           >
             <PiPlusBold className="w-4 h-4" />
             Thêm Danh Mục Mới
@@ -1134,6 +1215,117 @@ export default function EmergencyAmenityPage() {
               <option value="ACTIVE">Hoạt động (ACTIVE)</option>
               <option value="INACTIVE">Tạm khóa (INACTIVE)</option>
             </select>
+          </div>
+        </div>
+      </AddUpdateModelComponent>
+
+      {/* Modal Thêm điểm tiện ích mới */}
+      <AddUpdateModelComponent
+        open={showAddPointModal}
+        onClose={() => setShowAddPointModal(false)}
+        title="Thêm Điểm Tiện Ích Khẩn Cấp Mới"
+        subtitle="Hiển thị thông tin hỗ trợ cấp cứu, cứu hộ lên bản đồ"
+        headerIcon={<PiStorefrontBold className="text-gray-900 text-xl" />}
+        onSubmit={handleCreatePointSubmit}
+        submitLabel="Tạo mới điểm tiện ích"
+        loading={addPointLoading}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">
+              Danh mục tiện ích (*)
+            </label>
+            <select
+              required
+              value={newPoint.amenityCategoryId}
+              onChange={(e) => setNewPoint({ ...newPoint, amenityCategoryId: e.target.value })}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 font-semibold"
+            >
+              <option value="">-- Chọn danh mục tiện ích --</option>
+              {categories.map((cat) => (
+                <option key={cat.amenityCategoryId} value={cat.amenityCategoryId}>
+                  {cat.categoryName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">
+              Số điện thoại liên hệ
+            </label>
+            <input
+              type="text"
+              placeholder="Ví dụ: 115, 0901234567..."
+              value={newPoint.phone}
+              onChange={(e) => setNewPoint({ ...newPoint, phone: e.target.value })}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 font-medium"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-gray-700">
+                Tọa độ địa lý (Vĩ độ & Kinh độ) (*)
+              </label>
+              <button
+                type="button"
+                onClick={handleGetCurrentLocation}
+                className="inline-flex items-center gap-1 text-xs text-blue-600 font-semibold hover:underline cursor-pointer"
+              >
+                <PiMapPinBold size={14} />
+                <span>Lấy vị trí hiện tại</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  placeholder="Vĩ độ (Latitude)"
+                  value={newPoint.latitude}
+                  onChange={(e) => setNewPoint({ ...newPoint, latitude: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 font-mono"
+                />
+              </div>
+              <div>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  placeholder="Kinh độ (Longitude)"
+                  value={newPoint.longitude}
+                  onChange={(e) => setNewPoint({ ...newPoint, longitude: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">
+              Giờ mở cửa / Hoạt động
+            </label>
+            <input
+              type="text"
+              placeholder="Ví dụ: 24/7 hoặc 07:00 - 22:00"
+              value={newPoint.openingHours}
+              onChange={(e) => setNewPoint({ ...newPoint, openingHours: e.target.value })}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-900 font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-700 block mb-1">
+              Ảnh thực tế / Biển hiệu đính kèm (Tùy chọn)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewPoint({ ...newPoint, image: e.target.files[0] || null })}
+              className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-800 cursor-pointer"
+            />
           </div>
         </div>
       </AddUpdateModelComponent>

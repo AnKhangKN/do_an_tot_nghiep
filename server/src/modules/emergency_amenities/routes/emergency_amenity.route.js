@@ -19,6 +19,7 @@ route.post('/admin/categories', verifyToken, isAdmin, validatorCategory, adminEm
 route.put('/admin/categories/:id', verifyToken, isAdmin, validatorCategory, adminEmergencyAmenityController.updateCategoryAdmin);
 
 route.get('/admin/points', verifyToken, isAdmin, adminEmergencyAmenityController.getAmenitiesAdmin);
+route.post('/admin/points', verifyToken, isAdmin, uploadAmenityImage, validatorCreateAmenity, adminEmergencyAmenityController.createAmenityAdmin);
 route.put('/admin/points/:id/status', verifyToken, isAdmin, adminEmergencyAmenityController.updateAmenityStatusAdmin);
 route.delete('/admin/points/:id', verifyToken, isAdmin, adminEmergencyAmenityController.deleteAmenityAdmin);
 

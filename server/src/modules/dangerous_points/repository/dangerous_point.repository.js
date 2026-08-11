@@ -8,6 +8,9 @@ class DangerousPointRepository {
     }
 
     async createDangerousPoint(client, data) {
+        const status = data.status || 'PENDING';
+        const approvedBy = data.approvedBy || null;
+
         const query = `
         INSERT INTO ${this.dangerousPointModel.table}
             (${this.dangerousPointModel.field.dangerousPointId},
@@ -16,8 +19,10 @@ class DangerousPointRepository {
              ${this.dangerousPointModel.field.latitude},
              ${this.dangerousPointModel.field.longitude},
              ${this.dangerousPointModel.field.dangerLevel},
-             ${this.dangerousPointModel.field.reportedBy})
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+             ${this.dangerousPointModel.field.reportedBy},
+             status,
+             approved_by)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING *
     `;
 
@@ -28,7 +33,9 @@ class DangerousPointRepository {
             data.latitude,
             data.longitude,
             data.dangerLevel,
-            data.reportedBy
+            data.reportedBy,
+            status,
+            approvedBy
         ]);
 
         return result.rows[0];

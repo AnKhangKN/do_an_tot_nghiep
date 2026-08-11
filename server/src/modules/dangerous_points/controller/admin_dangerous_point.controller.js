@@ -17,6 +17,33 @@ class AdminDangerousPointController {
         }
     }
 
+    async createDangerousPointAdmin(req, res, next) {
+        try {
+            const { zoneName, description, latitude, longitude, dangerLevel, status } = req.body;
+            const imageUrl = req.file ? req.file.path : (req.body.imageUrl || null);
+            const reportedBy = req.userId;
+
+            const result = await dangerousPointService.createDangerousPointAdmin({
+                zoneName,
+                description,
+                latitude,
+                longitude,
+                dangerLevel,
+                reportedBy,
+                imageUrl,
+                status: status || 'APPROVED'
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: "Tạo điểm nguy hiểm mới thành công!",
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async approveDangerousPoint(req, res, next) {
         try {
             const { dangerousPointId } = req.params;

@@ -12,7 +12,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import "leaflet/dist/leaflet.css";
 import { getSosHeatmap, searchLocations } from "@/api/admin/MapApi";
-import { getApprovedDangerousZones } from "@/api/admin/DangerousZoneApi";
 import { getApprovedAmenitiesPublic, getCategoriesAdmin } from "@/api/admin/EmergencyAmenityApi";
 import { getRescuersAdmin } from "@/api/admin/RescuerApi";
 import { useSelector } from "react-redux";
@@ -163,40 +162,6 @@ const HeatmapLayer = ({ points }) => {
 
   return null;
 };
-
-// ================= LAYERS =================
-const dangerLevelRadius = { HIGH: 400, MEDIUM: 250, LOW: 150 };
-const dangerLevelColor = { HIGH: "#dc2626", MEDIUM: "#f59e0b", LOW: "#eab308" };
-
-const DangerLayer = ({ data }) => (
-  <>
-    {data.map((item) => (
-      <React.Fragment key={item.id}>
-        <Circle
-          center={item.position}
-          radius={item.radius}
-          pathOptions={{ color: item.color || "#dc2626", fillOpacity: 0.15 }}
-        >
-          <Popup>
-            <div className="p-1">
-              <span className="flex items-center gap-1 font-medium">
-                <PiCircleFill className="text-red-500" /> {item.name || "Vùng nguy hiểm"}
-              </span>
-              <p className="text-xs text-gray-600 mt-1">Mức độ: <b>{item.dangerLevel || "KHÔNG XÁC ĐỊNH"}</b></p>
-            </div>
-          </Popup>
-        </Circle>
-        <Marker position={item.position} icon={icons[item.type] || icons.accident}>
-          <Popup>
-            <span className="flex items-center gap-1 font-medium">
-              <PiWarningFill className="text-red-500" /> {item.name || item.type || "Điểm nguy hiểm"}
-            </span>
-          </Popup>
-        </Marker>
-      </React.Fragment>
-    ))}
-  </>
-);
 
 const AmenityLayer = ({ data }) => (
   <>
@@ -651,7 +616,6 @@ const MapPage = () => {
   const center = [10.0452, 105.7469];
   const [location, setLocation] = useState(null);
   const [heatmapPoints, setHeatmapPoints] = useState([]);
-  const [dangerPoints, setDangerPoints] = useState([]);
   const [amenities, setAmenities] = useState([]);
   const [categories, setCategories] = useState([]);
   const [rescuers, setRescuers] = useState([]);
@@ -660,7 +624,6 @@ const MapPage = () => {
 
   // State quản lý hiển thị các lớp
   const [showHeatmap, setShowHeatmap] = useState(true);
-  const [showDanger, setShowDanger] = useState(true);
   const [showAmenities, setShowAmenities] = useState(true);
   const [showRescuers, setShowRescuers] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("ALL");
@@ -677,29 +640,7 @@ const MapPage = () => {
         console.error("Lỗi khi tải dữ liệu heatmap điểm nóng:", err);
       }
 
-      // 2. Fetch Dangerous Points
-      try {
-        const res = await getApprovedDangerousZones();
-        if (res && res.data && Array.isArray(res.data)) {
-          const mappedPoints = res.data
-            .filter((item) => item.latitude && item.longitude)
-            .map((item) => {
-              const dangerLevel = (item.dangerLevel || "LOW").toUpperCase();
-              return {
-                id: item.dangerousPointId || item.id,
-                position: [parseFloat(item.latitude), parseFloat(item.longitude)],
-                dangerLevel,
-                type: dangerLevel === "HIGH" ? "fire" : "accident",
-                name: item.zoneName || "Điểm nguy hiểm",
-                radius: dangerLevelRadius[dangerLevel] || 200,
-                color: dangerLevelColor[dangerLevel] || "#dc2626",
-              };
-            });
-          setDangerPoints(mappedPoints);
-        }
-      } catch (err) {
-        console.error("Lỗi khi tải danh sách điểm nguy hiểm:", err);
-      }
+
 
       // 3. Fetch Emergency Amenities & Categories
       try {
@@ -771,8 +712,6 @@ const MapPage = () => {
       <LayerControlPanel
         showHeatmap={showHeatmap}
         setShowHeatmap={setShowHeatmap}
-        showDanger={showDanger}
-        setShowDanger={setShowDanger}
         showAmenities={showAmenities}
         setShowAmenities={setShowAmenities}
         showRescuers={showRescuers}
@@ -796,32 +735,22 @@ const MapPage = () => {
 
         <FlyToLocation location={location} />
         <MyLocationMarker position={myLocation} />
-        <AutoFitMapBounds dangerPoints={dangerPoints} amenities={filteredAmenities} />
+        <AutoFitMapBounds amenities={filteredAmenities} />
         <MapControls onLocate={setMyLocation} />
 
         {/* Render Lớp bản đồ theo Toggle */}
         {showHeatmap && <HeatmapLayer points={heatmapPoints} />}
-        {showDanger && <DangerLayer data={dangerPoints} />}
         {showAmenities && <AmenityLayer data={filteredAmenities} />}
         {showRescuers && <RescuerLayer data={rescuers} />}
       </MapContainer>
 
-      {/* Thẻ thống kê điểm nguy hiểm & tiện ích */}
-      <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 dark:bg-gray-100/90 backdrop-blur-md border border-gray-200 shadow-sm rounded-2xl p-3 flex items-center gap-4 text-xs font-medium text-gray-700">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-          <span>
-            Điểm nguy hiểm: <b className="text-red-600">{dangerPoints.length}</b>
-          </span>
-        </div>
-        <div className="h-4 w-px bg-gray-200" />
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-          <span>
-            Tiện ích {selectedCategory !== "ALL" ? `(${selectedCategory})` : "khẩn cấp"}:{" "}
-            <b className="text-emerald-600">{filteredAmenities.length}</b>
-          </span>
-        </div>
+      {/* Thẻ thống kê điểm tiện ích */}
+      <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 dark:bg-gray-100/90 backdrop-blur-md border border-gray-200 shadow-sm rounded-2xl p-3 flex items-center gap-2 text-xs font-medium text-gray-700">
+        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <span>
+          Tiện ích {selectedCategory !== "ALL" ? `(${selectedCategory})` : "khẩn cấp"}:{" "}
+          <b className="text-emerald-600">{filteredAmenities.length}</b>
+        </span>
       </div>
     </div>
   );
