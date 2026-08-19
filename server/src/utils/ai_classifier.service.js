@@ -45,7 +45,7 @@ class AiClassifierService {
     async classifyWithGroq(text, entityType) {
         const apiKey = GROQ_API_KEY;
         const apiUrl = GROQ_API_URL || "https://api.groq.com/openai/v1/chat/completions";
-        const modelName = GROQ_MODEL || "llama-3.3-70b-versatile";
+        const modelName = GROQ_MODEL || "llama-3.1-70b-versatile";
 
         const systemPrompt = `
 Bạn là Trợ lý AI Phân tích & Kiểm duyệt Nội dung cho Hệ thống Cứu hộ SOS Khẩn cấp tại Việt Nam.
@@ -192,7 +192,7 @@ Nhiệm vụ: Phân tích đoạn văn bản từ người dùng và trả về 
             try {
                 const apiKey = GROQ_API_KEY;
                 const apiUrl = GROQ_API_URL || "https://api.groq.com/openai/v1/chat/completions";
-                const modelName = GROQ_MODEL || "llama-3.3-70b-versatile";
+                const modelName = GROQ_MODEL || "llama-3.1-70b-versatile";
 
                 const systemPrompt = `
 Bạn là Trợ lý AI Phân tích Cảm xúc (Sentiment Analyzer) cho Hệ thống Cứu hộ Khẩn cấp tại Việt Nam.
@@ -303,7 +303,7 @@ Chú ý: Ngôn ngữ có thể là tiếng Việt. Chỉ chấm NEGATIVE khi có
             try {
                 const apiKey = GROQ_API_KEY;
                 const apiUrl = GROQ_API_URL || "https://api.groq.com/openai/v1/chat/completions";
-                const modelName = GROQ_MODEL || "llama-3.3-70b-versatile";
+                const modelName = GROQ_MODEL || "llama-3.1-70b-versatile";
 
                 const systemPrompt = `
 Bạn là Giám đốc Điều hành Cứu hộ AI (AI Emergency Operations Director) của hệ thống Cứu hộ Khẩn cấp Việt Nam.

@@ -1,8 +1,8 @@
 /resource
 /logs
 /.vscode
-script-db.sql
-select-db.sql
+init_database.sql
+select_all.sql
 render.yaml
 .agents
 .codegraph

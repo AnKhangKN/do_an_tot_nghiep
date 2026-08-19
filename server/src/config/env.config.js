@@ -42,7 +42,7 @@ module.exports = {
   // GROQ AI
   GROQ_API_KEY: process.env.GROQ_API_KEY,
   GROQ_API_URL: process.env.GROQ_API_URL || "https://api.groq.com/openai/v1/chat/completions",
-  GROQ_MODEL: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+  GROQ_MODEL: process.env.GROQ_MODEL || "llama-3.1-70b-versatile",
 
   // GOOGLE AUTH
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
